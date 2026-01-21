@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { SessionProvider } from '@/lib/ctx';
+import { initDatabase } from '@/services/storage';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -30,6 +31,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (error) throw error;
   }, [error]);
+
+  useEffect(() => {
+    initDatabase().catch((e) => console.error('Failed to initialize database:', e));
+  }, []);
 
   useEffect(() => {
     if (loaded) {

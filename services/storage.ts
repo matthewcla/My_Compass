@@ -1,13 +1,13 @@
-import * as SQLite from 'expo-sqlite';
 import {
-  Billet,
   Application,
-  LeaveRequest,
-  initializeSQLiteTables,
-  BilletSchema,
   ApplicationSchema,
+  Billet,
+  BilletSchema,
+  LeaveRequest,
   LeaveRequestSchema,
+  initializeSQLiteTables,
 } from '@/types/schema';
+import * as SQLite from 'expo-sqlite';
 
 const DB_NAME = 'my_compass.db';
 

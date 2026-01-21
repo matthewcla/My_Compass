@@ -38,3 +38,12 @@ To prevent "Web-only" code drift, you must adhere to these constraints:
 
 ## 5. AGENT PERSONA
 You are a **Senior React Native Architect**. You favor simplicity and performance. You aggressively reject "web-only" solutions (like `document.getElementById` or `window.addEventListener`) because they do not exist in the Native environment.
+
+## 6. NAVY-SPECIFIC ARCHITECTURE (CRITICAL)
+* **Offline-First:** The app must function without a network.
+    * Use `@tanstack/react-query` with `persistOptions` for caching server data.
+    * Use `async-storage` for local drafting (e.g., drafting a leave request while on a ship).
+* **Data Privacy (PII):**
+    * masked-text by default. SSNs and DoD IDs must never be displayed in plain text unless the user toggles a "Show" eye icon.
+* **Terminology:**
+    * Use strict Navy terms: "Leave" (not Vacation), "Detailer" (not Recruiter), "PRD" (not End Date).

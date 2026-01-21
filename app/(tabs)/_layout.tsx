@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Compass, Home, Settings } from 'lucide-react-native';
+import { Anchor, FileText, Map, User } from 'lucide-react-native';
 import React from 'react';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
@@ -16,24 +16,39 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
-        name="index"
+        name="assignments"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <Home size={28} color={color} />,
+          title: 'Assignments',
+          tabBarLabel: 'Assignments',
+          headerTitle: 'My Assignment',
+          tabBarIcon: ({ color }) => <Anchor size={28} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="admin"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <Compass size={28} color={color} />,
+          title: 'Admin',
+          tabBarLabel: 'Admin',
+          headerTitle: 'My Admin',
+          tabBarIcon: ({ color }) => <FileText size={28} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="pcs"
         options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <Settings size={28} color={color} />,
+          title: 'PCS',
+          tabBarLabel: 'PCS',
+          headerTitle: 'My PCS',
+          tabBarIcon: ({ color }) => <Map size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarLabel: 'Profile',
+          headerTitle: 'My Profile',
+          tabBarIcon: ({ color }) => <User size={28} color={color} />,
         }}
       />
     </Tabs>

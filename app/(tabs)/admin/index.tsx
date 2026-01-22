@@ -1,4 +1,5 @@
 import { LeaveBalanceCard } from '@/components/LeaveBalanceCard';
+import { SyncStatus, SyncStatusBadge } from '@/components/SyncStatusBadge';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { Link, useRouter } from 'expo-router';
 import { Calculator, Calendar, ChevronRight, Plus } from 'lucide-react-native';
@@ -11,7 +12,7 @@ export default function AdminScreen() {
         leaveBalance,
         leaveRequests,
         fetchLeaveData,
-        isSyncingBalance
+        isSyncingRequests
     } = useLeaveStore();
 
     // Mock User ID for Phase 1
@@ -34,14 +35,25 @@ export default function AdminScreen() {
         }
     };
 
+    // Determine Sync Status
+    const getSyncStatus = (): SyncStatus => {
+        if (isSyncingRequests) return 'pending_upload';
+        const hasError = Object.values(leaveRequests).some(r => r.syncStatus === 'error');
+        if (hasError) return 'error';
+        return 'synced';
+    };
+
     return (
         <ScrollView className="flex-1 bg-slate-50">
             <View className="px-5 py-6">
                 <View className="flex-row justify-between items-center mb-6">
                     <Text className="text-2xl font-bold text-slate-900">My Leave</Text>
-                    <Pressable className="bg-slate-200 p-2 rounded-full">
-                        <Calculator size={20} color="#64748b" />
-                    </Pressable>
+                    <View className="flex-row items-center space-x-2 gap-2">
+                        <SyncStatusBadge status={getSyncStatus()} />
+                        <Pressable className="bg-slate-200 p-2 rounded-full">
+                            <Calculator size={20} color="#64748b" />
+                        </Pressable>
+                    </View>
                 </View>
 
                 {/* Balance Card */}

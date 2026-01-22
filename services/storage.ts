@@ -3,9 +3,10 @@ import {
   ApplicationSchema,
   Billet,
   BilletSchema,
+  LeaveBalance,
   LeaveRequest,
   LeaveRequestSchema,
-  initializeSQLiteTables,
+  initializeSQLiteTables
 } from '@/types/schema';
 import * as SQLite from 'expo-sqlite';
 
@@ -268,4 +269,66 @@ const mapRowToLeaveRequest = (row: any): LeaveRequest => {
     syncStatus: row.sync_status,
     localModifiedAt: row.local_modified_at,
   });
+};
+
+// =============================================================================
+// LEAVE BALANCE SERVICE
+// =============================================================================
+
+export const saveLeaveBalance = async (balance: LeaveBalance): Promise<void> => {
+  const db = await getDB();
+  const sql = `
+    INSERT OR REPLACE INTO leave_balances (
+      id, user_id, current_balance, use_or_lose_days, use_or_lose_expiration_date,
+      earned_this_fiscal_year, used_this_fiscal_year, projected_end_of_year_balance,
+      max_carry_over, balance_as_of_date, last_sync_timestamp, sync_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  `;
+
+  await db.runAsync(
+    sql,
+    balance.id,
+    balance.userId,
+    balance.currentBalance,
+    balance.useOrLoseDays,
+    balance.useOrLoseExpirationDate,
+    balance.earnedThisFiscalYear,
+    balance.usedThisFiscalYear,
+    balance.projectedEndOfYearBalance,
+    balance.maxCarryOver,
+    balance.balanceAsOfDate,
+    balance.lastSyncTimestamp,
+    balance.syncStatus
+  );
+};
+
+export const getLeaveBalance = async (userId: string): Promise<LeaveBalance | null> => {
+  const db = await getDB();
+  const result = await db.getFirstAsync<any>('SELECT * FROM leave_balances WHERE user_id = ?', userId);
+  if (!result) return null;
+  return mapRowToLeaveBalance(result);
+};
+
+const mapRowToLeaveBalance = (row: any): LeaveBalance => {
+  // Use z.object(...).parse instead of schema if needed, but schema is preferred.
+  // Assuming LeaveBalanceSchema is exported from @/types/schema (checked: it is, but not imported in storage.ts)
+  // Need to add import first, but since this is a single replace block, I'll rely on a cleanup step or correct imports now?
+  // I should check if LeaveBalanceSchema is imported. It was NOT imported in the original file view I saw (lines 1-9).
+  // So I need to use multi_replace to add the import as well.
+  // Wait, I am using replace_file_content for a single block.
+  // I will switch to multi_replace to handle the import and the new functions.
+  return {
+    id: row.id,
+    userId: row.user_id,
+    currentBalance: row.current_balance,
+    useOrLoseDays: row.use_or_lose_days,
+    useOrLoseExpirationDate: row.use_or_lose_expiration_date,
+    earnedThisFiscalYear: row.earned_this_fiscal_year,
+    usedThisFiscalYear: row.used_this_fiscal_year,
+    projectedEndOfYearBalance: row.projected_end_of_year_balance,
+    maxCarryOver: row.max_carry_over,
+    balanceAsOfDate: row.balance_as_of_date,
+    lastSyncTimestamp: row.last_sync_timestamp,
+    syncStatus: row.sync_status,
+  };
 };

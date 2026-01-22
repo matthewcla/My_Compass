@@ -72,7 +72,7 @@ export function JobCard({
 
             {/* Narrative Box */}
             <View className="bg-gray-50 p-3 rounded-lg border border-gray-100 mb-4">
-                <Text className="text-gray-600 text-sm leading-5">
+                <Text className="text-gray-600 text-sm leading-5" testID="compass-narrative">
                     {billet.compass.contextualNarrative}
                 </Text>
             </View>

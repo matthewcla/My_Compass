@@ -3,7 +3,82 @@ import {
     CreateLeaveRequestPayload,
     SubmitLeaveRequestResponse
 } from '@/types/api';
-import { LeaveBalance } from '@/types/schema';
+import { LeaveBalance, LeaveRequest } from '@/types/schema';
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Generate a valid draft leave request pre-filled with required defaults.
+ * Compliant with LeaveRequestSchema (Zod) from types/schema.ts.
+ * 
+ * @param userId - The current user's ID to assign to the request
+ * @returns A valid LeaveRequest object in "draft" status
+ */
+export const generateDraftRequest = (userId: string): LeaveRequest => {
+    const now = new Date().toISOString();
+
+    return {
+        id: `lr-draft-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        userId,
+
+        // Leave period - defaults to tomorrow
+        startDate: now,
+        endDate: now,
+        chargeDays: 0,
+
+        // Leave details
+        leaveType: 'annual',
+        leaveAddress: '',
+        leavePhoneNumber: '',
+
+        // Emergency contact (required, initialized empty)
+        emergencyContact: {
+            name: '',
+            relationship: '',
+            phoneNumber: '',
+            altPhoneNumber: undefined,
+            address: undefined,
+        },
+
+        // Transportation
+        modeOfTravel: undefined,
+        destinationCountry: 'USA',
+
+        // Remarks
+        memberRemarks: undefined,
+
+        // Status workflow - starts as draft
+        status: 'draft',
+        statusHistory: [
+            {
+                status: 'draft',
+                timestamp: now,
+                actorId: userId,
+                comments: 'Request created',
+            },
+        ],
+
+        // Approval chain (empty, to be populated on submit)
+        approvalChain: [],
+        currentApproverId: undefined,
+
+        // Return/denial reasons
+        returnReason: undefined,
+        denialReason: undefined,
+
+        // Timestamps
+        createdAt: now,
+        updatedAt: now,
+        submittedAt: undefined,
+
+        // Sync metadata
+        lastSyncTimestamp: now,
+        syncStatus: 'pending_upload',
+        localModifiedAt: now,
+    };
+};
 
 // =============================================================================
 // MOCK DATA

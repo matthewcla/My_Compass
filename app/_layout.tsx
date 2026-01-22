@@ -1,11 +1,11 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { SessionProvider } from '@/lib/ctx';
+import { SessionProvider, useSession } from '@/lib/ctx';
 import { initDatabase } from '@/services/storage';
 
 export {
@@ -20,6 +20,40 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+/**
+ * Auth Guard Component
+ * 
+ * Watches the session state and handles navigation:
+ * - If session is valid → redirect to /(tabs)
+ * - If session is null → ensure user stays on /sign-in
+ * - Prevents back navigation to login after successful authentication
+ */
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { session, isLoading } = useSession();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Don't navigate while auth state is loading
+    if (isLoading) return;
+
+    // Check if user is on an auth route (sign-in page)
+    const inAuthGroup = segments[0] === 'sign-in';
+
+    if (!session && !inAuthGroup) {
+      // User is not authenticated and not on sign-in page
+      // Redirect to sign-in and replace history to prevent back navigation
+      router.replace('/sign-in');
+    } else if (session && inAuthGroup) {
+      // User is authenticated but still on sign-in page
+      // Redirect to main app and replace history to prevent back navigation to login
+      router.replace('/(tabs)');
+    }
+  }, [session, isLoading, segments]);
+
+  return <>{children}</>;
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -48,10 +82,13 @@ export default function RootLayout() {
 
   return (
     <SessionProvider>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="leave" options={{ presentation: 'modal', headerShown: false }} />
-      </Stack>
+      <AuthGuard>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+          <Stack.Screen name="leave" options={{ presentation: 'modal', headerShown: false }} />
+        </Stack>
+      </AuthGuard>
     </SessionProvider>
   );
 }

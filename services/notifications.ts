@@ -13,6 +13,13 @@ import { Platform } from 'react-native';
  * @returns {Promise<string | undefined>} The ExpoPushToken or undefined if failed.
  */
 export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
+    // Web support for push notifications requires VAPID keys and service workers.
+    // We are skipping it here to avoid the warning: 
+    // "Listening to push token changes is not yet fully supported on web"
+    if (Platform.OS === 'web') {
+        return undefined;
+    }
+
     if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
             name: 'default',

@@ -1,6 +1,7 @@
 import { ApplicationStatus, Billet } from '@/types/schema';
+import { MapPin } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, useColorScheme } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { ScalePressable } from './ScalePressable';
 
@@ -17,6 +18,9 @@ export function JobCard({
     isProcessing,
     applicationStatus,
 }: JobCardProps) {
+    const colorScheme = useColorScheme();
+    const iconColor = colorScheme === 'dark' ? '#9ca3af' : '#6b7280';
+
     // 1. Determine Match Score Logic
     const matchScore = billet.compass.matchScore;
     let matchColorClass = 'text-gray-500';
@@ -61,7 +65,12 @@ export function JobCard({
                     <Text className="text-lg font-bold text-gray-900 dark:text-white" numberOfLines={1}>
                         {billet.title}
                     </Text>
-                    <Text className="text-sm text-gray-500 dark:text-gray-400">{billet.location}</Text>
+                    <View className="flex-row items-start mt-1">
+                        <MapPin size={14} color={iconColor} style={{ marginTop: 3, marginRight: 4 }} />
+                        <Text className="text-sm text-gray-500 dark:text-gray-400 flex-1">
+                            {billet.location}
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Match Indicator Badge using Reanimated */}

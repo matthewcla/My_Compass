@@ -29,53 +29,13 @@ export default function TabLayout() {
 
     // Common Tabs Screen Definitions to reuse
     // We render these inside the specific layout containers
-    const renderTabScreens = () => (
-        <>
-            <Tabs.Screen
-                name="index"
-                options={{
-                    href: null,
-                    title: 'Home',
-                }}
-            />
-            <Tabs.Screen
-                name="assignments/index"
-                options={{
-                    title: 'Assignments',
-                    tabBarLabel: 'Assignments',
-                    headerTitle: 'My Assignment',
-                    tabBarIcon: ({ color }) => <Anchor size={28} color={color} strokeWidth={1.5} />,
-                }}
-            />
-            <Tabs.Screen
-                name="admin/index"
-                options={{
-                    title: 'Admin',
-                    tabBarLabel: 'Admin',
-                    headerTitle: 'My Admin',
-                    tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
-                }}
-            />
-            <Tabs.Screen
-                name="pcs/index"
-                options={{
-                    title: 'PCS',
-                    tabBarLabel: 'PCS',
-                    headerTitle: 'My PCS',
-                    tabBarIcon: ({ color }) => <Map size={28} color={color} strokeWidth={1.5} />,
-                }}
-            />
-            <Tabs.Screen
-                name="profile/index"
-                options={{
-                    title: 'Profile',
-                    tabBarLabel: 'Profile',
-                    headerTitle: 'My Profile',
-                    tabBarIcon: ({ color }) => <User size={28} color={color} strokeWidth={1.5} />,
-                }}
-            />
-        </>
+    const GlassBackground = () => (
+        <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
     );
+
+    // Common Tabs Screen Definitions to reuse
+    // We render these inside the specific layout containers
+
 
     // Desktop Sidebar Component
     const Sidebar = () => (
@@ -154,14 +114,58 @@ export default function TabLayout() {
                     header: () => <WebHeader />,
                     headerShown: true,
                     tabBarStyle: {
-                        borderTopWidth: 1,
-                        borderColor: '#E2E8F0',
-                        height: 60 + insets.bottom,
-                        paddingBottom: insets.bottom + 5,
-                        paddingTop: 5,
-                    }
+                        position: 'absolute',
+                        borderTopWidth: 0,
+                        elevation: 0,
+                        shadowOpacity: 0,
+                        height: 80, // Slightly taller for better touch area with absolute
+                        paddingBottom: 20, // Adjust for Home Indicator usually
+                    },
+                    tabBarBackground: () => <GlassBackground />,
                 }}>
-                {renderTabScreens()}
+                <Tabs.Screen
+                    name="index"
+                    options={{
+                        href: null,
+                        title: 'Home',
+                    }}
+                />
+                <Tabs.Screen
+                    name="assignments/index"
+                    options={{
+                        title: 'Assignments',
+                        tabBarLabel: 'Assignments',
+                        headerTitle: 'My Assignment',
+                        tabBarIcon: ({ color }) => <Anchor size={24} color={color} strokeWidth={1.5} />,
+                    }}
+                />
+                <Tabs.Screen
+                    name="admin/index"
+                    options={{
+                        title: 'Admin',
+                        tabBarLabel: 'Admin',
+                        headerTitle: 'My Admin',
+                        tabBarIcon: ({ color }) => <FileText size={24} color={color} strokeWidth={1.5} />,
+                    }}
+                />
+                <Tabs.Screen
+                    name="pcs/index"
+                    options={{
+                        title: 'PCS',
+                        tabBarLabel: 'PCS',
+                        headerTitle: 'My PCS',
+                        tabBarIcon: ({ color }) => <Map size={24} color={color} strokeWidth={1.5} />,
+                    }}
+                />
+                <Tabs.Screen
+                    name="profile/index"
+                    options={{
+                        title: 'Profile',
+                        tabBarLabel: 'Profile',
+                        headerTitle: 'My Profile',
+                        tabBarIcon: ({ color }) => <User size={24} color={color} strokeWidth={1.5} />,
+                    }}
+                />
             </Tabs>
         );
     }
@@ -180,7 +184,49 @@ export default function TabLayout() {
                         tabBarStyle: { display: 'none' },
                     }}
                 >
-                    {renderTabScreens()}
+                    <Tabs.Screen
+                        name="index"
+                        options={{
+                            href: null,
+                            title: 'Home',
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="assignments/index"
+                        options={{
+                            title: 'Assignments',
+                            tabBarLabel: 'Assignments',
+                            headerTitle: 'My Assignment',
+                            tabBarIcon: ({ color }) => <Anchor size={24} color={color} strokeWidth={1.5} />,
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="admin/index"
+                        options={{
+                            title: 'Admin',
+                            tabBarLabel: 'Admin',
+                            headerTitle: 'My Admin',
+                            tabBarIcon: ({ color }) => <FileText size={24} color={color} strokeWidth={1.5} />,
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="pcs/index"
+                        options={{
+                            title: 'PCS',
+                            tabBarLabel: 'PCS',
+                            headerTitle: 'My PCS',
+                            tabBarIcon: ({ color }) => <Map size={24} color={color} strokeWidth={1.5} />,
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="profile/index"
+                        options={{
+                            title: 'Profile',
+                            tabBarLabel: 'Profile',
+                            headerTitle: 'My Profile',
+                            tabBarIcon: ({ color }) => <User size={24} color={color} strokeWidth={1.5} />,
+                        }}
+                    />
                 </Tabs>
             </View>
         </View>

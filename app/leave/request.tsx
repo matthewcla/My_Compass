@@ -91,6 +91,14 @@ export default function LeaveRequestScreen() {
                 }
                 return true;
             case 2: // Emergency Contact
+                if (!formData.startDate || !formData.endDate) {
+                    Alert.alert('Required', 'Please ensure start and end dates are set.');
+                    return false;
+                }
+                if (!formData.leaveType) {
+                    Alert.alert('Required', 'Please ensure leave type is selected.');
+                    return false;
+                }
                 if (!formData.emergencyContact?.name || !formData.emergencyContact?.relationship || !formData.emergencyContact?.phoneNumber) {
                     Alert.alert('Required', 'Please fill in all emergency contact details.');
                     return false;

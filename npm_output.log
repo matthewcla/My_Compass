@@ -1,0 +1,110 @@
+Starting project at /app
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  expo@54.0.31 - expected version: ~54.0.32
+  react-native-svg@15.15.1 - expected version: 15.12.1
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.0% ( 54/148)
+λ node_modules/expo-router/node/render.js ▓▓░░░░░░░░░░░░░░ 15.6% (121/309)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% (184/261)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.4% (364/518)
+| Warning: Unknown at rule: @tailwind (global.css:1:10):
+| > 1 | @tailwind base;
+|     |          ^
+|   2 | @tailwind components;
+|   3 | @tailwind utilities;
+|   4 |
+| Warning: Unknown at rule: @tailwind (global.css:2:10):
+|   1 | @tailwind base;
+| > 2 | @tailwind components;
+|     |          ^
+|   3 | @tailwind utilities;
+|   4 |
+|   5 | @layer base {
+| Warning: Unknown at rule: @tailwind (global.css:3:10):
+|   1 | @tailwind base;
+|   2 | @tailwind components;
+| > 3 | @tailwind utilities;
+|     |          ^
+|   4 |
+|   5 | @layer base {
+|   6 |   :root {
+| (node:6340) DeprecationWarning: Passing lineNumber and colNumber is deprecated to @babel/code-frame. Please use `codeFrameColumns`.
+| (Use `node --trace-deprecation ...` to show where the warning was created)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% (258/400)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 63.7% ( 506/2303)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% (317/472)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 63.7% ( 641/2496)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% (317/472)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 63.7% (1738/2496)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 52.1% (405/561)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.6% (2385/2661)
+| Warning: Unknown at rule: @tailwind (global.css:1:10):
+| > 1 | @tailwind base;
+|     |          ^
+|   2 | @tailwind components;
+|   3 | @tailwind utilities;
+|   4 |
+| Warning: Unknown at rule: @tailwind (global.css:2:10):
+|   1 | @tailwind base;
+| > 2 | @tailwind components;
+|     |          ^
+|   3 | @tailwind utilities;
+|   4 |
+|   5 | @layer base {
+| Warning: Unknown at rule: @tailwind (global.css:3:10):
+|   1 | @tailwind base;
+|   2 | @tailwind components;
+| > 3 | @tailwind utilities;
+|     |          ^
+|   4 |
+|   5 | @layer base {
+|   6 |   :root {
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 61.8% ( 559/2359)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 89.6% (2590/2736)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 61.8% ( 803/2543)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.8% (2713/2772)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 61.8% (1555/2543)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.8% (2713/2772)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 81.1% (2292/2545)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.8% (2713/2772)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 87.3% (2542/2721)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.8% (2812/2876)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.0% (2795/2856)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 97.4% (2920/2960)
+λ Bundled 44497ms node_modules/expo-router/node/render.js (3026 modules)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3080/3080)
+Web Bundled 52166ms node_modules/expo-router/entry.js (3080 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3080/3080)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.9% (373/528)
+| Warning: Unknown at rule: @tailwind (global.css:1:10):
+| > 1 | @tailwind base;
+|     |          ^
+|   2 | @tailwind components;
+|   3 | @tailwind utilities;
+|   4 |
+| Warning: Unknown at rule: @tailwind (global.css:2:10):
+|   1 | @tailwind base;
+| > 2 | @tailwind components;
+|     |          ^
+|   3 | @tailwind utilities;
+|   4 |
+|   5 | @layer base {
+| Warning: Unknown at rule: @tailwind (global.css:3:10):
+|   1 | @tailwind base;
+|   2 | @tailwind components;
+| > 3 | @tailwind utilities;
+|     |          ^
+|   4 |
+|   5 | @layer base {
+|   6 |   :root {
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 53.3% (1023/2359)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 65.4% (1943/2402)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.4% (2432/2663)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.4% (2778/2874)
+Web Bundled 20484ms node_modules/expo-router/entry.js (3082 modules)
+ LOG  [web] Logs will appear in the browser console

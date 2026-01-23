@@ -1,9 +1,10 @@
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
+import Colors from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, MapPin, Phone, User, X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, useColorScheme } from 'react-native';
 
 // --- Types & Constants ---
 
@@ -22,6 +23,8 @@ const LEAVE_TYPES = [
 const TOTAL_STEPS = 4;
 
 export default function LeaveRequestScreen() {
+    const colorScheme = useColorScheme() ?? 'light';
+    const themeColors = Colors[colorScheme];
     const router = useRouter();
     const submitRequest = useLeaveStore((state) => state.submitRequest);
     const isSyncing = useLeaveStore((state) => state.isSyncingRequests);
@@ -129,11 +132,11 @@ export default function LeaveRequestScreen() {
     const renderStep0_Dates = () => (
         <View className="space-y-6">
             <View>
-                <Text className="text-sm font-medium text-slate-500 mb-1">Start Date (YYYY-MM-DD)</Text>
-                <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <Calendar size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
+                <Text className="text-sm font-medium text-labelSecondary mb-1">Start Date (YYYY-MM-DD)</Text>
+                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
+                    <Calendar size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
                     <TextInput
-                        className="flex-1 text-base text-slate-900"
+                        className="flex-1 text-base text-labelPrimary"
                         placeholder="2026-02-01"
                         value={formData.startDate}
                         onChangeText={(text) => updateField('startDate', text)}
@@ -143,11 +146,11 @@ export default function LeaveRequestScreen() {
             </View>
 
             <View>
-                <Text className="text-sm font-medium text-slate-500 mb-1">End Date (YYYY-MM-DD)</Text>
-                <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <Calendar size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
+                <Text className="text-sm font-medium text-labelSecondary mb-1">End Date (YYYY-MM-DD)</Text>
+                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
+                    <Calendar size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
                     <TextInput
-                        className="flex-1 text-base text-slate-900"
+                        className="flex-1 text-base text-labelPrimary"
                         placeholder="2026-02-05"
                         value={formData.endDate}
                         onChangeText={(text) => updateField('endDate', text)}
@@ -161,19 +164,19 @@ export default function LeaveRequestScreen() {
     const renderStep1_Details = () => (
         <View className="space-y-6">
             <View>
-                <Text className="text-sm font-medium text-slate-500 mb-2">Leave Type</Text>
+                <Text className="text-sm font-medium text-labelSecondary mb-2">Leave Type</Text>
                 <View className="flex-row flex-wrap gap-2">
                     {LEAVE_TYPES.map((type) => (
                         <Pressable
                             key={type.id}
                             onPress={() => updateField('leaveType', type.id)}
                             className={`px-4 py-2 rounded-full border ${formData.leaveType === type.id
-                                ? 'bg-blue-600 border-blue-600'
-                                : 'bg-white border-slate-200'
+                                ? 'bg-systemBlue border-systemBlue'
+                                : 'bg-systemBackground border-systemGray6'
                                 }`}
                         >
                             <Text
-                                className={`${formData.leaveType === type.id ? 'text-white' : 'text-slate-600'
+                                className={`${formData.leaveType === type.id ? 'text-white' : 'text-labelSecondary'
                                     } font-medium`}
                             >
                                 {type.label}
@@ -184,11 +187,11 @@ export default function LeaveRequestScreen() {
             </View>
 
             <View>
-                <Text className="text-sm font-medium text-slate-500 mb-1">Leave Address</Text>
-                <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <MapPin size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
+                <Text className="text-sm font-medium text-labelSecondary mb-1">Leave Address</Text>
+                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
+                    <MapPin size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
                     <TextInput
-                        className="flex-1 text-base text-slate-900"
+                        className="flex-1 text-base text-labelPrimary"
                         placeholder="123 Beach St, Honolulu, HI"
                         value={formData.leaveAddress}
                         onChangeText={(text) => updateField('leaveAddress', text)}
@@ -197,11 +200,11 @@ export default function LeaveRequestScreen() {
             </View>
 
             <View>
-                <Text className="text-sm font-medium text-slate-500 mb-1">Leave Phone Number</Text>
-                <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <Phone size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
+                <Text className="text-sm font-medium text-labelSecondary mb-1">Leave Phone Number</Text>
+                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
+                    <Phone size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
                     <TextInput
-                        className="flex-1 text-base text-slate-900"
+                        className="flex-1 text-base text-labelPrimary"
                         placeholder="555-123-4567"
                         value={formData.leavePhoneNumber}
                         onChangeText={(text) => updateField('leavePhoneNumber', text)}
@@ -214,16 +217,16 @@ export default function LeaveRequestScreen() {
 
     const renderStep2_Emergency = () => (
         <View className="space-y-6">
-            <Text className="text-slate-500 text-sm">
+            <Text className="text-labelSecondary text-sm">
                 Who should we contact in case of an emergency while you are on leave?
             </Text>
 
             <View>
-                <Text className="text-sm font-medium text-slate-500 mb-1">Contact Name</Text>
-                <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <User size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
+                <Text className="text-sm font-medium text-labelSecondary mb-1">Contact Name</Text>
+                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
+                    <User size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
                     <TextInput
-                        className="flex-1 text-base text-slate-900"
+                        className="flex-1 text-base text-labelPrimary"
                         placeholder="Jane Doe"
                         value={formData.emergencyContact?.name}
                         onChangeText={(text) => updateEmergencyContact('name', text)}
@@ -232,12 +235,12 @@ export default function LeaveRequestScreen() {
             </View>
 
             <View>
-                <Text className="text-sm font-medium text-slate-500 mb-1">Relationship</Text>
-                <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
+                <Text className="text-sm font-medium text-labelSecondary mb-1">Relationship</Text>
+                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
                     {/* Reusing User icon for relationship broadly, or could use Heart etc */}
-                    <User size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
+                    <User size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
                     <TextInput
-                        className="flex-1 text-base text-slate-900"
+                        className="flex-1 text-base text-labelPrimary"
                         placeholder="Spouse, Parent, etc."
                         value={formData.emergencyContact?.relationship}
                         onChangeText={(text) => updateEmergencyContact('relationship', text)}
@@ -246,11 +249,11 @@ export default function LeaveRequestScreen() {
             </View>
 
             <View>
-                <Text className="text-sm font-medium text-slate-500 mb-1">Emergency Phone</Text>
-                <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <Phone size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
+                <Text className="text-sm font-medium text-labelSecondary mb-1">Emergency Phone</Text>
+                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
+                    <Phone size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
                     <TextInput
-                        className="flex-1 text-base text-slate-900"
+                        className="flex-1 text-base text-labelPrimary"
                         placeholder="555-987-6543"
                         value={formData.emergencyContact?.phoneNumber}
                         onChangeText={(text) => updateEmergencyContact('phoneNumber', text)}
@@ -268,32 +271,32 @@ export default function LeaveRequestScreen() {
 
                 <View className="space-y-4">
                     <View>
-                        <Text className="text-xs font-bold text-blue-500 uppercase tracking-widest">Dates</Text>
-                        <Text className="text-base text-slate-800 font-medium">{formData.startDate} to {formData.endDate}</Text>
+                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Dates</Text>
+                        <Text className="text-base text-labelPrimary font-medium">{formData.startDate} to {formData.endDate}</Text>
                     </View>
 
                     <View>
-                        <Text className="text-xs font-bold text-blue-500 uppercase tracking-widest">Type</Text>
-                        <Text className="text-base text-slate-800 font-medium capitalize">{formData.leaveType}</Text>
+                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Type</Text>
+                        <Text className="text-base text-labelPrimary font-medium capitalize">{formData.leaveType}</Text>
                     </View>
 
                     <View>
-                        <Text className="text-xs font-bold text-blue-500 uppercase tracking-widest">Location</Text>
-                        <Text className="text-base text-slate-800 font-medium">{formData.leaveAddress}</Text>
-                        <Text className="text-base text-slate-800">{formData.leavePhoneNumber}</Text>
+                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Location</Text>
+                        <Text className="text-base text-labelPrimary font-medium">{formData.leaveAddress}</Text>
+                        <Text className="text-base text-labelPrimary">{formData.leavePhoneNumber}</Text>
                     </View>
 
                     <View>
-                        <Text className="text-xs font-bold text-blue-500 uppercase tracking-widest">Emergency Contact</Text>
-                        <Text className="text-base text-slate-800 font-medium">{formData.emergencyContact?.name} ({formData.emergencyContact?.relationship})</Text>
-                        <Text className="text-base text-slate-800">{formData.emergencyContact?.phoneNumber}</Text>
+                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Emergency Contact</Text>
+                        <Text className="text-base text-labelPrimary font-medium">{formData.emergencyContact?.name} ({formData.emergencyContact?.relationship})</Text>
+                        <Text className="text-base text-labelPrimary">{formData.emergencyContact?.phoneNumber}</Text>
                     </View>
                 </View>
             </View>
 
             <View className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex-row items-start">
                 <View className="mt-1 mr-3">
-                    <CheckCircle2 size={20} color="#d97706" strokeWidth={1.5} />
+                    <CheckCircle2 size={20} color={themeColors.navyGold} strokeWidth={1.5} />
                 </View>
                 <Text className="text-amber-800 text-sm flex-1">
                     By submitting this request, you certify that the information provided is accurate and you understand the leave policies relevant to your request type.
@@ -305,24 +308,24 @@ export default function LeaveRequestScreen() {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1 bg-white"
+            className="flex-1 bg-systemBackground"
         >
             {/* Header */}
-            <View className="pt-4 pb-2 px-6 border-b border-slate-100 flex-row items-center justify-between">
-                <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-slate-100">
-                    <X size={24} color="#334155" strokeWidth={1.5} />
+            <View className="pt-4 pb-2 px-6 border-b border-systemGray6 flex-row items-center justify-between">
+                <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-systemGray6">
+                    <X size={24} color={themeColors.labelSecondary} strokeWidth={1.5} />
                 </Pressable>
                 <View className="items-center">
-                    <Text className="font-bold text-lg text-slate-900">Request Leave</Text>
-                    <Text className="text-xs text-slate-500 font-medium">Step {step + 1} of {TOTAL_STEPS}</Text>
+                    <Text className="font-bold text-lg text-labelPrimary">Request Leave</Text>
+                    <Text className="text-xs text-labelSecondary font-medium">Step {step + 1} of {TOTAL_STEPS}</Text>
                 </View>
                 <View className="w-8" />{/* Spacer for centering */}
             </View>
 
             {/* Progress Bar */}
-            <View className="h-1 bg-slate-100 w-full">
+            <View className="h-1 bg-systemGray6 w-full">
                 <View
-                    className="h-full bg-blue-600 transition-all duration-300"
+                    className="h-full bg-systemBlue transition-all duration-300"
                     style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
                 />
             </View>
@@ -338,22 +341,22 @@ export default function LeaveRequestScreen() {
             </ScrollView>
 
             {/* Footer Navigation */}
-            <View className="p-6 border-t border-slate-100 bg-white safe-area-bottom">
+            <View className="p-6 border-t border-systemGray6 bg-systemBackground safe-area-bottom">
                 <View className="flex-row gap-4">
                     {step > 0 && (
                         <Pressable
                             onPress={handleBack}
-                            className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-slate-100 active:bg-slate-200"
+                            className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-systemGray6 active:bg-systemGray6"
                         >
-                            <ArrowLeft size={20} color="#475569" className="mr-2" strokeWidth={1.5} />
-                            <Text className="font-bold text-slate-700">Back</Text>
+                            <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2" strokeWidth={1.5} />
+                            <Text className="font-bold text-labelSecondary">Back</Text>
                         </Pressable>
                     )}
 
                     <Pressable
                         onPress={handleNext}
                         disabled={isSyncing}
-                        className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing ? 'bg-blue-400' : 'bg-blue-600 active:bg-blue-700'
+                        className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing ? 'bg-blue-400' : 'bg-systemBlue active:bg-blue-700'
                             }`}
                     >
                         <Text className="font-bold text-white mr-2">

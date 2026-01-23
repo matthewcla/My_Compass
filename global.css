@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* System Colors - Light Mode */
+    --color-system-gray: 142 142 147; /* #8E8E93 */
+    --color-system-gray6: 242 242 247; /* #F2F2F7 */
+    --color-system-blue: 0 122 255; /* #007AFF */
+
+    /* Semantic Colors - Light Mode */
+    --color-background: 255 255 255; /* #FFFFFF */
+    --color-foreground: 0 0 0; /* #000000 */
+    --color-label-primary: 0 0 0;
+    --color-label-secondary: 60 60 67; /* #3C3C43 */
+
+    /* Brand Colors */
+    --color-navy-blue: 10 22 40; /* #0A1628 */
+    --color-navy-gold: 201 162 39; /* #C9A227 */
+  }
+
+  .dark {
+    /* System Colors - Dark Mode */
+    --color-system-gray: 142 142 147; /* #8E8E93 */
+    --color-system-gray6: 28 28 30; /* #1C1C1E */
+    --color-system-blue: 10 132 255; /* #0A84FF */
+
+    /* Semantic Colors - Dark Mode */
+    --color-background: 0 0 0; /* #000000 */
+    --color-foreground: 255 255 255; /* #FFFFFF */
+    --color-label-primary: 255 255 255;
+    --color-label-secondary: 235 235 245; /* #EBEBF5 */
+
+    /* Brand Colors - Dark Mode */
+    --color-navy-blue: 10 22 40;
+    --color-navy-gold: 201 162 39;
+  }
+}

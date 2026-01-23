@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { useSession } from '@/lib/ctx';
+import Colors from '@/constants/Colors';
 
 /**
  * Okta Login Screen
@@ -41,7 +42,7 @@ export default function SignInScreen() {
                 {/* Logo / App Identity */}
                 <View style={styles.logoContainer}>
                     <View style={styles.logoCircle}>
-                        <Anchor size={64} color="#FFFFFF" strokeWidth={1.5} />
+                        <Anchor size={64} color="white" strokeWidth={1.5} />
                     </View>
                     <Text style={styles.appName}>My Compass</Text>
                     <Text style={styles.tagline}>Navy Career Navigation System</Text>
@@ -65,7 +66,7 @@ export default function SignInScreen() {
                 >
                     {isSigningIn ? (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="small" color="#FFFFFF" />
+                            <ActivityIndicator size="small" color="white" />
                             <Text style={styles.buttonText}>Redirecting to Okta...</Text>
                         </View>
                     ) : (
@@ -94,12 +95,11 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0A1628', // Navy dark blue
+        backgroundColor: Colors.light.navyBlue,
     },
     backgroundOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'transparent',
-        // In a real app, you might add an SVG background or gradient here
     },
     content: {
         flex: 1,
@@ -115,13 +115,12 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#1E3A5F', // Lighter navy blue
+        backgroundColor: Colors.light.navyLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,
         borderWidth: 3,
-        borderColor: '#C9A227', // Gold accent
-        // Shadow for depth
+        borderColor: Colors.light.navyGold,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
@@ -131,13 +130,13 @@ const styles = StyleSheet.create({
     appName: {
         fontSize: 36,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: 'white',
         letterSpacing: 1,
         marginBottom: 8,
     },
     tagline: {
         fontSize: 16,
-        color: '#8BA3C7', // Muted blue-grey
+        color: '#8BA3C7',
         letterSpacing: 0.5,
     },
     spacer: {
@@ -146,25 +145,24 @@ const styles = StyleSheet.create({
     signInButton: {
         width: '100%',
         maxWidth: 320,
-        backgroundColor: '#0066CC', // Primary blue
+        backgroundColor: Colors.light.systemBlue,
         paddingVertical: 18,
         paddingHorizontal: 32,
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        // Shadow
-        shadowColor: '#0066CC',
+        shadowColor: Colors.light.systemBlue,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 6,
     },
     signInButtonPressed: {
-        backgroundColor: '#0052A3', // Darker blue on press
+        backgroundColor: '#0052A3',
         transform: [{ scale: 0.98 }],
     },
     signInButtonDisabled: {
-        backgroundColor: '#4A5568', // Grey when disabled
+        backgroundColor: '#4A5568',
         shadowOpacity: 0.1,
     },
     loadingContainer: {
@@ -175,7 +173,7 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: 'white',
         letterSpacing: 0.5,
     },
     errorContainer: {

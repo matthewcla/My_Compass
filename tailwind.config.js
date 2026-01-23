@@ -5,11 +5,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        systemGray: "#8E8E93",
-        systemGray6: "#F2F2F7",
-        systemBlue: "#007AFF",
-        navyBlue: "#0A1628",
-        navyGold: "#C9A227",
+        systemGray: "rgb(var(--color-system-gray) / <alpha-value>)",
+        systemGray6: "rgb(var(--color-system-gray6) / <alpha-value>)",
+        systemBlue: "rgb(var(--color-system-blue) / <alpha-value>)",
+        navyBlue: "rgb(var(--color-navy-blue) / <alpha-value>)",
+        navyLight: "#1E3A5F",
+        navyGold: "rgb(var(--color-navy-gold) / <alpha-value>)",
+        systemBackground: "rgb(var(--color-background) / <alpha-value>)",
+        labelPrimary: "rgb(var(--color-label-primary) / <alpha-value>)",
+        labelSecondary: "rgb(var(--color-label-secondary) / <alpha-value>)",
       },
       fontFamily: {
         sans: ['System', 'Inter', 'Roboto', 'sans-serif'],
@@ -23,4 +27,3 @@ module.exports = {
   },
   plugins: [],
 }
-

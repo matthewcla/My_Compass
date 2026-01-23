@@ -6,6 +6,8 @@ import {
   LeaveBalance,
   LeaveRequest,
   LeaveRequestSchema,
+  User,
+  UserSchema,
   initializeSQLiteTables
 } from '@/types/schema';
 import * as SQLite from 'expo-sqlite';
@@ -29,6 +31,55 @@ export const initDatabase = async () => {
 
 // Helper to run raw queries (since we're wrapping direct SQL from schema)
 // In a real app, we might use a query builder, but here we map manually to match the schema's SQL definitions.
+
+// =============================================================================
+// USER SERVICE
+// =============================================================================
+
+export const saveUser = async (user: User): Promise<void> => {
+  const db = await getDB();
+  const sql = `
+    INSERT OR REPLACE INTO users (
+      id, dod_id, display_name, email, rank, title, uic,
+      preferences, last_sync_timestamp, sync_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  `;
+  await db.runAsync(
+    sql,
+    user.id,
+    user.dodId || null,
+    user.displayName,
+    user.email || null,
+    user.rank || null,
+    user.title || null,
+    user.uic || null,
+    JSON.stringify(user.preferences || {}),
+    user.lastSyncTimestamp,
+    user.syncStatus
+  );
+};
+
+export const getUser = async (id: string): Promise<User | null> => {
+  const db = await getDB();
+  const result = await db.getFirstAsync<any>('SELECT * FROM users WHERE id = ?', id);
+  if (!result) return null;
+  return mapRowToUser(result);
+};
+
+const mapRowToUser = (row: any): User => {
+  return UserSchema.parse({
+    id: row.id,
+    dodId: row.dod_id,
+    displayName: row.display_name,
+    email: row.email,
+    rank: row.rank,
+    title: row.title,
+    uic: row.uic,
+    preferences: row.preferences ? JSON.parse(row.preferences) : undefined,
+    lastSyncTimestamp: row.last_sync_timestamp,
+    syncStatus: row.sync_status,
+  });
+};
 
 // =============================================================================
 // BILLET SERVICE

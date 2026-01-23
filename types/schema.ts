@@ -44,10 +44,34 @@ export const UserSchema = z.object({
     rank: z.string().optional(), // Pay grade or rank abbreviation
     title: z.string().optional(), // Billet title / role
     uic: z.string().optional(), // Current unit
+    preferences: z.object({
+        regions: z.array(z.string()).optional(),
+        dutyTypes: z.array(z.string()).optional(),
+    }).optional(),
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
 });
 export type User = z.infer<typeof UserSchema>;
+
+export const PREFERENCE_REGIONS = [
+    'Mid-Atlantic',
+    'Southeast',
+    'Southwest',
+    'Northwest',
+    'Hawaii',
+    'Europe',
+    'Pacific',
+    'Japan'
+] as const;
+
+export const DUTY_TYPES = [
+    'Sea',
+    'Shore',
+    'Overseas',
+    'Special'
+] as const;
+
+export type UserPreferences = NonNullable<User['preferences']>;
 
 // =============================================================================
 // BILLET LOCK CONTEXT (Computed Helper)
@@ -130,6 +154,7 @@ export const SQLiteTableDefinitions = {
       rank TEXT,
       title TEXT,
       uic TEXT,
+      preferences TEXT, -- JSON object
       last_sync_timestamp TEXT NOT NULL,
       sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error'))
     );

@@ -4,7 +4,9 @@
 import {
     Application,
     Billet,
+    LeaveBalance,
     LeaveRequest,
+    User,
 } from '@/types/schema';
 
 export const initDatabase = async () => {
@@ -14,6 +16,12 @@ export const initDatabase = async () => {
 export const getDB = async (): Promise<any> => {
     throw new Error('SQLite is not supported on web. Use localStorage or IndexedDB.');
 };
+
+// =============================================================================
+// USER SERVICE (Web Stubs - using localStorage)
+// =============================================================================
+
+const USER_KEY = 'my_compass_user_';
 
 // =============================================================================
 // BILLET SERVICE (Web Stubs - using localStorage)
@@ -104,4 +112,30 @@ export const getUserLeaveRequests = async (userId: string): Promise<LeaveRequest
 const getAllLeaveRequests = async (): Promise<LeaveRequest[]> => {
     const data = localStorage.getItem(LEAVE_REQUESTS_KEY);
     return data ? JSON.parse(data) : [];
+};
+
+// =============================================================================
+// LEAVE BALANCE SERVICE (Web Stubs - using localStorage)
+// =============================================================================
+
+const LEAVE_BALANCE_KEY = 'my_compass_leave_balance_';
+
+export const saveLeaveBalance = async (balance: LeaveBalance): Promise<void> => {
+    // Key by userId to allow multiple users (though mocked)
+    localStorage.setItem(LEAVE_BALANCE_KEY + balance.userId, JSON.stringify(balance));
+};
+
+export const getLeaveBalance = async (userId: string): Promise<LeaveBalance | null> => {
+    const data = localStorage.getItem(LEAVE_BALANCE_KEY + userId);
+    return data ? JSON.parse(data) : null;
+};
+
+
+export const saveUser = async (user: User): Promise<void> => {
+    localStorage.setItem(USER_KEY + user.id, JSON.stringify(user));
+};
+
+export const getUser = async (id: string): Promise<User | null> => {
+    const data = localStorage.getItem(USER_KEY + id);
+    return data ? JSON.parse(data) : null;
 };

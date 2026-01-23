@@ -1,3 +1,4 @@
+import * as storage from '@/services/storage';
 import type { SyncStatus, User } from '@/types/schema';
 import { create } from 'zustand';
 
@@ -35,6 +36,11 @@ interface UserActions {
      * Update user data
      */
     updateUser: (updates: Partial<User>) => void;
+
+    /**
+     * Update user preferences
+     */
+    updatePreferences: (prefs: User['preferences']) => void;
 }
 
 type UserStore = UserState & UserActions;
@@ -51,6 +57,10 @@ const MOCK_USER: User = {
     rank: 'O-4',
     title: 'Operations Department Head',
     uic: 'N00124',
+    preferences: {
+        regions: ['Mid-Atlantic', 'Southeast'],
+        dutyTypes: ['Sea', 'Shore']
+    },
     lastSyncTimestamp: new Date().toISOString(),
     syncStatus: 'synced' as SyncStatus,
 };
@@ -92,11 +102,31 @@ export const useUserStore = create<UserStore>((set, get) => ({
             // For mock: return hardcoded user data matching UserSchema
             console.log('[UserStore] Hydrating user from token...');
 
-            set({
-                user: {
+            // Try to load from local storage first to preserve preferences
+            // In a real app, we'd sync with server, but for now local changes (prefs) rule over static mock
+            // We use MOCK_USER.id as the stable ID for this session
+            const storedUser = await storage.getUser(MOCK_USER.id);
+
+            let finalUser: User;
+
+            if (storedUser) {
+                console.log('[UserStore] Found locally persisted user data');
+                finalUser = {
+                    ...storedUser,
+                    lastSyncTimestamp: new Date().toISOString(),
+                };
+            } else {
+                console.log('[UserStore] No local data, using default MOCK_USER');
+                finalUser = {
                     ...MOCK_USER,
                     lastSyncTimestamp: new Date().toISOString(),
-                },
+                };
+                // Persist the default immediately
+                await storage.saveUser(finalUser);
+            }
+
+            set({
+                user: finalUser,
                 isHydrating: false,
                 hydrationError: null,
             });
@@ -132,14 +162,43 @@ export const useUserStore = create<UserStore>((set, get) => ({
             return;
         }
 
-        set({
-            user: {
-                ...currentUser,
-                ...updates,
-                lastSyncTimestamp: new Date().toISOString(),
-            },
-        });
+        const updatedUser = {
+            ...currentUser,
+            ...updates,
+            lastSyncTimestamp: new Date().toISOString(),
+        };
+
+        set({ user: updatedUser });
+
+        // Persist updates
+        storage.saveUser(updatedUser).catch(err =>
+            console.error('[UserStore] Failed to persist user update:', err)
+        );
     },
+
+    updatePreferences: (prefs) => {
+        const currentUser = get().user;
+        if (!currentUser) {
+            console.warn('[UserStore] Cannot update preferences: no user authenticated');
+            return;
+        }
+
+        const updatedUser = {
+            ...currentUser,
+            preferences: {
+                ...currentUser.preferences,
+                ...prefs
+            },
+            lastSyncTimestamp: new Date().toISOString(),
+        };
+
+        set({ user: updatedUser });
+
+        // Persist updates
+        storage.saveUser(updatedUser).catch(err =>
+            console.error('[UserStore] Failed to persist preferences:', err)
+        );
+    }
 }));
 
 /**

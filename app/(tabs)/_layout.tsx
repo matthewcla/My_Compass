@@ -16,7 +16,7 @@ export default function TabLayout() {
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
-        name="assignments"
+        name="assignments/index"
         options={{
           title: 'Assignments',
           tabBarLabel: 'Assignments',
@@ -25,7 +25,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="admin"
+        name="admin/index"
         options={{
           title: 'Admin',
           tabBarLabel: 'Admin',
@@ -34,7 +34,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="pcs"
+        name="pcs/index"
         options={{
           title: 'PCS',
           tabBarLabel: 'PCS',
@@ -43,7 +43,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile/index"
         options={{
           title: 'Profile',
           tabBarLabel: 'Profile',

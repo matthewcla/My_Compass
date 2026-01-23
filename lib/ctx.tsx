@@ -1,5 +1,6 @@
 import { CLIENT_ID, OKTA_ISSUER, REDIRECT_URI } from '@/config/auth';
-import React, { createContext, useContext, useState, type PropsWithChildren } from 'react';
+import { useUserStore } from '@/store/useUserStore';
+import React, { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 import { useStorageState } from './useStorageState';
 
 const AuthContext = createContext<{
@@ -31,6 +32,12 @@ export function useSession() {
 export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
     const [isSigningIn, setIsSigningIn] = useState(false);
+
+    useEffect(() => {
+        if (session && !isLoading) {
+            useUserStore.getState().hydrateUserFromToken(session).catch(console.error);
+        }
+    }, [session, isLoading]);
 
     /**
      * Simulates an Okta OIDC authentication flow.

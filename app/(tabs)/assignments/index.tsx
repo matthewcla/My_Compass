@@ -1,4 +1,5 @@
 import { JobCard } from '@/components/JobCard';
+import { JobCardSkeleton } from '@/components/JobCardSkeleton';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
 import React, { useEffect } from 'react';
@@ -13,6 +14,7 @@ export default function AssignmentsScreen() {
     fetchBillets,
     buyItNow,
     isSyncingApplications,
+    isSyncingBillets,
   } = useAssignmentStore();
 
   useEffect(() => {
@@ -45,15 +47,23 @@ export default function AssignmentsScreen() {
           </Text>
         </View>
 
-        {billetList.map((billet: Billet) => (
-          <JobCard
-            key={billet.id}
-            billet={billet}
-            onBuyPress={handleBuyPress}
-            isProcessing={isSyncingApplications}
-            applicationStatus={getApplicationStatus(billet.id)}
-          />
-        ))}
+        {isSyncingBillets ? (
+          <>
+            <JobCardSkeleton />
+            <JobCardSkeleton />
+            <JobCardSkeleton />
+          </>
+        ) : (
+          billetList.map((billet: Billet) => (
+            <JobCard
+              key={billet.id}
+              billet={billet}
+              onBuyPress={handleBuyPress}
+              isProcessing={isSyncingApplications}
+              applicationStatus={getApplicationStatus(billet.id)}
+            />
+          ))
+        )}
 
         <View className="h-8" />
       </ScrollView>

@@ -6,6 +6,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
+import { WebHeader } from '@/components/WebHeader';
 import Colors from '@/constants/Colors';
 
 export default function TabLayout() {
@@ -31,8 +32,9 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: useClientOnlyValue(false, true),
-        headerTransparent: true,
+        header: Platform.OS === 'web' ? () => <WebHeader /> : undefined,
+        headerShown: Platform.OS === 'web' ? true : useClientOnlyValue(false, true),
+        headerTransparent: Platform.OS === 'web' ? false : true,
         headerStyle: {
           borderBottomWidth: 0,
           elevation: 0,
@@ -45,7 +47,7 @@ export default function TabLayout() {
           shadowOpacity: 0,
         },
         tabBarBackground: () => <GlassBackground />,
-        headerBackground: () => <GlassBackground />,
+        headerBackground: Platform.OS === 'web' ? undefined : () => <GlassBackground />,
       }}>
       <Tabs.Screen
         name="index"

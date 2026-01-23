@@ -4,7 +4,7 @@ import { Skeleton } from './Skeleton';
 
 export function JobCardSkeleton() {
     return (
-        <View className="bg-white dark:bg-systemGray6 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 my-2">
+        <View className="bg-white dark:bg-systemGray6 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
             {/* Header: Title + Location + Match */}
             <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-1 mr-2">

@@ -3,11 +3,15 @@ import { JobCardSkeleton } from '@/components/JobCardSkeleton';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
 import React, { useEffect } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 
 const TEST_USER_ID = 'test-user-001';
 
 export default function AssignmentsScreen() {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const isDesktop = width >= 1024;
+
   const {
     billets,
     applications,
@@ -47,22 +51,35 @@ export default function AssignmentsScreen() {
           </Text>
         </View>
 
+
         {isSyncingBillets ? (
-          <>
-            <JobCardSkeleton />
-            <JobCardSkeleton />
-            <JobCardSkeleton />
-          </>
+          <View className="flex-row flex-wrap gap-4">
+            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
+              <JobCardSkeleton />
+            </View>
+            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
+              <JobCardSkeleton />
+            </View>
+            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
+              <JobCardSkeleton />
+            </View>
+          </View>
         ) : (
-          billetList.map((billet: Billet) => (
-            <JobCard
-              key={billet.id}
-              billet={billet}
-              onBuyPress={handleBuyPress}
-              isProcessing={isSyncingApplications}
-              applicationStatus={getApplicationStatus(billet.id)}
-            />
-          ))
+          <View className="flex-row flex-wrap gap-4">
+            {billetList.map((billet: Billet) => (
+              <View
+                key={billet.id}
+                style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}
+              >
+                <JobCard
+                  billet={billet}
+                  onBuyPress={handleBuyPress}
+                  isProcessing={isSyncingApplications}
+                  applicationStatus={getApplicationStatus(billet.id)}
+                />
+              </View>
+            ))}
+          </View>
         )}
 
         <View className="h-8" />

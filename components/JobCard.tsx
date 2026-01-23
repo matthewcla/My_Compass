@@ -54,7 +54,7 @@ export function JobCard({
     }
 
     return (
-        <ScalePressable className="bg-white dark:bg-systemGray6 p-4 rounded-xl shadow-apple-md border border-gray-200 dark:border-gray-800 my-2">
+        <ScalePressable className="bg-white dark:bg-systemGray6 p-4 rounded-xl shadow-apple-md border border-gray-200 dark:border-gray-800">
             {/* Header: Title + Location */}
             <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-1 mr-2">

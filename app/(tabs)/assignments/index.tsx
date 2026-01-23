@@ -3,12 +3,14 @@ import { JobCardSkeleton } from '@/components/JobCardSkeleton';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
 import React, { useEffect } from 'react';
-import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Platform, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TEST_USER_ID = 'test-user-001';
 
 export default function AssignmentsScreen() {
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isTablet = width >= 768;
   const isDesktop = width >= 1024;
 
@@ -41,7 +43,13 @@ export default function AssignmentsScreen() {
 
   return (
     <View className="flex-1 bg-gray-100">
-      <ScrollView className="flex-1 p-4">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          padding: 16,
+          paddingTop: Platform.OS === 'ios' ? insets.top + 60 : 16
+        }}
+      >
         <View className="mb-4">
           <Text className="text-2xl font-bold text-gray-900">
             Available Assignments

@@ -1,13 +1,15 @@
 import { LeaveBalanceCard } from '@/components/LeaveBalanceCard';
 import { SyncStatus, SyncStatusBadge } from '@/components/SyncStatusBadge';
-import { useLeaveStore } from '@/store/useLeaveStore';
 import Colors from '@/constants/Colors';
+import { useLeaveStore } from '@/store/useLeaveStore';
 import { Link, useRouter } from 'expo-router';
 import { Calculator, Calendar, ChevronRight, Plus } from 'lucide-react-native';
 import React, { useEffect } from 'react';
-import { Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdminScreen() {
+    const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
     const router = useRouter();
@@ -47,7 +49,10 @@ export default function AdminScreen() {
     };
 
     return (
-        <ScrollView className="flex-1 bg-systemGray6">
+        <ScrollView
+            className="flex-1 bg-systemGray6"
+            contentContainerStyle={{ paddingTop: Platform.OS === 'ios' ? insets.top + 60 : 0 }}
+        >
             <View className="px-5 py-6">
                 <View className="flex-row justify-between items-center mb-6">
                     <Text className="text-2xl font-bold text-labelPrimary">My Leave</Text>

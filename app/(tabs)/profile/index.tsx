@@ -3,8 +3,8 @@ import { DUTY_TYPES, PREFERENCE_REGIONS } from '@/types/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 // Define the form schema using Zod
@@ -16,6 +16,7 @@ const PreferencesFormSchema = z.object({
 type PreferencesFormData = z.infer<typeof PreferencesFormSchema>;
 
 export default function ProfileScreen() {
+    const insets = useSafeAreaInsets();
     const user = useUserStore((state) => state.user);
     const updatePreferences = useUserStore((state) => state.updatePreferences);
 
@@ -62,15 +63,18 @@ export default function ProfileScreen() {
 
     if (!user) {
         return (
-            <SafeAreaView className="flex-1 bg-slate-50 justify-center items-center">
+            <View className="flex-1 bg-slate-50 justify-center items-center">
                 <Text className="text-slate-500">Please sign in to view your profile.</Text>
-            </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
-            <ScrollView className="flex-1 px-4">
+        <View className="flex-1 bg-slate-50">
+            <ScrollView
+                className="flex-1 px-4"
+                contentContainerStyle={{ paddingTop: Platform.OS === 'ios' ? insets.top + 60 : 0 }}
+            >
                 <View className="mb-6 mt-4">
                     <Text className="text-2xl font-bold text-slate-900">Profile & Preferences</Text>
                     <Text className="text-slate-500">
@@ -173,6 +177,6 @@ export default function ProfileScreen() {
                     </Pressable>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }

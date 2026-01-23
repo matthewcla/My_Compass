@@ -59,7 +59,7 @@ export default function TabLayout() {
           title: 'Assignments',
           tabBarLabel: 'Assignments',
           headerTitle: 'My Assignment',
-          tabBarIcon: ({ color }) => <Anchor size={28} color={color} />,
+          tabBarIcon: ({ color }) => <Anchor size={28} color={color} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
@@ -68,7 +68,7 @@ export default function TabLayout() {
           title: 'Admin',
           tabBarLabel: 'Admin',
           headerTitle: 'My Admin',
-          tabBarIcon: ({ color }) => <FileText size={28} color={color} />,
+          tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
@@ -77,7 +77,7 @@ export default function TabLayout() {
           title: 'PCS',
           tabBarLabel: 'PCS',
           headerTitle: 'My PCS',
-          tabBarIcon: ({ color }) => <Map size={28} color={color} />,
+          tabBarIcon: ({ color }) => <Map size={28} color={color} strokeWidth={1.5} />,
         }}
       />
       <Tabs.Screen
@@ -86,7 +86,7 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarLabel: 'Profile',
           headerTitle: 'My Profile',
-          tabBarIcon: ({ color }) => <User size={28} color={color} />,
+          tabBarIcon: ({ color }) => <User size={28} color={color} strokeWidth={1.5} />,
         }}
       />
     </Tabs>

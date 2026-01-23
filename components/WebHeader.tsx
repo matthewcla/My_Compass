@@ -17,7 +17,7 @@ export function WebHeader() {
         <View className="flex-row justify-between items-center p-4 border-b border-gray-200 bg-white">
             {/* Left: App Identity */}
             <View className="flex-row items-center gap-2">
-                <Compass size={24} color="#000" />
+                <Compass size={24} color="#000" strokeWidth={1.5} />
                 <Text className="text-xl font-bold text-gray-900">My Compass</Text>
             </View>
 
@@ -34,7 +34,7 @@ export function WebHeader() {
                     <Text className="text-xs text-gray-500">{displayName || 'Guest'}</Text>
                 </View>
                 <View className="h-10 w-10 rounded-full bg-gray-200 items-center justify-center">
-                    <UserIcon size={20} color="#6B7280" />
+                    <UserIcon size={20} color="#6B7280" strokeWidth={1.5} />
                 </View>
             </Pressable>
         </View>

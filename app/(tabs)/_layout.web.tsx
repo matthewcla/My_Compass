@@ -52,7 +52,7 @@ export default function TabLayout() {
                                     <Icon
                                         size={22}
                                         color={isActive ? '#2563EB' : '#64748B'} // blue-600 : slate-500
-                                        strokeWidth={isActive ? 2.5 : 2}
+                                        strokeWidth={isActive ? 2 : 1.5}
                                     />
                                     <Text
                                         className={`text-base ${isActive

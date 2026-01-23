@@ -1,6 +1,8 @@
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import { Anchor, FileText, Map, User } from 'lucide-react-native';
 import React from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -9,12 +11,48 @@ import Colors from '@/constants/Colors';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
+  const GlassBackground = () => {
+    if (Platform.OS === 'android') {
+      return (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: 'rgba(242, 242, 247, 0.8)' },
+          ]}
+        />
+      );
+    }
+    return (
+      <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
+    );
+  };
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: useClientOnlyValue(false, true),
+        headerTransparent: true,
+        headerStyle: {
+          borderBottomWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarStyle: {
+          position: 'absolute',
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarBackground: () => <GlassBackground />,
+        headerBackground: () => <GlassBackground />,
       }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          href: null,
+        }}
+      />
       <Tabs.Screen
         name="assignments/index"
         options={{

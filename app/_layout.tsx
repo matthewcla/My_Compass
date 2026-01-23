@@ -2,7 +2,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { SessionProvider, useSession } from '@/lib/ctx';
@@ -61,6 +61,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
+  const [dbInitialized, setDbInitialized] = useState(false);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -68,11 +69,13 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    initDatabase().catch((e) => console.error('Failed to initialize database:', e));
+    initDatabase()
+      .then(() => setDbInitialized(true))
+      .catch((e) => console.error('Failed to initialize database:', e));
   }, []);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && dbInitialized) {
       SplashScreen.hideAsync();
       registerForPushNotificationsAsync().then(token => {
         if (token) {
@@ -80,9 +83,9 @@ export default function RootLayout() {
         }
       });
     }
-  }, [loaded]);
+  }, [loaded, dbInitialized]);
 
-  if (!loaded) {
+  if (!loaded || !dbInitialized) {
     return null;
   }
 

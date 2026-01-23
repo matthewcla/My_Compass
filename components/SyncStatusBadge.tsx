@@ -1,6 +1,7 @@
 import { AlertCircle, CheckCircle, Cloud } from 'lucide-react-native';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, useColorScheme } from 'react-native';
+import Colors from '@/constants/Colors';
 
 export type SyncStatus = 'synced' | 'pending_upload' | 'error';
 
@@ -9,10 +10,13 @@ interface SyncStatusBadgeProps {
 }
 
 export function SyncStatusBadge({ status }: SyncStatusBadgeProps) {
+    const colorScheme = useColorScheme() ?? 'light';
+    const themeColors = Colors[colorScheme];
+
     if (status === 'synced') {
         return (
             <View className="flex-row items-center bg-green-100 px-3 py-1.5 rounded-full border border-green-200">
-                <CheckCircle size={14} className="text-green-600 mr-2" color="#16a34a" strokeWidth={1.5} />
+                <CheckCircle size={14} className="text-green-600 mr-2" color={themeColors.status.success} strokeWidth={1.5} />
                 <Text className="text-green-700 text-xs font-semibold">Saved</Text>
             </View>
         );
@@ -21,7 +25,7 @@ export function SyncStatusBadge({ status }: SyncStatusBadgeProps) {
     if (status === 'pending_upload') {
         return (
             <View className="flex-row items-center bg-amber-100 px-3 py-1.5 rounded-full border border-amber-200">
-                <Cloud size={14} className="text-amber-600 mr-2" color="#d97706" strokeWidth={1.5} />
+                <Cloud size={14} className="text-amber-600 mr-2" color={themeColors.status.warning} strokeWidth={1.5} />
                 <Text className="text-amber-700 text-xs font-semibold">Waiting...</Text>
             </View>
         );
@@ -30,7 +34,7 @@ export function SyncStatusBadge({ status }: SyncStatusBadgeProps) {
     if (status === 'error') {
         return (
             <View className="flex-row items-center bg-red-100 px-3 py-1.5 rounded-full border border-red-200">
-                <AlertCircle size={14} className="text-red-600 mr-2" color="#dc2626" strokeWidth={1.5} />
+                <AlertCircle size={14} className="text-red-600 mr-2" color={themeColors.status.error} strokeWidth={1.5} />
                 <Text className="text-red-700 text-xs font-semibold">Sync Error</Text>
             </View>
         );

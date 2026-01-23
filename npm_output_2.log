@@ -1,0 +1,19 @@
+Starting project at /app
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  expo@54.0.31 - expected version: ~54.0.32
+  react-native-svg@15.15.1 - expected version: 15.12.1
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.9% ( 852/2692)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 87.4% (2624/2807)
+λ Bundled 4362ms node_modules/expo-router/node/render.js (3026 modules)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+"shadow*" style props are deprecated. Use "boxShadow".
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3080/3080)
+Web Bundled 8289ms node_modules/expo-router/entry.js (3080 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3080/3080)
+Web Bundled 1632ms node_modules/expo-router/entry.js (3082 modules)
+ LOG  [web] Logs will appear in the browser console

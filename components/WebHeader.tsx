@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { Bell, Compass, Search, User as UserIcon } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Colors from '@/constants/Colors';
@@ -20,6 +20,8 @@ export function WebHeader() {
     const insets = useSafeAreaInsets();
     const rank = useUserRank();
     const displayName = useUserDisplayName();
+    const colorScheme = useColorScheme() ?? 'light';
+    const themeColors = Colors[colorScheme];
 
     const isMobile = width < 768;
 
@@ -30,7 +32,7 @@ export function WebHeader() {
             paddingTop: isMobile ? insets.top : 0,
         }}>
             {/* Glass Background */}
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255, 255, 255, 0.8)' }]}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: themeColors.background }]}>
                 <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
             </View>
 
@@ -55,9 +57,9 @@ export function WebHeader() {
                                 backgroundColor: Colors.light.tint,
                                 alignItems: 'center', justifyContent: 'center'
                             }}>
-                                <Compass size={22} color="#FFF" strokeWidth={2} />
+                                <Compass size={22} color="white" strokeWidth={2} />
                             </View>
-                            <Text style={{ fontSize: 18, fontWeight: '700', color: '#1E293B' }}>
+                            <Text style={{ fontSize: 18, fontWeight: '700', color: themeColors.text }}>
                                 My Compass
                             </Text>
                         </View>
@@ -66,31 +68,31 @@ export function WebHeader() {
                         <View style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            backgroundColor: 'rgba(241, 245, 249, 0.7)', // slate-100/70
+                            backgroundColor: themeColors.systemGray6, // slate-100/70
                             borderRadius: 100, // pill 
                             paddingHorizontal: 16,
                             paddingVertical: 8,
                             width: 380,
                             gap: 10
                         }}>
-                            <Search size={18} color="#94A3B8" />
+                            <Search size={18} color={themeColors.labelSecondary} />
                             <TextInput
                                 placeholder="Search commands, billets, or people..."
-                                placeholderTextColor="#94A3B8"
+                                placeholderTextColor={themeColors.labelSecondary}
                                 style={{
                                     flex: 1,
                                     fontSize: 14,
-                                    color: '#0F172A',
+                                    color: themeColors.text,
                                     outlineStyle: 'none' // Web only
                                 } as any}
                             />
                             {/* Visual Hint */}
                             <View style={{
                                 paddingHorizontal: 6, paddingVertical: 2,
-                                backgroundColor: '#FFF', borderRadius: 4,
-                                borderWidth: 1, borderColor: '#E2E8F0'
+                                backgroundColor: themeColors.background, borderRadius: 4,
+                                borderWidth: 1, borderColor: themeColors.tabIconDefault
                             }}>
-                                <Text style={{ fontSize: 10, color: '#64748B', fontWeight: '600' }}>⌘ K</Text>
+                                <Text style={{ fontSize: 10, color: themeColors.labelSecondary, fontWeight: '600' }}>⌘ K</Text>
                             </View>
                         </View>
                     )}
@@ -105,12 +107,12 @@ export function WebHeader() {
                         alignItems: 'center', justifyContent: 'center',
                         backgroundColor: hovered ? 'rgba(0,0,0,0.05)' : 'transparent'
                     })}>
-                        <Bell size={20} color="#64748B" strokeWidth={2} />
+                        <Bell size={20} color={themeColors.labelSecondary} strokeWidth={2} />
                         {/* Dot */}
                         <View style={{
                             position: 'absolute', top: 10, right: 10,
                             width: 8, height: 8, borderRadius: 4,
-                            backgroundColor: '#EF4444', borderWidth: 1.5, borderColor: '#FFF'
+                            backgroundColor: themeColors.status.error, borderWidth: 1.5, borderColor: themeColors.background
                         }} />
                     </Pressable>
 
@@ -129,21 +131,21 @@ export function WebHeader() {
                     >
                         <View style={{
                             height: 36, width: 36, borderRadius: 18,
-                            backgroundColor: '#E2E8F0',
+                            backgroundColor: themeColors.systemGray6,
                             alignItems: 'center', justifyContent: 'center',
-                            borderWidth: 2, borderColor: '#FFF', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 2
+                            borderWidth: 2, borderColor: themeColors.background, shadowColor: 'black', shadowOpacity: 0.05, shadowRadius: 2
                         }}>
                             {/* Initials fallback */}
-                            <UserIcon size={18} color="#64748B" strokeWidth={2} />
+                            <UserIcon size={18} color={themeColors.labelSecondary} strokeWidth={2} />
                         </View>
 
                         {/* Enhanced Text for Desktop, minimal for Mobile */}
                         {!isMobile && (
                             <View>
-                                <Text style={{ fontSize: 14, fontWeight: '600', color: '#1E293B' }}>
+                                <Text style={{ fontSize: 14, fontWeight: '600', color: themeColors.text }}>
                                     {displayName || 'Guest'}
                                 </Text>
-                                <Text style={{ fontSize: 11, fontWeight: '500', color: '#64748B' }}>
+                                <Text style={{ fontSize: 11, fontWeight: '500', color: themeColors.labelSecondary }}>
                                     {rank || 'No Rank'}
                                 </Text>
                             </View>

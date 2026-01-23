@@ -53,7 +53,7 @@ export default function TabLayout() {
             <View style={{ flex: 1, padding: 24, paddingTop: insets.top + 24 }}>
                 {/* Header / Logo Area */}
                 <View style={{ marginBottom: 32, paddingHorizontal: 12 }}>
-                    <Text style={{ fontSize: 24, fontWeight: '700', color: '#1E293B', letterSpacing: -0.5 }}>
+                    <Text style={{ fontSize: 24, fontWeight: '700', color: Colors[colorScheme ?? 'light'].text, letterSpacing: -0.5 }}>
                         My Compass
                     </Text>
                 </View>
@@ -82,13 +82,13 @@ export default function TabLayout() {
                             >
                                 <Icon
                                     size={24}
-                                    color={isActive ? '#2563EB' : '#64748B'}
+                                    color={isActive ? Colors[colorScheme ?? 'light'].systemBlue : Colors[colorScheme ?? 'light'].labelSecondary}
                                     strokeWidth={isActive ? 2 : 1.5}
                                 />
                                 <Text style={{
                                     fontSize: 16,
                                     fontWeight: isActive ? '600' : '500',
-                                    color: isActive ? '#1D4ED8' : '#475569'
+                                    color: isActive ? Colors[colorScheme ?? 'light'].systemBlue : Colors[colorScheme ?? 'light'].labelSecondary
                                 }}>
                                     {item.name}
                                 </Text>
@@ -100,7 +100,7 @@ export default function TabLayout() {
 
             {/* Footer / Version */}
             <View style={{ padding: 24, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' }}>
-                <Text style={{ fontSize: 12, color: '#94A3B8', textAlign: 'center' }}>v1.0.0 (Web Desktop)</Text>
+                <Text style={{ fontSize: 12, color: Colors[colorScheme ?? 'light'].labelSecondary, textAlign: 'center' }}>v1.0.0 (Web Desktop)</Text>
             </View>
         </View>
     );
@@ -172,7 +172,7 @@ export default function TabLayout() {
 
     // Desktop Web Layout
     return (
-        <View style={{ flex: 1, flexDirection: 'row', backgroundColor: '#F8FAFC' }}>
+        <View style={{ flex: 1, flexDirection: 'row', backgroundColor: Colors[colorScheme ?? 'light'].systemGray6 }}>
             <Sidebar />
             {/* Main Content Area */}
             <View style={{ flex: 1 }}>

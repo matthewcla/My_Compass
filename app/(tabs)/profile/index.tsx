@@ -76,16 +76,6 @@ export default function ProfileScreen() {
                     <Text className="text-slate-500">
                         {user.displayName} • {user.rank}
                     </Text>
-                    {/* DEBUG VIEW - REMOVE AFTER FIX */}
-                    <View className="bg-yellow-50 p-2 mt-2 border border-yellow-200 rounded">
-                        <Text className="text-xs font-mono text-yellow-800">
-                            DEBUG INFO:{'\n'}
-                            Regions count: {PREFERENCE_REGIONS.length}{'\n'}
-                            DutyTypes count: {DUTY_TYPES.length}{'\n'}
-                            User Prefs: {JSON.stringify(user.preferences)}{'\n'}
-                            User Regions: {user.preferences?.regions?.length || 0}
-                        </Text>
-                    </View>
                 </View>
 
                 <View className="bg-white rounded-xl p-4 shadow-sm mb-6 border border-slate-200">

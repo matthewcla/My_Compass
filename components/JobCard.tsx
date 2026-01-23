@@ -1,7 +1,7 @@
 import { ApplicationStatus, Billet } from '@/types/schema';
 import { MapPin } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, View, useColorScheme } from 'react-native';
+import { Platform, Pressable, Text, View, useColorScheme } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { ScalePressable } from './ScalePressable';
 
@@ -35,8 +35,9 @@ export function JobCard({
     }
 
     // 2. Determine Button State Logic
+    // 2. Determine Button State Logic
     let buttonText = 'Buy It Now';
-    let buttonBgClass = 'bg-blue-600';
+    let buttonBgClass = 'bg-navyBlue';
     let isDisabled = false;
 
     if (isProcessing || applicationStatus === 'optimistically_locked') {
@@ -58,7 +59,11 @@ export function JobCard({
     }
 
     return (
-        <ScalePressable className="bg-white dark:bg-systemGray6 p-4 rounded-xl shadow-apple-md border border-gray-200 dark:border-gray-800">
+        <ScalePressable
+            className="bg-white/90 dark:bg-slate-900/90 p-4 rounded-xl shadow-apple-md border border-black/5 dark:border-white/10"
+            // @ts-ignore - Web-specific style to remove focus ring
+            style={Platform.OS === 'web' ? { outlineStyle: 'none' } : undefined}
+        >
             {/* Header: Title + Location */}
             <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-1 mr-2">

@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { SessionProvider, useSession } from '@/lib/ctx';
+import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { initDatabase } from '@/services/storage';
 
 export {
@@ -73,6 +74,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      registerForPushNotificationsAsync().then(token => {
+        if (token) {
+          console.log('Push Token:', token);
+        }
+      });
     }
   }, [loaded]);
 

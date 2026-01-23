@@ -1,6 +1,8 @@
 import { ApplicationStatus, Billet } from '@/types/schema';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import Animated, { FadeInRight } from 'react-native-reanimated';
+import { ScalePressable } from './ScalePressable';
 
 interface JobCardProps {
     billet: Billet;
@@ -52,27 +54,30 @@ export function JobCard({
     }
 
     return (
-        <View className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 my-2">
+        <ScalePressable className="bg-white dark:bg-systemGray6 p-4 rounded-xl shadow-apple-md border border-gray-200 dark:border-gray-800 my-2">
             {/* Header: Title + Location */}
             <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-1 mr-2">
-                    <Text className="text-lg font-bold text-gray-900" numberOfLines={1}>
+                    <Text className="text-lg font-bold text-gray-900 dark:text-white" numberOfLines={1}>
                         {billet.title}
                     </Text>
-                    <Text className="text-sm text-gray-500">{billet.location}</Text>
+                    <Text className="text-sm text-gray-500 dark:text-gray-400">{billet.location}</Text>
                 </View>
 
-                {/* Match Indicator Badge */}
-                <View className={`px-2 py-1 rounded-md ${matchBgClass}`}>
+                {/* Match Indicator Badge using Reanimated */}
+                <Animated.View
+                    entering={FadeInRight.delay(200).springify().damping(12)}
+                    className={`px-2 py-1 rounded-md ${matchBgClass}`}
+                >
                     <Text className={`font-bold text-xs ${matchColorClass}`}>
                         {matchScore}% Match
                     </Text>
-                </View>
+                </Animated.View>
             </View>
 
             {/* Narrative Box */}
-            <View className="bg-gray-50 p-3 rounded-lg border border-gray-100 mb-4">
-                <Text className="text-gray-600 text-sm leading-5" testID="compass-narrative">
+            <View className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 mb-4">
+                <Text className="text-gray-600 dark:text-gray-300 text-sm leading-5" testID="compass-narrative">
                     {billet.compass.contextualNarrative}
                 </Text>
             </View>
@@ -85,6 +90,6 @@ export function JobCard({
             >
                 <Text className="text-white font-bold text-base">{buttonText}</Text>
             </Pressable>
-        </View>
+        </ScalePressable>
     );
 }

@@ -51,7 +51,7 @@ export default function AdminScreen() {
                     <View className="flex-row items-center space-x-2 gap-2">
                         <SyncStatusBadge status={getSyncStatus()} />
                         <Pressable className="bg-slate-200 p-2 rounded-full">
-                            <Calculator size={20} color="#64748b" />
+                            <Calculator size={20} color="#64748b" strokeWidth={1.5} />
                         </Pressable>
                     </View>
                 </View>
@@ -72,7 +72,7 @@ export default function AdminScreen() {
                 {/* Actions */}
                 <Link href="/leave/request" asChild>
                     <Pressable className="flex-row items-center justify-center bg-blue-600 py-4 rounded-xl shadow-sm mb-8 active:opacity-90">
-                        <Plus color="white" size={24} className="mr-2" />
+                        <Plus color="white" size={24} className="mr-2" strokeWidth={1.5} />
                         <Text className="text-white font-semibold text-lg">Request Leave</Text>
                     </Pressable>
                 </Link>
@@ -90,7 +90,7 @@ export default function AdminScreen() {
 
                     {requestsList.length === 0 ? (
                         <View className="bg-white rounded-xl p-8 items-center border border-dashed border-gray-300">
-                            <Calendar size={48} color="#cbd5e1" className="mb-2" />
+                            <Calendar size={48} color="#cbd5e1" className="mb-2" strokeWidth={1.5} />
                             <Text className="text-slate-400 text-center">No recent leave requests</Text>
                         </View>
                     ) : (
@@ -116,7 +116,7 @@ export default function AdminScreen() {
                                                     {req.status}
                                                 </Text>
                                             </View>
-                                            <ChevronRight size={20} color="#cbd5e1" />
+                                            <ChevronRight size={20} color="#cbd5e1" strokeWidth={1.5} />
                                         </View>
                                     </Pressable>
                                 </View>

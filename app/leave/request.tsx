@@ -131,7 +131,7 @@ export default function LeaveRequestScreen() {
             <View>
                 <Text className="text-sm font-medium text-slate-500 mb-1">Start Date (YYYY-MM-DD)</Text>
                 <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <Calendar size={20} color="#64748b" className="mr-3" />
+                    <Calendar size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
                     <TextInput
                         className="flex-1 text-base text-slate-900"
                         placeholder="2026-02-01"
@@ -145,7 +145,7 @@ export default function LeaveRequestScreen() {
             <View>
                 <Text className="text-sm font-medium text-slate-500 mb-1">End Date (YYYY-MM-DD)</Text>
                 <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <Calendar size={20} color="#64748b" className="mr-3" />
+                    <Calendar size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
                     <TextInput
                         className="flex-1 text-base text-slate-900"
                         placeholder="2026-02-05"
@@ -186,7 +186,7 @@ export default function LeaveRequestScreen() {
             <View>
                 <Text className="text-sm font-medium text-slate-500 mb-1">Leave Address</Text>
                 <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <MapPin size={20} color="#64748b" className="mr-3" />
+                    <MapPin size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
                     <TextInput
                         className="flex-1 text-base text-slate-900"
                         placeholder="123 Beach St, Honolulu, HI"
@@ -199,7 +199,7 @@ export default function LeaveRequestScreen() {
             <View>
                 <Text className="text-sm font-medium text-slate-500 mb-1">Leave Phone Number</Text>
                 <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <Phone size={20} color="#64748b" className="mr-3" />
+                    <Phone size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
                     <TextInput
                         className="flex-1 text-base text-slate-900"
                         placeholder="555-123-4567"
@@ -221,7 +221,7 @@ export default function LeaveRequestScreen() {
             <View>
                 <Text className="text-sm font-medium text-slate-500 mb-1">Contact Name</Text>
                 <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <User size={20} color="#64748b" className="mr-3" />
+                    <User size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
                     <TextInput
                         className="flex-1 text-base text-slate-900"
                         placeholder="Jane Doe"
@@ -235,7 +235,7 @@ export default function LeaveRequestScreen() {
                 <Text className="text-sm font-medium text-slate-500 mb-1">Relationship</Text>
                 <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
                     {/* Reusing User icon for relationship broadly, or could use Heart etc */}
-                    <User size={20} color="#64748b" className="mr-3" />
+                    <User size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
                     <TextInput
                         className="flex-1 text-base text-slate-900"
                         placeholder="Spouse, Parent, etc."
@@ -248,7 +248,7 @@ export default function LeaveRequestScreen() {
             <View>
                 <Text className="text-sm font-medium text-slate-500 mb-1">Emergency Phone</Text>
                 <View className="flex-row items-center bg-slate-100 rounded-xl px-4 py-3 border border-slate-200">
-                    <Phone size={20} color="#64748b" className="mr-3" />
+                    <Phone size={20} color="#64748b" className="mr-3" strokeWidth={1.5} />
                     <TextInput
                         className="flex-1 text-base text-slate-900"
                         placeholder="555-987-6543"
@@ -293,7 +293,7 @@ export default function LeaveRequestScreen() {
 
             <View className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex-row items-start">
                 <View className="mt-1 mr-3">
-                    <CheckCircle2 size={20} color="#d97706" />
+                    <CheckCircle2 size={20} color="#d97706" strokeWidth={1.5} />
                 </View>
                 <Text className="text-amber-800 text-sm flex-1">
                     By submitting this request, you certify that the information provided is accurate and you understand the leave policies relevant to your request type.
@@ -310,7 +310,7 @@ export default function LeaveRequestScreen() {
             {/* Header */}
             <View className="pt-4 pb-2 px-6 border-b border-slate-100 flex-row items-center justify-between">
                 <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-slate-100">
-                    <X size={24} color="#334155" />
+                    <X size={24} color="#334155" strokeWidth={1.5} />
                 </Pressable>
                 <View className="items-center">
                     <Text className="font-bold text-lg text-slate-900">Request Leave</Text>
@@ -345,7 +345,7 @@ export default function LeaveRequestScreen() {
                             onPress={handleBack}
                             className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-slate-100 active:bg-slate-200"
                         >
-                            <ArrowLeft size={20} color="#475569" className="mr-2" />
+                            <ArrowLeft size={20} color="#475569" className="mr-2" strokeWidth={1.5} />
                             <Text className="font-bold text-slate-700">Back</Text>
                         </Pressable>
                     )}
@@ -359,7 +359,7 @@ export default function LeaveRequestScreen() {
                         <Text className="font-bold text-white mr-2">
                             {step === TOTAL_STEPS - 1 ? (isSyncing ? 'Submitting...' : 'Submit Request') : 'Next'}
                         </Text>
-                        {!isSyncing && <ArrowRight size={20} color="white" />}
+                        {!isSyncing && <ArrowRight size={20} color="white" strokeWidth={1.5} />}
                     </Pressable>
                 </View>
             </View>

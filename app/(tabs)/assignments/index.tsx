@@ -2,9 +2,9 @@ import { JobCard } from '@/components/JobCard';
 import { JobCardSkeleton } from '@/components/JobCardSkeleton';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
-import React, { useEffect } from 'react';
-import { Platform, ScrollView, Text, View, useWindowDimensions } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import React, { useEffect, useMemo } from 'react';
+import { Platform, Text, View, useWindowDimensions } from 'react-native';
+import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TEST_USER_ID = 'test-user-001';
@@ -54,64 +54,78 @@ export default function AssignmentsScreen() {
     buyItNow(billetId, TEST_USER_ID);
   };
 
+  const applicationStatusMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    Object.values(applications).forEach((a) => {
+      if (a.userId === TEST_USER_ID) {
+        map[a.billetId] = a.status;
+      }
+    });
+    return map;
+  }, [applications]);
+
   const getApplicationStatus = (billetId: string) => {
-    const app = Object.values(applications).find(
-      (a) => a.billetId === billetId && a.userId === TEST_USER_ID
-    );
-    return app?.status;
+    return applicationStatusMap[billetId];
   };
 
-  const billetList = Object.values(billets);
+  const billetList = useMemo(() => Object.values(billets), [billets]);
+
+  const renderHeader = () => (
+    <View className="mb-4">
+      <Text className="text-2xl font-bold text-gray-900 dark:text-white">
+        Available Assignments
+      </Text>
+      <Text className="text-gray-500 dark:text-gray-400">
+        Real-time marketplace based on your profile
+      </Text>
+    </View>
+  );
+
+  const renderFooter = () => <View className="h-8" />;
+
+  const renderItem = ({ item }: { item: Billet | number }) => {
+    if (isSyncingBillets) {
+      return (
+        <View style={{ width: itemWidth, marginBottom: 16 }}>
+          <JobCardSkeleton />
+        </View>
+      );
+    }
+
+    const billet = item as Billet;
+    return (
+      <Animated.View
+        layout={LinearTransition}
+        entering={FadeInDown}
+        style={{ width: itemWidth, marginBottom: 16 }}
+      >
+        <JobCard
+          billet={billet}
+          onBuyPress={handleBuyPress}
+          isProcessing={isSyncingApplications}
+          applicationStatus={getApplicationStatus(billet.id)}
+        />
+      </Animated.View>
+    );
+  };
 
   return (
     <View className="flex-1 bg-gray-100 dark:bg-black">
-      <ScrollView
-        className="flex-1"
+      <Animated.FlatList
+        key={numColumns} // Force re-render when columns change
+        data={isSyncingBillets ? [1, 2, 3] : billetList}
+        renderItem={renderItem}
+        keyExtractor={(item) => (isSyncingBillets ? item.toString() : (item as Billet).id)}
+        numColumns={numColumns}
         contentContainerStyle={{
           padding: 16,
           paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 16
         }}
-      >
-        <View className="mb-4">
-          <Text className="text-2xl font-bold text-gray-900 dark:text-white">
-            Available Assignments
-          </Text>
-          <Text className="text-gray-500 dark:text-gray-400">
-            Real-time marketplace based on your profile
-          </Text>
-        </View>
-
-        {isSyncingBillets ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP }}>
-            {[1, 2, 3].map((i) => (
-              <View key={i} style={{ width: itemWidth, marginBottom: 16 }}>
-                <JobCardSkeleton />
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Animated.View
-            style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP }}
-            layout={LinearTransition}
-          >
-            {billetList.map((billet: Billet) => (
-              <View
-                key={billet.id}
-                style={{ width: itemWidth, marginBottom: 16 }}
-              >
-                <JobCard
-                  billet={billet}
-                  onBuyPress={handleBuyPress}
-                  isProcessing={isSyncingApplications}
-                  applicationStatus={getApplicationStatus(billet.id)}
-                />
-              </View>
-            ))}
-          </Animated.View>
-        )}
-
-        <View className="h-8" />
-      </ScrollView>
+        columnWrapperStyle={numColumns > 1 ? { gap: GAP } : undefined}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        itemLayoutAnimation={LinearTransition}
+      />
 
       {/* Temporary User Context Indicator */}
       <View className="bg-gray-200 p-2 items-center">

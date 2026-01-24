@@ -131,7 +131,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
                 hydrationError: null,
             });
 
-            console.log('[UserStore] User hydrated successfully.');
+            console.log(`[UserStore] User hydrated successfully (ID: ...${finalUser.id.slice(-4)})`);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to hydrate user';
             console.error('[UserStore] Hydration failed:', errorMessage);

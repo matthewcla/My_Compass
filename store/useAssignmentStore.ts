@@ -128,9 +128,6 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     fetchBillets: async () => {
         set({ isSyncingBillets: true });
 
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 800));
-
         // Convert array to record for store
         const billetRecord: Record<string, Billet> = {};
         MOCK_BILLETS.forEach((billet) => {

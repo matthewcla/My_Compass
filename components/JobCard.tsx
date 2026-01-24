@@ -1,6 +1,7 @@
 import { ApplicationStatus, Billet } from '@/types/schema';
+import { MapPin } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View, useColorScheme } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { ScalePressable } from './ScalePressable';
 
@@ -17,22 +18,26 @@ export function JobCard({
     isProcessing,
     applicationStatus,
 }: JobCardProps) {
+    const colorScheme = useColorScheme();
+    const iconColor = colorScheme === 'dark' ? '#9ca3af' : '#6b7280';
+
     // 1. Determine Match Score Logic
     const matchScore = billet.compass.matchScore;
     let matchColorClass = 'text-gray-500';
     let matchBgClass = 'bg-gray-100';
 
     if (matchScore >= 80) {
-        matchColorClass = 'text-green-700';
-        matchBgClass = 'bg-green-100';
+        matchColorClass = 'text-green-700 dark:text-green-300';
+        matchBgClass = 'bg-green-100 dark:bg-green-900/40';
     } else if (matchScore >= 50) {
-        matchColorClass = 'text-yellow-700';
-        matchBgClass = 'bg-yellow-100';
+        matchColorClass = 'text-yellow-700 dark:text-yellow-300';
+        matchBgClass = 'bg-yellow-100 dark:bg-yellow-900/40';
     }
 
     // 2. Determine Button State Logic
+    // 2. Determine Button State Logic
     let buttonText = 'Buy It Now';
-    let buttonBgClass = 'bg-blue-600';
+    let buttonBgClass = 'bg-navyBlue';
     let isDisabled = false;
 
     if (isProcessing || applicationStatus === 'optimistically_locked') {
@@ -54,14 +59,23 @@ export function JobCard({
     }
 
     return (
-        <ScalePressable className="bg-white dark:bg-systemGray6 p-4 rounded-xl shadow-apple-md border border-gray-200 dark:border-gray-800">
+        <ScalePressable
+            className="bg-white/90 dark:bg-slate-900/90 p-4 rounded-xl shadow-apple-md android:elevation-4 border border-black/5 dark:border-white/10"
+            // @ts-ignore - Web-specific style to remove focus ring
+            style={Platform.OS === 'web' ? { outlineStyle: 'none' } : undefined}
+        >
             {/* Header: Title + Location */}
             <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-1 mr-2">
                     <Text className="text-lg font-bold text-gray-900 dark:text-white" numberOfLines={1}>
                         {billet.title}
                     </Text>
-                    <Text className="text-sm text-gray-500 dark:text-gray-400">{billet.location}</Text>
+                    <View className="flex-row items-start mt-1">
+                        <MapPin size={14} color={iconColor} style={{ marginTop: 3, marginRight: 4 }} />
+                        <Text className="text-sm text-gray-500 dark:text-gray-400 flex-1">
+                            {billet.location}
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Match Indicator Badge using Reanimated */}

@@ -20,6 +20,12 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
         return undefined;
     }
 
+    // Expo Go on Android does not support expo-notifications in SDK 53+
+    if (Platform.OS === 'android' && Constants.appOwnership === 'expo') {
+        console.log('Skipping Push Notifications on Android Expo Go (not supported).');
+        return undefined;
+    }
+
     if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
             name: 'default',

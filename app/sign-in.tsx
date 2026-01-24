@@ -1,4 +1,3 @@
-import { Anchor } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
@@ -7,19 +6,24 @@ import {
     Text,
     View,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { useSession } from '@/lib/ctx';
+import StartupAnimation from '@/components/StartupAnimation';
 import Colors from '@/constants/Colors';
+import { useSession } from '@/lib/ctx';
 
 /**
- * Okta Login Screen
+ * Okta Login Screen with Cinematic Startup
  * 
- * A professional, Navy-branded landing page for authentication.
- * On button press, initiates mock Okta OIDC flow via SessionProvider.
+ * Features a high-fidelity startup animation that transitions
+ * seamlessly into the login controls.
+ * 
+ * "Zero Trust" & "Anti-Hallucination" compliant.
  */
 export default function SignInScreen() {
     const { signInWithOkta, isSigningIn } = useSession();
     const [error, setError] = useState<string | null>(null);
+    const [showLoginControls, setShowLoginControls] = useState(false);
 
     const handleSignIn = async () => {
         setError(null);
@@ -34,59 +38,66 @@ export default function SignInScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Background gradient overlay */}
-            <View style={styles.backgroundOverlay} />
+            {/* Background is always Navy Abyss */}
 
-            {/* Content container */}
             <View style={styles.content}>
-                {/* Logo / App Identity */}
-                <View style={styles.logoContainer}>
-                    <View style={styles.logoCircle}>
-                        <Anchor size={64} color="white" strokeWidth={1.5} />
-                    </View>
-                    <Text style={styles.appName}>My Compass</Text>
-                    <Text style={styles.tagline}>Navy Career Navigation System</Text>
-                </View>
 
-                {/* Spacer */}
-                <View style={styles.spacer} />
+                {/* 
+                   Startup Animation 
+                   - Handles only the visuals of the logo and text.
+                   - On completion, triggers the appearance of the login form.
+                */}
+                <StartupAnimation
+                    onAnimationComplete={() => setShowLoginControls(true)}
+                />
 
-                {/* Sign In Button */}
-                <Pressable
-                    style={({ pressed }) => [
-                        styles.signInButton,
-                        pressed && styles.signInButtonPressed,
-                        isSigningIn && styles.signInButtonDisabled,
-                    ]}
-                    onPress={handleSignIn}
-                    disabled={isSigningIn}
-                    accessibilityRole="button"
-                    accessibilityLabel="Sign in with Okta"
-                    accessibilityState={{ disabled: isSigningIn }}
-                >
-                    {isSigningIn ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="small" color="white" />
-                            <Text style={styles.buttonText}>Redirecting to Okta...</Text>
+                {/* Login Controls - Only appear after animation */}
+                {showLoginControls && (
+                    <Animated.View
+                        style={styles.formContainer}
+                        entering={FadeInDown.duration(800).springify()}
+                    >
+                        {/* Spacer to push buttons down relative to the moved-up logo */}
+                        <View style={styles.spacer} />
+
+                        {/* Sign In Button */}
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.signInButton,
+                                pressed && styles.signInButtonPressed,
+                                isSigningIn && styles.signInButtonDisabled,
+                            ]}
+                            onPress={handleSignIn}
+                            disabled={isSigningIn}
+                            accessibilityRole="button"
+                            accessibilityLabel="Sign in with Okta"
+                            accessibilityState={{ disabled: isSigningIn }}
+                        >
+                            {isSigningIn ? (
+                                <View style={styles.loadingContainer}>
+                                    <ActivityIndicator size="small" color="white" />
+                                    <Text style={styles.buttonText}>Redirecting to Okta...</Text>
+                                </View>
+                            ) : (
+                                <Text style={styles.buttonText}>Sign In with Okta</Text>
+                            )}
+                        </Pressable>
+
+                        {/* Error message */}
+                        {error && (
+                            <View style={styles.errorContainer}>
+                                <Text style={styles.errorText}>{error}</Text>
+                            </View>
+                        )}
+
+                        {/* Footer */}
+                        <View style={styles.footer}>
+                            <Text style={styles.footerText}>
+                                Authorized personnel only. Use of this system constitutes consent to monitoring.
+                            </Text>
                         </View>
-                    ) : (
-                        <Text style={styles.buttonText}>Sign In with Okta</Text>
-                    )}
-                </Pressable>
-
-                {/* Error message */}
-                {error && (
-                    <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>{error}</Text>
-                    </View>
+                    </Animated.View>
                 )}
-
-                {/* Footer */}
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>
-                        Authorized personnel only. Use of this system constitutes consent to monitoring.
-                    </Text>
-                </View>
             </View>
         </View>
     );
@@ -95,52 +106,20 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.light.navyBlue,
-    },
-    backgroundOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'transparent',
+        backgroundColor: '#0A1628', // Navy Abyss
     },
     content: {
         flex: 1,
-        justifyContent: 'center',
+        justifyContent: 'center', // Center vertically initially
         alignItems: 'center',
         paddingHorizontal: 32,
     },
-    logoContainer: {
+    formContainer: {
+        width: '100%',
         alignItems: 'center',
-        marginBottom: 24,
-    },
-    logoCircle: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: Colors.light.navyLight,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 24,
-        borderWidth: 3,
-        borderColor: Colors.light.navyGold,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
-    },
-    appName: {
-        fontSize: 36,
-        fontWeight: '700',
-        color: 'white',
-        letterSpacing: 1,
-        marginBottom: 8,
-    },
-    tagline: {
-        fontSize: 16,
-        color: '#8BA3C7',
-        letterSpacing: 0.5,
     },
     spacer: {
-        height: 80,
+        height: 60, // Adjust based on where component lands
     },
     signInButton: {
         width: '100%',
@@ -191,10 +170,8 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     footer: {
-        position: 'absolute',
-        bottom: 48,
-        left: 32,
-        right: 32,
+        marginTop: 48,
+        paddingHorizontal: 16,
     },
     footerText: {
         fontSize: 12,
@@ -203,3 +180,4 @@ const styles = StyleSheet.create({
         lineHeight: 18,
     },
 });
+

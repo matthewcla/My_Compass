@@ -3,8 +3,8 @@ import { DUTY_TYPES, PREFERENCE_REGIONS } from '@/types/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 // Define the form schema using Zod
@@ -16,6 +16,7 @@ const PreferencesFormSchema = z.object({
 type PreferencesFormData = z.infer<typeof PreferencesFormSchema>;
 
 export default function ProfileScreen() {
+    const insets = useSafeAreaInsets();
     const user = useUserStore((state) => state.user);
     const updatePreferences = useUserStore((state) => state.updatePreferences);
 
@@ -62,27 +63,30 @@ export default function ProfileScreen() {
 
     if (!user) {
         return (
-            <SafeAreaView className="flex-1 bg-slate-50 justify-center items-center">
-                <Text className="text-slate-500">Please sign in to view your profile.</Text>
-            </SafeAreaView>
+            <View className="flex-1 bg-slate-50 dark:bg-black justify-center items-center">
+                <Text className="text-slate-500 dark:text-gray-400">Please sign in to view your profile.</Text>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
-            <ScrollView className="flex-1 px-4">
+        <View className="flex-1 bg-slate-50 dark:bg-black">
+            <ScrollView
+                className="flex-1 px-4"
+                contentContainerStyle={{ paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 0 }}
+            >
                 <View className="mb-6 mt-4">
-                    <Text className="text-2xl font-bold text-slate-900">Profile & Preferences</Text>
-                    <Text className="text-slate-500">
+                    <Text className="text-2xl font-bold text-slate-900 dark:text-white">Profile & Preferences</Text>
+                    <Text className="text-slate-500 dark:text-gray-400">
                         {user.displayName} • {user.rank}
                     </Text>
                 </View>
 
-                <View className="bg-white rounded-xl p-4 shadow-sm mb-6 border border-slate-200">
-                    <Text className="text-lg font-semibold text-slate-800 mb-4">
+                <View className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm mb-6 border border-slate-200 dark:border-slate-800">
+                    <Text className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
                         Preferred Regions
                     </Text>
-                    <Text className="text-sm text-slate-500 mb-3">
+                    <Text className="text-sm text-slate-500 dark:text-gray-400 mb-3">
                         Select the regions you are interested in for future assignments.
                     </Text>
 
@@ -99,11 +103,11 @@ export default function ProfileScreen() {
                                             onPress={() => toggleSelection(value, region, onChange)}
                                             className={`px-4 py-2 rounded-full border ${isSelected
                                                 ? 'bg-blue-600 border-blue-600'
-                                                : 'bg-white border-slate-300'
+                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'
                                                 }`}
                                         >
                                             <Text
-                                                className={`font-medium ${isSelected ? 'text-white' : 'text-slate-700'
+                                                className={`font-medium ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'
                                                     }`}
                                             >
                                                 {region}
@@ -119,11 +123,11 @@ export default function ProfileScreen() {
                     )}
                 </View>
 
-                <View className="bg-white rounded-xl p-4 shadow-sm mb-8 border border-slate-200">
-                    <Text className="text-lg font-semibold text-slate-800 mb-4">
+                <View className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm mb-8 border border-slate-200 dark:border-slate-800">
+                    <Text className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
                         Duty Type Interface
                     </Text>
-                    <Text className="text-sm text-slate-500 mb-3">
+                    <Text className="text-sm text-slate-500 dark:text-gray-400 mb-3">
                         Select your preferred duty types.
                     </Text>
 
@@ -140,11 +144,11 @@ export default function ProfileScreen() {
                                             onPress={() => toggleSelection(value, type, onChange)}
                                             className={`px-4 py-2 rounded-full border ${isSelected
                                                 ? 'bg-blue-600 border-blue-600'
-                                                : 'bg-white border-slate-300'
+                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'
                                                 }`}
                                         >
                                             <Text
-                                                className={`font-medium ${isSelected ? 'text-white' : 'text-slate-700'
+                                                className={`font-medium ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'
                                                     }`}
                                             >
                                                 {type}
@@ -173,6 +177,6 @@ export default function ProfileScreen() {
                     </Pressable>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }

@@ -8,6 +8,7 @@ import {
     LeaveRequest,
     User,
 } from '@/types/schema';
+import { decryptData, encryptData } from '../lib/encryption';
 
 export const initDatabase = async () => {
     console.log('Using web storage (localStorage). SQLite not available on web.');
@@ -37,7 +38,7 @@ export const saveBillet = async (billet: Billet): Promise<void> => {
     } else {
         billets.push(billet);
     }
-    localStorage.setItem(BILLETS_KEY, JSON.stringify(billets));
+    localStorage.setItem(BILLETS_KEY, encryptData(JSON.stringify(billets)));
 };
 
 export const getBillet = async (id: string): Promise<Billet | null> => {
@@ -47,7 +48,7 @@ export const getBillet = async (id: string): Promise<Billet | null> => {
 
 export const getAllBillets = async (): Promise<Billet[]> => {
     const data = localStorage.getItem(BILLETS_KEY);
-    return data ? JSON.parse(data) : [];
+    return data ? JSON.parse(decryptData(data)) : [];
 };
 
 // =============================================================================
@@ -64,7 +65,7 @@ export const saveApplication = async (app: Application): Promise<void> => {
     } else {
         apps.push(app);
     }
-    localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(apps));
+    localStorage.setItem(APPLICATIONS_KEY, encryptData(JSON.stringify(apps)));
 };
 
 export const getApplication = async (id: string): Promise<Application | null> => {
@@ -79,7 +80,7 @@ export const getUserApplications = async (userId: string): Promise<Application[]
 
 const getAllApplications = async (): Promise<Application[]> => {
     const data = localStorage.getItem(APPLICATIONS_KEY);
-    return data ? JSON.parse(data) : [];
+    return data ? JSON.parse(decryptData(data)) : [];
 };
 
 // =============================================================================
@@ -96,7 +97,7 @@ export const saveLeaveRequest = async (request: LeaveRequest): Promise<void> => 
     } else {
         requests.push(request);
     }
-    localStorage.setItem(LEAVE_REQUESTS_KEY, JSON.stringify(requests));
+    localStorage.setItem(LEAVE_REQUESTS_KEY, encryptData(JSON.stringify(requests)));
 };
 
 export const getLeaveRequest = async (id: string): Promise<LeaveRequest | null> => {
@@ -111,7 +112,7 @@ export const getUserLeaveRequests = async (userId: string): Promise<LeaveRequest
 
 const getAllLeaveRequests = async (): Promise<LeaveRequest[]> => {
     const data = localStorage.getItem(LEAVE_REQUESTS_KEY);
-    return data ? JSON.parse(data) : [];
+    return data ? JSON.parse(decryptData(data)) : [];
 };
 
 // =============================================================================
@@ -122,20 +123,20 @@ const LEAVE_BALANCE_KEY = 'my_compass_leave_balance_';
 
 export const saveLeaveBalance = async (balance: LeaveBalance): Promise<void> => {
     // Key by userId to allow multiple users (though mocked)
-    localStorage.setItem(LEAVE_BALANCE_KEY + balance.userId, JSON.stringify(balance));
+    localStorage.setItem(LEAVE_BALANCE_KEY + balance.userId, encryptData(JSON.stringify(balance)));
 };
 
 export const getLeaveBalance = async (userId: string): Promise<LeaveBalance | null> => {
     const data = localStorage.getItem(LEAVE_BALANCE_KEY + userId);
-    return data ? JSON.parse(data) : null;
+    return data ? JSON.parse(decryptData(data)) : null;
 };
 
 
 export const saveUser = async (user: User): Promise<void> => {
-    localStorage.setItem(USER_KEY + user.id, JSON.stringify(user));
+    localStorage.setItem(USER_KEY + user.id, encryptData(JSON.stringify(user)));
 };
 
 export const getUser = async (id: string): Promise<User | null> => {
     const data = localStorage.getItem(USER_KEY + id);
-    return data ? JSON.parse(data) : null;
+    return data ? JSON.parse(decryptData(data)) : null;
 };

@@ -3,14 +3,39 @@ import { JobCardSkeleton } from '@/components/JobCardSkeleton';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
 import React, { useEffect } from 'react';
-import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { Platform, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TEST_USER_ID = 'test-user-001';
 
 export default function AssignmentsScreen() {
   const { width } = useWindowDimensions();
-  const isTablet = width >= 768;
-  const isDesktop = width >= 1024;
+  const insets = useSafeAreaInsets();
+
+  // Layout Constants
+  const SIDEBAR_WIDTH = 280;
+  const CONTAINER_PADDING = 32; // 16px left + 16px right from ScrollView padding
+  const GAP = 16;
+
+  // Determine effective content width
+  // On Desktop Web (>=768px), the sidebar is present via _layout.web.tsx
+  const isWebDesktop = Platform.OS === 'web' && width >= 768;
+  const availableWidth = isWebDesktop
+    ? width - SIDEBAR_WIDTH - CONTAINER_PADDING
+    : width - CONTAINER_PADDING;
+
+  // Determine Column Count based on available width
+  let numColumns = 1;
+  if (availableWidth >= 900) {
+    numColumns = 3;
+  } else if (availableWidth >= 550) {
+    numColumns = 2;
+  }
+
+  // Calculate Exact Item Width: (TotalWidth - TotalGapWidth) / NumCols
+  const totalGapWidth = (numColumns - 1) * GAP;
+  const itemWidth = Math.floor((availableWidth - totalGapWidth) / numColumns);
 
   const {
     billets,
@@ -30,7 +55,6 @@ export default function AssignmentsScreen() {
   };
 
   const getApplicationStatus = (billetId: string) => {
-    // Find if we have an application for this billet
     const app = Object.values(applications).find(
       (a) => a.billetId === billetId && a.userId === TEST_USER_ID
     );
@@ -40,36 +64,40 @@ export default function AssignmentsScreen() {
   const billetList = Object.values(billets);
 
   return (
-    <View className="flex-1 bg-gray-100">
-      <ScrollView className="flex-1 p-4">
+    <View className="flex-1 bg-gray-100 dark:bg-black">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{
+          padding: 16,
+          paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 16
+        }}
+      >
         <View className="mb-4">
-          <Text className="text-2xl font-bold text-gray-900">
+          <Text className="text-2xl font-bold text-gray-900 dark:text-white">
             Available Assignments
           </Text>
-          <Text className="text-gray-500">
+          <Text className="text-gray-500 dark:text-gray-400">
             Real-time marketplace based on your profile
           </Text>
         </View>
 
-
         {isSyncingBillets ? (
-          <View className="flex-row flex-wrap gap-4">
-            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
-              <JobCardSkeleton />
-            </View>
-            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
-              <JobCardSkeleton />
-            </View>
-            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
-              <JobCardSkeleton />
-            </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP }}>
+            {[1, 2, 3].map((i) => (
+              <View key={i} style={{ width: itemWidth, marginBottom: 16 }}>
+                <JobCardSkeleton />
+              </View>
+            ))}
           </View>
         ) : (
-          <View className="flex-row flex-wrap gap-4">
+          <Animated.View
+            style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP }}
+            layout={LinearTransition}
+          >
             {billetList.map((billet: Billet) => (
               <View
                 key={billet.id}
-                style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}
+                style={{ width: itemWidth, marginBottom: 16 }}
               >
                 <JobCard
                   billet={billet}
@@ -79,7 +107,7 @@ export default function AssignmentsScreen() {
                 />
               </View>
             ))}
-          </View>
+          </Animated.View>
         )}
 
         <View className="h-8" />

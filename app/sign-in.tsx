@@ -9,7 +9,6 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import StartupAnimation from '@/components/StartupAnimation';
-import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
 
 /**
@@ -55,18 +54,26 @@ export default function SignInScreen() {
                 {showLoginControls && (
                     <Animated.View
                         style={styles.formContainer}
-                        entering={FadeInDown.duration(800).springify()}
+                        entering={FadeInDown.duration(600).springify().damping(15)}
                     >
                         {/* Spacer to push buttons down relative to the moved-up logo */}
+                        {/* 
+                            StartupAnimation moves up by approx 25% of screen height.
+                            We need enough space so the logo doesn't overlap the buttons.
+                            The logo is 140px, moves up. 
+                            Let's increase spacer to ensure clearance.
+                        */}
                         <View style={styles.spacer} />
 
-                        {/* Sign In Button */}
+                        {/* Sign In Button - Glass Cockpit Style (Option B) */}
                         <Pressable
-                            style={({ pressed }) => [
-                                styles.signInButton,
-                                pressed && styles.signInButtonPressed,
-                                isSigningIn && styles.signInButtonDisabled,
-                            ]}
+                            className={`
+                                w-full max-w-xs h-14 rounded-2xl self-center
+                                bg-white/10 border border-white/20
+                                items-center justify-center
+                                active:bg-white/20 active:scale-95
+                                ${isSigningIn ? 'opacity-50' : ''}
+                            `}
                             onPress={handleSignIn}
                             disabled={isSigningIn}
                             accessibilityRole="button"
@@ -74,12 +81,12 @@ export default function SignInScreen() {
                             accessibilityState={{ disabled: isSigningIn }}
                         >
                             {isSigningIn ? (
-                                <View style={styles.loadingContainer}>
+                                <View className="flex-row items-center gap-3">
                                     <ActivityIndicator size="small" color="white" />
-                                    <Text style={styles.buttonText}>Redirecting to Okta...</Text>
+                                    <Text className="text-white font-semibold text-lg">Redirecting to Okta...</Text>
                                 </View>
                             ) : (
-                                <Text style={styles.buttonText}>Sign In with Okta</Text>
+                                <Text className="text-white font-semibold text-lg tracking-wide">Sign In with Okta</Text>
                             )}
                         </Pressable>
 
@@ -89,13 +96,18 @@ export default function SignInScreen() {
                                 <Text style={styles.errorText}>{error}</Text>
                             </View>
                         )}
+                    </Animated.View>
+                )}
 
-                        {/* Footer */}
-                        <View style={styles.footer}>
-                            <Text style={styles.footerText}>
-                                Authorized personnel only. Use of this system constitutes consent to monitoring.
-                            </Text>
-                        </View>
+                {/* Footer - Positioned at bottom of screen, outside formContainer */}
+                {showLoginControls && (
+                    <Animated.View
+                        style={styles.footer}
+                        entering={FadeInDown.duration(600).delay(100)}
+                    >
+                        <Text style={styles.footerText}>
+                            Authorized personnel only. Use of this system constitutes consent to monitoring.
+                        </Text>
                     </Animated.View>
                 )}
             </View>
@@ -110,50 +122,21 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        justifyContent: 'center', // Center vertically initially
+        justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 32,
+        // Removed paddingHorizontal - absolute children position relative to padding box, causing off-center
     },
     formContainer: {
         width: '100%',
         alignItems: 'center',
+        position: 'absolute',
+        bottom: '25%',
+        left: 0,
+        right: 0,
+        paddingHorizontal: 32, // Apply padding at this level for proper centering
     },
     spacer: {
-        height: 60, // Adjust based on where component lands
-    },
-    signInButton: {
-        width: '100%',
-        maxWidth: 320,
-        backgroundColor: Colors.light.systemBlue,
-        paddingVertical: 18,
-        paddingHorizontal: 32,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: Colors.light.systemBlue,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-    },
-    signInButtonPressed: {
-        backgroundColor: '#0052A3',
-        transform: [{ scale: 0.98 }],
-    },
-    signInButtonDisabled: {
-        backgroundColor: '#4A5568',
-        shadowOpacity: 0.1,
-    },
-    loadingContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    buttonText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: 'white',
-        letterSpacing: 0.5,
+        height: 80, // Reduced slightly since we moved the logo down (0.25 -> 0.18)
     },
     errorContainer: {
         marginTop: 16,
@@ -170,8 +153,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     footer: {
-        marginTop: 48,
-        paddingHorizontal: 16,
+        position: 'absolute',
+        bottom: 48,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        paddingHorizontal: 32,
     },
     footerText: {
         fontSize: 12,

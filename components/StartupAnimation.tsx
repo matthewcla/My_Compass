@@ -1,7 +1,6 @@
 import Colors from '@/constants/Colors';
-import { Anchor } from 'lucide-react-native';
-import React, { useEffect } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import Animated, {
     Easing,
     runOnJS,
@@ -12,89 +11,110 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 
-const NAVY_ABYSS = '#0A1628';
-const LOGO_SIZE = 120;
+const LOGO_SIZE = 140; // Slightly larger for impact
 const FINAL_LOGO_SIZE = 64;
 
-// Animation Timing Constants
-const STEP_1_DELAY = 800; // Wait before starting
-const LOGO_SCALE_DURATION = 1000;
-const TEXT_REVEAL_DELAY = 1200;
-const TEXT_REVEAL_DURATION = 800;
-const HOLD_DURATION = 1000; // How long to hold the full state before moving up
-const MOVE_UP_DURATION = 800;
+// Animation Timing Constants - Strictly Sequential
+const PHASE_1_START = 500; // Delay after mount (waiting for native splash)
+const ICON_FADE_DURATION = 800; // Phase 1: Icon opacity animation
+const TITLE_FADE_DURATION = 600; // Phase 2: Title opacity animation
+const DWELL_AFTER_TEXT = 1000; // Pause after text reveals before handoff
+const MOVE_UP_DURATION = 800; // Phase 3: Handoff animation
 
 interface StartupAnimationProps {
     onAnimationComplete: () => void;
 }
 
 export default function StartupAnimation({ onAnimationComplete }: StartupAnimationProps) {
-    // Shared Values for Animation State
-    const logoScale = useSharedValue(0);
-    const logoOpacity = useSharedValue(0);
-    const logoTranslateY = useSharedValue(0);
+    const { height: screenHeight } = useWindowDimensions();
 
-    const textOpacity = useSharedValue(0);
+    // Conditional rendering state for text - prevents flash
+    const [showText, setShowText] = useState(false);
+
+    // Shared Values for Animation State - BOTH START AT 0
+    const logoScale = useSharedValue(0);
+    const logoOpacity = useSharedValue(0); // Icon starts invisible
+
+    // Text opacity & translation - STARTS AT 0
+    const textOpacity = useSharedValue(0); // Title starts invisible
     const textTranslateY = useSharedValue(20);
 
+    // Container translation for the "Handoff"
     const containerTranslateY = useSharedValue(0);
 
     useEffect(() => {
-        // PHASE 1: THE REVEAL
-        // Logo fades in and scales up
-        logoOpacity.value = withDelay(STEP_1_DELAY, withTiming(1, { duration: 800 }));
-        logoScale.value = withDelay(
-            STEP_1_DELAY,
-            withSpring(1, {
-                damping: 12,
-                stiffness: 100,
-            })
-        );
+        // Helper to trigger Phase 2 (Title fade) - called via runOnJS from Phase 1 callback
+        const startPhase2 = () => {
+            // Mount the text component right before animating
+            setShowText(true);
 
-        // PHASE 2: THE IDENTITY
-        // Text slides up and fades in
-        textOpacity.value = withDelay(TEXT_REVEAL_DELAY, withTiming(1, { duration: TEXT_REVEAL_DURATION }));
-        textTranslateY.value = withDelay(
-            TEXT_REVEAL_DELAY,
-            withTiming(0, {
-                duration: TEXT_REVEAL_DURATION,
+            // PHASE 2: THE IDENTITY - Title fades in over 600ms
+            textOpacity.value = withTiming(1, {
+                duration: TITLE_FADE_DURATION,
+                easing: Easing.out(Easing.quad),
+            });
+            textTranslateY.value = withTiming(0, {
+                duration: TITLE_FADE_DURATION,
                 easing: Easing.out(Easing.exp),
+            }, (finished) => {
+                if (finished) {
+                    runOnJS(startPhase3)();
+                }
+            });
+        };
+
+        // Helper to trigger Phase 3 (Handoff) - called via runOnJS from Phase 2 callback
+        const startPhase3 = () => {
+            // Pause briefly after text is readable, then handoff
+            const targetTranslation = -(screenHeight * 0.18);
+
+            logoScale.value = withDelay(
+                DWELL_AFTER_TEXT,
+                withTiming(FINAL_LOGO_SIZE / LOGO_SIZE, { duration: MOVE_UP_DURATION })
+            );
+
+            containerTranslateY.value = withDelay(
+                DWELL_AFTER_TEXT,
+                withTiming(targetTranslation, {
+                    duration: MOVE_UP_DURATION,
+                    easing: Easing.inOut(Easing.cubic),
+                }, (finished) => {
+                    if (finished) {
+                        runOnJS(onAnimationComplete)();
+                    }
+                })
+            );
+        };
+
+        // PHASE 1: THE REVEAL - Icon fades in over 800ms with Ease Out
+        // Spring for scale, timing with callback for opacity to trigger Phase 2
+        logoScale.value = withDelay(
+            PHASE_1_START,
+            withSpring(1, {
+                damping: 15,
+                stiffness: 90,
             })
         );
 
-        // PHASE 3: THE HANDOFF
-        // After holding, everything moves to the top & logo shrinks
-        const TOTAL_DELAY = TEXT_REVEAL_DELAY + TEXT_REVEAL_DURATION + HOLD_DURATION;
-
-        // We animate the LOGO scale down to its header size
-        logoScale.value = withDelay(TOTAL_DELAY, withTiming(FINAL_LOGO_SIZE / LOGO_SIZE, { duration: MOVE_UP_DURATION }));
-
-        // Animate the entire container up to the header position
-        // We calculate the rough distance to move up based on screen layout assumptions, 
-        // but a relative translation is safer for now.
-        // Let's rely on the layout flex changes for the final position, 
-        // but here we want a smooth transition. 
-        // Actually, properly transitioning layout from center to top can be tricky with absolute positioning.
-        // Strategy: We will animate the translateY of the container to a negative value that places it roughly at the top,
-        // Then call onAnimationComplete to let the parent switch layouts if needed, or just keep it there.
-        // Better Strategy for smooth UX: The parent (SignInScreen) keeps this component mounted.
-        // We explicitly animate to a specific negative Y offset that approximates the header position.
-
-        // Assuming center is 0. Moving to top requires approx -30% of screen height or a fixed amount.
-        // Let's use a fixed decent amount mostly to clear space for the login buttons.
-        containerTranslateY.value = withDelay(
-            TOTAL_DELAY,
-            withTiming(-200, {
-                duration: MOVE_UP_DURATION,
-                easing: Easing.inOut(Easing.cubic)
-            }, () => {
-                runOnJS(onAnimationComplete)();
+        logoOpacity.value = withDelay(
+            PHASE_1_START,
+            withTiming(1, {
+                duration: ICON_FADE_DURATION,
+                easing: Easing.out(Easing.quad),
+            }, (finished) => {
+                // STRICTLY WAIT for icon animation to complete before starting Phase 2
+                if (finished) {
+                    runOnJS(startPhase2)();
+                }
             })
         );
+    }, [screenHeight, onAnimationComplete]);
 
-    }, []);
+    // Fix: Reanimated safe access
+    const rootStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: containerTranslateY.value }]
+    }));
 
-    // Animated Styles
     const logoAnimatedStyle = useAnimatedStyle(() => ({
         opacity: logoOpacity.value,
         transform: [{ scale: logoScale.value }],
@@ -107,31 +127,25 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
         ],
     }));
 
-    const containerAnimatedStyle = useAnimatedStyle(() => ({
-        transform: [{ translateY: containerTranslateY.value }],
-    }));
-
     return (
-        <Animated.View style={[styles.container, containerAnimatedStyle]}>
+        <Animated.View style={[styles.container, rootStyle]}>
 
-            {/* Logo Circle */}
+            {/* Logo Circle with Glass Effect */}
             <Animated.View style={[styles.logoCircle, logoAnimatedStyle]}>
-                {/* 
-            Ideally we use the Image component here with the asset.
-            For now, using the Anchor Icon as per previous implementation 
-            but scaling it. If the user provides the image, we can swap this.
-            The USER requested: "Navigate to assets/images/navy-logo.png".
-            I will use the Anchor as a fallback if the Image is not loaded effectively,
-            but let's implement the container for the image.
-          */}
-                <Anchor size={64} color="white" strokeWidth={1.5} />
+                <Image
+                    source={require('@/assets/images/splash-icon.png')}
+                    style={styles.logoImage}
+                    resizeMode="contain"
+                />
             </Animated.View>
 
-            {/* Text Container */}
-            <Animated.View style={[styles.textContainer, textAnimatedStyle]}>
-                <Text style={styles.appName}>My Compass</Text>
-                <Text style={styles.tagline}>Navy Career Navigation System</Text>
-            </Animated.View>
+            {/* Text Container - Conditionally Rendered to Prevent Flash */}
+            {showText && (
+                <Animated.View style={[styles.textContainer, textAnimatedStyle]}>
+                    <Text style={styles.appName}>My Compass</Text>
+                    <Text style={styles.tagline}>Navy Career Navigation System</Text>
+                </Animated.View>
+            )}
 
         </Animated.View>
     );
@@ -142,36 +156,46 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 10,
+        // Ensure it doesn't take up full screen height rigidly so layout can flow
     },
     logoCircle: {
         width: LOGO_SIZE,
         height: LOGO_SIZE,
         borderRadius: LOGO_SIZE / 2,
-        backgroundColor: Colors.light.navyLight,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)', // Subtle glass fill
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,
-        borderWidth: 3,
-        borderColor: Colors.light.navyGold,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)', // Glass border
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.4,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    logoImage: {
+        width: '70%',
+        height: '70%',
+        tintColor: Colors.light.navyGold, // Optional: Tint gold if it's a monochrome icon, remove if full color
     },
     textContainer: {
         alignItems: 'center',
     },
     appName: {
-        fontSize: 36,
+        fontSize: 32,
         fontWeight: '700',
         color: 'white',
-        letterSpacing: 1,
+        letterSpacing: 1.2,
         marginBottom: 8,
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
     },
     tagline: {
-        fontSize: 16,
-        color: '#8BA3C7',
-        letterSpacing: 0.5,
+        fontSize: 14,
+        color: '#94A3B8',
+        letterSpacing: 1,
+        textTransform: 'uppercase',
     },
 });

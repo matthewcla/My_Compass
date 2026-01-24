@@ -29,7 +29,7 @@ export default function AdminScreen() {
     }, []);
 
     const requestsList = useMemo(() => Object.values(leaveRequests).sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        b.createdAt.localeCompare(a.createdAt)
     ), [leaveRequests]);
 
     const getStatusColor = (status: string) => {

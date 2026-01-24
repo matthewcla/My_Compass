@@ -29,7 +29,7 @@ export default function AdminScreen() {
     }, []);
 
     const requestsList = useMemo(() => Object.values(leaveRequests).sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        b.createdAt.localeCompare(a.createdAt)
     ), [leaveRequests]);
 
     const getStatusColor = (status: string) => {
@@ -42,19 +42,19 @@ export default function AdminScreen() {
     };
 
     // Determine Sync Status
-    const getSyncStatus = (): SyncStatus => {
+    const syncStatus = useMemo((): SyncStatus => {
         if (isSyncingRequests) return 'pending_upload';
-        const hasError = Object.values(leaveRequests).some(r => r.syncStatus === 'error');
+        const hasError = requestsList.some(r => r.syncStatus === 'error');
         if (hasError) return 'error';
         return 'synced';
-    };
+    }, [isSyncingRequests, requestsList]);
 
     const renderHeader = () => (
         <View>
             <View className="flex-row justify-between items-center mb-6">
                 <Text className="text-2xl font-bold text-slate-900 dark:text-white">My Leave</Text>
                 <View className="flex-row items-center space-x-2 gap-2">
-                    <SyncStatusBadge status={getSyncStatus()} />
+                    <SyncStatusBadge status={syncStatus} />
                     <Pressable className="bg-white dark:bg-slate-800 p-2 rounded-full border border-gray-200 dark:border-gray-700">
                         <Calculator size={20} color={themeColors.labelSecondary} strokeWidth={1.5} />
                     </Pressable>

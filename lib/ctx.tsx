@@ -55,9 +55,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
             console.log(`[Auth] Client ID: ${CLIENT_ID}`);
             console.log(`[Auth] Redirect URI: ${REDIRECT_URI}`);
 
-            // Simulate 1.5s network delay for token exchange
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
             // On success, set mock JWT session token
             // In production: would receive actual access_token from Okta
             const mockAccessToken = 'mock-okta-access-token';

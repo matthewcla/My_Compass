@@ -51,7 +51,7 @@ export default function AdminScreen() {
     return (
         <ScrollView
             className="flex-1 bg-systemGray6"
-            contentContainerStyle={{ paddingTop: Platform.OS === 'ios' ? insets.top + 60 : 0 }}
+            contentContainerStyle={{ paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 0 }}
         >
             <View className="px-5 py-6">
                 <View className="flex-row justify-between items-center mb-6">

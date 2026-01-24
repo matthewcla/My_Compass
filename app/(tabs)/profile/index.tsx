@@ -73,7 +73,7 @@ export default function ProfileScreen() {
         <View className="flex-1 bg-slate-50">
             <ScrollView
                 className="flex-1 px-4"
-                contentContainerStyle={{ paddingTop: Platform.OS === 'ios' ? insets.top + 60 : 0 }}
+                contentContainerStyle={{ paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 0 }}
             >
                 <View className="mb-6 mt-4">
                     <Text className="text-2xl font-bold text-slate-900">Profile & Preferences</Text>

@@ -47,7 +47,7 @@ export default function AssignmentsScreen() {
         className="flex-1"
         contentContainerStyle={{
           padding: 16,
-          paddingTop: Platform.OS === 'ios' ? insets.top + 60 : 16
+          paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 16
         }}
       >
         <View className="mb-4">

@@ -7,7 +7,7 @@ export default function PcsScreen() {
     return (
         <View
             className="flex-1 bg-white items-center justify-center"
-            style={{ paddingTop: Platform.OS === 'ios' ? insets.top + 60 : 0 }}
+            style={{ paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 0 }}
         >
             <Text className="text-xl font-bold">My PCS</Text>
         </View>

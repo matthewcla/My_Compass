@@ -18,13 +18,13 @@ export default function TabLayout() {
         <View
           style={[
             StyleSheet.absoluteFill,
-            { backgroundColor: 'rgba(242, 242, 247, 0.8)' },
+            { backgroundColor: colorScheme === 'dark' ? '#000000' : 'rgba(242, 242, 247, 0.8)' },
           ]}
         />
       );
     }
     return (
-      <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
+      <BlurView intensity={80} tint={colorScheme === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
     );
   };
 
@@ -32,6 +32,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        headerTintColor: Colors[colorScheme ?? 'light'].text,
         header: Platform.OS === 'web' ? () => <WebHeader /> : undefined,
         headerShown: Platform.OS === 'web' ? true : useClientOnlyValue(false, true),
         headerTransparent: Platform.OS === 'web' ? false : true,

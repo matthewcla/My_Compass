@@ -63,14 +63,14 @@ export default function ProfileScreen() {
 
     if (!user) {
         return (
-            <View className="flex-1 bg-slate-50 dark:bg-systemGray6 justify-center items-center">
+            <View className="flex-1 bg-slate-50 dark:bg-black justify-center items-center">
                 <Text className="text-slate-500 dark:text-gray-400">Please sign in to view your profile.</Text>
             </View>
         );
     }
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-systemGray6">
+        <View className="flex-1 bg-slate-50 dark:bg-black">
             <ScrollView
                 className="flex-1 px-4"
                 contentContainerStyle={{ paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 0 }}
@@ -82,7 +82,7 @@ export default function ProfileScreen() {
                     </Text>
                 </View>
 
-                <View className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm mb-6 border border-slate-200 dark:border-slate-700">
+                <View className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm mb-6 border border-slate-200 dark:border-slate-800">
                     <Text className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
                         Preferred Regions
                     </Text>
@@ -103,7 +103,7 @@ export default function ProfileScreen() {
                                             onPress={() => toggleSelection(value, region, onChange)}
                                             className={`px-4 py-2 rounded-full border ${isSelected
                                                 ? 'bg-blue-600 border-blue-600'
-                                                : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'
+                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'
                                                 }`}
                                         >
                                             <Text
@@ -123,7 +123,7 @@ export default function ProfileScreen() {
                     )}
                 </View>
 
-                <View className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm mb-8 border border-slate-200 dark:border-slate-700">
+                <View className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm mb-8 border border-slate-200 dark:border-slate-800">
                     <Text className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
                         Duty Type Interface
                     </Text>
@@ -144,7 +144,7 @@ export default function ProfileScreen() {
                                             onPress={() => toggleSelection(value, type, onChange)}
                                             className={`px-4 py-2 rounded-full border ${isSelected
                                                 ? 'bg-blue-600 border-blue-600'
-                                                : 'bg-white dark:bg-slate-700 border-slate-300 dark:border-slate-600'
+                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'
                                                 }`}
                                         >
                                             <Text

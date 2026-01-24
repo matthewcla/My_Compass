@@ -27,11 +27,11 @@ export function JobCard({
     let matchBgClass = 'bg-gray-100';
 
     if (matchScore >= 80) {
-        matchColorClass = 'text-green-700';
-        matchBgClass = 'bg-green-100';
+        matchColorClass = 'text-green-700 dark:text-green-300';
+        matchBgClass = 'bg-green-100 dark:bg-green-900/40';
     } else if (matchScore >= 50) {
-        matchColorClass = 'text-yellow-700';
-        matchBgClass = 'bg-yellow-100';
+        matchColorClass = 'text-yellow-700 dark:text-yellow-300';
+        matchBgClass = 'bg-yellow-100 dark:bg-yellow-900/40';
     }
 
     // 2. Determine Button State Logic
@@ -60,7 +60,7 @@ export function JobCard({
 
     return (
         <ScalePressable
-            className="bg-white/90 dark:bg-slate-900/90 p-4 rounded-xl shadow-apple-md border border-black/5 dark:border-white/10"
+            className="bg-white/90 dark:bg-slate-900/90 p-4 rounded-xl shadow-apple-md android:elevation-4 border border-black/5 dark:border-white/10"
             // @ts-ignore - Web-specific style to remove focus ring
             style={Platform.OS === 'web' ? { outlineStyle: 'none' } : undefined}
         >

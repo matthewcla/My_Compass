@@ -4,6 +4,7 @@ import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
 import React, { useEffect } from 'react';
 import { Platform, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TEST_USER_ID = 'test-user-001';
@@ -73,7 +74,10 @@ export default function AssignmentsScreen() {
             </View>
           </View>
         ) : (
-          <View className="flex-row flex-wrap gap-4">
+          <Animated.View
+            className="flex-row flex-wrap gap-4"
+            layout={LinearTransition}
+          >
             {billetList.map((billet: Billet) => (
               <View
                 key={billet.id}
@@ -87,7 +91,7 @@ export default function AssignmentsScreen() {
                 />
               </View>
             ))}
-          </View>
+          </Animated.View>
         )}
 
         <View className="h-8" />

@@ -50,15 +50,15 @@ export default function AdminScreen() {
 
     return (
         <ScrollView
-            className="flex-1 bg-systemGray6"
+            className="flex-1 bg-slate-50 dark:bg-black"
             contentContainerStyle={{ paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 0 }}
         >
             <View className="px-5 py-6">
                 <View className="flex-row justify-between items-center mb-6">
-                    <Text className="text-2xl font-bold text-labelPrimary">My Leave</Text>
+                    <Text className="text-2xl font-bold text-slate-900 dark:text-white">My Leave</Text>
                     <View className="flex-row items-center space-x-2 gap-2">
                         <SyncStatusBadge status={getSyncStatus()} />
-                        <Pressable className="bg-systemGray6 p-2 rounded-full">
+                        <Pressable className="bg-white dark:bg-slate-800 p-2 rounded-full border border-gray-200 dark:border-gray-700">
                             <Calculator size={20} color={themeColors.labelSecondary} strokeWidth={1.5} />
                         </Pressable>
                     </View>
@@ -72,7 +72,7 @@ export default function AdminScreen() {
                         projectedBalance={leaveBalance.projectedEndOfYearBalance}
                     />
                 ) : (
-                    <View className="bg-systemBackground h-48 rounded-xl items-center justify-center mb-4">
+                    <View className="bg-white dark:bg-slate-900 h-48 rounded-xl items-center justify-center mb-4 border border-gray-200 dark:border-gray-800">
                         <Text className="text-labelSecondary">Loading balance...</Text>
                     </View>
                 )}
@@ -88,7 +88,7 @@ export default function AdminScreen() {
                 {/* Requests List */}
                 <View>
                     <View className="flex-row justify-between items-center mb-4">
-                        <Text className="text-lg font-bold text-labelPrimary">Recent Requests</Text>
+                        <Text className="text-lg font-bold text-slate-900 dark:text-white">Recent Requests</Text>
                         <Link href="/leave/history" asChild>
                             <Pressable>
                                 <Text className="text-systemBlue font-medium">View All</Text>
@@ -97,25 +97,25 @@ export default function AdminScreen() {
                     </View>
 
                     {requestsList.length === 0 ? (
-                        <View className="bg-systemBackground rounded-xl p-8 items-center border border-dashed border-systemGray6">
+                        <View className="bg-white dark:bg-slate-900 rounded-xl p-8 items-center border border-dashed border-gray-300 dark:border-gray-700">
                             <Calendar size={48} color={themeColors.tabIconDefault} className="mb-2" strokeWidth={1.5} />
                             <Text className="text-labelSecondary text-center">No recent leave requests</Text>
                         </View>
                     ) : (
-                        <View className="bg-systemBackground rounded-xl overflow-hidden border border-systemGray6">
+                        <View className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
                             {requestsList.map((req, index) => (
                                 <View key={req.id}>
                                     <Pressable
-                                        className={`flex-row items-center justify-between p-4 ${index !== requestsList.length - 1 ? 'border-b border-systemGray6' : ''}`}
+                                        className={`flex-row items-center justify-between p-4 ${index !== requestsList.length - 1 ? 'border-b border-gray-100 dark:border-gray-800' : ''}`}
                                         onPress={() => router.push(`/leave/${req.id}`)}
                                     >
                                         <View>
                                             <View className="flex-row items-center mb-1">
-                                                <Text className="font-semibold text-labelPrimary text-base mr-2">
+                                                <Text className="font-semibold text-slate-900 dark:text-white text-base mr-2">
                                                     {new Date(req.startDate).toLocaleDateString()} - {new Date(req.endDate).toLocaleDateString()}
                                                 </Text>
                                             </View>
-                                            <Text className="text-labelSecondary text-xs capitalize">{req.leaveType}</Text>
+                                            <Text className="text-slate-500 dark:text-slate-400 text-xs capitalize">{req.leaveType}</Text>
                                         </View>
 
                                         <View className="flex-row items-center">

@@ -30,7 +30,7 @@ export default function TabLayout() {
     // Common Tabs Screen Definitions to reuse
     // We render these inside the specific layout containers
     const GlassBackground = () => (
-        <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={80} tint={colorScheme === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
     );
 
     // Common Tabs Screen Definitions to reuse
@@ -41,10 +41,10 @@ export default function TabLayout() {
     const Sidebar = () => (
         <View style={{ width: SIDEBAR_WIDTH, height: '100%' }}>
             {/* Glassmorphism Background */}
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255, 255, 255, 0.7)' }]}>
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colorScheme === 'dark' ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)' }]}>
                 <BlurView
                     intensity={40}
-                    tint="light"
+                    tint={colorScheme === 'dark' ? 'dark' : 'light'}
                     style={StyleSheet.absoluteFill}
                 />
             </View>
@@ -172,7 +172,7 @@ export default function TabLayout() {
 
     // Desktop Web Layout
     return (
-        <View style={{ flex: 1, flexDirection: 'row', backgroundColor: Colors[colorScheme ?? 'light'].systemGray6 }}>
+        <View style={{ flex: 1, flexDirection: 'row', backgroundColor: colorScheme === 'dark' ? '#000' : Colors.light.systemGray6 }}>
             <Sidebar />
             {/* Main Content Area */}
             <View style={{ flex: 1 }}>

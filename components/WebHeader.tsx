@@ -1,8 +1,9 @@
 import { BlurView } from 'expo-blur';
 import { Bell, Compass, Search, User as UserIcon } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColorScheme } from './useColorScheme';
 
 import Colors from '@/constants/Colors';
 import { useUserDisplayName, useUserRank } from '@/store/useUserStore';
@@ -32,8 +33,14 @@ export function WebHeader() {
             paddingTop: isMobile ? insets.top : 0,
         }}>
             {/* Glass Background */}
-            <View style={[StyleSheet.absoluteFill, { backgroundColor: themeColors.background }]}>
-                <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
+            <View style={[StyleSheet.absoluteFill, {
+                backgroundColor: colorScheme === 'dark' ? 'rgba(0,0,0,0.7)' : themeColors.background
+            }]}>
+                <BlurView
+                    intensity={50}
+                    tint={colorScheme === 'dark' ? 'dark' : 'light'}
+                    style={StyleSheet.absoluteFill}
+                />
             </View>
 
             <View style={{

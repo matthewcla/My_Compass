@@ -42,7 +42,7 @@ export default function AssignmentsScreen() {
   const billetList = Object.values(billets);
 
   return (
-    <View className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-gray-100 dark:bg-black">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
@@ -51,10 +51,10 @@ export default function AssignmentsScreen() {
         }}
       >
         <View className="mb-4">
-          <Text className="text-2xl font-bold text-gray-900">
+          <Text className="text-2xl font-bold text-gray-900 dark:text-white">
             Available Assignments
           </Text>
-          <Text className="text-gray-500">
+          <Text className="text-gray-500 dark:text-gray-400">
             Real-time marketplace based on your profile
           </Text>
         </View>

@@ -36,4 +36,23 @@
     --color-navy-blue: 10 22 40;
     --color-navy-gold: 201 162 39;
   }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      /* System Colors - Dark Mode */
+      --color-system-gray: 142 142 147; /* #8E8E93 */
+      --color-system-gray6: 28 28 30; /* #1C1C1E */
+      --color-system-blue: 10 132 255; /* #0A84FF */
+
+      /* Semantic Colors - Dark Mode */
+      --color-background: 0 0 0; /* #000000 */
+      --color-foreground: 255 255 255; /* #FFFFFF */
+      --color-label-primary: 255 255 255;
+      --color-label-secondary: 235 235 245; /* #EBEBF5 */
+
+      /* Brand Colors - Dark Mode */
+      --color-navy-blue: 10 22 40;
+      --color-navy-gold: 201 162 39;
+    }
+  }
 }

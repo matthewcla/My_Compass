@@ -1,11 +1,12 @@
 import { BlurView } from 'expo-blur';
-import { Bell, Compass, Search, User as UserIcon } from 'lucide-react-native';
+import { Bell, Compass, LogOut, Search, User as UserIcon } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from './useColorScheme';
 
 import Colors from '@/constants/Colors';
+import { useSession } from '@/lib/ctx';
 import { useUserDisplayName, useUserRank } from '@/store/useUserStore';
 
 /**
@@ -21,8 +22,28 @@ export function WebHeader() {
     const insets = useSafeAreaInsets();
     const rank = useUserRank();
     const displayName = useUserDisplayName();
+    const { signOut } = useSession();
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
+
+    const handleLogout = () => {
+        Alert.alert(
+            "Sign Out",
+            "Are you sure you want to sign out?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Sign Out",
+                    style: "destructive",
+                    onPress: signOut
+                }
+            ]
+        );
+    };
+
+    const handleAlert = () => {
+        Alert.alert("Notifications", "No new alerts at this time.");
+    };
 
     const isMobile = width < 768;
 
@@ -109,11 +130,13 @@ export function WebHeader() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
 
                     {/* Notification Bell (Desktop & Mobile) */}
-                    <Pressable style={({ hovered }: { hovered?: boolean }) => ({
-                        width: 40, height: 40, borderRadius: 20,
-                        alignItems: 'center', justifyContent: 'center',
-                        backgroundColor: hovered ? 'rgba(0,0,0,0.05)' : 'transparent'
-                    })}>
+                    <Pressable
+                        onPress={handleAlert}
+                        style={({ hovered }: { hovered?: boolean }) => ({
+                            width: 40, height: 40, borderRadius: 20,
+                            alignItems: 'center', justifyContent: 'center',
+                            backgroundColor: hovered ? 'rgba(0,0,0,0.05)' : 'transparent'
+                        })}>
                         <Bell size={20} color={themeColors.labelSecondary} strokeWidth={2} />
                         {/* Dot */}
                         <View style={{
@@ -156,6 +179,24 @@ export function WebHeader() {
                                     {rank || 'No Rank'}
                                 </Text>
                             </View>
+                        )}
+                    </Pressable>
+
+                    {/* Logout Button */}
+                    <Pressable
+                        onPress={handleLogout}
+                        style={({ hovered }: { hovered?: boolean }) => ({
+                            width: 40, height: 40, borderRadius: 20,
+                            alignItems: 'center', justifyContent: 'center',
+                            backgroundColor: hovered ? 'rgba(220, 38, 38, 0.1)' : 'transparent'
+                        })}
+                    >
+                        {({ hovered }: { hovered?: boolean }) => (
+                            <LogOut
+                                size={20}
+                                color={hovered ? themeColors.status.error : themeColors.labelSecondary}
+                                strokeWidth={2}
+                            />
                         )}
                     </Pressable>
                 </View>

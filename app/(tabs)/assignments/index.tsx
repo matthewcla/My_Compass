@@ -12,8 +12,30 @@ const TEST_USER_ID = 'test-user-001';
 export default function AssignmentsScreen() {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const isTablet = width >= 768;
-  const isDesktop = width >= 1024;
+
+  // Layout Constants
+  const SIDEBAR_WIDTH = 280;
+  const CONTAINER_PADDING = 32; // 16px left + 16px right from ScrollView padding
+  const GAP = 16;
+
+  // Determine effective content width
+  // On Desktop Web (>=768px), the sidebar is present via _layout.web.tsx
+  const isWebDesktop = Platform.OS === 'web' && width >= 768;
+  const availableWidth = isWebDesktop
+    ? width - SIDEBAR_WIDTH - CONTAINER_PADDING
+    : width - CONTAINER_PADDING;
+
+  // Determine Column Count based on available width
+  let numColumns = 1;
+  if (availableWidth >= 900) {
+    numColumns = 3;
+  } else if (availableWidth >= 550) {
+    numColumns = 2;
+  }
+
+  // Calculate Exact Item Width: (TotalWidth - TotalGapWidth) / NumCols
+  const totalGapWidth = (numColumns - 1) * GAP;
+  const itemWidth = Math.floor((availableWidth - totalGapWidth) / numColumns);
 
   const {
     billets,
@@ -33,7 +55,6 @@ export default function AssignmentsScreen() {
   };
 
   const getApplicationStatus = (billetId: string) => {
-    // Find if we have an application for this billet
     const app = Object.values(applications).find(
       (a) => a.billetId === billetId && a.userId === TEST_USER_ID
     );
@@ -60,28 +81,23 @@ export default function AssignmentsScreen() {
           </Text>
         </View>
 
-
         {isSyncingBillets ? (
-          <View className="flex-row flex-wrap gap-4">
-            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
-              <JobCardSkeleton />
-            </View>
-            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
-              <JobCardSkeleton />
-            </View>
-            <View style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}>
-              <JobCardSkeleton />
-            </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP }}>
+            {[1, 2, 3].map((i) => (
+              <View key={i} style={{ width: itemWidth, marginBottom: 16 }}>
+                <JobCardSkeleton />
+              </View>
+            ))}
           </View>
         ) : (
           <Animated.View
-            className="flex-row flex-wrap gap-4"
+            style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GAP }}
             layout={LinearTransition}
           >
             {billetList.map((billet: Billet) => (
               <View
                 key={billet.id}
-                style={{ width: isDesktop ? '32%' : isTablet ? '48%' : '100%' }}
+                style={{ width: itemWidth, marginBottom: 16 }}
               >
                 <JobCard
                   billet={billet}

@@ -4,6 +4,7 @@ import { Anchor, FileText, Map, User } from 'lucide-react-native';
 import React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
+import { HeaderControls } from '@/components/HeaderControls';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
 import { WebHeader } from '@/components/WebHeader';
@@ -13,7 +14,9 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   const GlassBackground = () => {
+    // ... (unchanged)
     if (Platform.OS === 'android') {
+      // ...
       return (
         <View
           style={[
@@ -35,6 +38,7 @@ export default function TabLayout() {
         headerTintColor: Colors[colorScheme ?? 'light'].text,
         header: Platform.OS === 'web' ? () => <WebHeader /> : undefined,
         headerShown: Platform.OS === 'web' ? true : useClientOnlyValue(false, true),
+        headerRight: Platform.OS === 'web' ? undefined : () => <HeaderControls />, // Add controls for Native
         headerTransparent: Platform.OS === 'web' ? false : true,
         headerStyle: {
           borderBottomWidth: 0,

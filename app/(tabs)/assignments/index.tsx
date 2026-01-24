@@ -68,7 +68,7 @@ export default function AssignmentsScreen() {
     return applicationStatusMap[billetId];
   };
 
-  const billetList = Object.values(billets);
+  const billetList = useMemo(() => Object.values(billets), [billets]);
 
   const renderHeader = () => (
     <View className="mb-4">

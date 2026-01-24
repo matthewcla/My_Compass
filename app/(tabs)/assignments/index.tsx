@@ -2,7 +2,7 @@ import { JobCard } from '@/components/JobCard';
 import { JobCardSkeleton } from '@/components/JobCardSkeleton';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Platform, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,11 +54,18 @@ export default function AssignmentsScreen() {
     buyItNow(billetId, TEST_USER_ID);
   };
 
+  const applicationStatusMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    Object.values(applications).forEach((a) => {
+      if (a.userId === TEST_USER_ID) {
+        map[a.billetId] = a.status;
+      }
+    });
+    return map;
+  }, [applications]);
+
   const getApplicationStatus = (billetId: string) => {
-    const app = Object.values(applications).find(
-      (a) => a.billetId === billetId && a.userId === TEST_USER_ID
-    );
-    return app?.status;
+    return applicationStatusMap[billetId];
   };
 
   const billetList = Object.values(billets);

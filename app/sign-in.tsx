@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
+    Dimensions,
     Pressable,
     StyleSheet,
     Text,
     View,
+    useColorScheme,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -24,6 +26,10 @@ export default function SignInScreen() {
     const [error, setError] = useState<string | null>(null);
     const [showLoginControls, setShowLoginControls] = useState(false);
 
+    // Get screen dimensions for absolute button width calculation
+    const screenWidth = Dimensions.get('window').width;
+    const buttonWidth = Math.min(screenWidth - 32, 560); // 16px margin each side, max 560px
+
     const handleSignIn = async () => {
         setError(null);
         try {
@@ -35,8 +41,17 @@ export default function SignInScreen() {
         }
     };
 
+    // Explicitly define theme state for robustness
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+    const backgroundColor = isDark ? '#0A1628' : '#EFF6FF';
+
+    // UI Constants - High Contrast for "Wow" Factor
+    const buttonBaseColor = isDark ? 'rgba(255,255,255,0.1)' : '#1e3a8a'; // Navy Blue (Blue 900) for Day Mode
+    const buttonPressedColor = isDark ? 'rgba(255,255,255,0.2)' : '#172554'; // Blue 950 for pressed
+
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor }]}>
             {/* Background is always Navy Abyss */}
 
             <View style={styles.content}>
@@ -54,7 +69,7 @@ export default function SignInScreen() {
                 {showLoginControls && (
                     <Animated.View
                         style={styles.formContainer}
-                        entering={FadeInDown.duration(600).springify().damping(15)}
+                        entering={FadeInDown.duration(1200)}
                     >
                         {/* Spacer to push buttons down relative to the moved-up logo */}
                         {/* 
@@ -65,28 +80,48 @@ export default function SignInScreen() {
                         */}
                         <View style={styles.spacer} />
 
-                        {/* Sign In Button - Glass Cockpit Style (Option B) */}
                         <Pressable
-                            className={`
-                                w-full max-w-xs h-14 rounded-2xl self-center
-                                bg-white/10 border border-white/20
-                                items-center justify-center
-                                active:bg-white/20 active:scale-95
-                                ${isSigningIn ? 'opacity-50' : ''}
-                            `}
-                            onPress={handleSignIn}
                             disabled={isSigningIn}
                             accessibilityRole="button"
-                            accessibilityLabel="Sign in with Okta"
+                            accessibilityLabel="Sign In"
                             accessibilityState={{ disabled: isSigningIn }}
+                            style={({ pressed }) => [
+                                {
+                                    width: buttonWidth, // Absolute pixel width: screenWidth - 32
+                                    height: 60, // Taller, modern touch target
+                                    borderRadius: 16,
+                                    alignSelf: 'center',
+                                    backgroundColor: 'transparent',
+                                    ...(!isDark ? {
+                                        shadowColor: '#1e3a8a',
+                                        shadowOffset: { width: 0, height: 4 },
+                                        shadowOpacity: 0.25,
+                                        shadowRadius: 10,
+                                    } : {})
+                                }
+                            ]}
+                            onPress={handleSignIn}
                         >
-                            {isSigningIn ? (
-                                <View className="flex-row items-center gap-3">
-                                    <ActivityIndicator size="small" color="white" />
-                                    <Text className="text-white font-semibold text-lg">Redirecting to Okta...</Text>
+                            {({ pressed }) => (
+                                <View style={{
+                                    flex: 1,
+                                    borderRadius: 16,
+                                    borderWidth: 1,
+                                    borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                    backgroundColor: pressed ? buttonPressedColor : buttonBaseColor,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    overflow: 'hidden',
+                                }}>
+                                    {isSigningIn ? (
+                                        <View className="flex-row items-center gap-3">
+                                            <ActivityIndicator size="small" color="white" />
+                                            <Text className="text-white font-bold text-lg">Redirecting...</Text>
+                                        </View>
+                                    ) : (
+                                        <Text className="text-white font-bold text-lg tracking-wider">Sign In</Text>
+                                    )}
                                 </View>
-                            ) : (
-                                <Text className="text-white font-semibold text-lg tracking-wide">Sign In with Okta</Text>
                             )}
                         </Pressable>
 
@@ -116,9 +151,9 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
+    // container backgroundColor is now dynamic
     container: {
         flex: 1,
-        backgroundColor: '#0A1628', // Navy Abyss
     },
     content: {
         flex: 1,
@@ -133,7 +168,7 @@ const styles = StyleSheet.create({
         bottom: '25%',
         left: 0,
         right: 0,
-        paddingHorizontal: 32, // Apply padding at this level for proper centering
+        // Padding removed - button now handles its own margins for full-width flexibility
     },
     spacer: {
         height: 80, // Reduced slightly since we moved the logo down (0.25 -> 0.18)

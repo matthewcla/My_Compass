@@ -1,9 +1,10 @@
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { Anchor, FileText, Map, User } from 'lucide-react-native';
-import React from 'react';
+import { Anchor, CircleUser, FileText, Map, User } from 'lucide-react-native';
+import React, { useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
+import { AccountDrawer } from '@/components/AccountDrawer';
 import { HeaderControls } from '@/components/HeaderControls';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -12,6 +13,7 @@ import Colors from '@/constants/Colors';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const [accountDrawerVisible, setAccountDrawerVisible] = useState(false);
 
   const GlassBackground = () => {
     // ... (unchanged)
@@ -32,70 +34,91 @@ export default function TabLayout() {
   };
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerTintColor: Colors[colorScheme ?? 'light'].text,
-        header: Platform.OS === 'web' ? () => <WebHeader /> : undefined,
-        headerShown: Platform.OS === 'web' ? true : useClientOnlyValue(false, true),
-        headerRight: Platform.OS === 'web' ? undefined : () => <HeaderControls />, // Add controls for Native
-        headerTransparent: Platform.OS === 'web' ? false : true,
-        headerStyle: {
-          borderBottomWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        tabBarStyle: {
-          position: 'absolute',
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        tabBarBackground: () => <GlassBackground />,
-        headerBackground: Platform.OS === 'web' ? undefined : () => <GlassBackground />,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null,
-        }}
+    <>
+      <AccountDrawer
+        visible={accountDrawerVisible}
+        onClose={() => setAccountDrawerVisible(false)}
       />
-      <Tabs.Screen
-        name="assignments/index"
-        options={{
-          title: 'Assignments',
-          tabBarLabel: 'Assignments',
-          headerTitle: '',
-          tabBarIcon: ({ color }) => <Anchor size={28} color={color} strokeWidth={1.5} />,
-        }}
-      />
-      <Tabs.Screen
-        name="admin/index"
-        options={{
-          title: 'Admin',
-          tabBarLabel: 'Admin',
-          headerTitle: '',
-          tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
-        }}
-      />
-      <Tabs.Screen
-        name="pcs/index"
-        options={{
-          title: 'PCS',
-          tabBarLabel: 'PCS',
-          headerTitle: '',
-          tabBarIcon: ({ color }) => <Map size={28} color={color} strokeWidth={1.5} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile/index"
-        options={{
-          title: 'Profile',
-          tabBarLabel: 'Profile',
-          headerTitle: '',
-          tabBarIcon: ({ color }) => <User size={28} color={color} strokeWidth={1.5} />,
-        }}
-      />
-    </Tabs>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          headerTintColor: Colors[colorScheme ?? 'light'].text,
+          header: Platform.OS === 'web' ? () => <WebHeader /> : undefined,
+          headerShown: Platform.OS === 'web' ? true : useClientOnlyValue(false, true),
+          headerRight: Platform.OS === 'web' ? undefined : () => <HeaderControls />, // Add controls for Native
+          headerTransparent: Platform.OS === 'web' ? false : true,
+          headerStyle: {
+            borderBottomWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
+          },
+          tabBarStyle: {
+            position: 'absolute',
+            borderTopWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
+          },
+          tabBarBackground: () => <GlassBackground />,
+          headerBackground: Platform.OS === 'web' ? undefined : () => <GlassBackground />,
+        }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="assignments/index"
+          options={{
+            title: 'Assign',
+            tabBarLabel: 'Assign',
+            headerTitle: '',
+            tabBarIcon: ({ color }) => <Anchor size={28} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="admin/index"
+          options={{
+            title: 'Admin',
+            tabBarLabel: 'Admin',
+            headerTitle: '',
+            tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="pcs/index"
+          options={{
+            title: 'PCS',
+            tabBarLabel: 'PCS',
+            headerTitle: '',
+            tabBarIcon: ({ color }) => <Map size={28} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="profile/index"
+          options={{
+            title: 'Profile',
+            tabBarLabel: 'Profile',
+            headerTitle: '',
+            tabBarIcon: ({ color }) => <User size={28} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="settings_placeholder"
+          options={{
+            title: 'Account',
+            tabBarLabel: '', // Show no label for the control? Or 'Settings'? User asked for "elegant user profile selector", circle user icon usually implies account.
+            headerShown: false,
+            tabBarIcon: ({ color }) => <CircleUser size={28} color={color} strokeWidth={1.5} />,
+          }}
+          listeners={() => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              setAccountDrawerVisible(true);
+            },
+          })}
+        />
+      </Tabs>
+    </>
   );
 }

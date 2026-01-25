@@ -119,30 +119,32 @@ export default function AssignmentsScreen() {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <>
       <Tabs.Screen options={{ headerShown: false }} />
-      <View className="flex-1 bg-gray-100 dark:bg-black">
-        {/* Header */}
-        <View style={{ paddingTop: insets.top + 20, paddingHorizontal: 20 }} className="z-50">
-          <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            DISCOVER
-          </Text>
-          <Text className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest text-xs">
-            A World of Opportunity
-          </Text>
-        </View>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View className="flex-1 bg-gray-100 dark:bg-black">
+          {/* Header */}
+          <View style={{ paddingTop: insets.top + 20, paddingHorizontal: 20 }} className="z-50">
+            <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              DISCOVER
+            </Text>
+            <Text className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest text-xs">
+              A World of Opportunity
+            </Text>
+          </View>
 
-        {renderDeck()}
+          {renderDeck()}
 
-        {/* Temporary Footer / Controls hint */}
-        <View style={{ paddingBottom: insets.bottom + 120 }} className="items-center">
-          {/* Increased padding to 120 to ensure text sits ABOVE the floating tab bar */}
-          <Text className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-            Swipe Right to LIKE • Up to LOVE • Left to PASS
-          </Text>
+          {/* Temporary Footer / Controls hint */}
+          <View style={{ paddingBottom: insets.bottom + 120 }} className="items-center">
+            {/* Increased padding to 120 to ensure text sits ABOVE the floating tab bar */}
+            <Text className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+              Swipe Right to LIKE • Up to LOVE • Left to PASS
+            </Text>
+          </View>
         </View>
-      </View>
-    </GestureHandlerRootView>
+      </GestureHandlerRootView>
+    </>
   );
 }
 

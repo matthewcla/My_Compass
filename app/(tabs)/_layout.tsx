@@ -65,7 +65,7 @@ export default function TabLayout() {
         options={{
           title: 'Assignments',
           tabBarLabel: 'Assignments',
-          headerTitle: 'My Assignment',
+          headerTitle: '',
           tabBarIcon: ({ color }) => <Anchor size={28} color={color} strokeWidth={1.5} />,
         }}
       />
@@ -74,7 +74,7 @@ export default function TabLayout() {
         options={{
           title: 'Admin',
           tabBarLabel: 'Admin',
-          headerTitle: 'My Admin',
+          headerTitle: '',
           tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
         }}
       />
@@ -83,7 +83,7 @@ export default function TabLayout() {
         options={{
           title: 'PCS',
           tabBarLabel: 'PCS',
-          headerTitle: 'My PCS',
+          headerTitle: '',
           tabBarIcon: ({ color }) => <Map size={28} color={color} strokeWidth={1.5} />,
         }}
       />
@@ -92,7 +92,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarLabel: 'Profile',
-          headerTitle: 'My Profile',
+          headerTitle: '',
           tabBarIcon: ({ color }) => <User size={28} color={color} strokeWidth={1.5} />,
         }}
       />

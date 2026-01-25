@@ -72,10 +72,18 @@ export default function AssignmentsScreen() {
       );
     }
 
+    // Calculate available height for the card deck
+    // Header: ~80px (insets.top + 20 + title heights ~40)
+    // Footer: ~60px (insets.bottom + 20 + text ~20)
+    const HEADER_HEIGHT = insets.top + 80;
+    const FOOTER_HEIGHT = insets.bottom + 60;
+    const TAB_BAR_HEIGHT = 80;
+    const cardHeight = height - HEADER_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
+
     return (
-      <View className="flex-1 justify-center items-center relative mt-4">
+      <View className="flex-1 justify-center items-center relative">
         {/* Maximum Width Constraint for iPad/Web */}
-        <View style={{ width: Math.min(width - 32, 400), height: 600 }}>
+        <View style={{ width: Math.min(width - 32, 400), height: Math.max(cardHeight, 400) }}>
 
           {/* Background Card (Next) */}
           {nextBilletId && billets[nextBilletId] && (

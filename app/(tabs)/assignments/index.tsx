@@ -1,5 +1,6 @@
 import { BilletSwipeCard } from '@/components/BilletSwipeCard';
 import { SwipeDirection, useAssignmentStore } from '@/store/useAssignmentStore';
+import { Tabs } from 'expo-router';
 import { RotateCcw } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
@@ -74,14 +75,15 @@ export default function AssignmentsScreen() {
 
     // Calculate available height for the card deck
     // Header: ~80px (insets.top + 20 + title heights ~40)
-    // Footer: ~60px (insets.bottom + 20 + text ~20)
+    // Footer: Needs to be large to clear Tab Bar (80px) + Visual spacing
     const HEADER_HEIGHT = insets.top + 80;
-    const FOOTER_HEIGHT = insets.bottom + 60;
+    const FOOTER_HEIGHT = insets.bottom + 120; // Increased significantly to clear tab bar
     const TAB_BAR_HEIGHT = 80;
     const cardHeight = height - HEADER_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
 
     return (
-      <View className="flex-1 justify-center items-center relative">
+      <View className="flex-1 justify-center items-center relative pt-8">
+        {/* Changed pb-8 to pt-8 to push card DOWN away from header, balancing the top-heavy feel */}
         {/* Maximum Width Constraint for iPad/Web */}
         <View style={{ width: Math.min(width - 32, 400), height: Math.max(cardHeight, 400) }}>
 
@@ -118,23 +120,25 @@ export default function AssignmentsScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <Tabs.Screen options={{ headerShown: false }} />
       <View className="flex-1 bg-gray-100 dark:bg-black">
         {/* Header */}
         <View style={{ paddingTop: insets.top + 20, paddingHorizontal: 20 }} className="z-50">
           <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            My Compass
+            DISCOVER
           </Text>
           <Text className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest text-xs">
-            Assignment Matching
+            A World of Opportunity
           </Text>
         </View>
 
         {renderDeck()}
 
         {/* Temporary Footer / Controls hint */}
-        <View style={{ paddingBottom: insets.bottom + 20 }} className="items-center">
+        <View style={{ paddingBottom: insets.bottom + 120 }} className="items-center">
+          {/* Increased padding to 120 to ensure text sits ABOVE the floating tab bar */}
           <Text className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-            Swipe Right to Apply • Left to Skip
+            Swipe Right to LIKE • Up to LOVE • Left to PASS
           </Text>
         </View>
       </View>

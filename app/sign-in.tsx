@@ -9,6 +9,7 @@ import {
     useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StartupAnimation from '@/components/StartupAnimation';
 import { useSession } from '@/lib/ctx';
@@ -20,14 +21,25 @@ import { useSession } from '@/lib/ctx';
  * seamlessly into the login controls.
  * 
  * "Zero Trust" & "Anti-Hallucination" compliant.
+ * 
+ * DESIGN NOTE:
+ * Uses a "Double-Container Pattern" for the Sign In button to ensure
+ * exact pixel parity between Light and Dark modes.
+ * - Outer Container: Handles Layout (Width/Height) and Shadows.
+ * - Inner Container: Handles Border, Clipping, and Background Color.
+ * 
+ * This prevents the iOS shadow/border clipping conflict.
  */
 export default function SignInScreen() {
     const { signInWithOkta, isSigningIn } = useSession();
     const [error, setError] = useState<string | null>(null);
     const [showLoginControls, setShowLoginControls] = useState(false);
 
-    // Reactive dimensions for potential future use or specific calculations
+    // Reactive dimensions
     const { width } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
+
+    const buttonWidth = Math.min(width - 32, 560); // Reactive width calculation
 
     const handleSignIn = async () => {
         setError(null);
@@ -41,7 +53,8 @@ export default function SignInScreen() {
     };
 
     // Explicitly define theme state for robustness
-    const colorScheme = useColorScheme();
+    // Robustly handle undefined state during hydration
+    const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
     const backgroundColor = isDark ? '#0A1628' : '#EFF6FF';
 
@@ -49,9 +62,14 @@ export default function SignInScreen() {
     const buttonBaseColor = isDark ? 'rgba(255,255,255,0.1)' : '#1e3a8a'; // Navy Blue (Blue 900) for Day Mode
     const buttonPressedColor = isDark ? 'rgba(255,255,255,0.2)' : '#172554'; // Blue 950 for pressed
 
+    // Strict Layout Constants
+    const BUTTON_HEIGHT = 60;
+    const BUTTON_RADIUS = 16;
+    const BORDER_WIDTH = 1; // Constant across modes
+
     return (
         <View className="flex-1" style={{ backgroundColor }}>
-            {/* Background is always Navy Abyss */}
+            {/* Background is always Navy Abyss or Light Gray */}
 
             <View className="flex-1 justify-center items-center">
 
@@ -68,53 +86,78 @@ export default function SignInScreen() {
                 {showLoginControls && (
                     <Animated.View
                         entering={FadeInDown.duration(1200)}
-                        className="absolute bottom-[25%] left-0 right-0 w-full items-center px-4"
+                        style={{
+                            position: 'absolute',
+                            bottom: '25%',
+                            left: 0,
+                            right: 0,
+                            width: '100%',
+                            alignItems: 'center',
+                            paddingHorizontal: 16,
+                            paddingBottom: Platform.OS === 'web' ? insets.bottom : 0
+                        }}
                     >
                         {/* Spacer to push buttons down relative to the moved-up logo */}
-                        {/* 
-                            StartupAnimation moves up by approx 25% of screen height.
-                            We need enough space so the logo doesn't overlap the buttons.
-                        */}
                         <View className="h-20" />
 
-                        <Pressable
-                            disabled={isSigningIn}
-                            accessibilityRole="button"
-                            accessibilityLabel="Sign In"
-                            accessibilityState={{ disabled: isSigningIn }}
-                            hitSlop={20}
-                            className="w-full max-w-[560px] h-[60px] rounded-2xl self-center bg-transparent"
-                            style={({ pressed }) => [
-                                !isDark && {
-                                    shadowColor: '#1e3a8a',
-                                    shadowOffset: { width: 0, height: 4 },
-                                    shadowOpacity: 0.25,
-                                    shadowRadius: 10,
-                                }
-                            ]}
-                            onPress={handleSignIn}
+                        {/* 
+                            DOUBLE-CONTAINER PATTERN (Visual Stability)
+                            Outer: Layout + Shadow
+                            Inner: Border + Content + Clipping
+                        */}
+                        <View
+                            style={{
+                                width: buttonWidth,
+                                height: BUTTON_HEIGHT,
+                                borderRadius: BUTTON_RADIUS,
+                                backgroundColor: 'transparent',
+                                // Deterministic Shadow Props
+                                shadowColor: '#1e3a8a',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowRadius: 10,
+                                // Shadow Opacity toggles, but layout props remain constant
+                                shadowOpacity: isDark ? 0 : 0.25,
+                            }}
                         >
-                            {({ pressed }) => (
-                                <View
-                                    className={`flex-1 rounded-2xl border items-center justify-center overflow-hidden ${isDark ? 'border-white/20' : 'border-transparent'
-                                        }`}
-                                    style={{
-                                        backgroundColor: pressed ? buttonPressedColor : buttonBaseColor,
-                                    }}
-                                >
-                                    {isSigningIn ? (
-                                        <View className="flex-row items-center gap-3">
-                                            <ActivityIndicator size="small" color="white" />
-                                            <Text className="text-white font-bold text-lg">Redirecting...</Text>
-                                        </View>
-                                    ) : (
-                                        <Text className="text-white font-bold text-lg tracking-wider">
-                                            {Platform.OS === 'ios' ? 'Sign In with Okta' : 'Sign In'}
-                                        </Text>
-                                    )}
-                                </View>
-                            )}
-                        </Pressable>
+                            <Pressable
+                                disabled={isSigningIn}
+                                accessibilityRole="button"
+                                accessibilityLabel="Sign In"
+                                accessibilityState={{ disabled: isSigningIn }}
+                                hitSlop={20}
+                                style={{ flex: 1, borderRadius: BUTTON_RADIUS }}
+                                onPress={handleSignIn}
+                            >
+                                {({ pressed }) => (
+                                    <View
+                                        style={{
+                                            flex: 1,
+                                            borderRadius: BUTTON_RADIUS,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            overflow: 'hidden', // Ensures content stays inside border
+
+                                            // STYLE DETERMINISM:
+                                            // Border width is ALWAYS 1.
+                                            // Color becomes transparent in Light Mode to match Dark Mode footprint.
+                                            borderWidth: BORDER_WIDTH,
+                                            borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'transparent',
+
+                                            backgroundColor: pressed ? buttonPressedColor : buttonBaseColor,
+                                        }}
+                                    >
+                                        {isSigningIn ? (
+                                            <View className="flex-row items-center gap-3">
+                                                <ActivityIndicator size="small" color="white" />
+                                                <Text className="text-white font-bold text-lg">Redirecting...</Text>
+                                            </View>
+                                        ) : (
+                                            <Text className="text-white font-bold text-lg tracking-wider">Sign In with Okta</Text>
+                                        )}
+                                    </View>
+                                )}
+                            </Pressable>
+                        </View>
 
                         {/* Error message */}
                         {error && (
@@ -125,11 +168,18 @@ export default function SignInScreen() {
                     </Animated.View>
                 )}
 
-                {/* Footer - Positioned at bottom of screen, outside formContainer */}
+                {/* Footer - Positioned at bottom of screen */}
                 {showLoginControls && (
                     <Animated.View
                         entering={FadeInDown.duration(600).delay(100)}
-                        className="absolute bottom-12 left-0 right-0 items-center px-8"
+                        style={{
+                            position: 'absolute',
+                            bottom: 48 + (Platform.OS === 'web' ? insets.bottom : 0),
+                            left: 0,
+                            right: 0,
+                            alignItems: 'center',
+                            paddingHorizontal: 32
+                        }}
                     >
                         <Text className="text-xs text-gray-500 text-center leading-[18px]">
                             Authorized personnel only. Use of this system constitutes consent to monitoring.

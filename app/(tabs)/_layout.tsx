@@ -2,7 +2,7 @@ import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import { Anchor, CircleUser, FileText, Map, User } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { AccountDrawer } from '@/components/AccountDrawer';
 import { HeaderControls } from '@/components/HeaderControls';
@@ -14,6 +14,8 @@ import Colors from '@/constants/Colors';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const [accountDrawerVisible, setAccountDrawerVisible] = useState(false);
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   const GlassBackground = () => {
     // ... (unchanged)
@@ -43,8 +45,8 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
           headerTintColor: Colors[colorScheme ?? 'light'].text,
-          header: Platform.OS === 'web' ? () => <WebHeader /> : undefined,
-          headerShown: Platform.OS === 'web' ? true : useClientOnlyValue(false, true),
+          header: Platform.OS === 'web' && isDesktop ? () => <WebHeader /> : undefined,
+          headerShown: Platform.OS === 'web' ? isDesktop : useClientOnlyValue(false, true),
           headerRight: Platform.OS === 'web' ? undefined : () => <HeaderControls />, // Add controls for Native
           headerTransparent: Platform.OS === 'web' ? false : true,
           headerStyle: {

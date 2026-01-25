@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "module": "commonjs",
+    "baseUrl": "../",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strict": false,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "../store/**/*",
+    "../types/**/*",
+    "../services/**/*",
+    "./**/*"
+  ]
+}

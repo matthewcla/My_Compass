@@ -270,7 +270,7 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
 
                 <Animated.View style={[superLikeStyle, { position: 'absolute', top: 55, alignSelf: 'center', zIndex: 50 }]}>
                     <View className="border-4 border-blue-500 rounded-xl px-4 py-2 bg-white/20">
-                        <Text className="text-blue-500 font-black text-4xl uppercase tracking-widest">WOW</Text>
+                        <Text className="text-blue-500 font-black text-4xl uppercase tracking-widest">WOW!</Text>
                     </View>
                 </Animated.View>
 
@@ -487,26 +487,39 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
                                             <Text style={{ fontSize: 11, color: COLORS.slate400, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>Command Mission</Text>
                                             <Text style={{ color: COLORS.slate600, fontSize: 13, lineHeight: 20 }}>{data.description}</Text>
                                         </View>
-
-                                        {/* Close Button at Bottom */}
-                                        <View style={{ alignItems: 'center', marginTop: 24, marginBottom: 30 }}>
-                                            <TouchableOpacity
-                                                onPress={closeDrawer}
-                                                style={{
-                                                    backgroundColor: COLORS.slate100,
-                                                    paddingVertical: 8,
-                                                    paddingHorizontal: 16,
-                                                    borderRadius: 20,
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center',
-                                                    gap: 6
-                                                }}
-                                            >
-                                                <ChevronDown size={18} color={COLORS.slate700} strokeWidth={2.5} />
-                                                <Text style={{ color: COLORS.slate700, fontWeight: '800', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 }}>Close Details</Text>
-                                            </TouchableOpacity>
-                                        </View>
+                                        <View style={{ height: 20 }} />
                                     </ScrollView>
+
+                                    {/* Fixed Footer - Matches Trigger Bar Exactly */}
+                                    <View
+                                        style={{
+                                            height: 70,
+                                            backgroundColor: COLORS.white,
+                                            borderTopWidth: 1,
+                                            borderTopColor: COLORS.slate100,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            paddingBottom: 8,
+                                        }}
+                                    >
+                                        <TouchableOpacity
+                                            onPress={closeDrawer}
+                                            activeOpacity={0.8}
+                                        >
+                                            <View style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                gap: 6,
+                                                backgroundColor: COLORS.slate50,
+                                                paddingVertical: 8,
+                                                paddingHorizontal: 16,
+                                                borderRadius: 20
+                                            }}>
+                                                <Text style={{ color: COLORS.blue600, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, fontSize: 13 }}>Close Details</Text>
+                                                <ChevronDown size={18} color={COLORS.blue600} strokeWidth={2.5} />
+                                            </View>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             </View>
                         )}

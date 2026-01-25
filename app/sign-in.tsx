@@ -9,6 +9,7 @@ import {
     useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StartupAnimation from '@/components/StartupAnimation';
 import { useSession } from '@/lib/ctx';
@@ -28,6 +29,9 @@ export default function SignInScreen() {
 
     // Reactive dimensions for potential future use or specific calculations
     const { width } = useWindowDimensions();
+    const insets = useSafeAreaInsets();
+
+    const buttonWidth = Math.min(width - 32, 560); // Reactive width calculation
 
     const handleSignIn = async () => {
         setError(null);
@@ -68,7 +72,16 @@ export default function SignInScreen() {
                 {showLoginControls && (
                     <Animated.View
                         entering={FadeInDown.duration(1200)}
-                        className="absolute bottom-[25%] left-0 right-0 w-full items-center px-4"
+                        style={{
+                            position: 'absolute',
+                            bottom: '25%',
+                            left: 0,
+                            right: 0,
+                            width: '100%',
+                            alignItems: 'center',
+                            paddingHorizontal: 16,
+                            paddingBottom: Platform.OS === 'web' ? insets.bottom : 0
+                        }}
                     >
                         {/* Spacer to push buttons down relative to the moved-up logo */}
                         {/* 
@@ -83,8 +96,14 @@ export default function SignInScreen() {
                             accessibilityLabel="Sign In"
                             accessibilityState={{ disabled: isSigningIn }}
                             hitSlop={20}
-                            className="w-full max-w-[560px] h-[60px] rounded-2xl self-center bg-transparent"
                             style={({ pressed }) => [
+                                {
+                                    width: buttonWidth,
+                                    height: 60,
+                                    borderRadius: 16,
+                                    alignSelf: 'center',
+                                    backgroundColor: 'transparent',
+                                },
                                 !isDark && {
                                     shadowColor: '#1e3a8a',
                                     shadowOffset: { width: 0, height: 4 },
@@ -108,9 +127,7 @@ export default function SignInScreen() {
                                             <Text className="text-white font-bold text-lg">Redirecting...</Text>
                                         </View>
                                     ) : (
-                                        <Text className="text-white font-bold text-lg tracking-wider">
-                                            {Platform.OS === 'ios' ? 'Sign In with Okta' : 'Sign In'}
-                                        </Text>
+                                        <Text className="text-white font-bold text-lg tracking-wider">Sign In with Okta</Text>
                                     )}
                                 </View>
                             )}
@@ -129,7 +146,14 @@ export default function SignInScreen() {
                 {showLoginControls && (
                     <Animated.View
                         entering={FadeInDown.duration(600).delay(100)}
-                        className="absolute bottom-12 left-0 right-0 items-center px-8"
+                        style={{
+                            position: 'absolute',
+                            bottom: 48 + (Platform.OS === 'web' ? insets.bottom : 0),
+                            left: 0,
+                            right: 0,
+                            alignItems: 'center',
+                            paddingHorizontal: 32
+                        }}
                     >
                         <Text className="text-xs text-gray-500 text-center leading-[18px]">
                             Authorized personnel only. Use of this system constitutes consent to monitoring.

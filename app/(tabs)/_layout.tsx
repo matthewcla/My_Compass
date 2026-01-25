@@ -73,6 +73,7 @@ export default function TabLayout() {
             title: 'Assign',
             tabBarLabel: 'Assign',
             headerTitle: '',
+            headerShown: false,
             tabBarIcon: ({ color }) => <Anchor size={28} color={color} strokeWidth={1.5} />,
           }}
         />

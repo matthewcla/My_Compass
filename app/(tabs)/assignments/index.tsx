@@ -1,6 +1,5 @@
 import { BilletSwipeCard } from '@/components/BilletSwipeCard';
 import { SwipeDirection, useAssignmentStore } from '@/store/useAssignmentStore';
-import { Tabs } from 'expo-router';
 import { RotateCcw } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
@@ -120,7 +119,6 @@ export default function AssignmentsScreen() {
 
   return (
     <>
-      <Tabs.Screen options={{ headerShown: false }} />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View className="flex-1 bg-gray-100 dark:bg-black">
           {/* Header */}

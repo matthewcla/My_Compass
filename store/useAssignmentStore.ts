@@ -26,6 +26,9 @@ const generateUUID = () => {
 // STORE TYPES
 // =============================================================================
 
+export type SwipeDirection = 'left' | 'right' | 'up';
+export type SwipeDecision = 'nope' | 'like' | 'super';
+
 interface AssignmentActions {
     /**
      * Fetch billets from "API" (Mock) and populate store.
@@ -38,20 +41,34 @@ interface AssignmentActions {
     buyItNow: (billetId: string, userId: string) => Promise<void>;
 
     /**
+     * Handle user swipe action on a billet
+     */
+    swipe: (billetId: string, direction: SwipeDirection, userId: string) => Promise<void>;
+
+    /**
      * Reset store to initial state (useful for logout/testing).
      */
     resetStore: () => void;
 }
 
-export type AssignmentStore = MyAssignmentState & AssignmentActions;
+export type AssignmentStore = MyAssignmentState & {
+    // New State for Swipe Deck
+    billetStack: string[];
+    cursor: number;
+    decisionMap: Record<string, SwipeDecision>;
+} & AssignmentActions;
 
-const INITIAL_STATE: MyAssignmentState = {
+const INITIAL_STATE: MyAssignmentState & { billetStack: string[]; cursor: number; decisionMap: Record<string, SwipeDecision> } = {
     billets: {},
     applications: {},
     userApplicationIds: [],
     lastBilletSyncAt: null,
     isSyncingBillets: false,
     isSyncingApplications: false,
+    // New State
+    billetStack: [],
+    cursor: 0,
+    decisionMap: {},
 };
 
 // =============================================================================
@@ -130,15 +147,48 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         // Convert array to record for store
         const billetRecord: Record<string, Billet> = {};
+        const newStack: string[] = []; // Create stack from fetched billets
+
         MOCK_BILLETS.forEach((billet) => {
             billetRecord[billet.id] = billet;
+            newStack.push(billet.id);
         });
 
         set({
             billets: billetRecord,
+            billetStack: newStack, // Initialize stack
+            cursor: 0,             // Reset cursor on full refresh
+            decisionMap: {},       // Clear decisions on full refresh
             lastBilletSyncAt: new Date().toISOString(),
             isSyncingBillets: false,
         });
+    },
+
+    swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
+        const { cursor, decisionMap, buyItNow } = get();
+
+        // 1. Determine Decision based on Direction
+        let decision: SwipeDecision = 'nope';
+        if (direction === 'right') decision = 'like';
+        else if (direction === 'up') decision = 'super';
+
+        // 2. Optimistic Update of Cursor and Decision Map
+        set({
+            cursor: cursor + 1,
+            decisionMap: {
+                ...decisionMap,
+                [billetId]: decision
+            }
+        });
+
+        // 3. Handle Side Effects (Transactions)
+        // If Right or Up, we want to attempt a lock (Apply).
+        if (decision === 'like' || decision === 'super') {
+            // Re-use existing Buy-It-Now logic which handles optimistic locking + persistence
+            await buyItNow(billetId, userId);
+        }
+
+        // If 'nope', we just move on. No backend impact in this MVP.
     },
 
     buyItNow: async (billetId: string, userId: string) => {

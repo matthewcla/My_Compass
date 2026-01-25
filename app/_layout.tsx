@@ -2,6 +2,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import '../global.css';
@@ -97,6 +98,7 @@ export default function RootLayout() {
 
   return (
     <SessionProvider>
+      <StatusBar style="auto" />
       <AuthGuard>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
+    Platform,
     Pressable,
-    StyleSheet,
     Text,
     View,
+    useColorScheme,
+    useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -24,6 +26,9 @@ export default function SignInScreen() {
     const [error, setError] = useState<string | null>(null);
     const [showLoginControls, setShowLoginControls] = useState(false);
 
+    // Reactive dimensions for potential future use or specific calculations
+    const { width } = useWindowDimensions();
+
     const handleSignIn = async () => {
         setError(null);
         try {
@@ -35,11 +40,20 @@ export default function SignInScreen() {
         }
     };
 
+    // Explicitly define theme state for robustness
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+    const backgroundColor = isDark ? '#0A1628' : '#EFF6FF';
+
+    // UI Constants - High Contrast for "Wow" Factor
+    const buttonBaseColor = isDark ? 'rgba(255,255,255,0.1)' : '#1e3a8a'; // Navy Blue (Blue 900) for Day Mode
+    const buttonPressedColor = isDark ? 'rgba(255,255,255,0.2)' : '#172554'; // Blue 950 for pressed
+
     return (
-        <View style={styles.container}>
+        <View className="flex-1" style={{ backgroundColor }}>
             {/* Background is always Navy Abyss */}
 
-            <View style={styles.content}>
+            <View className="flex-1 justify-center items-center">
 
                 {/* 
                    Startup Animation 
@@ -53,47 +67,59 @@ export default function SignInScreen() {
                 {/* Login Controls - Only appear after animation */}
                 {showLoginControls && (
                     <Animated.View
-                        style={styles.formContainer}
-                        entering={FadeInDown.duration(600).springify().damping(15)}
+                        entering={FadeInDown.duration(1200)}
+                        className="absolute bottom-[25%] left-0 right-0 w-full items-center px-4"
                     >
                         {/* Spacer to push buttons down relative to the moved-up logo */}
                         {/* 
                             StartupAnimation moves up by approx 25% of screen height.
                             We need enough space so the logo doesn't overlap the buttons.
-                            The logo is 140px, moves up. 
-                            Let's increase spacer to ensure clearance.
                         */}
-                        <View style={styles.spacer} />
+                        <View className="h-20" />
 
-                        {/* Sign In Button - Glass Cockpit Style (Option B) */}
                         <Pressable
-                            className={`
-                                w-full max-w-xs h-14 rounded-2xl self-center
-                                bg-white/10 border border-white/20
-                                items-center justify-center
-                                active:bg-white/20 active:scale-95
-                                ${isSigningIn ? 'opacity-50' : ''}
-                            `}
-                            onPress={handleSignIn}
                             disabled={isSigningIn}
                             accessibilityRole="button"
-                            accessibilityLabel="Sign in with Okta"
+                            accessibilityLabel="Sign In"
                             accessibilityState={{ disabled: isSigningIn }}
+                            hitSlop={20}
+                            className="w-full max-w-[560px] h-[60px] rounded-2xl self-center bg-transparent"
+                            style={({ pressed }) => [
+                                !isDark && {
+                                    shadowColor: '#1e3a8a',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowOpacity: 0.25,
+                                    shadowRadius: 10,
+                                }
+                            ]}
+                            onPress={handleSignIn}
                         >
-                            {isSigningIn ? (
-                                <View className="flex-row items-center gap-3">
-                                    <ActivityIndicator size="small" color="white" />
-                                    <Text className="text-white font-semibold text-lg">Redirecting to Okta...</Text>
+                            {({ pressed }) => (
+                                <View
+                                    className={`flex-1 rounded-2xl border items-center justify-center overflow-hidden ${isDark ? 'border-white/20' : 'border-transparent'
+                                        }`}
+                                    style={{
+                                        backgroundColor: pressed ? buttonPressedColor : buttonBaseColor,
+                                    }}
+                                >
+                                    {isSigningIn ? (
+                                        <View className="flex-row items-center gap-3">
+                                            <ActivityIndicator size="small" color="white" />
+                                            <Text className="text-white font-bold text-lg">Redirecting...</Text>
+                                        </View>
+                                    ) : (
+                                        <Text className="text-white font-bold text-lg tracking-wider">
+                                            {Platform.OS === 'ios' ? 'Sign In with Okta' : 'Sign In'}
+                                        </Text>
+                                    )}
                                 </View>
-                            ) : (
-                                <Text className="text-white font-semibold text-lg tracking-wide">Sign In with Okta</Text>
                             )}
                         </Pressable>
 
                         {/* Error message */}
                         {error && (
-                            <View style={styles.errorContainer}>
-                                <Text style={styles.errorText}>{error}</Text>
+                            <View className="mt-4 px-4 py-3 bg-red-600/15 rounded-lg border border-red-600/30">
+                                <Text className="text-red-300 text-sm text-center">{error}</Text>
                             </View>
                         )}
                     </Animated.View>
@@ -102,10 +128,10 @@ export default function SignInScreen() {
                 {/* Footer - Positioned at bottom of screen, outside formContainer */}
                 {showLoginControls && (
                     <Animated.View
-                        style={styles.footer}
                         entering={FadeInDown.duration(600).delay(100)}
+                        className="absolute bottom-12 left-0 right-0 items-center px-8"
                     >
-                        <Text style={styles.footerText}>
+                        <Text className="text-xs text-gray-500 text-center leading-[18px]">
                             Authorized personnel only. Use of this system constitutes consent to monitoring.
                         </Text>
                     </Animated.View>
@@ -114,57 +140,3 @@ export default function SignInScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#0A1628', // Navy Abyss
-    },
-    content: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        // Removed paddingHorizontal - absolute children position relative to padding box, causing off-center
-    },
-    formContainer: {
-        width: '100%',
-        alignItems: 'center',
-        position: 'absolute',
-        bottom: '25%',
-        left: 0,
-        right: 0,
-        paddingHorizontal: 32, // Apply padding at this level for proper centering
-    },
-    spacer: {
-        height: 80, // Reduced slightly since we moved the logo down (0.25 -> 0.18)
-    },
-    errorContainer: {
-        marginTop: 16,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: 'rgba(220, 38, 38, 0.15)',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: 'rgba(220, 38, 38, 0.3)',
-    },
-    errorText: {
-        color: '#FCA5A5',
-        fontSize: 14,
-        textAlign: 'center',
-    },
-    footer: {
-        position: 'absolute',
-        bottom: 48,
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-        paddingHorizontal: 32,
-    },
-    footerText: {
-        fontSize: 12,
-        color: '#6B7280',
-        textAlign: 'center',
-        lineHeight: 18,
-    },
-});
-

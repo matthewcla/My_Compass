@@ -34,6 +34,7 @@ import Animated, {
 
 // --- Constants ---
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
 const VELOCITY_THRESHOLD = 800;
 const HEADER_HEIGHT = 224;
@@ -170,7 +171,6 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
     // --- PAN GESTURE ---
     const pan = Gesture.Pan()
         .enabled(active && !isDrawerOpen)
-        .activeOffsetX([-20, 20])
         .onUpdate((event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
             translateX.value = event.translationX;
             translateY.value = event.translationY;
@@ -220,10 +220,34 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
         };
     });
 
-    const overlayOpacity = useAnimatedStyle(() => {
-        const opacity = interpolate(Math.abs(translateX.value), [0, SCREEN_WIDTH * 0.25], [0, 1]);
-        return { opacity };
-    });
+    // Badge Opacity Logic
+    const likeStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(
+            translateX.value,
+            [0, SCREEN_WIDTH * 0.25],
+            [0, 1],
+            Extrapolation.CLAMP
+        )
+    }));
+
+    const nopeStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(
+            translateX.value,
+            [-SCREEN_WIDTH * 0.25, 0],
+            [1, 0],
+            Extrapolation.CLAMP
+        )
+    }));
+
+    // Super Like (WOW) Opacity - Driven by vertical swipe
+    const superLikeStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(
+            translateY.value,
+            [-SCREEN_HEIGHT * 0.2, 0],
+            [1, 0],
+            Extrapolation.CLAMP
+        )
+    }));
 
     return (
         <GestureDetector gesture={composedGesture}>
@@ -232,15 +256,21 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
                 onLayout={onCardLayout}
             >
                 {/* Swipe Overlays */}
-                <Animated.View style={[overlayOpacity, { position: 'absolute', top: 40, left: 40, zIndex: 50, transform: [{ rotate: '-30deg' }], opacity: translateX.value > 0 ? undefined : 0 }]}>
+                <Animated.View style={[likeStyle, { position: 'absolute', top: 40, left: 40, zIndex: 50, transform: [{ rotate: '-30deg' }] }]}>
                     <View className="border-4 border-green-500 rounded-xl px-4 py-2 bg-white/20">
-                        <Text className="text-green-500 font-black text-4xl uppercase tracking-widest">APPLY</Text>
+                        <Text className="text-green-500 font-black text-4xl uppercase tracking-widest">YES</Text>
                     </View>
                 </Animated.View>
 
-                <Animated.View style={[overlayOpacity, { position: 'absolute', top: 40, right: 40, zIndex: 50, transform: [{ rotate: '30deg' }], opacity: translateX.value < 0 ? undefined : 0 }]}>
+                <Animated.View style={[nopeStyle, { position: 'absolute', top: 40, right: 40, zIndex: 50, transform: [{ rotate: '30deg' }] }]}>
                     <View className="border-4 border-red-500 rounded-xl px-4 py-2 bg-white/20">
                         <Text className="text-red-500 font-black text-4xl uppercase tracking-widest">NOPE</Text>
+                    </View>
+                </Animated.View>
+
+                <Animated.View style={[superLikeStyle, { position: 'absolute', top: 55, alignSelf: 'center', zIndex: 50 }]}>
+                    <View className="border-4 border-blue-500 rounded-xl px-4 py-2 bg-white/20">
+                        <Text className="text-blue-500 font-black text-4xl uppercase tracking-widest">WOW</Text>
                     </View>
                 </Animated.View>
 

@@ -1,5 +1,4 @@
-import { Billet } from '@/types/schema';
-import { enrichBillet } from '@/utils/billetAdapter';
+
 import { Image } from 'expo-image';
 import {
     Award,
@@ -14,7 +13,7 @@ import {
     MessageSquare,
     Users
 } from 'lucide-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Dimensions, LayoutChangeEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import {
     Gesture,
@@ -61,6 +60,43 @@ const COLORS = {
     purple600: '#9333ea',
 };
 
+// --- Types ---
+export interface SwipeCardData {
+    id: number;
+    billetId: string;
+    title: string;
+    location: string;
+    type: string;
+    rotation: string;
+    rank: string;
+    rate: string;
+    compatibility: number;
+    isHot: boolean;
+    image: string;
+    description: string;
+    detailerNote: string;
+    career: {
+        manning: string;
+        nec: string;
+        warfare: string;
+    };
+    financials: {
+        bah: string;
+        specialPay: string[];
+        colIndex: string;
+    };
+    lifestyle: {
+        schools: number;
+        spouseJobs: string;
+        commute: string;
+    };
+    startDate: string;
+}
+
+interface SailorSwipeCardProps {
+    data: SwipeCardData;
+}
+
 // --- Helper Components ---
 const InfoSection = ({ icon: Icon, title, children, color = 'blue' }: { icon: React.ElementType; title: string; children: React.ReactNode; color?: 'blue' | 'green' | 'purple' }) => {
     const iconColor = color === 'green' ? COLORS.green600 : color === 'purple' ? COLORS.purple600 : COLORS.blue600;
@@ -88,18 +124,17 @@ const DataPill = ({ label, value }: { label: string; value: string }) => (
     </View>
 );
 
-// --- Props ---
-interface BilletSwipeCardProps {
-    billet: Billet;
-    onSwipe: (direction: 'left' | 'right' | 'up') => void;
-    active: boolean;
-    index: number;
-}
-
-// --- Main Component ---
-export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeCardProps) {
-    const data = useMemo(() => enrichBillet(billet), [billet]);
+export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    // Using index 0 and active true by default for now since this is used in a flat list context often
+    // Ideally this would receive onSwipe, active, index props like BilletCard
+    const active = true;
+    const index = 0;
+
+    // For standalone demo purposes, we mock onSwipe. 
+    // In production, this should be passed as a prop.
+    const onSwipe = (direction: string) => console.log('Swiped sailor:', direction);
 
     const cardHeight = useSharedValue(0);
     const translateX = useSharedValue(0);
@@ -107,7 +142,7 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
 
     const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up') => {
         onSwipe(direction);
-    }, [onSwipe]);
+    }, []);
 
     const openDrawer = useCallback(() => {
         setIsDrawerOpen(true);
@@ -121,7 +156,7 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
         cardHeight.value = e.nativeEvent.layout.height;
     }, []);
 
-    // --- TAP GESTURE: Only triggers in bottom trigger zone ---
+    // --- TAP GESTURE ---
     const tap = Gesture.Tap()
         .maxDuration(300)
         .onEnd((event: GestureUpdateEvent<TapGestureHandlerEventPayload>) => {
@@ -132,7 +167,7 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
             }
         });
 
-    // --- PAN GESTURE: For swiping the card ---
+    // --- PAN GESTURE ---
     const pan = Gesture.Pan()
         .enabled(active && !isDrawerOpen)
         .activeOffsetX([-20, 20])
@@ -144,24 +179,17 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
             const velocityX = event.velocityX;
             const velocityY = event.velocityY;
 
+            // Simple swipe logic matching BilletCard
             if (velocityY < -VELOCITY_THRESHOLD || translateY.value < -200) {
-                translateY.value = withTiming(-1000, {}, () => {
-                    runOnJS(handleSwipeComplete)('up');
-                });
+                translateY.value = withTiming(-1000, {}, () => runOnJS(handleSwipeComplete)('up'));
                 return;
             }
-
             if (velocityX > VELOCITY_THRESHOLD || translateX.value > SWIPE_THRESHOLD) {
-                translateX.value = withTiming(SCREEN_WIDTH * 1.5, {}, () => {
-                    runOnJS(handleSwipeComplete)('right');
-                });
+                translateX.value = withTiming(SCREEN_WIDTH * 1.5, {}, () => runOnJS(handleSwipeComplete)('right'));
                 return;
             }
-
             if (velocityX < -VELOCITY_THRESHOLD || translateX.value < -SWIPE_THRESHOLD) {
-                translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {}, () => {
-                    runOnJS(handleSwipeComplete)('left');
-                });
+                translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {}, () => runOnJS(handleSwipeComplete)('left'));
                 return;
             }
 
@@ -178,7 +206,6 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
             [-15, 0, 15],
             Extrapolation.CLAMP
         );
-
         const scale = withSpring(index === 0 ? 1 : 0.95);
         const top = withSpring(index === 0 ? 0 : 20);
 
@@ -201,7 +228,7 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
     return (
         <GestureDetector gesture={composedGesture}>
             <Animated.View
-                style={[{ position: 'absolute', width: '100%', height: '100%' }, cardStyle]}
+                style={[{ width: '100%', maxWidth: 400, height: 600, alignSelf: 'center' }, cardStyle]} // Fixed height approximation for standalone usage logic
                 onLayout={onCardLayout}
             >
                 {/* Swipe Overlays */}
@@ -236,11 +263,13 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                     <View
                         className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 flex flex-col"
                     >
+
                         {/* Header */}
                         <View className="relative w-full bg-slate-900" style={{ height: HEADER_HEIGHT }}>
-                            <Image source={data.image} className="w-full h-full" contentFit="cover" />
+                            <Image source={{ uri: data.image }} className="w-full h-full" contentFit="cover" />
                             <View className="absolute inset-0 bg-black/30" />
 
+                            {/* Badges */}
                             <View className="absolute top-6 left-6 flex-row gap-2">
                                 <View className="px-3 py-1.5 bg-blue-600 rounded-xl shadow-lg">
                                     <Text className="text-white text-[10px] font-black uppercase tracking-widest">{data.type}</Text>
@@ -253,6 +282,7 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                                 )}
                             </View>
 
+                            {/* Match */}
                             <View className="absolute top-6 right-6">
                                 <View className="w-14 h-14 bg-white/20 rounded-2xl border border-white/30 items-center justify-center">
                                     <Text className="text-white text-[10px] font-bold uppercase leading-none opacity-80">Match</Text>
@@ -260,6 +290,7 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                                 </View>
                             </View>
 
+                            {/* Info */}
                             <View className="absolute bottom-6 left-6 right-6">
                                 <Text className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">{data.billetId}</Text>
                                 <Text className="text-3xl font-black text-white leading-tight uppercase tracking-tight">{data.title}</Text>
@@ -421,7 +452,7 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                                             </View>
                                         </InfoSection>
 
-                                        {/* Command Mission */}
+                                        {/* Command Mission (Description) */}
                                         <View style={{ marginTop: 8 }}>
                                             <Text style={{ fontSize: 11, color: COLORS.slate400, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>Command Mission</Text>
                                             <Text style={{ color: COLORS.slate600, fontSize: 13, lineHeight: 20 }}>{data.description}</Text>
@@ -449,10 +480,9 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                                 </View>
                             </View>
                         )}
-
                     </View>
                 </View>
-            </Animated.View>
-        </GestureDetector>
+            </Animated.View >
+        </GestureDetector >
     );
 }

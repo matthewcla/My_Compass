@@ -6,10 +6,9 @@ import {
   LeaveBalance,
   LeaveRequest,
   LeaveRequestSchema,
-  User,
-  UserSchema,
   initializeSQLiteTables
 } from '@/types/schema';
+import { User, UserSchema } from '@/types/user';
 import { DashboardData } from '@/types/dashboard';
 import * as SQLite from 'expo-sqlite';
 

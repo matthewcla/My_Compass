@@ -1,5 +1,6 @@
 import * as storage from '@/services/storage';
-import type { SyncStatus, User } from '@/types/schema';
+import type { SyncStatus } from '@/types/schema';
+import type { User } from '@/types/user';
 import { create } from 'zustand';
 
 /**
@@ -46,7 +47,7 @@ interface UserActions {
 type UserStore = UserState & UserActions;
 
 /**
- * Mock user data matching UserSchema from types/schema.ts
+ * Mock user data matching UserSchema from types/user.ts
  * Used when token validation succeeds
  */
 const MOCK_USER: User = {

@@ -8,8 +8,8 @@ import type {
     Billet,
     LeaveBalance,
     LeaveRequest,
-    User,
 } from './schema';
+import { User } from './user';
 
 // =============================================================================
 // PAGINATION

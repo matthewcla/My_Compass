@@ -6,8 +6,8 @@ import {
     Billet,
     LeaveBalance,
     LeaveRequest,
-    User,
 } from '@/types/schema';
+import { User } from '@/types/user';
 import { decryptData, encryptData } from '../lib/encryption';
 
 export const initDatabase = async () => {

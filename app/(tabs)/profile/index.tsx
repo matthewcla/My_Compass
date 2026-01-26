@@ -1,5 +1,5 @@
 import { useUserStore } from '@/store/useUserStore';
-import { DUTY_TYPES, PREFERENCE_REGIONS } from '@/types/schema';
+import { DUTY_TYPES, PREFERENCE_REGIONS } from '@/types/user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';

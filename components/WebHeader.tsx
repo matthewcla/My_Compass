@@ -149,7 +149,7 @@ export function WebHeader() {
                     {/* Profile */}
                     <Pressable
                         onPress={() => {
-                            console.log('Navigate to profile');
+                            // Navigate to profile
                         }}
                         style={({ hovered }: { hovered?: boolean }) => ({
                             flexDirection: 'row', alignItems: 'center', gap: 10,

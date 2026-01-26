@@ -84,11 +84,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded && dbInitialized) {
       SplashScreen.hideAsync();
-      registerForPushNotificationsAsync().then(token => {
-        if (token) {
-          console.log('Push Token:', token);
-        }
-      });
+      registerForPushNotificationsAsync();
     }
   }, [loaded, dbInitialized]);
 

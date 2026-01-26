@@ -9,7 +9,7 @@ interface StatusCardProps {
 
 export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     return (
-        <View className="flex flex-col gap-2 mb-3">
+        <View className="flex flex-col gap-2">
             <View className="bg-blue-50/80 border-l-2 border-blue-500 pl-3 pr-2 py-2.5 rounded-r-lg shadow-sm flex-row items-center justify-between">
                 <View className="flex-row items-center gap-2.5">
                     <Calendar size={16} className="text-blue-600" color="#2563EB" />

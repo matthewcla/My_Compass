@@ -20,7 +20,7 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
     // This implies about 50% emerald (top and right) and 50% slate (bottom and left).
 
     return (
-        <View className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 mb-3 flex flex-col justify-between" style={{ elevation: 2 }}>
+        <View className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex flex-col justify-between" style={{ elevation: 2 }}>
             <View className="flex-row justify-between items-start mb-2">
                 <View>
                     <Text className="text-slate-400 text-[9px] font-bold uppercase tracking-wider">My Shortlist</Text>

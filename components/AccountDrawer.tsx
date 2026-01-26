@@ -1,5 +1,6 @@
 import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
+import { useUser } from '@/store/useUserStore';
 import { LogOut, Settings, UserCircle, X } from 'lucide-react-native';
 import React from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
@@ -11,6 +12,7 @@ interface AccountDrawerProps {
 
 export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
     const { signOut } = useSession();
+    const user = useUser();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const theme = Colors[colorScheme ?? 'light'];
@@ -43,8 +45,8 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
                             <View style={styles.avatarPlaceholder}>
                                 <UserCircle size={64} color={theme.tint} strokeWidth={1} />
                             </View>
-                            <Text style={[styles.userName, { color: theme.text }]}>Sailor Name</Text>
-                            <Text style={[styles.userRank, { color: theme.text, opacity: 0.6 }]}>Rank • Rate</Text>
+                            <Text style={[styles.userName, { color: theme.text }]}>{user?.displayName || 'Guest'}</Text>
+                            <Text style={[styles.userRank, { color: theme.text, opacity: 0.6 }]}>{user?.rank || ''} • {user?.title || ''}</Text>
                         </View>
 
                         <View style={styles.separator} />

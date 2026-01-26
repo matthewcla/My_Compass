@@ -33,6 +33,14 @@ export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
     const [isSigningIn, setIsSigningIn] = useState(false);
 
+    // OFFLINE DEV: Auto-inject mock session if no session exists after loading
+    useEffect(() => {
+        if (!isLoading && !session) {
+            console.log('[Auth] OFFLINE DEV: Auto-injecting mock session token');
+            setSession('mock-offline-dev-token');
+        }
+    }, [isLoading, session]);
+
     useEffect(() => {
         if (session && !isLoading) {
             useUserStore.getState().hydrateUserFromToken(session).catch(console.error);

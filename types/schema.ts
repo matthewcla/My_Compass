@@ -255,8 +255,29 @@ export const SQLiteTableDefinitions = {
  * @param db - expo-sqlite database instance
  */
 export async function initializeSQLiteTables(db: { execAsync: (sql: string) => Promise<void> }): Promise<void> {
+    // Create all tables
     for (const tableDef of Object.values(SQLiteTableDefinitions)) {
         await db.execAsync(tableDef);
+    }
+
+    // Run migrations for existing databases
+    await runMigrations(db);
+}
+
+/**
+ * Database migrations for schema updates.
+ * Each migration is idempotent and safe to run multiple times.
+ */
+async function runMigrations(db: { execAsync: (sql: string) => Promise<void> }): Promise<void> {
+    // Migration 1: Add preferences column to users table (if missing)
+    try {
+        await db.execAsync(`ALTER TABLE users ADD COLUMN preferences TEXT;`);
+        console.log('[DB Migration] Added preferences column to users table');
+    } catch (e: any) {
+        // Column already exists - this is expected for new databases
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding preferences column:', e);
+        }
     }
 }
 

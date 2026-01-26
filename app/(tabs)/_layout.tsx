@@ -5,8 +5,6 @@ import React, { useState } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { AccountDrawer } from '@/components/AccountDrawer';
-import { HeaderControls } from '@/components/HeaderControls';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
 import { WebHeader } from '@/components/WebHeader';
 import Colors from '@/constants/Colors';
@@ -46,8 +44,8 @@ export default function TabLayout() {
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
           headerTintColor: Colors[colorScheme ?? 'light'].text,
           header: Platform.OS === 'web' && isDesktop ? () => <WebHeader /> : undefined,
-          headerShown: Platform.OS === 'web' ? isDesktop : useClientOnlyValue(false, true),
-          headerRight: Platform.OS === 'web' ? undefined : () => <HeaderControls />, // Add controls for Native
+          headerShown: Platform.OS === 'web' ? isDesktop : false,
+          headerRight: undefined, // Controls are now inside ScreenHeader
           headerTransparent: Platform.OS === 'web' ? false : true,
           headerStyle: {
             borderBottomWidth: 0,

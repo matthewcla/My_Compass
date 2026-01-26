@@ -1,4 +1,5 @@
 import { BilletSwipeCard } from '@/components/BilletSwipeCard';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { SwipeDirection, useAssignmentStore } from '@/store/useAssignmentStore';
 import { RotateCcw } from 'lucide-react-native';
 import React, { useEffect } from 'react';
@@ -122,14 +123,10 @@ export default function AssignmentsScreen() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View className="flex-1 bg-gray-100 dark:bg-black">
           {/* Header */}
-          <View style={{ paddingTop: insets.top + 20, paddingHorizontal: 20 }} className="z-50">
-            <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              DISCOVER
-            </Text>
-            <Text className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest text-xs">
-              A World of Opportunity
-            </Text>
-          </View>
+          <ScreenHeader
+            title="DISCOVER"
+            subtitle="A World of Opportunity"
+          />
 
           {renderDeck()}
 

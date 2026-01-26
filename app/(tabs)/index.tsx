@@ -2,13 +2,13 @@ import { DiscoveryCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useSession } from '@/lib/ctx';
 import { useIsHydrating, useUser } from '@/store/useUserStore';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
     const router = useRouter();
@@ -19,21 +19,21 @@ export default function HomeScreen() {
 
     // Header Logic: Display personalized welcome or generic fallback while loading
     const getGreeting = () => {
-        if (!user) return "Welcome, Sailor";
+        if (!user) return "Welcome Aboard";
         const parts = user.displayName?.split(' ') || [];
         const lastName = parts.length > 1 ? parts[parts.length - 1] : user.displayName;
-        return `Welcome, ${user.rank || ''} ${lastName || 'Sailor'}`;
+        return `Welcome, ${user.title || user.rank || ''} ${lastName || 'Sailor'}`;
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-systemGray6" edges={['top']}>
-            <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 8, paddingBottom: Platform.OS === 'ios' ? 90 : 80 }}>
-                {/* Header - Compact */}
-                <View style={{ marginBottom: 8 }}>
-                    <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Welcome Back</Text>
-                    <Text className="text-lg font-bold text-slate-900">{getGreeting()}</Text>
-                </View>
+        <View className="flex-1 bg-systemGray6">
+            {/* Header - Fixed at Top */}
+            <ScreenHeader
+                title="HOME"
+                subtitle={getGreeting()}
+            />
 
+            <View style={{ flex: 1, paddingHorizontal: 16 }}>
                 {/* Loading/Error States */}
                 {isSessionLoading || isHydrating ? (
                     <Text className="text-slate-500 text-center mt-10">Loading User Profile...</Text>
@@ -57,7 +57,7 @@ export default function HomeScreen() {
                     </View>
                 ) : (
                     /* Dashboard Cards - Flex layout to fill available space */
-                    <View style={{ flex: 1, gap: 12 }}>
+                    <View style={{ flex: 1, gap: 12, paddingBottom: Platform.OS === 'ios' ? 90 : 80 }}>
                         {/* 1. Status Section */}
                         <StatusCard
                             nextCycle={data.cycle.cycleId}
@@ -93,6 +93,6 @@ export default function HomeScreen() {
                     </View>
                 )}
             </View>
-        </SafeAreaView>
+        </View>
     );
 }

@@ -1,9 +1,10 @@
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useUserStore } from '@/store/useUserStore';
 import { DUTY_TYPES, PREFERENCE_REGIONS } from '@/types/user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
@@ -72,109 +73,109 @@ export default function ProfileScreen() {
     return (
         <View className="flex-1 bg-slate-50 dark:bg-black">
             <ScrollView
-                className="flex-1 px-4"
-                contentContainerStyle={{ paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 0 }}
+                className="flex-1"
             >
-                <View className="mb-6 mt-4">
-                    <Text className="text-2xl font-bold text-slate-900 dark:text-white">Profile & Preferences</Text>
-                    <Text className="text-slate-500 dark:text-gray-400">
-                        {user.displayName} • {user.rank}
-                    </Text>
-                </View>
+                <ScreenHeader
+                    title="PROFILE"
+                    subtitle="My Preference Engine"
+                />
 
-                <View className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm mb-6 border border-slate-200 dark:border-slate-800">
-                    <Text className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
-                        Preferred Regions
-                    </Text>
-                    <Text className="text-sm text-slate-500 dark:text-gray-400 mb-3">
-                        Select the regions you are interested in for future assignments.
-                    </Text>
+                <View className="px-4 mt-2">
 
-                    <Controller
-                        control={control}
-                        name="regions"
-                        render={({ field: { value, onChange } }) => (
-                            <View className="flex-row flex-wrap gap-2">
-                                {PREFERENCE_REGIONS.map((region) => {
-                                    const isSelected = value.includes(region);
-                                    return (
-                                        <Pressable
-                                            key={region}
-                                            onPress={() => toggleSelection(value, region, onChange)}
-                                            className={`px-4 py-2 rounded-full border ${isSelected
-                                                ? 'bg-blue-600 border-blue-600'
-                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'
-                                                }`}
-                                        >
-                                            <Text
-                                                className={`font-medium ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'
-                                                    }`}
-                                            >
-                                                {region}
-                                            </Text>
-                                        </Pressable>
-                                    );
-                                })}
-                            </View>
-                        )}
-                    />
-                    {errors.regions && (
-                        <Text className="text-red-500 text-sm mt-2">{errors.regions.message}</Text>
-                    )}
-                </View>
-
-                <View className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm mb-8 border border-slate-200 dark:border-slate-800">
-                    <Text className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
-                        Duty Type Interface
-                    </Text>
-                    <Text className="text-sm text-slate-500 dark:text-gray-400 mb-3">
-                        Select your preferred duty types.
-                    </Text>
-
-                    <Controller
-                        control={control}
-                        name="dutyTypes"
-                        render={({ field: { value, onChange } }) => (
-                            <View className="flex-row flex-wrap gap-2">
-                                {DUTY_TYPES.map((type) => {
-                                    const isSelected = value.includes(type);
-                                    return (
-                                        <Pressable
-                                            key={type}
-                                            onPress={() => toggleSelection(value, type, onChange)}
-                                            className={`px-4 py-2 rounded-full border ${isSelected
-                                                ? 'bg-blue-600 border-blue-600'
-                                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'
-                                                }`}
-                                        >
-                                            <Text
-                                                className={`font-medium ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'
-                                                    }`}
-                                            >
-                                                {type}
-                                            </Text>
-                                        </Pressable>
-                                    );
-                                })}
-                            </View>
-                        )}
-                    />
-                    {errors.dutyTypes && (
-                        <Text className="text-red-500 text-sm mt-2">{errors.dutyTypes.message}</Text>
-                    )}
-                </View>
-
-                <View className="mb-10">
-                    <Pressable
-                        onPress={handleSubmit(onSubmit)}
-                        className={`w-full py-4 rounded-xl items-center shadow-sm ${isDirty ? 'bg-blue-600' : 'bg-slate-300'
-                            }`}
-                        disabled={!isDirty}
-                    >
-                        <Text className="text-white font-bold text-lg">
-                            Save Preferences
+                    <View className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm mb-6 border border-slate-200 dark:border-slate-800">
+                        <Text className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
+                            Preferred Regions
                         </Text>
-                    </Pressable>
+                        <Text className="text-sm text-slate-500 dark:text-gray-400 mb-3">
+                            Select the regions you are interested in for future assignments.
+                        </Text>
+
+                        <Controller
+                            control={control}
+                            name="regions"
+                            render={({ field: { value, onChange } }) => (
+                                <View className="flex-row flex-wrap gap-2">
+                                    {PREFERENCE_REGIONS.map((region) => {
+                                        const isSelected = value.includes(region);
+                                        return (
+                                            <Pressable
+                                                key={region}
+                                                onPress={() => toggleSelection(value, region, onChange)}
+                                                className={`px-4 py-2 rounded-full border ${isSelected
+                                                    ? 'bg-blue-600 border-blue-600'
+                                                    : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'
+                                                    }`}
+                                            >
+                                                <Text
+                                                    className={`font-medium ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'
+                                                        }`}
+                                                >
+                                                    {region}
+                                                </Text>
+                                            </Pressable>
+                                        );
+                                    })}
+                                </View>
+                            )}
+                        />
+                        {errors.regions && (
+                            <Text className="text-red-500 text-sm mt-2">{errors.regions.message}</Text>
+                        )}
+                    </View>
+
+                    <View className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm mb-8 border border-slate-200 dark:border-slate-800">
+                        <Text className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
+                            Duty Type Interface
+                        </Text>
+                        <Text className="text-sm text-slate-500 dark:text-gray-400 mb-3">
+                            Select your preferred duty types.
+                        </Text>
+
+                        <Controller
+                            control={control}
+                            name="dutyTypes"
+                            render={({ field: { value, onChange } }) => (
+                                <View className="flex-row flex-wrap gap-2">
+                                    {DUTY_TYPES.map((type) => {
+                                        const isSelected = value.includes(type);
+                                        return (
+                                            <Pressable
+                                                key={type}
+                                                onPress={() => toggleSelection(value, type, onChange)}
+                                                className={`px-4 py-2 rounded-full border ${isSelected
+                                                    ? 'bg-blue-600 border-blue-600'
+                                                    : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700'
+                                                    }`}
+                                            >
+                                                <Text
+                                                    className={`font-medium ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'
+                                                        }`}
+                                                >
+                                                    {type}
+                                                </Text>
+                                            </Pressable>
+                                        );
+                                    })}
+                                </View>
+                            )}
+                        />
+                        {errors.dutyTypes && (
+                            <Text className="text-red-500 text-sm mt-2">{errors.dutyTypes.message}</Text>
+                        )}
+                    </View>
+
+                    <View className="mb-10">
+                        <Pressable
+                            onPress={handleSubmit(onSubmit)}
+                            className={`w-full py-4 rounded-xl items-center shadow-sm ${isDirty ? 'bg-blue-600' : 'bg-slate-300'
+                                }`}
+                            disabled={!isDirty}
+                        >
+                            <Text className="text-white font-bold text-lg">
+                                Save Preferences
+                            </Text>
+                        </Pressable>
+                    </View>
                 </View>
             </ScrollView>
         </View>

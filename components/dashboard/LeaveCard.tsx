@@ -1,6 +1,6 @@
 import { Clock } from 'lucide-react-native';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface LeaveCardProps {
     balance: number;
@@ -8,9 +8,10 @@ interface LeaveCardProps {
         dates: string;
         status: string; // Not explicitly used in mockup visual but good for props
     };
+    onPress?: () => void;
 }
 
-export function LeaveCard({ balance, pendingRequest }: LeaveCardProps) {
+export function LeaveCard({ balance, pendingRequest, onPress }: LeaveCardProps) {
     return (
         <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex-row items-center justify-between relative overflow-hidden min-h-[60px]" style={{ elevation: 2 }}>
             {/* Decorative Corner */}

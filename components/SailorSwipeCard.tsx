@@ -135,7 +135,9 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
 
     // For standalone demo purposes, we mock onSwipe. 
     // In production, this should be passed as a prop.
-    const onSwipe = (direction: string) => console.log('Swiped sailor:', direction);
+    const onSwipe = (direction: string) => {
+        // Swiped sailor
+    };
 
     const cardHeight = useSharedValue(0);
     const translateX = useSharedValue(0);

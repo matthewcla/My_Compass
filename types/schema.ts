@@ -74,6 +74,18 @@ export const DUTY_TYPES = [
 export type UserPreferences = NonNullable<User['preferences']>;
 
 // =============================================================================
+// DASHBOARD CACHE
+// =============================================================================
+
+export const DashboardCacheSchema = z.object({
+    userId: z.string().uuid(),
+    data: z.string(), // JSON stringified DashboardData
+    lastSyncTimestamp: z.string().datetime(),
+    syncStatus: SyncStatusSchema,
+});
+export type DashboardCache = z.infer<typeof DashboardCacheSchema>;
+
+// =============================================================================
 // BILLET LOCK CONTEXT (Computed Helper)
 // =============================================================================
 
@@ -159,6 +171,16 @@ export const SQLiteTableDefinitions = {
       sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error'))
     );
   `,
+
+    dashboard_cache: `
+    CREATE TABLE IF NOT EXISTS dashboard_cache (
+      user_id TEXT PRIMARY KEY,
+      data TEXT NOT NULL,
+      last_sync_timestamp TEXT NOT NULL,
+      sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    `,
 
     billets: `
     CREATE TABLE IF NOT EXISTS billets (

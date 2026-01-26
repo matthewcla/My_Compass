@@ -32,46 +32,7 @@ export type SyncMetadata = z.infer<typeof SyncMetadataSchema>;
 // NORMALIZED USER ENTITY
 // =============================================================================
 
-/**
- * Normalized User entity for referential integrity.
- * Used by approval chains, lock ownership, and actor tracking.
- */
-export const UserSchema = z.object({
-    id: z.string().uuid(),
-    dodId: z.string().optional(), // DoD ID (EDIPI) for CAC authentication
-    displayName: z.string(), // e.g., "CAPT J. Smith"
-    email: z.string().email().optional(),
-    rank: z.string().optional(), // Pay grade or rank abbreviation
-    title: z.string().optional(), // Billet title / role
-    uic: z.string().optional(), // Current unit
-    preferences: z.object({
-        regions: z.array(z.string()).optional(),
-        dutyTypes: z.array(z.string()).optional(),
-    }).optional(),
-    lastSyncTimestamp: z.string().datetime(),
-    syncStatus: SyncStatusSchema,
-});
-export type User = z.infer<typeof UserSchema>;
-
-export const PREFERENCE_REGIONS = [
-    'Mid-Atlantic',
-    'Southeast',
-    'Southwest',
-    'Northwest',
-    'Hawaii',
-    'Europe',
-    'Pacific',
-    'Japan'
-] as const;
-
-export const DUTY_TYPES = [
-    'Sea',
-    'Shore',
-    'Overseas',
-    'Special'
-] as const;
-
-export type UserPreferences = NonNullable<User['preferences']>;
+// User types moved to @/types/user.ts
 
 // =============================================================================
 // DASHBOARD CACHE

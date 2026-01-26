@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useSession } from '@/lib/ctx';
+import { getDashboardCache, saveDashboardCache } from '@/services/storage';
 import { useUser } from '@/store/useUserStore';
 import { DashboardData } from '@/types/dashboard';
-import { getDashboardCache, saveDashboardCache } from '@/services/storage';
 import { logger } from '@/utils/logger';
+import { useCallback, useEffect, useState } from 'react';
 
 export function useDashboardData() {
   const { session } = useSession();
@@ -62,11 +62,15 @@ export function useDashboardData() {
           startDate: '2024-05-01T00:00:00Z',
           endDate: '2024-05-31T23:59:59Z',
           daysRemaining: 12,
+          matchingBillets: 342,
         },
         stats: {
           applicationsCount: 3,
           averageMatchScore: 85,
           lastLogin: new Date().toISOString(),
+          liked: 12,
+          superLiked: 2,
+          passed: 45,
         },
         leave: {
           currentBalance: 15.5,

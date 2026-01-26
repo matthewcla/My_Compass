@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { Anchor, CircleUser, FileText, Map, User } from 'lucide-react-native';
+import { Anchor, CircleUser, FileText, Home, Map, User } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 
@@ -64,7 +64,10 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            href: null,
+            title: 'Home',
+            tabBarLabel: 'Home',
+            headerShown: false,
+            tabBarIcon: ({ color }) => <Home size={28} color={color} strokeWidth={1.5} />,
           }}
         />
         <Tabs.Screen
@@ -78,21 +81,21 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="admin/index"
-          options={{
-            title: 'Admin',
-            tabBarLabel: 'Admin',
-            headerTitle: '',
-            tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
-          }}
-        />
-        <Tabs.Screen
           name="pcs/index"
           options={{
             title: 'PCS',
             tabBarLabel: 'PCS',
             headerTitle: '',
             tabBarIcon: ({ color }) => <Map size={28} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="admin/index"
+          options={{
+            title: 'Admin',
+            tabBarLabel: 'Admin',
+            headerTitle: '',
+            tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
           }}
         />
         <Tabs.Screen

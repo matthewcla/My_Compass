@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { Tabs, router, usePathname } from 'expo-router';
-import { Anchor, CircleUser, FileText, Map, User } from 'lucide-react-native';
+import { Anchor, CircleUser, FileText, Home, Map, User } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,9 +23,10 @@ export default function TabLayout() {
 
     // Icons mapping for the sidebar
     const navItems = [
+        { name: 'Home', href: '/', icon: Home },
         { name: 'Assign', href: '/assignments', icon: Anchor },
-        { name: 'Admin', href: '/admin', icon: FileText },
         { name: 'PCS', href: '/pcs', icon: Map },
+        { name: 'Admin', href: '/admin', icon: FileText },
         { name: 'Profile', href: '/profile', icon: User },
     ];
 
@@ -139,8 +140,9 @@ export default function TabLayout() {
                     <Tabs.Screen
                         name="index"
                         options={{
-                            href: null,
                             title: 'Home',
+                            // tabBarLabel: 'Home', // Optional if title is enough, but consistently nice
+                            tabBarIcon: ({ color }) => <Home size={24} color={color} strokeWidth={1.5} />,
                         }}
                     />
                     <Tabs.Screen
@@ -153,21 +155,21 @@ export default function TabLayout() {
                         }}
                     />
                     <Tabs.Screen
-                        name="admin/index"
-                        options={{
-                            title: 'Admin',
-                            tabBarLabel: 'Admin',
-                            headerTitle: 'My Admin',
-                            tabBarIcon: ({ color }) => <FileText size={24} color={color} strokeWidth={1.5} />,
-                        }}
-                    />
-                    <Tabs.Screen
                         name="pcs/index"
                         options={{
                             title: 'PCS',
                             tabBarLabel: 'PCS',
                             headerTitle: 'My PCS',
                             tabBarIcon: ({ color }) => <Map size={24} color={color} strokeWidth={1.5} />,
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="admin/index"
+                        options={{
+                            title: 'Admin',
+                            tabBarLabel: 'Admin',
+                            headerTitle: 'My Admin',
+                            tabBarIcon: ({ color }) => <FileText size={24} color={color} strokeWidth={1.5} />,
                         }}
                     />
                     <Tabs.Screen
@@ -220,7 +222,6 @@ export default function TabLayout() {
                     <Tabs.Screen
                         name="index"
                         options={{
-                            href: null,
                             title: 'Home',
                         }}
                     />
@@ -234,21 +235,21 @@ export default function TabLayout() {
                         }}
                     />
                     <Tabs.Screen
-                        name="admin/index"
-                        options={{
-                            title: 'Admin',
-                            tabBarLabel: 'Admin',
-                            headerTitle: 'My Admin',
-                            tabBarIcon: ({ color }) => <FileText size={24} color={color} strokeWidth={1.5} />,
-                        }}
-                    />
-                    <Tabs.Screen
                         name="pcs/index"
                         options={{
                             title: 'PCS',
                             tabBarLabel: 'PCS',
                             headerTitle: 'My PCS',
                             tabBarIcon: ({ color }) => <Map size={24} color={color} strokeWidth={1.5} />,
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="admin/index"
+                        options={{
+                            title: 'Admin',
+                            tabBarLabel: 'Admin',
+                            headerTitle: 'My Admin',
+                            tabBarIcon: ({ color }) => <FileText size={24} color={color} strokeWidth={1.5} />,
                         }}
                     />
                     <Tabs.Screen

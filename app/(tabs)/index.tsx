@@ -3,7 +3,8 @@ import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { useUser } from '@/store/useUserStore';
+import { useSession } from '@/lib/ctx';
+import { useIsHydrating, useUser } from '@/store/useUserStore';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
@@ -11,7 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
     const router = useRouter();
-    const { data, loading } = useDashboardData();
+    const { data, loading, error, refetch } = useDashboardData();
+    const { isLoading: isSessionLoading } = useSession();
+    const isHydrating = useIsHydrating();
     const user = useUser();
 
     // Header Logic: Display personalized welcome or generic fallback while loading
@@ -42,43 +45,76 @@ export default function HomeScreen() {
                     <Text className="text-lg font-bold text-slate-900">{getGreeting()}</Text>
                 </View>
 
-                {loading || !data ? (
-                    // Simple Loading State - Could be fleshed out with Skeletons later
-                    <Text className="text-slate-500 text-center mt-10">Loading Dashboard...</Text>
-                ) : (
-                    <View className="gap-3">
-                        {/* 1. Status Section */}
-                        <StatusCard
-                            nextCycle={data.cycle.cycleId}
-                            daysUntilOpen={data.cycle.daysRemaining}
-                        />
+                {/* 
+                    Current Logic Analysis:
+                    - isSessionLoading: Auth token is being read from secure storage
+                    - isHydrating: User data is loading from token/storage
+                    - loading: Dashboard data is loading
+                    - !data: Dashboard data is missing
+                    - error: Dashboard data fetch failed
+                 */}
 
-                        {/* 2. Stats Section */}
-                        <StatsCard
-                            liked={data.stats.liked || 0}
-                            superLiked={data.stats.superLiked || 0}
-                            passed={data.stats.passed || 0}
-                            onPressSuperLiked={() => router.push({ pathname: '/(tabs)/recommendations', params: { filter: 'super_liked' } } as any)}
-                        />
+                {/* 1. Session or User is hydrating (Critical first step) */}
+                {isSessionLoading || isHydrating ? (
+                    <Text className="text-slate-500 text-center mt-10">Loading User Profile...</Text>
+                ) :
 
-                        {/* 3. Discovery Section */}
-                        <DiscoveryCard
-                            matchingBillets={data.cycle.matchingBillets || 0}
-                            onStartExploring={() => router.push('/(tabs)/discovery' as any)}
-                        />
+                    /* 2. User failed to load? (Guard against null user if session existed but failed) */
+                    !user ? (
+                        <View className="items-center mt-10">
+                            <Text className="text-red-500 text-center mb-2">User Profile Error</Text>
+                            <Text className="text-slate-400 text-xs text-center">Unable to load user identity.</Text>
+                        </View>
+                    ) :
 
-                        {/* 4. Leave Section */}
-                        <LeaveCard
-                            balance={data.leave.currentBalance}
-                            pendingRequest={data.leave.pendingRequestsCount > 0 ? {
-                                dates: "Pending Approval", // Data hook doesn't provide dates yet, placeholder
-                                status: "Pending"
-                            } : undefined}
-                            // @ts-ignore - Route needs to be created
-                            onPress={() => router.push('/(tabs)/admin/leave' as any)}
-                        />
-                    </View>
-                )}
+                        /* 3. Dashboard Loading or Error */
+                        loading ? (
+                            <Text className="text-slate-500 text-center mt-10">Loading Dashboard...</Text>
+                        ) : error ? (
+                            <View className="items-center mt-10">
+                                <Text className="text-red-500 text-center mb-2">Dashboard Error</Text>
+                                <Text className="text-slate-500 text-center">{error}</Text>
+                                <Text className="text-blue-500 text-center mt-2" onPress={refetch}>Tap to Retry</Text>
+                            </View>
+                        ) : !data ? (
+                            <View className="items-center mt-10">
+                                <Text className="text-slate-500 text-center">No Dashboard Data Available</Text>
+                                <Text className="text-blue-500 text-center mt-2" onPress={refetch}>Tap to Refresh</Text>
+                            </View>
+                        ) : (
+                            <View className="gap-3">
+                                {/* 1. Status Section */}
+                                <StatusCard
+                                    nextCycle={data.cycle.cycleId}
+                                    daysUntilOpen={data.cycle.daysRemaining}
+                                />
+
+                                {/* 2. Stats Section */}
+                                <StatsCard
+                                    liked={data.stats.liked || 0}
+                                    superLiked={data.stats.superLiked || 0}
+                                    passed={data.stats.passed || 0}
+                                    onPressSuperLiked={() => router.push({ pathname: '/(tabs)/recommendations', params: { filter: 'super_liked' } } as any)}
+                                />
+
+                                {/* 3. Discovery Section */}
+                                <DiscoveryCard
+                                    matchingBillets={data.cycle.matchingBillets || 0}
+                                    onStartExploring={() => router.push('/(tabs)/discovery' as any)}
+                                />
+
+                                {/* 4. Leave Section */}
+                                <LeaveCard
+                                    balance={data.leave.currentBalance}
+                                    pendingRequest={data.leave.pendingRequestsCount > 0 ? {
+                                        dates: "Pending Approval", // Data hook doesn't provide dates yet, placeholder
+                                        status: "Pending"
+                                    } : undefined}
+                                    // @ts-ignore - Route needs to be created
+                                    onPress={() => router.push('/(tabs)/admin/leave' as any)}
+                                />
+                            </View>
+                        )}
             </ScrollView>
         </SafeAreaView>
     );

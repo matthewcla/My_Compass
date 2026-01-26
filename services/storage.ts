@@ -10,6 +10,7 @@ import {
   UserSchema,
   initializeSQLiteTables
 } from '@/types/schema';
+import { DashboardData } from '@/types/dashboard';
 import * as SQLite from 'expo-sqlite';
 
 const DB_NAME = 'my_compass.db';
@@ -382,4 +383,41 @@ const mapRowToLeaveBalance = (row: any): LeaveBalance => {
     lastSyncTimestamp: row.last_sync_timestamp,
     syncStatus: row.sync_status,
   };
+};
+
+// =============================================================================
+// DASHBOARD SERVICE
+// =============================================================================
+
+export const saveDashboardCache = async (userId: string, data: DashboardData): Promise<void> => {
+  const db = await getDB();
+  const serialized = JSON.stringify(data);
+  const now = new Date().toISOString();
+
+  const sql = `
+    INSERT OR REPLACE INTO dashboard_cache (
+      user_id, data, last_sync_timestamp, sync_status
+    ) VALUES (?, ?, ?, ?);
+  `;
+
+  await db.runAsync(
+    sql,
+    userId,
+    serialized,
+    now,
+    'synced'
+  );
+};
+
+export const getDashboardCache = async (userId: string): Promise<DashboardData | null> => {
+  const db = await getDB();
+  const result = await db.getFirstAsync<any>('SELECT * FROM dashboard_cache WHERE user_id = ?', userId);
+  if (!result) return null;
+
+  try {
+    return JSON.parse(result.data) as DashboardData;
+  } catch (e) {
+    console.error('Failed to parse dashboard cache', e);
+    return null;
+  }
 };

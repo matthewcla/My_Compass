@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
 import { SessionProvider, useSession } from '@/lib/ctx';
@@ -93,15 +94,17 @@ export default function RootLayout() {
   }
 
   return (
-    <SessionProvider>
-      <StatusBar style="auto" />
-      <AuthGuard>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="sign-in" options={{ headerShown: false }} />
-          <Stack.Screen name="leave" options={{ presentation: 'modal', headerShown: false }} />
-        </Stack>
-      </AuthGuard>
-    </SessionProvider>
+    <SafeAreaProvider>
+      <SessionProvider>
+        <StatusBar style="auto" />
+        <AuthGuard>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+            <Stack.Screen name="leave" options={{ presentation: 'modal', headerShown: false }} />
+          </Stack>
+        </AuthGuard>
+      </SessionProvider>
+    </SafeAreaProvider>
   );
 }

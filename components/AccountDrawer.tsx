@@ -1,9 +1,9 @@
 import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
 import { useUser } from '@/store/useUserStore';
-import { LogOut, Settings, UserCircle, X } from 'lucide-react-native';
-import React from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { LogOut, Minimize, Settings, UserCircle, X } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { Modal, Platform, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 interface AccountDrawerProps {
     visible: boolean;
@@ -16,6 +16,23 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const theme = Colors[colorScheme ?? 'light'];
+    const [isPWA, setIsPWA] = useState(false);
+
+    useEffect(() => {
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            const checkPWA = () => {
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+                setIsPWA(isStandalone);
+            };
+            checkPWA();
+        }
+    }, []);
+
+    const handleExitFullScreen = () => {
+        if (Platform.OS === 'web' && document.exitFullscreen) {
+            document.exitFullscreen().catch(err => console.error(err));
+        }
+    };
 
     return (
         <Modal
@@ -50,6 +67,13 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
                         </View>
 
                         <View style={styles.separator} />
+
+                        {isPWA && (
+                            <TouchableOpacity style={styles.menuItem} onPress={handleExitFullScreen}>
+                                <Minimize size={20} color={theme.text} />
+                                <Text style={[styles.menuText, { color: theme.text }]}>Exit Full Screen</Text>
+                            </TouchableOpacity>
+                        )}
 
                         <TouchableOpacity style={styles.menuItem}>
                             <Settings size={20} color={theme.text} />

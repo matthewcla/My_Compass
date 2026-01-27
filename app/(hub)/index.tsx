@@ -2,22 +2,25 @@ import { DiscoveryCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
+import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
-import { useUser } from '@/store/useUserStore';
+import { useUserStore } from '@/store/useUserStore';
 import { formatRank } from '@/utils/format';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useShallow } from 'zustand/react/shallow';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlashList } from '@shopify/flash-list';
 
 export default function HubDashboard() {
     const router = useRouter();
     const { isLoading: isSessionLoading } = useSession();
-    const user = useUser();
+    const user = useUserStore(useShallow(state => state.user));
     const insets = useSafeAreaInsets();
     const { data, loading, error } = useDashboardData();
 
@@ -64,10 +67,7 @@ export default function HubDashboard() {
                 style={{ flex: 1 }}
             >
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
-                <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#3b82f6" />
-                    <Text className="text-slate-400 mt-4">Loading dashboard...</Text>
-                </View>
+                <HubSkeleton />
             </LinearGradient>
         );
     }
@@ -89,43 +89,42 @@ export default function HubDashboard() {
 
 
 
-    return (
-        <LinearGradient
-            colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
-            style={{ flex: 1 }}
-        >
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{
-                    padding: 16,
-                    paddingTop: 10,
-                    paddingBottom: 100 + insets.bottom,
-                    gap: 12,
-                }}
-            >
-                {/* Cycle Status Banner */}
-                <StatusCard
-                    nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                    daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
-                />
+    const sections = ['status', 'discovery', 'stats', 'leave'];
 
-                {/* Vertical Stack Layout */}
-                <View className="flex-col gap-6">
-                    {/* Primary Hero: Discovery */}
-                    <DiscoveryCard
-                        matchingBillets={data?.cycle?.matchingBillets ?? 0}
-                        onStartExploring={handleStartExploring}
-                        onJobPreferencesPress={handleJobPreferencesPress}
-                    />
-
-                    {/* Secondary Actions */}
-                    <StatsCard
-                        liked={data?.stats?.liked ?? 0}
-                        superLiked={data?.stats?.superLiked ?? 0}
-                        passed={data?.stats?.passed ?? 0}
-                        onPressSuperLiked={handleSuperLikedPress}
-                    />
-
+    const renderItem = ({ item }: { item: string }) => {
+        switch (item) {
+            case 'status':
+                return (
+                    <View style={{ marginBottom: 12 }}>
+                        <StatusCard
+                            nextCycle={data?.cycle?.cycleId ?? '24-02'}
+                            daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
+                        />
+                    </View>
+                );
+            case 'discovery':
+                return (
+                    <View style={{ marginBottom: 24 }}>
+                        <DiscoveryCard
+                            matchingBillets={data?.cycle?.matchingBillets ?? 0}
+                            onStartExploring={handleStartExploring}
+                            onJobPreferencesPress={handleJobPreferencesPress}
+                        />
+                    </View>
+                );
+            case 'stats':
+                return (
+                    <View style={{ marginBottom: 24 }}>
+                        <StatsCard
+                            liked={data?.stats?.liked ?? 0}
+                            superLiked={data?.stats?.superLiked ?? 0}
+                            passed={data?.stats?.passed ?? 0}
+                            onPressSuperLiked={handleSuperLikedPress}
+                        />
+                    </View>
+                );
+            case 'leave':
+                return (
                     <LeaveCard
                         balance={data?.leave?.currentBalance ?? 0}
                         pendingRequest={
@@ -135,8 +134,29 @@ export default function HubDashboard() {
                         }
                         onPress={handleLeavePress}
                     />
-                </View>
-            </ScrollView>
+                );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <LinearGradient
+            colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
+            style={{ flex: 1 }}
+        >
+            <FlashList
+                data={sections}
+                renderItem={renderItem}
+                // @ts-expect-error: estimatedItemSize is missing in the type definition of @shopify/flash-list v2.2.0 despite being mandatory
+                estimatedItemSize={150}
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    padding: 16,
+                    paddingTop: 10,
+                    paddingBottom: 100 + insets.bottom,
+                }}
+            />
         </LinearGradient>
     );
 }

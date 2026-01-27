@@ -75,7 +75,14 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
                             </TouchableOpacity>
                         )}
 
-                        <TouchableOpacity style={styles.menuItem}>
+                        <TouchableOpacity
+                            style={styles.menuItem}
+                            onPress={() => {
+                                onClose();
+                                // @ts-ignore
+                                router.push('/(profile)/preferences');
+                            }}
+                        >
                             <Settings size={20} color={theme.text} />
                             <Text style={[styles.menuText, { color: theme.text }]}>Profile Settings</Text>
                         </TouchableOpacity>

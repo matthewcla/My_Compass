@@ -8,9 +8,14 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
+import { AccountDrawer } from '@/components/AccountDrawer';
+import GlobalHeader from '@/components/navigation/GlobalHeader';
+import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { initDatabase } from '@/services/storage';
+import { useUIStore } from '@/store/useUIStore';
+import { View } from 'react-native';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -19,7 +24,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: '(hub)',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -52,7 +57,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     } else if (session && inAuthGroup) {
       // User is authenticated but still on sign-in page
       // Redirect to main app and replace history to prevent back navigation to login
-      router.replace('/(tabs)');
+      router.replace('/(hub)');
     }
   }, [session, isLoading, segments]);
 
@@ -65,6 +70,8 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
   const [dbInitialized, setDbInitialized] = useState(false);
+
+  const isAccountDrawerOpen = useUIStore((state) => state.isAccountDrawerOpen);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -97,12 +104,24 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SessionProvider>
         <StatusBar style="auto" />
+        <AccountDrawer
+          visible={isAccountDrawerOpen}
+          onClose={() => useUIStore.getState().closeAccountDrawer()}
+        />
         <AuthGuard>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="sign-in" options={{ headerShown: false }} />
-            <Stack.Screen name="leave" options={{ presentation: 'modal', headerShown: false }} />
-          </Stack>
+          <View className="flex-1 bg-white dark:bg-black">
+            <GlobalHeader />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(hub)" />
+              <Stack.Screen name="(assignment)" />
+              <Stack.Screen name="(pcs)" />
+              <Stack.Screen name="(admin)" />
+              <Stack.Screen name="(profile)" />
+              <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="leave" />
+            </Stack>
+            <GlobalTabBar />
+          </View>
         </AuthGuard>
       </SessionProvider>
     </SafeAreaProvider>

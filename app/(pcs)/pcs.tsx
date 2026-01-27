@@ -1,4 +1,4 @@
-import { ScreenHeader } from '@/components/ScreenHeader';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import React from 'react';
 import { View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function PcsScreen() {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
+    useScreenHeader("PCS", "Relocation Manager");
+
     return (
         <View
             className="flex-1 bg-slate-50 dark:bg-black"
@@ -13,10 +15,10 @@ export default function PcsScreen() {
                 backgroundColor: colorScheme === 'dark' ? '#000000' : '#f8fafc'
             }}
         >
-            <ScreenHeader
+            {/* <ScreenHeader
                 title="PCS"
                 subtitle="Relocation Manager"
-            />
+            /> */}
         </View>
     );
 }

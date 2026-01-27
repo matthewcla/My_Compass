@@ -1,0 +1,22 @@
+{
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "dodId": "1234567891",
+    "displayName": "IT1 Matthew Wilson",
+    "email": "matthew.wilson.mil@us.navy.mil",
+    "rank": "E-6",
+    "title": "IT1",
+    "uic": "21545",
+    "unit": "USS Gerald R. Ford",
+    "status": "Active",
+    "preferences": {
+        "regions": [
+            "Mid-Atlantic"
+        ],
+        "dutyTypes": [
+            "Sea"
+        ]
+    },
+    "privacyMode": false,
+    "lastSyncTimestamp": "2026-01-26T22:24:00.000Z",
+    "syncStatus": "synced"
+}

@@ -32,46 +32,19 @@ export type SyncMetadata = z.infer<typeof SyncMetadataSchema>;
 // NORMALIZED USER ENTITY
 // =============================================================================
 
-/**
- * Normalized User entity for referential integrity.
- * Used by approval chains, lock ownership, and actor tracking.
- */
-export const UserSchema = z.object({
-    id: z.string().uuid(),
-    dodId: z.string().optional(), // DoD ID (EDIPI) for CAC authentication
-    displayName: z.string(), // e.g., "CAPT J. Smith"
-    email: z.string().email().optional(),
-    rank: z.string().optional(), // Pay grade or rank abbreviation
-    title: z.string().optional(), // Billet title / role
-    uic: z.string().optional(), // Current unit
-    preferences: z.object({
-        regions: z.array(z.string()).optional(),
-        dutyTypes: z.array(z.string()).optional(),
-    }).optional(),
+// User types moved to @/types/user.ts
+
+// =============================================================================
+// DASHBOARD CACHE
+// =============================================================================
+
+export const DashboardCacheSchema = z.object({
+    userId: z.string().uuid(),
+    data: z.string(), // JSON stringified DashboardData
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
 });
-export type User = z.infer<typeof UserSchema>;
-
-export const PREFERENCE_REGIONS = [
-    'Mid-Atlantic',
-    'Southeast',
-    'Southwest',
-    'Northwest',
-    'Hawaii',
-    'Europe',
-    'Pacific',
-    'Japan'
-] as const;
-
-export const DUTY_TYPES = [
-    'Sea',
-    'Shore',
-    'Overseas',
-    'Special'
-] as const;
-
-export type UserPreferences = NonNullable<User['preferences']>;
+export type DashboardCache = z.infer<typeof DashboardCacheSchema>;
 
 // =============================================================================
 // BILLET LOCK CONTEXT (Computed Helper)
@@ -159,6 +132,16 @@ export const SQLiteTableDefinitions = {
       sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error'))
     );
   `,
+
+    dashboard_cache: `
+    CREATE TABLE IF NOT EXISTS dashboard_cache (
+      user_id TEXT PRIMARY KEY,
+      data TEXT NOT NULL,
+      last_sync_timestamp TEXT NOT NULL,
+      sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    `,
 
     billets: `
     CREATE TABLE IF NOT EXISTS billets (
@@ -272,8 +255,29 @@ export const SQLiteTableDefinitions = {
  * @param db - expo-sqlite database instance
  */
 export async function initializeSQLiteTables(db: { execAsync: (sql: string) => Promise<void> }): Promise<void> {
+    // Create all tables
     for (const tableDef of Object.values(SQLiteTableDefinitions)) {
         await db.execAsync(tableDef);
+    }
+
+    // Run migrations for existing databases
+    await runMigrations(db);
+}
+
+/**
+ * Database migrations for schema updates.
+ * Each migration is idempotent and safe to run multiple times.
+ */
+async function runMigrations(db: { execAsync: (sql: string) => Promise<void> }): Promise<void> {
+    // Migration 1: Add preferences column to users table (if missing)
+    try {
+        await db.execAsync(`ALTER TABLE users ADD COLUMN preferences TEXT;`);
+        console.log('[DB Migration] Added preferences column to users table');
+    } catch (e: any) {
+        // Column already exists - this is expected for new databases
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding preferences column:', e);
+        }
     }
 }
 

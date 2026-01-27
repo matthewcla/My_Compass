@@ -32,6 +32,15 @@ export function useSession() {
 export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
     const [isSigningIn, setIsSigningIn] = useState(false);
+    const [hasLoggedOut, setHasLoggedOut] = useState(false);
+
+    // OFFLINE DEV: Auto-inject mock session if no session exists after loading
+    useEffect(() => {
+        if (!isLoading && !session && !hasLoggedOut) {
+            console.log('[Auth] OFFLINE DEV: Auto-injecting mock session token');
+            setSession('mock-offline-dev-token');
+        }
+    }, [isLoading, session, hasLoggedOut]);
 
     useEffect(() => {
         if (session && !isLoading) {
@@ -46,6 +55,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
      */
     const signInWithOkta = async (): Promise<void> => {
         setIsSigningIn(true);
+        setHasLoggedOut(false);
 
         try {
             // Simulate network call to Okta authorization server
@@ -74,6 +84,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
             value={{
                 signInWithOkta,
                 signOut: () => {
+                    setHasLoggedOut(true);
                     setSession(null);
                 },
                 session,

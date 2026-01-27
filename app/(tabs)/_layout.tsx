@@ -1,12 +1,10 @@
 import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { Anchor, CircleUser, FileText, Map, User } from 'lucide-react-native';
+import { Anchor, CircleUser, FileText, Home, Map, User } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { AccountDrawer } from '@/components/AccountDrawer';
-import { HeaderControls } from '@/components/HeaderControls';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
 import { WebHeader } from '@/components/WebHeader';
 import Colors from '@/constants/Colors';
@@ -46,8 +44,8 @@ export default function TabLayout() {
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
           headerTintColor: Colors[colorScheme ?? 'light'].text,
           header: Platform.OS === 'web' && isDesktop ? () => <WebHeader /> : undefined,
-          headerShown: Platform.OS === 'web' ? isDesktop : useClientOnlyValue(false, true),
-          headerRight: Platform.OS === 'web' ? undefined : () => <HeaderControls />, // Add controls for Native
+          headerShown: Platform.OS === 'web' ? isDesktop : false,
+          headerRight: undefined, // Controls are now inside ScreenHeader
           headerTransparent: Platform.OS === 'web' ? false : true,
           headerStyle: {
             borderBottomWidth: 0,
@@ -66,7 +64,10 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            href: null,
+            title: 'Home',
+            tabBarLabel: 'Home',
+            headerShown: false,
+            tabBarIcon: ({ color }) => <Home size={28} color={color} strokeWidth={1.5} />,
           }}
         />
         <Tabs.Screen
@@ -80,21 +81,21 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="admin/index"
-          options={{
-            title: 'Admin',
-            tabBarLabel: 'Admin',
-            headerTitle: '',
-            tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
-          }}
-        />
-        <Tabs.Screen
           name="pcs/index"
           options={{
             title: 'PCS',
             tabBarLabel: 'PCS',
             headerTitle: '',
             tabBarIcon: ({ color }) => <Map size={28} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="admin/index"
+          options={{
+            title: 'Admin',
+            tabBarLabel: 'Admin',
+            headerTitle: '',
+            tabBarIcon: ({ color }) => <FileText size={28} color={color} strokeWidth={1.5} />,
           }}
         />
         <Tabs.Screen

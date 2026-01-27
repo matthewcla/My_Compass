@@ -1,6 +1,10 @@
 import * as storage from '@/services/storage';
-import type { SyncStatus, User } from '@/types/schema';
+import type { SyncStatus } from '@/types/schema';
+import type { User } from '@/types/user';
 import { create } from 'zustand';
+
+// Mock profile for offline-first development
+import mockProfileData from '@/data/mockProfile.json';
 
 /**
  * User store state interface
@@ -46,23 +50,12 @@ interface UserActions {
 type UserStore = UserState & UserActions;
 
 /**
- * Mock user data matching UserSchema from types/schema.ts
- * Used when token validation succeeds
+ * Mock user data matching UserSchema from types/user.ts
+ * Loaded from data/mockProfile.json for offline-first development
  */
 const MOCK_USER: User = {
-    id: '550e8400-e29b-41d4-a716-446655440000',
-    dodId: '1234567890',
-    displayName: 'LCDR Matthew Clark',
-    email: 'matthew.clark@navy.mil',
-    rank: 'O-4',
-    title: 'Operations Department Head',
-    uic: 'N00124',
-    preferences: {
-        regions: ['Mid-Atlantic', 'Southeast'],
-        dutyTypes: ['Sea', 'Shore']
-    },
-    lastSyncTimestamp: new Date().toISOString(),
-    syncStatus: 'synced' as SyncStatus,
+    ...mockProfileData,
+    syncStatus: mockProfileData.syncStatus as SyncStatus,
 };
 
 /**
@@ -79,10 +72,13 @@ function isValidToken(token: string): boolean {
  * 
  * Manages authenticated user state and provides methods for
  * hydrating user data from Okta tokens.
+ * 
+ * OFFLINE DEV: Initialized with MOCK_USER for offline-first development.
+ * Remove this when backend is online.
  */
 export const useUserStore = create<UserStore>((set, get) => ({
-    // Initial state
-    user: null,
+    // Initial state - MOCK_USER for offline development
+    user: MOCK_USER,
     isHydrating: false,
     hydrationError: null,
 
@@ -102,28 +98,15 @@ export const useUserStore = create<UserStore>((set, get) => ({
             // For mock: return hardcoded user data matching UserSchema
             console.log('[UserStore] Hydrating user from token...');
 
-            // Try to load from local storage first to preserve preferences
-            // In a real app, we'd sync with server, but for now local changes (prefs) rule over static mock
-            // We use MOCK_USER.id as the stable ID for this session
-            const storedUser = await storage.getUser(MOCK_USER.id);
+            // OFFLINE DEV: Always use MOCK_USER from mockProfile.json
+            // This ensures fresh mock data is used, ignoring stale SQLite cache
+            const finalUser: User = {
+                ...MOCK_USER,
+                lastSyncTimestamp: new Date().toISOString(),
+            };
 
-            let finalUser: User;
-
-            if (storedUser) {
-                console.log('[UserStore] Found locally persisted user data');
-                finalUser = {
-                    ...storedUser,
-                    lastSyncTimestamp: new Date().toISOString(),
-                };
-            } else {
-                console.log('[UserStore] No local data, using default MOCK_USER');
-                finalUser = {
-                    ...MOCK_USER,
-                    lastSyncTimestamp: new Date().toISOString(),
-                };
-                // Persist the default immediately
-                await storage.saveUser(finalUser);
-            }
+            // Persist to storage (overwrites any stale data)
+            await storage.saveUser(finalUser);
 
             set({
                 user: finalUser,

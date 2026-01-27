@@ -1,5 +1,6 @@
+import { ScreenHeader } from '@/components/ScreenHeader';
 import React from 'react';
-import { Platform, Text, View, useColorScheme } from 'react-native';
+import { View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PcsScreen() {
@@ -7,13 +8,15 @@ export default function PcsScreen() {
     const colorScheme = useColorScheme();
     return (
         <View
-            className="flex-1 bg-slate-50 dark:bg-black items-center justify-center"
+            className="flex-1 bg-slate-50 dark:bg-black"
             style={{
-                paddingTop: Platform.OS !== 'web' ? insets.top + 60 : 0,
-                backgroundColor: colorScheme === 'dark' ? '#000000' : '#f8fafc' // Force Deep Ocean
+                backgroundColor: colorScheme === 'dark' ? '#000000' : '#f8fafc'
             }}
         >
-            <Text className="text-xl font-bold text-slate-900 dark:text-white">My PCS</Text>
+            <ScreenHeader
+                title="PCS"
+                subtitle="Relocation Manager"
+            />
         </View>
     );
 }

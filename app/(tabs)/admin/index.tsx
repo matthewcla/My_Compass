@@ -1,12 +1,13 @@
 import { LeaveBalanceCard } from '@/components/LeaveBalanceCard';
-import { SyncStatus, SyncStatusBadge } from '@/components/SyncStatusBadge';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { SyncStatus } from '@/components/SyncStatusBadge';
 import Colors from '@/constants/Colors';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { LeaveRequest } from '@/types/schema';
 import { Link, useRouter } from 'expo-router';
-import { Calculator, Calendar, ChevronRight, Plus } from 'lucide-react-native';
+import { Calendar, ChevronRight, Plus } from 'lucide-react-native';
 import React, { useEffect, useMemo } from 'react';
-import { FlatList, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { FlatList, Pressable, Text, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AdminScreen() {
@@ -51,16 +52,6 @@ export default function AdminScreen() {
 
     const renderHeader = () => (
         <View>
-            <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-2xl font-bold text-slate-900 dark:text-white">My Leave</Text>
-                <View className="flex-row items-center space-x-2 gap-2">
-                    <SyncStatusBadge status={syncStatus} />
-                    <Pressable className="bg-white dark:bg-slate-800 p-2 rounded-full border border-gray-200 dark:border-gray-700">
-                        <Calculator size={20} color={themeColors.labelSecondary} strokeWidth={1.5} />
-                    </Pressable>
-                </View>
-            </View>
-
             {/* Balance Card */}
             {leaveBalance ? (
                 <LeaveBalanceCard
@@ -140,18 +131,24 @@ export default function AdminScreen() {
     };
 
     return (
-        <FlatList
-            className="flex-1 bg-slate-50 dark:bg-black"
-            contentContainerStyle={{
-                paddingTop: (Platform.OS !== 'web' ? insets.top + 60 : 0) + 24,
-                paddingBottom: 24,
-                paddingHorizontal: 20
-            }}
-            data={requestsList}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            ListHeaderComponent={renderHeader}
-            ListEmptyComponent={renderEmpty}
-        />
+        <View className="flex-1 bg-slate-50 dark:bg-black">
+            <ScreenHeader
+                title="MY ADMIN"
+                subtitle="Leave & Actions"
+            />
+            <FlatList
+                className="flex-1"
+                contentContainerStyle={{
+                    paddingTop: 0,
+                    paddingBottom: 24,
+                    paddingHorizontal: 20
+                }}
+                data={requestsList}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+                ListHeaderComponent={renderHeader}
+                ListEmptyComponent={renderEmpty}
+            />
+        </View>
     );
 }

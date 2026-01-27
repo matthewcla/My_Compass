@@ -1,0 +1,55 @@
+Starting project at /app
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  expo@54.0.31 - expected version: ~54.0.32
+  react-native-gesture-handler@2.30.0 - expected version: ~2.28.0
+  react-native-svg@15.15.1 - expected version: 15.12.1
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓░░░░░░░░░░░ 31.6% ( 81/186)
+λ node_modules/expo-router/node/render.js ▓░░░░░░░░░░░░░░░ 10.1% ( 54/170)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.8% (234/375)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓░░░░░░░░░░░ 37.2% (308/505)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 46.8% (275/408)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 62.0% (478/655)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.2% (408/570)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 62.0% ( 631/2470)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.2% (408/570)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 62.0% (1391/2553)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 52.3% (446/631)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.7% (2333/2565)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 57.6% ( 549/2377)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 84.7% (2483/2705)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 57.6% (1184/2630)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.6% (2572/2878)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 76.8% (2311/2637)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.6% (2646/2933)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 84.7% (2502/2741)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.7% (2883/2992)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 93.9% (2859/2951)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.9% (3039/3103)
+λ Bundled 42154ms node_modules/expo-router/node/render.js (3231 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.8% (3283/3286)
+"shadow*" style props are deprecated. Use "boxShadow".
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+"textShadow*" style props are deprecated. Use "textShadow".
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3286/3286)
+Web Bundled 48472ms node_modules/expo-router/entry.js (3286 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3286/3286)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 44.7% (373/558)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 45.0% ( 927/2464)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 75.9% (2203/2529)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.0% (2562/2846)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.9% (2826/2945)
+λ Bundled 105ms node_modules/expo-router/node/render.js (1 module)
+"shadow*" style props are deprecated. Use "boxShadow".
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+"textShadow*" style props are deprecated. Use "textShadow".
+Web Bundled 1475ms node_modules/expo-router/entry.js (1 module)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.9% (2998/3077)
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 22555ms node_modules/expo-router/entry.js (3288 modules)
+Web Bundled 2379ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console

@@ -6,16 +6,20 @@ import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { useSession } from '@/lib/ctx';
 import { useUserStore } from '@/store/useUserStore';
 import { formatRate } from '@/utils/format';
 import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 export default function HubDashboard() {
+    const router = useRouter();
+    const { isLoading: isSessionLoading } = useSession();
     const user = useUserStore(useShallow(state => state.user));
     const insets = useSafeAreaInsets();
     const { data, loading, error } = useDashboardData();

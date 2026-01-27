@@ -13,7 +13,7 @@ interface LeaveCardProps {
 
 export function LeaveCard({ balance, pendingRequest, onPress }: LeaveCardProps) {
     return (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex-row items-center justify-between relative overflow-hidden min-h-[60px]" style={{ elevation: 2 }}>
+        <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="bg-white rounded-xl p-3 border border-slate-100 flex-row items-center justify-between relative overflow-hidden min-h-[60px]" style={{ shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: { width: 0, height: 4 }, shadowRadius: 10, elevation: 4 }}>
             {/* Decorative Corner */}
             <View className="absolute top-0 right-0 w-3 h-3 bg-amber-500 rounded-bl-lg z-10" />
 
@@ -26,12 +26,12 @@ export function LeaveCard({ balance, pendingRequest, onPress }: LeaveCardProps) 
             </View>
 
             {pendingRequest && (
-                <View className="bg-amber-50 rounded-lg pl-3 pr-2 py-1.5 border border-amber-100 flex-col items-end">
+                <View className="bg-orange-50 rounded-lg pl-3 pr-2 py-1.5 border border-orange-100 flex-col items-end">
                     <View className="flex-row items-center gap-1 mb-0.5">
-                        <Text className="text-[9px] font-bold text-amber-700 uppercase">Pending</Text>
-                        <Clock size={12} color="#d97706" />
+                        <Text className="text-[9px] font-bold text-orange-700 uppercase">Pending</Text>
+                        <Clock size={12} color="#c2410c" />
                     </View>
-                    <Text className="text-[10px] text-amber-800 font-medium">{pendingRequest.dates}</Text>
+                    <Text className="text-[10px] text-orange-800 font-medium">{pendingRequest.dates}</Text>
                 </View>
             )}
         </TouchableOpacity>

@@ -12,11 +12,13 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
   const activeColor = '#0F172A'; // slate-900 (Navy-ish)
   const inactiveColor = '#94A3B8'; // slate-400
 
-  // Filter out hidden routes (href: null)
+  // Filter out hidden routes (href: null) AND the index route which shouldn't be in the tab bar
   const visibleRoutes = state.routes.filter((route) => {
     const { options } = descriptors[route.key];
     // @ts-ignore: specific to expo-router
-    return options.href !== null;
+    if (options.href === null) return false;
+    if (route.name === 'index') return false; // Explicitly hide index
+    return true;
   });
 
   // Helper to render dynamic tab

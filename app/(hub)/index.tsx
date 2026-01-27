@@ -1,20 +1,28 @@
+import { DiscoveryCard } from '@/components/dashboard/DiscoveryCard';
+import { LeaveCard } from '@/components/dashboard/LeaveCard';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useDashboardData } from '@/hooks/useDashboardData';
 import { useSession } from '@/lib/ctx';
 import { useUser } from '@/store/useUserStore';
 import { formatRank } from '@/utils/format';
-import { DrawerActions } from '@react-navigation/native';
-import { useNavigation, useRouter } from 'expo-router';
-import { Anchor, FileText, Map, User } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HubDashboard() {
     const router = useRouter();
-    const navigation = useNavigation();
-    const { isLoading: isSessionLoading } = useSession(); // Keep hook calls for stability
+    const { isLoading: isSessionLoading } = useSession();
     const user = useUser();
     const insets = useSafeAreaInsets();
+    const { data, loading, error } = useDashboardData();
+
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
 
     // Header Logic: Display personalized welcome or generic fallback
     const renderGreeting = () => {
@@ -27,35 +35,63 @@ export default function HubDashboard() {
         return `Welcome, ${formattedRank} ${lastName}`.trim();
     };
 
-    const cards = [
-        {
-            label: 'My Assignment',
-            icon: Anchor,
-            onPress: () => router.replace('/(assignment)/assignments'), // Mapped 'explore' to actual route
-            color: '#3b82f6', // blue-500
-        },
-        {
-            label: 'My PCS',
-            icon: Map,
-            onPress: () => router.replace('/(pcs)/orders'),
-            color: '#10b981', // emerald-500
-        },
-        {
-            label: 'My Admin',
-            icon: FileText,
-            onPress: () => router.replace('/(admin)/requests'),
-            color: '#f59e0b', // amber-500
-        },
-        {
-            label: 'Profile',
-            icon: User,
-            onPress: () => navigation.dispatch(DrawerActions.openDrawer()),
-            color: '#8b5cf6', // violet-500
-        },
-    ];
+    // Navigation Handlers
+    const handleStartExploring = () => {
+        router.push('/(assignment)/assignments' as any);
+    };
+
+    const handleJobPreferencesPress = () => {
+        router.push('/(profile)/preferences' as any);
+    };
+
+    const handleLeavePress = () => {
+        router.push('/leave' as any);
+    };
+
+    const handleSuperLikedPress = () => {
+        // Navigate to saved billets filtered by super-liked
+        router.push('/(assignment)/assignments' as any);
+    };
+
+    // Loading state
+    if (loading && !data) {
+        return (
+            <LinearGradient
+                colors={['#0f172a', '#1e293b']} // Slate-900 to Slate-800
+                style={{ flex: 1 }}
+            >
+                <ScreenHeader title="HUB" subtitle={renderGreeting()} />
+                <View className="flex-1 items-center justify-center">
+                    <ActivityIndicator size="large" color="#3b82f6" />
+                    <Text className="text-slate-400 mt-4">Loading dashboard...</Text>
+                </View>
+            </LinearGradient>
+        );
+    }
+
+    // Error state with fallback
+    if (error && !data) {
+        return (
+            <LinearGradient
+                colors={['#0f172a', '#1e293b']}
+                style={{ flex: 1 }}
+            >
+                <ScreenHeader title="HUB" subtitle={renderGreeting()} />
+                <View className="flex-1 items-center justify-center px-8">
+                    <Text className="text-slate-400 text-center">{error}</Text>
+                </View>
+            </LinearGradient>
+        );
+    }
+
+
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-neutral-900">
+        <LinearGradient
+            colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
+            style={{ flex: 1 }}
+        >
+
             <ScreenHeader
                 title="HUB"
                 subtitle={renderGreeting()}
@@ -65,32 +101,45 @@ export default function HubDashboard() {
                 style={{ flex: 1 }}
                 contentContainerStyle={{
                     padding: 16,
+                    paddingTop: 10,
                     paddingBottom: 100 + insets.bottom,
+                    gap: 12,
                 }}
             >
-                <View className="flex-row flex-wrap justify-between gap-4">
-                    {cards.map((card, index) => (
-                        <Pressable
-                            key={index}
-                            onPress={card.onPress}
-                            className="w-[47%] aspect-square bg-white dark:bg-slate-800 rounded-2xl p-4 justify-between shadow-sm active:opacity-90 active:scale-95"
-                            style={{ elevation: 2 }}
-                        >
-                            <View className="w-12 h-12 rounded-full items-center justify-center bg-slate-100 dark:bg-slate-700">
-                                <card.icon size={24} color={card.color} />
-                            </View>
-                            <View>
-                                <Text className="text-slate-900 dark:text-white text-lg font-bold">
-                                    {card.label}
-                                </Text>
-                                <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-                                    Tap to view
-                                </Text>
-                            </View>
-                        </Pressable>
-                    ))}
+                {/* Cycle Status Banner */}
+                <StatusCard
+                    nextCycle={data?.cycle?.cycleId ?? '24-02'}
+                    daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
+                />
+
+                {/* Vertical Stack Layout */}
+                <View className="flex-col gap-6">
+                    {/* Primary Hero: Discovery */}
+                    <DiscoveryCard
+                        matchingBillets={data?.cycle?.matchingBillets ?? 0}
+                        onStartExploring={handleStartExploring}
+                        onJobPreferencesPress={handleJobPreferencesPress}
+                    />
+
+                    {/* Secondary Actions */}
+                    <StatsCard
+                        liked={data?.stats?.liked ?? 0}
+                        superLiked={data?.stats?.superLiked ?? 0}
+                        passed={data?.stats?.passed ?? 0}
+                        onPressSuperLiked={handleSuperLikedPress}
+                    />
+
+                    <LeaveCard
+                        balance={data?.leave?.currentBalance ?? 0}
+                        pendingRequest={
+                            data?.leave?.pendingRequestsCount
+                                ? { dates: 'Mar 15-22', status: 'Pending' }
+                                : undefined
+                        }
+                        onPress={handleLeavePress}
+                    />
                 </View>
             </ScrollView>
-        </View>
+        </LinearGradient>
     );
 }

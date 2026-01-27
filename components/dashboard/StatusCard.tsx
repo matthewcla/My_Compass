@@ -1,3 +1,4 @@
+import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Calendar } from 'lucide-react-native';
 import React from 'react';
@@ -15,7 +16,11 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
     return (
         <View className="flex flex-col gap-2">
-            <View className="bg-card border-l-4 border-blue-600 dark:border-blue-400 pl-3 pr-2 py-2.5 rounded-r-lg shadow-sm flex-row items-start justify-between">
+            <GlassView
+                intensity={60}
+                tint={isDark ? 'dark' : 'light'}
+                className="border-l-4 border-blue-600 dark:border-blue-400 pl-3 pr-2 py-2.5 rounded-r-lg overflow-hidden flex-row items-start justify-between"
+            >
                 <View className="flex-row items-center gap-2.5">
                     <Calendar size={16} color={iconColor} />
                     <View>
@@ -28,7 +33,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 <Text className="text-[9px] font-bold text-blue-600 dark:text-blue-900 bg-blue-100 dark:bg-blue-400 px-2 py-1 rounded-full overflow-hidden">
                     Prep Mode
                 </Text>
-            </View>
+            </GlassView>
         </View>
     );
 }

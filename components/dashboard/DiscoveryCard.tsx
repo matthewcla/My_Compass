@@ -1,3 +1,5 @@
+import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, ChevronRight, Search, SlidersHorizontal } from 'lucide-react-native';
 import React from 'react';
@@ -12,6 +14,8 @@ interface DiscoveryCardProps {
 
 export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferencesPress }: DiscoveryCardProps) {
     const scale = useSharedValue(1);
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
 
     const animatedButtonStyle = useAnimatedStyle(() => {
         return {
@@ -56,7 +60,7 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
                 {/* Content Section - Pushed to bottom with flex spacer using justify-end */}
                 <View className="relative z-10 flex-1 justify-end p-5 pt-0">
                     <View className="flex-row items-center gap-3 mb-6">
-                        <Text className="text-4xl font-bold text-white tracking-tight">{matchingBillets}</Text>
+                        <Text className="text-5xl font-bold text-white tracking-tight">{matchingBillets}</Text>
                         <View className="flex flex-col">
                             <Text className="text-xs text-emerald-400 font-bold uppercase tracking-wider">New Matches</Text>
                             <Text className="text-[10px] text-slate-500 font-medium">Since last login</Text>
@@ -73,9 +77,9 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
                             // @ts-ignore
                             sharedTransitionTag="explore-btn"
                         >
-                            <View className="w-full bg-white dark:bg-slate-200 z-20 py-3.5 rounded-xl shadow-sm flex-row items-center justify-center gap-2">
-                                <Text className="font-bold text-sm text-slate-900">Start Exploring</Text>
-                                <ArrowRight size={16} color="#0f172a" />
+                            <View className="w-full bg-white dark:bg-slate-200 z-20 py-4 rounded-xl shadow-sm flex-row items-center justify-center gap-2">
+                                <Text className="font-bold text-base text-slate-900">Start Exploring</Text>
+                                <ArrowRight size={18} color="#0f172a" />
                             </View>
                         </Animated.View>
                     </Pressable>
@@ -85,19 +89,25 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
             {/* Secondary Actions: Preferences */}
             <TouchableOpacity
                 onPress={onJobPreferencesPress}
-                className="h-16 bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex-row items-center justify-between"
-                style={{ elevation: 2 }}
+                activeOpacity={0.8}
+                style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 }}
             >
-                <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-lg bg-slate-50 items-center justify-center">
-                        <SlidersHorizontal size={20} color="#64748B" />
+                <GlassView
+                    intensity={60}
+                    tint={isDark ? 'dark' : 'light'}
+                    className="h-20 rounded-xl px-5 border border-slate-200/50 dark:border-slate-700/50 flex-row items-center justify-between"
+                >
+                    <View className="flex-row items-center gap-4">
+                        <View className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 items-center justify-center">
+                            <SlidersHorizontal size={20} color={isDark ? "#94A3B8" : "#64748B"} />
+                        </View>
+                        <View>
+                            <Text className="text-sm font-bold text-slate-800 dark:text-white">Job Preferences</Text>
+                            <Text className="text-xs text-slate-400">Last updated 24 days ago</Text>
+                        </View>
                     </View>
-                    <View>
-                        <Text className="text-xs font-bold text-slate-800">Job Preferences</Text>
-                        <Text className="text-[10px] text-slate-400">Last updated 24 days ago</Text>
-                    </View>
-                </View>
-                <ChevronRight size={16} color="#cbd5e1" />
+                    <ChevronRight size={20} color={isDark ? "#475569" : "#cbd5e1"} />
+                </GlassView>
             </TouchableOpacity>
         </View>
     );

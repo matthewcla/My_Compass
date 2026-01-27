@@ -91,7 +91,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded && dbInitialized) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {
+        // Ignore error: "No native splash screen registered"
+        // This can happen if the splash screen is already hidden or in certain dev scenarios.
+      });
       registerForPushNotificationsAsync();
     }
   }, [loaded, dbInitialized]);

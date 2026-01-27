@@ -21,10 +21,31 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <ScrollViewStyleReset />
 
         {/* Using raw CSS styles as an escape-hatch to ensure the background color never flickers in dark-mode. */}
-        <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
+        <style dangerouslySetInnerHTML={{ __html: globalCss }} />
         {/* Add any additional <head> elements that you want globally available on web... */}
       </head>
-      <body>{children}</body>
+      <body>
+        {/* 
+            SIMULATED NATIVE SPLASH
+            This div renders immediately (before JS), preventing the white flash.
+            It matches the exact layout of StartupAnimation.tsx Phase 1.
+        */}
+        <div id="splash">
+          <img src="/assets/images/splash-icon.png" style={{ width: '98px', height: '98px' }} alt="Loading..." />
+        </div>
+
+        {children}
+
+        {/* Script to fade out splash when app is ready - redundant safety, React will also handle */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+          // Safety timeout to remove splash if something hangs, but usually removed by mount
+          setTimeout(() => {
+            const splash = document.getElementById('splash');
+            if (splash) splash.classList.add('hidden');
+          }, 3000);
+        `}} />
+      </body>
     </html>
   );
 }
@@ -33,8 +54,31 @@ const responsiveBackground = `
 body {
   background-color: #0A1628;
 }
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #0A1628;
-  }
-}`;
+`;
+
+// Native-Like Web Splash Simulation
+// Matches the native launch screen exactly to prevent white flash
+const globalCss = `
+body {
+  background-color: #0A1628;
+  margin: 0;
+  padding: 0;
+}
+#splash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0A1628;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease-out;
+  pointer-events: none;
+}
+#splash.hidden {
+  opacity: 0;
+}
+`;

@@ -10,6 +10,7 @@ import { useUserStore } from '@/store/useUserStore';
 import { formatRate } from '@/utils/format';
 import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +19,7 @@ import { useShallow } from 'zustand/react/shallow';
 export default function HubDashboard() {
     const user = useUserStore(useShallow(state => state.user));
     const insets = useSafeAreaInsets();
+    const router = useRouter(); // Initialize router
     const { data, loading, error } = useDashboardData();
 
     const colorScheme = useColorScheme();

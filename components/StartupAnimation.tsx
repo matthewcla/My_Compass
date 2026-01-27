@@ -1,7 +1,7 @@
 import Colors from '@/constants/Colors';
 import { getShadow, getTextShadow } from '@/utils/getShadow';
 import React, { useEffect } from 'react';
-import { Image, Text, useColorScheme, useWindowDimensions } from 'react-native';
+import { Image, Platform, Text, useColorScheme, useWindowDimensions } from 'react-native';
 import Animated, {
     Easing,
     runOnJS,
@@ -65,7 +65,9 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
         // Helper to trigger Phase 3 (Handoff) - called via runOnJS from Phase 2 callback
         const startPhase3 = () => {
             // Pause briefly after text is readable, then handoff
-            const targetTranslation = -(screenHeight * 0.18);
+            // Adjust translation for Web to account for browser chrome reducing screenHeight
+            const translationFactor = Platform.OS === 'web' ? 0.25 : 0.18;
+            const targetTranslation = -(screenHeight * translationFactor);
 
             // logoScale.value update removed to prevent shrinking during move up
             // logoScale.value = withDelay(
@@ -88,6 +90,20 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
                 onAnimationComplete();
             }, DWELL_AFTER_TEXT + (MOVE_UP_DURATION * 0.3));
         };
+
+        // WEB SPLASH HANDOFF
+        // Synthesize the "Native Splash" -> "React Native" transition
+        // The CSS splash (#splash) is currently visible.
+        // We trigger its fade-out slightly before our animation starts to create a cross-fade.
+        if (Platform.OS === 'web') {
+            // Delay match PHASE_1_START but slightly earlier to blend
+            setTimeout(() => {
+                const splash = document.getElementById('splash');
+                if (splash) {
+                    splash.classList.add('hidden'); // Triggers 0.5s CSS fade out
+                }
+            }, PHASE_1_START - 100);
+        }
 
         // PHASE 1: THE REVEAL - Icon fades in over 800ms with Ease Out
         // Spring for scale, timing with callback for opacity to trigger Phase 2
@@ -149,42 +165,64 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
     }));
 
     return (
-        <Animated.View className="items-center justify-center z-10" style={rootStyle}>
+        <Animated.View
+            className="items-center justify-center z-10"
+            style={[
+                rootStyle,
+                { alignItems: 'center', justifyContent: 'center', width: '100%' } // Force center alignment for Web
+            ]}
+        >
 
             {/* Logo Circle with Glass Effect */}
             <Animated.View
-                className="justify-center items-center mb-6 border w-[140px] h-[140px] rounded-[70px]"
+                className="justify-center items-center mb-9 border w-[140px] h-[140px] rounded-[70px]"
                 style={[
                     logoAnimatedStyle,
-                    { backgroundColor: circleBg, borderColor: circleBorder },
+                    {
+                        backgroundColor: circleBg,
+                        borderColor: circleBorder,
+                        // Fix for Mobile PWA: Explicitly enforce dimensions to prevent "ballooning" if NativeWind fails to resolve
+                        width: LOGO_SIZE,
+                        height: LOGO_SIZE,
+                        borderRadius: LOGO_SIZE / 2, // Explicitly enforce circle shape for Web
+                        overflow: 'hidden', // Clip content to circle
+                        justifyContent: 'center', // Force center content (Image)
+                        alignItems: 'center',    // Force center content (Image)
+                    },
                     getShadow({
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 10 },
                         shadowOpacity: 0.1, // Reduced for subtle feel
                         shadowRadius: 20,
-                        elevation: 5,
+                        elevation: 0, // Disable elevation on Android to prevent surface tinting on glass
                     })
                 ]}
             >
                 <Image
                     source={require('@/assets/images/splash-icon.png')}
-                    className="w-[70%] h-[70%]"
-                    style={{ tintColor: logoTint }}
+                    // Fix for Mobile PWA: Percentage classes (w-[70%]) can fail to resolve on Web. 
+                    // Using explicit pixel values guarantees the image has size.
+                    style={{
+                        tintColor: logoTint,
+                        width: LOGO_SIZE * 0.7,
+                        height: LOGO_SIZE * 0.7,
+                        alignSelf: 'center', // Ensure image itself is centered
+                    }}
                     resizeMode="contain"
                 />
             </Animated.View>
 
             {/* Text Container */}
-            <Animated.View className="items-center" style={textAnimatedStyle}>
+            <Animated.View className="items-center" style={[textAnimatedStyle, { alignItems: 'center', width: '100%', marginTop: Platform.OS === 'web' ? 18 : 0 }]}>
                 <Text
                     className="text-[32px] font-bold tracking-[1.2px] mb-2"
-                    style={[{ color: textColor }, textShadowStyle]}
+                    style={[{ color: textColor, textAlign: 'center' }, textShadowStyle]}
                 >
                     My Compass
                 </Text>
                 <Text
                     className="text-sm tracking-[1px] uppercase font-medium"
-                    style={{ color: taglineColor }}
+                    style={{ color: taglineColor, textAlign: 'center' }}
                 >
                     Navy Career Navigation System
                 </Text>

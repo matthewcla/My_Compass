@@ -1,5 +1,6 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
+import { getShadow } from '@/utils/getShadow';
 import { Star, ThumbsUp, X } from 'lucide-react-native';
 import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
@@ -25,7 +26,7 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
             intensity={60}
             tint={isDark ? 'dark' : 'light'}
             className="rounded-xl p-5 border border-slate-200/50 dark:border-slate-700/50 flex flex-col justify-between"
-            style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 }}
+            style={getShadow({ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 })}
         >
             <View className="flex-row justify-between items-start mb-2">
                 <View>

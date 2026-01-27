@@ -1,5 +1,6 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
+import { getShadow } from '@/utils/getShadow';
 import { Clock } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -18,7 +19,7 @@ export function LeaveCard({ balance, pendingRequest, onPress }: LeaveCardProps) 
     const isDark = colorScheme === 'dark';
 
     return (
-        <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 }}>
+        <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={getShadow({ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 })}>
             <GlassView
                 intensity={60}
                 tint={isDark ? 'dark' : 'light'}

@@ -1,6 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useUIStore } from '@/store/useUIStore';
+import { getShadow } from '@/utils/getShadow';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
     ClipboardList,
@@ -149,7 +150,7 @@ export default function GlobalTabBar() {
 }
 
 const styles = StyleSheet.create({
-    shadow: {
+    shadow: getShadow({
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -158,5 +159,5 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 3,
         elevation: 5,
-    }
+    })
 });

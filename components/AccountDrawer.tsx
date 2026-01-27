@@ -1,6 +1,7 @@
 import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
 import { useUser } from '@/store/useUserStore';
+import { getShadow } from '@/utils/getShadow';
 import { LogOut, Minimize, Settings, UserCircle, X } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
@@ -112,14 +113,16 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: -2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
+        ...getShadow({
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: -2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+        }),
         maxHeight: '80%',
     },
     header: {

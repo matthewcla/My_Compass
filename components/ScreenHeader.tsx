@@ -2,6 +2,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePathname, useRouter } from 'expo-router';
 import { Bell, CheckCircle2, ChevronRight, FileText, LayoutGrid, User } from 'lucide-react-native';
+import { getShadow } from '@/utils/getShadow';
 import React, { useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -159,7 +160,7 @@ export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHea
 }
 
 const styles = StyleSheet.create({
-    menuShadow: {
+    menuShadow: getShadow({
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -168,5 +169,5 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 20,
         elevation: 10,
-    }
+    })
 });

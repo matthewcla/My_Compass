@@ -1,4 +1,5 @@
 
+import { getShadow } from '@/utils/getShadow';
 import { Image } from 'expo-image';
 import {
     Award,
@@ -284,11 +285,13 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
                         height: '100%',
                         borderRadius: 40, // 2.5rem
                         backgroundColor: 'white',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 10 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 20,
-                        elevation: 10,
+                        ...getShadow({
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 10 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 20,
+                            elevation: 10,
+                        }),
                     }}
                 >
                     {/* 2. Inner Container: Clipping & Border */}
@@ -415,11 +418,13 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
                                         backgroundColor: COLORS.white,
                                         borderTopLeftRadius: 32,
                                         borderTopRightRadius: 32,
-                                        shadowColor: '#000',
-                                        shadowOffset: { width: 0, height: -4 },
-                                        shadowOpacity: 0.15,
-                                        shadowRadius: 16,
-                                        elevation: 10,
+                                        ...getShadow({
+                                            shadowColor: '#000',
+                                            shadowOffset: { width: 0, height: -4 },
+                                            shadowOpacity: 0.15,
+                                            shadowRadius: 16,
+                                            elevation: 10,
+                                        }),
                                         overflow: 'hidden',
                                     }}
                                 >

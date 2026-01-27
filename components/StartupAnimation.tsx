@@ -1,4 +1,5 @@
 import Colors from '@/constants/Colors';
+import { getShadow, getTextShadow } from '@/utils/getShadow';
 import React, { useEffect } from 'react';
 import { Image, StyleSheet, Text, useColorScheme, useWindowDimensions } from 'react-native';
 import Animated, {
@@ -122,6 +123,12 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
     const shadowColor = isDark ? 'rgba(0,0,0,0.5)' : 'transparent'; // Clean look for day mode
     const logoTint = isDark ? Colors.light.navyGold : '#eab308'; // Gold for both, but ensured visibility
 
+    const textShadowStyle = getTextShadow({
+        textShadowColor: shadowColor,
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
+    });
+
     /* ... existing animation logic ... */
 
     // Fix: Reanimated safe access
@@ -159,7 +166,7 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
 
             {/* Text Container */}
             <Animated.View style={[styles.textContainer, textAnimatedStyle]}>
-                <Text style={[styles.appName, { color: textColor, textShadowColor: shadowColor }]}>My Compass</Text>
+                <Text style={[styles.appName, { color: textColor }, textShadowStyle]}>My Compass</Text>
                 <Text style={[styles.tagline, { color: taglineColor }]}>Navy Career Navigation System</Text>
             </Animated.View>
 
@@ -182,11 +189,13 @@ const styles = StyleSheet.create({
         marginBottom: 24,
         borderWidth: 1,
         // Shadows only apply nicely on iOS/Android, fine to leave reasonable defaults
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1, // Reduced for subtle feel
-        shadowRadius: 20,
-        elevation: 5,
+        ...getShadow({
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.1, // Reduced for subtle feel
+            shadowRadius: 20,
+            elevation: 5,
+        }),
     },
     logoImage: {
         width: '70%',
@@ -200,8 +209,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         letterSpacing: 1.2,
         marginBottom: 8,
-        textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 4,
     },
     tagline: {
         fontSize: 14,

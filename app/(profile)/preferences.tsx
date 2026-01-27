@@ -1,11 +1,13 @@
-import { Stack } from 'expo-router';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { Text, View } from 'react-native';
 
 export default function ProfilePreferences() {
     return (
-        <View className="flex-1 items-center justify-center bg-slate-50 dark:bg-black">
-            <Stack.Screen options={{ title: "Preferences" }} />
-            <Text className="text-slate-900 dark:text-white text-xl font-bold">Preferences</Text>
+        <View className="flex-1 bg-slate-50 dark:bg-black">
+            <ScreenHeader title="PROFILE" subtitle="Preferences" />
+            <View className="flex-1 items-center justify-center">
+                <Text className="text-slate-900 dark:text-white text-xl font-bold">Preferences</Text>
+            </View>
         </View>
     );
 }

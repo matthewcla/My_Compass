@@ -56,7 +56,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     } else if (session && inAuthGroup) {
       // User is authenticated but still on sign-in page
       // Redirect to main app and replace history to prevent back navigation to login
-      router.replace('/(hub)/dashboard');
+      router.replace('/(hub)');
     }
   }, [session, isLoading, segments]);
 
@@ -69,6 +69,8 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
   const [dbInitialized, setDbInitialized] = useState(false);
+
+  const isAccountDrawerOpen = useUIStore((state) => state.isAccountDrawerOpen);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -102,7 +104,7 @@ export default function RootLayout() {
       <SessionProvider>
         <StatusBar style="auto" />
         <AccountDrawer
-          visible={useUIStore((state) => state.isAccountDrawerOpen)}
+          visible={isAccountDrawerOpen}
           onClose={() => useUIStore.getState().closeAccountDrawer()}
         />
         <AuthGuard>

@@ -79,10 +79,7 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
       {/* Slot 1 (Fixed): Home */}
       <Pressable
         onPress={() => {
-          if (router.canGoBack()) {
-            router.dismissAll();
-          }
-          router.replace('/(hub)/dashboard');
+          router.replace('/(hub)');
         }}
         className="flex-1 items-center justify-center gap-1"
       >

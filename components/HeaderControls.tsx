@@ -3,7 +3,7 @@ import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
 import { Bell, LogOut } from 'lucide-react-native';
 import React from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
 /**
  * Header Controls Component
@@ -41,7 +41,7 @@ export function HeaderControls() {
     };
 
     return (
-        <View style={styles.container}>
+        <View className="flex-row items-center gap-5 mr-4">
             <Pressable onPress={handleAlert} accessibilityLabel="Notifications" hitSlop={8}>
                 {({ pressed }) => (
                     <Bell
@@ -64,12 +64,3 @@ export function HeaderControls() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 20,
-        marginRight: 16,
-    }
-});

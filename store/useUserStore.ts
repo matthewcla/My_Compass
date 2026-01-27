@@ -1,4 +1,4 @@
-import * as storage from '@/services/storage';
+import { storage } from '@/services/storage';
 import type { SyncStatus } from '@/types/schema';
 import type { User } from '@/types/user';
 import { create } from 'zustand';

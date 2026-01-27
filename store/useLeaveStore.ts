@@ -1,5 +1,5 @@
 import * as api from '@/services/api/mockLeaveService';
-import * as storage from '@/services/storage';
+import { storage } from '@/services/storage';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import {
     LeaveRequest,

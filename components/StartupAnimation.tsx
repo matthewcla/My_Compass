@@ -1,7 +1,7 @@
 import Colors from '@/constants/Colors';
 import { getShadow, getTextShadow } from '@/utils/getShadow';
 import React, { useEffect } from 'react';
-import { Image, StyleSheet, Text, useColorScheme, useWindowDimensions } from 'react-native';
+import { Image, Text, useColorScheme, useWindowDimensions } from 'react-native';
 import Animated, {
     Easing,
     runOnJS,
@@ -149,71 +149,47 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
     }));
 
     return (
-        <Animated.View style={[styles.container, rootStyle]}>
+        <Animated.View className="items-center justify-center z-10" style={rootStyle}>
 
             {/* Logo Circle with Glass Effect */}
-            <Animated.View style={[
-                styles.logoCircle,
-                logoAnimatedStyle,
-                { backgroundColor: circleBg, borderColor: circleBorder }
-            ]}>
+            <Animated.View
+                className="justify-center items-center mb-6 border w-[140px] h-[140px] rounded-[70px]"
+                style={[
+                    logoAnimatedStyle,
+                    { backgroundColor: circleBg, borderColor: circleBorder },
+                    getShadow({
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 10 },
+                        shadowOpacity: 0.1, // Reduced for subtle feel
+                        shadowRadius: 20,
+                        elevation: 5,
+                    })
+                ]}
+            >
                 <Image
                     source={require('@/assets/images/splash-icon.png')}
-                    style={[styles.logoImage, { tintColor: logoTint }]}
+                    className="w-[70%] h-[70%]"
+                    style={{ tintColor: logoTint }}
                     resizeMode="contain"
                 />
             </Animated.View>
 
             {/* Text Container */}
-            <Animated.View style={[styles.textContainer, textAnimatedStyle]}>
-                <Text style={[styles.appName, { color: textColor }, textShadowStyle]}>My Compass</Text>
-                <Text style={[styles.tagline, { color: taglineColor }]}>Navy Career Navigation System</Text>
+            <Animated.View className="items-center" style={textAnimatedStyle}>
+                <Text
+                    className="text-[32px] font-bold tracking-[1.2px] mb-2"
+                    style={[{ color: textColor }, textShadowStyle]}
+                >
+                    My Compass
+                </Text>
+                <Text
+                    className="text-sm tracking-[1px] uppercase font-medium"
+                    style={{ color: taglineColor }}
+                >
+                    Navy Career Navigation System
+                </Text>
             </Animated.View>
 
         </Animated.View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10,
-    },
-    logoCircle: {
-        width: LOGO_SIZE,
-        height: LOGO_SIZE,
-        borderRadius: LOGO_SIZE / 2,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 24,
-        borderWidth: 1,
-        // Shadows only apply nicely on iOS/Android, fine to leave reasonable defaults
-        ...getShadow({
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.1, // Reduced for subtle feel
-            shadowRadius: 20,
-            elevation: 5,
-        }),
-    },
-    logoImage: {
-        width: '70%',
-        height: '70%',
-    },
-    textContainer: {
-        alignItems: 'center',
-    },
-    appName: {
-        fontSize: 32,
-        fontWeight: '700',
-        letterSpacing: 1.2,
-        marginBottom: 8,
-    },
-    tagline: {
-        fontSize: 14,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        fontWeight: '500', // Added weight for legibility
-    },
-});

@@ -76,7 +76,14 @@ export default function GlobalTabBar() {
         // Exception: For Home, we want exact match or just being in (hub) root
         const isActive = isActiveOverride !== undefined
             ? isActiveOverride
-            : pathname.includes(route) || (route === '/(hub)' && currentSpoke === '(hub)' && !pathname.includes('inbox'));
+            : (
+                // 1. Exact match (ignoring groups if needed, but router.push uses groups)
+                pathname === route ||
+                // 2. Pathname includes route (but we need to strip groups from route to match pathname)
+                pathname.includes(route.replace(/\/\([^)]+\)/g, '')) ||
+                // 3. Special handling for Home/Hub root
+                (route === '/(hub)' && currentSpoke === '(hub)' && !pathname.includes('inbox'))
+            );
 
         const color = isActive ? activeColor : inactiveColor;
 
@@ -109,7 +116,7 @@ export default function GlobalTabBar() {
             className="flex-row bg-white border-t border-slate-200"
         >
             {/* 1. HOME (Fixed) */}
-            {renderTab('Home', '/(hub)', Home)}
+            {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox'))}
 
             {/* 2. SPOKE PRIMARY (Dynamic) */}
             {config ? (

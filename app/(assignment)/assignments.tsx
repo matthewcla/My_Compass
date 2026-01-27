@@ -1,5 +1,5 @@
 import { BilletSwipeCard } from '@/components/BilletSwipeCard';
-import { ScreenHeader } from '@/components/ScreenHeader';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { SwipeDirection, useAssignmentStore } from '@/store/useAssignmentStore';
 import { RotateCcw } from 'lucide-react-native';
 import React, { useEffect } from 'react';
@@ -12,6 +12,8 @@ const TEST_USER_ID = 'test-user-001';
 export default function AssignmentsScreen() {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+
+  useScreenHeader("DISCOVER", "A World of Opportunity");
 
   const {
     billets,
@@ -122,11 +124,8 @@ export default function AssignmentsScreen() {
     <>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View className="flex-1 bg-gray-100 dark:bg-black">
-          {/* Header */}
-          <ScreenHeader
-            title="DISCOVER"
-            subtitle="A World of Opportunity"
-          />
+          {/* Header Hoisted */}
+
 
           {renderDeck()}
 

@@ -2,9 +2,9 @@ import { DiscoveryCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
-import { ScreenHeader } from '@/components/ScreenHeader';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
 import { useUser } from '@/store/useUserStore';
 import { formatRank } from '@/utils/format';
@@ -35,6 +35,9 @@ export default function HubDashboard() {
         return `Welcome, ${formattedRank} ${lastName}`.trim();
     };
 
+    // Hoist Header State
+    useScreenHeader("HUB", renderGreeting());
+
     // Navigation Handlers
     const handleStartExploring = () => {
         router.push('/(assignment)/assignments' as any);
@@ -60,7 +63,7 @@ export default function HubDashboard() {
                 colors={['#0f172a', '#1e293b']} // Slate-900 to Slate-800
                 style={{ flex: 1 }}
             >
-                <ScreenHeader title="HUB" subtitle={renderGreeting()} />
+                {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <View className="flex-1 items-center justify-center">
                     <ActivityIndicator size="large" color="#3b82f6" />
                     <Text className="text-slate-400 mt-4">Loading dashboard...</Text>
@@ -76,7 +79,7 @@ export default function HubDashboard() {
                 colors={['#0f172a', '#1e293b']}
                 style={{ flex: 1 }}
             >
-                <ScreenHeader title="HUB" subtitle={renderGreeting()} />
+                {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <View className="flex-1 items-center justify-center px-8">
                     <Text className="text-slate-400 text-center">{error}</Text>
                 </View>
@@ -91,12 +94,6 @@ export default function HubDashboard() {
             colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
             style={{ flex: 1 }}
         >
-
-            <ScreenHeader
-                title="HUB"
-                subtitle={renderGreeting()}
-            />
-
             <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={{

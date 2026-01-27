@@ -1,4 +1,4 @@
-import { ScreenHeader } from '@/components/ScreenHeader';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useUserStore } from '@/store/useUserStore';
 import { DUTY_TYPES, PREFERENCE_REGIONS } from '@/types/user';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +20,8 @@ export default function ProfileScreen() {
     const insets = useSafeAreaInsets();
     const user = useUserStore((state) => state.user);
     const updatePreferences = useUserStore((state) => state.updatePreferences);
+
+    useScreenHeader("PROFILE", "My Preference Engine");
 
     const { control, handleSubmit, setValue, formState: { errors, isDirty } } = useForm<PreferencesFormData>({
         resolver: zodResolver(PreferencesFormSchema),
@@ -75,10 +77,10 @@ export default function ProfileScreen() {
             <ScrollView
                 className="flex-1"
             >
-                <ScreenHeader
+                {/* <ScreenHeader
                     title="PROFILE"
                     subtitle="My Preference Engine"
-                />
+                /> */}
 
                 <View className="px-4 mt-2">
 

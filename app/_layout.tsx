@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
 import { AccountDrawer } from '@/components/AccountDrawer';
+import GlobalHeader from '@/components/navigation/GlobalHeader';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
@@ -109,6 +110,7 @@ export default function RootLayout() {
         />
         <AuthGuard>
           <View className="flex-1 bg-white dark:bg-black">
+            <GlobalHeader />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(hub)" />
               <Stack.Screen name="(assignment)" />

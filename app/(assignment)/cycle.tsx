@@ -1,4 +1,4 @@
-import { ScreenHeader } from '@/components/ScreenHeader';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { RotateCcw } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -10,9 +10,11 @@ export default function MyCycleScreen() {
     const cycleId = "24-02";
     const status = "Open";
 
+    useScreenHeader("MY CYCLE", `Cycle ${cycleId} • ${status}`);
+
     return (
         <View className="flex-1 bg-slate-50 dark:bg-slate-950">
-            <ScreenHeader title="MY CYCLE" subtitle={`Cycle ${cycleId} • ${status}`} />
+            {/* <ScreenHeader title="MY CYCLE" subtitle={`Cycle ${cycleId} • ${status}`} /> */}
 
             <View className="flex-1 items-center justify-center p-8">
                 <View className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center mb-4">

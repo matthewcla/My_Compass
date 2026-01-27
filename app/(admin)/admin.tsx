@@ -1,7 +1,7 @@
 import { LeaveBalanceCard } from '@/components/LeaveBalanceCard';
-import { ScreenHeader } from '@/components/ScreenHeader';
 import { SyncStatus } from '@/components/SyncStatusBadge';
 import Colors from '@/constants/Colors';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { LeaveRequest } from '@/types/schema';
 import { Link, useRouter } from 'expo-router';
@@ -21,6 +21,8 @@ export default function AdminScreen() {
         fetchLeaveData,
         isSyncingRequests
     } = useLeaveStore();
+
+    useScreenHeader("MY ADMIN", "Leave & Actions");
 
     // Mock User ID for Phase 1
     const MOCK_USER_ID = 'user-123';
@@ -130,12 +132,14 @@ export default function AdminScreen() {
         );
     };
 
+
+
     return (
         <View className="flex-1 bg-slate-50 dark:bg-black">
-            <ScreenHeader
+            {/* <ScreenHeader
                 title="MY ADMIN"
                 subtitle="Leave & Actions"
-            />
+            /> */}
             <FlatList
                 className="flex-1"
                 contentContainerStyle={{

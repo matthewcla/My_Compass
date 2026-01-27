@@ -8,7 +8,8 @@ import { useSession } from '@/lib/ctx';
 import { useIsHydrating, useUser } from '@/store/useUserStore';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Platform, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
     const router = useRouter();
@@ -16,24 +17,35 @@ export default function HomeScreen() {
     const { isLoading: isSessionLoading } = useSession();
     const isHydrating = useIsHydrating();
     const user = useUser();
+    const insets = useSafeAreaInsets();
 
     // Header Logic: Display personalized welcome or generic fallback while loading
-    const getGreeting = () => {
-        if (!user) return "Welcome Aboard";
-        const parts = user.displayName?.split(' ') || [];
-        const lastName = parts.length > 1 ? parts[parts.length - 1] : user.displayName;
-        return `Welcome, ${user.title || user.rank || ''} ${lastName || 'Sailor'}`;
+    const renderGreeting = () => {
+        if (isSessionLoading || isHydrating || !user) {
+            return <View className="w-48 h-8 rounded bg-slate-200 animate-pulse" />;
+        }
+
+        const lastName = user.displayName.split(' ').pop();
+        const displayName = user.privacyMode
+            ? "Sailor"
+            : `${user.rank || ''} ${lastName}`.trim();
+
+        return `Welcome, ${displayName}`;
     };
 
     return (
         <View className="flex-1 bg-systemGray6">
             {/* Header - Fixed at Top */}
+            {/* Header - Fixed at Top */}
             <ScreenHeader
                 title="HOME"
-                subtitle={getGreeting()}
+                subtitle={renderGreeting()}
             />
 
-            <View style={{ flex: 1, paddingHorizontal: 16 }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+            >
                 {/* Loading/Error States */}
                 {isSessionLoading || isHydrating ? (
                     <Text className="text-slate-500 text-center mt-10">Loading User Profile...</Text>
@@ -57,7 +69,7 @@ export default function HomeScreen() {
                     </View>
                 ) : (
                     /* Dashboard Cards - Flex layout to fill available space */
-                    <View style={{ flex: 1, gap: 12, paddingBottom: Platform.OS === 'ios' ? 90 : 80 }}>
+                    <View style={{ gap: 12 }}>
                         {/* 1. Status Section */}
                         <StatusCard
                             nextCycle={data.cycle.cycleId}
@@ -92,7 +104,7 @@ export default function HomeScreen() {
                         />
                     </View>
                 )}
-            </View>
+            </ScrollView>
         </View>
     );
 }

@@ -53,6 +53,11 @@ export interface User {
     };
 
     /**
+     * Whether to hide PII in greeting.
+     */
+    privacyMode?: boolean;
+
+    /**
      * Timestamp of the last successful sync.
      */
     lastSyncTimestamp: string;
@@ -99,6 +104,7 @@ export const UserSchema = z.object({
         regions: z.array(z.string()).optional(),
         dutyTypes: z.array(z.string()).optional(),
     }).optional(),
+    privacyMode: z.boolean().optional(),
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
 });

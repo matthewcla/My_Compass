@@ -7,10 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ScreenHeaderProps {
     title: string;
-    subtitle: string;
+    subtitle: string | React.ReactNode;
+    withSafeArea?: boolean;
 }
 
-export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHeaderProps) {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
@@ -22,7 +23,7 @@ export function ScreenHeader({ title, subtitle }: ScreenHeaderProps) {
     return (
         <View
             style={{
-                paddingTop: insets.top + 20,
+                paddingTop: (withSafeArea ? insets.top : 0) + 20,
                 paddingHorizontal: 20,
                 paddingBottom: 20
             }}

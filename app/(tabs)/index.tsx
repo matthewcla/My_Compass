@@ -6,6 +6,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useSession } from '@/lib/ctx';
 import { useIsHydrating, useUser } from '@/store/useUserStore';
+import { formatRank } from '@/utils/format';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, ScrollView, Text, View } from 'react-native';
@@ -25,10 +26,16 @@ export default function HomeScreen() {
             return <View className="w-48 h-8 rounded bg-slate-200 animate-pulse" />;
         }
 
+        // Privacy Default: true (Sailor)
+        const isPrivacyMode = user.privacyMode ?? true;
+
+        if (isPrivacyMode) {
+            return "Welcome, Sailor";
+        }
+
         const lastName = user.displayName.split(' ').pop();
-        const displayName = user.privacyMode
-            ? "Sailor"
-            : `${user.rank || ''} ${lastName}`.trim();
+        const formattedRank = formatRank(user.rank);
+        const displayName = `${formattedRank} ${lastName}`.trim();
 
         return `Welcome, ${displayName}`;
     };

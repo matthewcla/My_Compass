@@ -6,12 +6,12 @@ import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
     ClipboardList,
     Compass,
-    DollarSign,
     FileText,
     Home,
     Inbox,
     Map as MapIcon,
     Settings,
+    Shield,
     Target,
     UserCircle
 } from 'lucide-react-native';
@@ -34,8 +34,8 @@ const SPOKE_CONFIG: Record<string, SpokeConfig> = {
         secondary: { label: 'Move', route: '/(pcs)/move', icon: MapIcon },
     },
     '(admin)': {
-        primary: { label: 'Requests', route: '/(admin)/requests', icon: FileText },
-        secondary: { label: 'Pay', route: '/(admin)/pay-status', icon: DollarSign },
+        primary: { label: 'Leave', route: '/(admin)/requests', icon: FileText },
+        secondary: { label: 'Admin', route: '/(admin)/pay-status', icon: Shield },
     },
     '(profile)': {
         primary: { label: 'Preferences', route: '/(profile)/preferences', icon: Settings },

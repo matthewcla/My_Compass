@@ -16,7 +16,7 @@ import {
     UserCircle
 } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type SpokeConfig = {
@@ -113,7 +113,16 @@ export default function GlobalTabBar() {
             style={{
                 paddingBottom: insets.bottom,
                 height: 60 + insets.bottom, // Standard height + safe area
-                ...styles.shadow
+                ...getShadow({
+                    shadowColor: "#000",
+                    shadowOffset: {
+                        width: 0,
+                        height: -2,
+                    },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 3,
+                    elevation: 5,
+                })
             }}
             className="flex-row bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
         >
@@ -148,16 +157,3 @@ export default function GlobalTabBar() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    shadow: getShadow({
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: -2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 5,
-    })
-});

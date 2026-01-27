@@ -133,36 +133,69 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
             }
         });
 
+    const gestureAxis = useSharedValue<0 | 1 | 2>(0); // 0: null, 1: x-axis, 2: y-axis
+    const LOCK_THRESHOLD = 10;
+
     // --- PAN GESTURE: For swiping the card ---
     const pan = Gesture.Pan()
         .enabled(active && !isDrawerOpen)
+        .onStart(() => {
+            gestureAxis.value = 0;
+        })
         .onUpdate((event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
-            translateX.value = event.translationX;
-            translateY.value = event.translationY;
+            // RAILROADING LOGIC:
+            // Determine axis if not yet set
+            if (gestureAxis.value === 0) {
+                const absX = Math.abs(event.translationX);
+                const absY = Math.abs(event.translationY);
+
+                if (absX > LOCK_THRESHOLD && absX > absY) {
+                    gestureAxis.value = 1; // Lock to X
+                } else if (absY > LOCK_THRESHOLD && absY > absX) {
+                    gestureAxis.value = 2; // Lock to Y
+                }
+            }
+
+            // Apply movement based on locked axis
+            if (gestureAxis.value === 1) {
+                translateX.value = event.translationX;
+                translateY.value = 0; // Force Y to 0
+            } else if (gestureAxis.value === 2) {
+                translateX.value = 0; // Force X to 0
+                translateY.value = event.translationY;
+            } else {
+                // Pre-lock: allow micro-movement or dampen it?
+                // Let's dampen it to prevent jitter before lock
+                translateX.value = event.translationX * 0.2;
+                translateY.value = event.translationY * 0.2;
+            }
         })
         .onEnd((event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
             const velocityX = event.velocityX;
             const velocityY = event.velocityY;
 
-            if (velocityY < -VELOCITY_THRESHOLD || translateY.value < -200) {
+            // Only trigger actions if we are locked to that axis
+            if (gestureAxis.value === 2 && (velocityY < -VELOCITY_THRESHOLD || translateY.value < -200)) {
                 translateY.value = withTiming(-1000, {}, () => {
                     runOnJS(handleSwipeComplete)('up');
                 });
                 return;
             }
 
-            if (velocityX > VELOCITY_THRESHOLD || translateX.value > SWIPE_THRESHOLD) {
-                translateX.value = withTiming(SCREEN_WIDTH * 1.5, {}, () => {
-                    runOnJS(handleSwipeComplete)('right');
-                });
-                return;
-            }
+            if (gestureAxis.value === 1) {
+                if (velocityX > VELOCITY_THRESHOLD || translateX.value > SWIPE_THRESHOLD) {
+                    translateX.value = withTiming(SCREEN_WIDTH * 1.5, {}, () => {
+                        runOnJS(handleSwipeComplete)('right');
+                    });
+                    return;
+                }
 
-            if (velocityX < -VELOCITY_THRESHOLD || translateX.value < -SWIPE_THRESHOLD) {
-                translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {}, () => {
-                    runOnJS(handleSwipeComplete)('left');
-                });
-                return;
+                if (velocityX < -VELOCITY_THRESHOLD || translateX.value < -SWIPE_THRESHOLD) {
+                    translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {}, () => {
+                        runOnJS(handleSwipeComplete)('left');
+                    });
+                    return;
+                }
             }
 
             translateX.value = withSpring(0);

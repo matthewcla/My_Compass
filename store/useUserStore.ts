@@ -55,6 +55,8 @@ type UserStore = UserState & UserActions;
  */
 const MOCK_USER: User = {
     ...mockProfileData,
+    rank: 'E-6',
+    rating: 'IT',
     syncStatus: mockProfileData.syncStatus as SyncStatus,
 };
 

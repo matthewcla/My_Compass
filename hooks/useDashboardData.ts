@@ -1,13 +1,15 @@
 import { useSession } from '@/lib/ctx';
 import { storage } from '@/services/storage';
-import { useUser } from '@/store/useUserStore';
+import { useUserStore } from '@/store/useUserStore';
 import { DashboardData } from '@/types/dashboard';
 import { logger } from '@/utils/logger';
 import { useCallback, useEffect, useState } from 'react';
+import { InteractionManager } from 'react-native';
+import { useShallow } from 'zustand/react/shallow';
 
 export function useDashboardData() {
   const { session } = useSession();
-  const user = useUser();
+  const user = useUserStore(useShallow(state => state.user));
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,9 +114,18 @@ export function useDashboardData() {
   }, [session, user]);
 
   useEffect(() => {
+    let task: { cancel: () => void };
+
     if (session && user) {
-      fetchDashboardData();
+      // Wait for navigation animation to finish completely before fetching
+      task = InteractionManager.runAfterInteractions(() => {
+        fetchDashboardData();
+      });
     }
+
+    return () => {
+      if (task) task.cancel();
+    };
   }, [session, user, fetchDashboardData]);
 
   return { data, loading, error, refetch: fetchDashboardData };

@@ -16,7 +16,7 @@ export default function AssignmentLayout() {
       }}
     >
       <Tabs.Screen
-        name="assignments/index"
+        name="assignments"
         options={{
           title: 'Explore',
           tabBarLabel: 'Explore',
@@ -31,7 +31,6 @@ export default function AssignmentLayout() {
           tabBarIcon: ({ color }) => <Target size={24} color={color} />,
         }}
       />
-      <Tabs.Screen name="settings_placeholder" options={{ href: null }} />
     </Tabs>
   );
 }

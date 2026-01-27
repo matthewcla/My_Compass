@@ -1,7 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { useRouter, useSegments } from 'expo-router';
-import { Drawer } from 'expo-router/drawer';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -10,7 +9,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
 import { AccountDrawer } from '@/components/AccountDrawer';
-import AppDrawerContent from '@/components/navigation/AppDrawerContent';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { initDatabase } from '@/services/storage';
@@ -108,31 +106,15 @@ export default function RootLayout() {
           onClose={() => useUIStore.getState().closeAccountDrawer()}
         />
         <AuthGuard>
-          <Drawer
-            drawerContent={(props) => <AppDrawerContent {...props} />}
-            screenOptions={{ headerShown: false }}
-          >
-            <Drawer.Screen name="(hub)" options={{ headerShown: false }} />
-            <Drawer.Screen name="(assignment)" options={{ headerShown: false }} />
-            <Drawer.Screen name="(pcs)" options={{ headerShown: false }} />
-            <Drawer.Screen name="(admin)" options={{ headerShown: false }} />
-            <Drawer.Screen name="(profile)" options={{ headerShown: false }} />
-            <Drawer.Screen
-              name="sign-in"
-              options={{
-                headerShown: false,
-                drawerItemStyle: { display: 'none' },
-                swipeEnabled: false,
-              }}
-            />
-            <Drawer.Screen
-              name="leave"
-              options={{
-                headerShown: false,
-                drawerItemStyle: { display: 'none' },
-              }}
-            />
-          </Drawer>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(hub)" />
+            <Stack.Screen name="(assignment)" />
+            <Stack.Screen name="(pcs)" />
+            <Stack.Screen name="(admin)" />
+            <Stack.Screen name="(profile)" />
+            <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+            <Stack.Screen name="leave" />
+          </Stack>
         </AuthGuard>
       </SessionProvider>
     </SafeAreaProvider>

@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Pressable, Text } from 'react-native';
+import { useUIStore } from '@/store/useUIStore';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Home, Inbox, User } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
+import { Home, Inbox, UserCircle } from 'lucide-react-native';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 export default function CompositeTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const router = useRouter();
@@ -12,21 +12,30 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
   const activeColor = '#0F172A'; // slate-900 (Navy-ish)
   const inactiveColor = '#94A3B8'; // slate-400
 
+  // Filter out hidden routes (href: null) AND the index route which shouldn't be in the tab bar
+  const visibleRoutes = state.routes.filter((route) => {
+    const { options } = descriptors[route.key];
+    // @ts-ignore: specific to expo-router
+    if (options.href === null) return false;
+    if (route.name === 'index') return false; // Explicitly hide index
+    return true;
+  });
+
   // Helper to render dynamic tab
   const renderDynamicTab = (index: number) => {
-    const route = state.routes[index];
+    const route = visibleRoutes[index];
     if (!route) return <View className="flex-1" />;
 
     const { options } = descriptors[route.key];
-    const isFocused = state.index === index;
+    const isFocused = state.routes[state.index].key === route.key;
     const color = isFocused ? activeColor : inactiveColor;
 
     const label =
       options.tabBarLabel !== undefined
         ? options.tabBarLabel
         : options.title !== undefined
-        ? options.title
-        : route.name;
+          ? options.title
+          : route.name;
 
     const onPress = () => {
       const event = navigation.emit({
@@ -72,8 +81,7 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
       {/* Slot 1 (Fixed): Home */}
       <Pressable
         onPress={() => {
-          router.dismissAll();
-          router.replace('/(hub)/dashboard');
+          router.replace('/(hub)');
         }}
         className="flex-1 items-center justify-center gap-1"
       >
@@ -96,12 +104,12 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
       {/* Slot 4 (Dynamic): 2nd Tab */}
       {renderDynamicTab(1)}
 
-      {/* Slot 5 (Fixed): Profile */}
+      {/* Slot 5 (Fixed): User Menu */}
       <Pressable
-        onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        onPress={() => useUIStore.getState().openAccountDrawer()}
         className="flex-1 items-center justify-center gap-1"
       >
-        <User size={24} color={inactiveColor} />
+        <UserCircle size={24} color={inactiveColor} />
         <Text style={{ color: inactiveColor, fontSize: 10 }}>Profile</Text>
       </Pressable>
     </View>

@@ -1,6 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -8,9 +9,12 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
+import { AccountDrawer } from '@/components/AccountDrawer';
+import AppDrawerContent from '@/components/navigation/AppDrawerContent';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { initDatabase } from '@/services/storage';
+import { useUIStore } from '@/store/useUIStore';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -52,7 +56,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     } else if (session && inAuthGroup) {
       // User is authenticated but still on sign-in page
       // Redirect to main app and replace history to prevent back navigation to login
-      router.replace('/(hub)/dashboard');
+      router.replace('/(hub)');
     }
   }, [session, isLoading, segments]);
 
@@ -65,6 +69,8 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
   const [dbInitialized, setDbInitialized] = useState(false);
+
+  const isAccountDrawerOpen = useUIStore((state) => state.isAccountDrawerOpen);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -97,16 +103,36 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SessionProvider>
         <StatusBar style="auto" />
+        <AccountDrawer
+          visible={isAccountDrawerOpen}
+          onClose={() => useUIStore.getState().closeAccountDrawer()}
+        />
         <AuthGuard>
-          <Stack>
-            <Stack.Screen name="(hub)" options={{ headerShown: false }} />
-            <Stack.Screen name="(assignment)" options={{ headerShown: false }} />
-            <Stack.Screen name="(pcs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-            <Stack.Screen name="(profile)" options={{ headerShown: false }} />
-            <Stack.Screen name="sign-in" options={{ headerShown: false }} />
-            <Stack.Screen name="leave" options={{ presentation: 'modal', headerShown: false }} />
-          </Stack>
+          <Drawer
+            drawerContent={(props) => <AppDrawerContent {...props} />}
+            screenOptions={{ headerShown: false }}
+          >
+            <Drawer.Screen name="(hub)" options={{ headerShown: false }} />
+            <Drawer.Screen name="(assignment)" options={{ headerShown: false }} />
+            <Drawer.Screen name="(pcs)" options={{ headerShown: false }} />
+            <Drawer.Screen name="(admin)" options={{ headerShown: false }} />
+            <Drawer.Screen name="(profile)" options={{ headerShown: false }} />
+            <Drawer.Screen
+              name="sign-in"
+              options={{
+                headerShown: false,
+                drawerItemStyle: { display: 'none' },
+                swipeEnabled: false,
+              }}
+            />
+            <Drawer.Screen
+              name="leave"
+              options={{
+                headerShown: false,
+                drawerItemStyle: { display: 'none' },
+              }}
+            />
+          </Drawer>
         </AuthGuard>
       </SessionProvider>
     </SafeAreaProvider>

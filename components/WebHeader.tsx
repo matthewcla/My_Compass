@@ -8,6 +8,7 @@ import { useColorScheme } from './useColorScheme';
 import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
 import { useUserDisplayName, useUserRank } from '@/store/useUserStore';
+import { getShadow } from '@/utils/getShadow';
 
 /**
  * WebHeader Component
@@ -163,7 +164,7 @@ export function WebHeader() {
                             height: 36, width: 36, borderRadius: 18,
                             backgroundColor: themeColors.systemGray6,
                             alignItems: 'center', justifyContent: 'center',
-                            borderWidth: 2, borderColor: themeColors.background, shadowColor: 'black', shadowOpacity: 0.05, shadowRadius: 2
+                            borderWidth: 2, borderColor: themeColors.background, ...getShadow({ shadowColor: 'black', shadowOpacity: 0.05, shadowRadius: 2 })
                         }}>
                             {/* Initials fallback */}
                             <UserIcon size={18} color={themeColors.labelSecondary} strokeWidth={2} />

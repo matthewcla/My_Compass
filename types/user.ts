@@ -1,72 +1,5 @@
 import { z } from 'zod';
-import { SyncStatus, SyncStatusSchema } from './schema';
-
-/**
- * Normalized User entity for referential integrity.
- * Used by approval chains, lock ownership, and actor tracking.
- */
-export interface User {
-    /**
-     * Unique identifier for the user (UUID).
-     */
-    id: string;
-
-    /**
-     * DoD ID (EDIPI) for CAC authentication.
-     * @security PII - STRICTLY FORBIDDEN IN LOGS
-     */
-    dodId?: string;
-
-    /**
-     * Display name (e.g., "CAPT J. Smith").
-     * @security PII - STRICTLY FORBIDDEN IN LOGS
-     */
-    displayName: string;
-
-    /**
-     * Email address.
-     * @security PII - STRICTLY FORBIDDEN IN LOGS
-     */
-    email?: string;
-
-    /**
-     * Pay grade or rank abbreviation.
-     */
-    rank?: string;
-
-    /**
-     * Billet title / role.
-     */
-    title?: string;
-
-    /**
-     * Current unit (UIC).
-     */
-    uic?: string;
-
-    /**
-     * User preferences.
-     */
-    preferences?: {
-        regions?: string[];
-        dutyTypes?: string[];
-    };
-
-    /**
-     * Whether to hide PII in greeting.
-     */
-    privacyMode?: boolean;
-
-    /**
-     * Timestamp of the last successful sync.
-     */
-    lastSyncTimestamp: string;
-
-    /**
-     * Sync status of the record.
-     */
-    syncStatus: SyncStatus;
-}
+import { SyncStatusSchema } from './schema';
 
 export const PREFERENCE_REGIONS = [
     'Mid-Atlantic',
@@ -86,18 +19,29 @@ export const DUTY_TYPES = [
     'Special'
 ] as const;
 
-export type UserPreferences = NonNullable<User['preferences']>;
-
 /**
  * Zod schema for User.
  * Matches the User interface.
  */
 export const UserSchema = z.object({
     id: z.string().uuid(),
-    dodId: z.string().optional(), // DoD ID (EDIPI) for CAC authentication
-    displayName: z.string(), // e.g., "CAPT J. Smith"
+    /**
+     * DoD ID (EDIPI) for CAC authentication.
+     * @security PII - STRICTLY FORBIDDEN IN LOGS
+     */
+    dodId: z.string().optional(),
+    /**
+     * Display name (e.g., "CAPT J. Smith").
+     * @security PII - STRICTLY FORBIDDEN IN LOGS
+     */
+    displayName: z.string(),
+    /**
+     * Email address.
+     * @security PII - STRICTLY FORBIDDEN IN LOGS
+     */
     email: z.string().email().optional(),
     rank: z.string().optional(), // Pay grade or rank abbreviation
+    rating: z.string().optional(), // Enlisted rating (e.g., "IT", "ET")
     title: z.string().optional(), // Billet title / role
     uic: z.string().optional(), // Current unit
     preferences: z.object({
@@ -108,3 +52,11 @@ export const UserSchema = z.object({
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
 });
+
+/**
+ * Normalized User entity for referential integrity.
+ * Used by approval chains, lock ownership, and actor tracking.
+ */
+export type User = z.infer<typeof UserSchema>;
+
+export type UserPreferences = NonNullable<User['preferences']>;

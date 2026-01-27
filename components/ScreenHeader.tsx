@@ -2,8 +2,9 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePathname, useRouter } from 'expo-router';
 import { Bell, CheckCircle2, ChevronRight, FileText, LayoutGrid, User } from 'lucide-react-native';
+import { getShadow } from '@/utils/getShadow';
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { Alert, Modal, Pressable, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ScreenHeaderProps {
@@ -103,7 +104,16 @@ export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHea
                             <TouchableWithoutFeedback>
                                 <View
                                     className="bg-white dark:bg-slate-900 rounded-xl w-64 overflow-hidden border border-slate-200 dark:border-slate-800"
-                                    style={styles.menuShadow}
+                                    style={getShadow({
+                                        shadowColor: "#000",
+                                        shadowOffset: {
+                                            width: 0,
+                                            height: 10,
+                                        },
+                                        shadowOpacity: 0.3,
+                                        shadowRadius: 20,
+                                        elevation: 10,
+                                    })}
                                 >
                                     <View className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
                                         <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">
@@ -157,16 +167,3 @@ export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHea
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    menuShadow: {
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 10,
-        },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 10,
-    }
-});

@@ -1,6 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useUIStore } from '@/store/useUIStore';
+import { getShadow } from '@/utils/getShadow';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
     ClipboardList,
@@ -15,7 +16,7 @@ import {
     UserCircle
 } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type SpokeConfig = {
@@ -53,11 +54,40 @@ export default function GlobalTabBar() {
     // Current Spoke (root segment)
     const currentSpoke = segments[0] as string; // e.g., '(assignment)', '(hub)'
 
+    // Access store for persistent context
+    const { activeSpoke, setActiveSpoke } = useUIStore();
+
+    // Effect to update activeSpoke based on navigation
+    React.useEffect(() => {
+        // Known spokes list
+        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)'];
+
+        if (KNOWN_SPOKES.includes(currentSpoke)) {
+            // If we are in a known spoke, update the store
+            setActiveSpoke(currentSpoke);
+        } else if (currentSpoke === '(hub)') {
+            // If we are in the hub, reset the store
+            setActiveSpoke(null);
+        } else if (currentSpoke === 'leave') {
+            // Special case: Leave screen belongs to Admin context
+            setActiveSpoke('(admin)');
+        }
+        // If 'inbox' or other generic routes, do nothing (keep last active spoke)
+    }, [currentSpoke, setActiveSpoke]);
+
     // Hide on Sign In
     if (currentSpoke === 'sign-in') return null;
 
-    // Configuration for the current spoke (fallback to null implies we are in Hub or unknown)
-    const config = SPOKE_CONFIG[currentSpoke];
+    // Determine target spoke for configuration:
+    // 1. If we are in a known spoke, use it.
+    // 2. If we are in a generic route (like inbox), use the persistent activeSpoke from store.
+    // 3. Fallback to null (Hub)
+    const targetSpoke = SPOKE_CONFIG[currentSpoke]
+        ? currentSpoke
+        : (activeSpoke && SPOKE_CONFIG[activeSpoke] ? activeSpoke : null);
+
+    // Configuration for the target spoke
+    const config = targetSpoke ? SPOKE_CONFIG[targetSpoke] : null;
 
     // Colors
     const isDark = colorScheme === 'dark';
@@ -112,7 +142,16 @@ export default function GlobalTabBar() {
             style={{
                 paddingBottom: insets.bottom,
                 height: 60 + insets.bottom, // Standard height + safe area
-                ...styles.shadow
+                ...getShadow({
+                    shadowColor: "#000",
+                    shadowOffset: {
+                        width: 0,
+                        height: -2,
+                    },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 3,
+                    elevation: 5,
+                })
             }}
             className="flex-row bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
         >
@@ -147,16 +186,3 @@ export default function GlobalTabBar() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    shadow: {
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: -2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 5,
-    }
-});

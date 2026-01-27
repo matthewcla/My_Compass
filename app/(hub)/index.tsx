@@ -2,22 +2,21 @@ import { DiscoveryCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
+import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
-import { useSession } from '@/lib/ctx';
-import { useUser } from '@/store/useUserStore';
-import { formatRank } from '@/utils/format';
+import { useUserStore } from '@/store/useUserStore';
+import { formatRate } from '@/utils/format';
+import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useShallow } from 'zustand/react/shallow';
 
 export default function HubDashboard() {
-    const router = useRouter();
-    const { isLoading: isSessionLoading } = useSession();
-    const user = useUser();
+    const user = useUserStore(useShallow(state => state.user));
     const insets = useSafeAreaInsets();
     const { data, loading, error } = useDashboardData();
 
@@ -31,7 +30,8 @@ export default function HubDashboard() {
         if (isPrivacyMode) return "Welcome, Sailor";
 
         const lastName = user.displayName.split(' ').pop();
-        const formattedRank = formatRank(user.rank);
+        // Use formatRate to handle "Rate" (Enlisted) vs "Rank" (Officer)
+        const formattedRank = formatRate(user.rating, user.rank);
         return `Welcome, ${formattedRank} ${lastName}`.trim();
     };
 
@@ -64,10 +64,7 @@ export default function HubDashboard() {
                 style={{ flex: 1 }}
             >
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
-                <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#3b82f6" />
-                    <Text className="text-slate-400 mt-4">Loading dashboard...</Text>
-                </View>
+                <HubSkeleton />
             </LinearGradient>
         );
     }
@@ -89,43 +86,36 @@ export default function HubDashboard() {
 
 
 
-    return (
-        <LinearGradient
-            colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
-            style={{ flex: 1 }}
-        >
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{
-                    padding: 16,
-                    paddingTop: 10,
-                    paddingBottom: 100 + insets.bottom,
-                    gap: 12,
-                }}
-            >
-                {/* Cycle Status Banner */}
-                <StatusCard
-                    nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                    daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
-                />
+    const sections = ['status', 'discovery', 'stats', 'leave'];
 
-                {/* Vertical Stack Layout */}
-                <View className="flex-col gap-6">
-                    {/* Primary Hero: Discovery */}
+    const renderItem = ({ item }: { item: string }) => {
+        switch (item) {
+            case 'status':
+                return (
+                    <StatusCard
+                        nextCycle={data?.cycle?.cycleId ?? '24-02'}
+                        daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
+                    />
+                );
+            case 'discovery':
+                return (
                     <DiscoveryCard
                         matchingBillets={data?.cycle?.matchingBillets ?? 0}
                         onStartExploring={handleStartExploring}
                         onJobPreferencesPress={handleJobPreferencesPress}
                     />
-
-                    {/* Secondary Actions */}
+                );
+            case 'stats':
+                return (
                     <StatsCard
                         liked={data?.stats?.liked ?? 0}
                         superLiked={data?.stats?.superLiked ?? 0}
                         passed={data?.stats?.passed ?? 0}
                         onPressSuperLiked={handleSuperLikedPress}
                     />
-
+                );
+            case 'leave':
+                return (
                     <LeaveCard
                         balance={data?.leave?.currentBalance ?? 0}
                         pendingRequest={
@@ -135,8 +125,30 @@ export default function HubDashboard() {
                         }
                         onPress={handleLeavePress}
                     />
-                </View>
-            </ScrollView>
+                );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <LinearGradient
+            colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
+            style={{ flex: 1 }}
+        >
+            <FlashList
+                data={sections}
+                renderItem={renderItem}
+                ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
+                // @ts-expect-error: estimatedItemSize is missing in the type definition of @shopify/flash-list v2.2.0 despite being mandatory
+                estimatedItemSize={150}
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    padding: 16,
+                    paddingTop: 10,
+                    paddingBottom: 100 + insets.bottom,
+                }}
+            />
         </LinearGradient>
     );
 }

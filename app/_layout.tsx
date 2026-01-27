@@ -13,7 +13,7 @@ import GlobalHeader from '@/components/navigation/GlobalHeader';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
-import { initDatabase } from '@/services/storage';
+import { storage } from '@/services/storage';
 import { useUIStore } from '@/store/useUIStore';
 import { View } from 'react-native';
 
@@ -79,7 +79,7 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    initDatabase()
+    storage.init()
       .then(() => setDbInitialized(true))
       .catch((e) => {
         console.error('Failed to initialize database:', e);

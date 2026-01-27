@@ -1,4 +1,4 @@
-import * as storage from '@/services/storage';
+import { storage } from '@/services/storage';
 import type { SyncStatus } from '@/types/schema';
 import type { User } from '@/types/user';
 import { create } from 'zustand';
@@ -55,6 +55,8 @@ type UserStore = UserState & UserActions;
  */
 const MOCK_USER: User = {
     ...mockProfileData,
+    rank: 'E-6',
+    rating: 'IT',
     syncStatus: mockProfileData.syncStatus as SyncStatus,
 };
 

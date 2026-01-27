@@ -6,137 +6,155 @@ import {
     Billet,
     LeaveBalance,
     LeaveRequest,
+    DashboardCacheSchema
 } from '@/types/schema';
 import { User } from '@/types/user';
+import { DashboardData } from '@/types/dashboard';
 import { decryptData, encryptData } from '../lib/encryption';
+import { IStorageService, DataIntegrityError } from './storage.interface';
 
-export const initDatabase = async () => {
+// =============================================================================
+// WEB IMPLEMENTATION
+// =============================================================================
+
+class WebStorage implements IStorageService {
+  private USER_KEY = 'my_compass_user_';
+  private BILLETS_KEY = 'my_compass_billets';
+  private APPLICATIONS_KEY = 'my_compass_applications';
+  private LEAVE_REQUESTS_KEY = 'my_compass_leave_requests';
+  private LEAVE_BALANCE_KEY = 'my_compass_leave_balance_';
+  private DASHBOARD_CACHE_KEY = 'my_compass_dashboard_';
+
+  async init(): Promise<void> {
     console.log('Using web storage (localStorage). SQLite not available on web.');
-};
+  }
 
-export const getDB = async (): Promise<any> => {
-    throw new Error('SQLite is not supported on web. Use localStorage or IndexedDB.');
-};
+  // ---------------------------------------------------------------------------
+  // User
+  // ---------------------------------------------------------------------------
 
-// =============================================================================
-// USER SERVICE (Web Stubs - using localStorage)
-// =============================================================================
+  async saveUser(user: User): Promise<void> {
+    localStorage.setItem(this.USER_KEY + user.id, encryptData(JSON.stringify(user)));
+  }
 
-const USER_KEY = 'my_compass_user_';
+  async getUser(id: string): Promise<User | null> {
+    const data = localStorage.getItem(this.USER_KEY + id);
+    return data ? JSON.parse(decryptData(data)) : null;
+  }
 
-// =============================================================================
-// BILLET SERVICE (Web Stubs - using localStorage)
-// =============================================================================
+  // ---------------------------------------------------------------------------
+  // Billets
+  // ---------------------------------------------------------------------------
 
-const BILLETS_KEY = 'my_compass_billets';
-
-export const saveBillet = async (billet: Billet): Promise<void> => {
-    const billets = await getAllBillets();
+  async saveBillet(billet: Billet): Promise<void> {
+    const billets = await this.getAllBillets();
     const index = billets.findIndex((b) => b.id === billet.id);
     if (index >= 0) {
         billets[index] = billet;
     } else {
         billets.push(billet);
     }
-    localStorage.setItem(BILLETS_KEY, encryptData(JSON.stringify(billets)));
-};
+    localStorage.setItem(this.BILLETS_KEY, encryptData(JSON.stringify(billets)));
+  }
 
-export const getBillet = async (id: string): Promise<Billet | null> => {
-    const billets = await getAllBillets();
+  async getBillet(id: string): Promise<Billet | null> {
+    const billets = await this.getAllBillets();
     return billets.find((b) => b.id === id) || null;
-};
+  }
 
-export const getAllBillets = async (): Promise<Billet[]> => {
-    const data = localStorage.getItem(BILLETS_KEY);
+  async getAllBillets(): Promise<Billet[]> {
+    const data = localStorage.getItem(this.BILLETS_KEY);
     return data ? JSON.parse(decryptData(data)) : [];
-};
+  }
 
-// =============================================================================
-// APPLICATION SERVICE (Web Stubs - using localStorage)
-// =============================================================================
+  // ---------------------------------------------------------------------------
+  // Applications
+  // ---------------------------------------------------------------------------
 
-const APPLICATIONS_KEY = 'my_compass_applications';
-
-export const saveApplication = async (app: Application): Promise<void> => {
-    const apps = await getAllApplications();
-    const index = apps.findIndex((a) => a.id === app.id);
+  async saveApplication(app: Application): Promise<void> {
+    const apps = await this.getUserApplications(app.userId); // This gets apps for user, but we need ALL apps to save correctly in this simple store?
+    // The previous implementation was: getALL, update, saveALL.
+    // Let's reuse that logic.
+    const allApps = await this._getAllApplications();
+    const index = allApps.findIndex((a) => a.id === app.id);
     if (index >= 0) {
-        apps[index] = app;
+        allApps[index] = app;
     } else {
-        apps.push(app);
+        allApps.push(app);
     }
-    localStorage.setItem(APPLICATIONS_KEY, encryptData(JSON.stringify(apps)));
-};
+    localStorage.setItem(this.APPLICATIONS_KEY, encryptData(JSON.stringify(allApps)));
+  }
 
-export const getApplication = async (id: string): Promise<Application | null> => {
-    const apps = await getAllApplications();
+  async getApplication(id: string): Promise<Application | null> {
+    const apps = await this._getAllApplications();
     return apps.find((a) => a.id === id) || null;
-};
+  }
 
-export const getUserApplications = async (userId: string): Promise<Application[]> => {
-    const apps = await getAllApplications();
+  async getUserApplications(userId: string): Promise<Application[]> {
+    const apps = await this._getAllApplications();
     return apps.filter((a) => a.userId === userId);
-};
+  }
 
-const getAllApplications = async (): Promise<Application[]> => {
-    const data = localStorage.getItem(APPLICATIONS_KEY);
+  private async _getAllApplications(): Promise<Application[]> {
+    const data = localStorage.getItem(this.APPLICATIONS_KEY);
     return data ? JSON.parse(decryptData(data)) : [];
-};
+  }
 
-// =============================================================================
-// LEAVE REQUEST SERVICE (Web Stubs - using localStorage)
-// =============================================================================
+  // ---------------------------------------------------------------------------
+  // Leave Requests
+  // ---------------------------------------------------------------------------
 
-const LEAVE_REQUESTS_KEY = 'my_compass_leave_requests';
-
-export const saveLeaveRequest = async (request: LeaveRequest): Promise<void> => {
-    const requests = await getAllLeaveRequests();
-    const index = requests.findIndex((r) => r.id === request.id);
+  async saveLeaveRequest(request: LeaveRequest): Promise<void> {
+    const allRequests = await this._getAllLeaveRequests();
+    const index = allRequests.findIndex((r) => r.id === request.id);
     if (index >= 0) {
-        requests[index] = request;
+        allRequests[index] = request;
     } else {
-        requests.push(request);
+        allRequests.push(request);
     }
-    localStorage.setItem(LEAVE_REQUESTS_KEY, encryptData(JSON.stringify(requests)));
-};
+    localStorage.setItem(this.LEAVE_REQUESTS_KEY, encryptData(JSON.stringify(allRequests)));
+  }
 
-export const getLeaveRequest = async (id: string): Promise<LeaveRequest | null> => {
-    const requests = await getAllLeaveRequests();
+  async getLeaveRequest(id: string): Promise<LeaveRequest | null> {
+    const requests = await this._getAllLeaveRequests();
     return requests.find((r) => r.id === id) || null;
-};
+  }
 
-export const getUserLeaveRequests = async (userId: string): Promise<LeaveRequest[]> => {
-    const requests = await getAllLeaveRequests();
+  async getUserLeaveRequests(userId: string): Promise<LeaveRequest[]> {
+    const requests = await this._getAllLeaveRequests();
     return requests.filter((r) => r.userId === userId);
-};
+  }
 
-const getAllLeaveRequests = async (): Promise<LeaveRequest[]> => {
-    const data = localStorage.getItem(LEAVE_REQUESTS_KEY);
+  private async _getAllLeaveRequests(): Promise<LeaveRequest[]> {
+    const data = localStorage.getItem(this.LEAVE_REQUESTS_KEY);
     return data ? JSON.parse(decryptData(data)) : [];
-};
+  }
 
-// =============================================================================
-// LEAVE BALANCE SERVICE (Web Stubs - using localStorage)
-// =============================================================================
+  // ---------------------------------------------------------------------------
+  // Leave Balance
+  // ---------------------------------------------------------------------------
 
-const LEAVE_BALANCE_KEY = 'my_compass_leave_balance_';
+  async saveLeaveBalance(balance: LeaveBalance): Promise<void> {
+    localStorage.setItem(this.LEAVE_BALANCE_KEY + balance.userId, encryptData(JSON.stringify(balance)));
+  }
 
-export const saveLeaveBalance = async (balance: LeaveBalance): Promise<void> => {
-    // Key by userId to allow multiple users (though mocked)
-    localStorage.setItem(LEAVE_BALANCE_KEY + balance.userId, encryptData(JSON.stringify(balance)));
-};
-
-export const getLeaveBalance = async (userId: string): Promise<LeaveBalance | null> => {
-    const data = localStorage.getItem(LEAVE_BALANCE_KEY + userId);
+  async getLeaveBalance(userId: string): Promise<LeaveBalance | null> {
+    const data = localStorage.getItem(this.LEAVE_BALANCE_KEY + userId);
     return data ? JSON.parse(decryptData(data)) : null;
-};
+  }
 
+  // ---------------------------------------------------------------------------
+  // Dashboard
+  // ---------------------------------------------------------------------------
 
-export const saveUser = async (user: User): Promise<void> => {
-    localStorage.setItem(USER_KEY + user.id, encryptData(JSON.stringify(user)));
-};
+  async saveDashboardCache(userId: string, data: DashboardData): Promise<void> {
+    localStorage.setItem(this.DASHBOARD_CACHE_KEY + userId, encryptData(JSON.stringify(data)));
+  }
 
-export const getUser = async (id: string): Promise<User | null> => {
-    const data = localStorage.getItem(USER_KEY + id);
+  async getDashboardCache(userId: string): Promise<DashboardData | null> {
+    const data = localStorage.getItem(this.DASHBOARD_CACHE_KEY + userId);
     return data ? JSON.parse(decryptData(data)) : null;
-};
+  }
+}
+
+export const storage: IStorageService = new WebStorage();

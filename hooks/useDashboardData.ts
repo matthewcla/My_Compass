@@ -1,13 +1,15 @@
 import { useSession } from '@/lib/ctx';
-import { getDashboardCache, saveDashboardCache } from '@/services/storage';
-import { useUser } from '@/store/useUserStore';
+import { storage } from '@/services/storage';
+import { useUserStore } from '@/store/useUserStore';
 import { DashboardData } from '@/types/dashboard';
 import { logger } from '@/utils/logger';
 import { useCallback, useEffect, useState } from 'react';
+import { InteractionManager } from 'react-native';
+import { useShallow } from 'zustand/react/shallow';
 
 export function useDashboardData() {
   const { session } = useSession();
-  const user = useUser();
+  const user = useUserStore(useShallow(state => state.user));
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export function useDashboardData() {
       // Persist to offline cache (SQLite)
       // Constraint: Auth tokens are NOT stored here. Only dashboard data.
       try {
-        await saveDashboardCache(user.id, mockData);
+        await storage.saveDashboardCache(user.id, mockData);
       } catch (saveErr) {
         logger.error('Failed to save dashboard cache', saveErr);
         // Do not fail the request if caching fails; UI still has fresh data.
@@ -95,7 +97,7 @@ export function useDashboardData() {
 
       // Offline Fallback Strategy
       try {
-        const cached = await getDashboardCache(user.id);
+        const cached = await storage.getDashboardCache(user.id);
         if (cached) {
           logger.info('Loaded dashboard data from offline cache');
           setData(cached);
@@ -112,9 +114,18 @@ export function useDashboardData() {
   }, [session, user]);
 
   useEffect(() => {
+    let task: { cancel: () => void };
+
     if (session && user) {
-      fetchDashboardData();
+      // Wait for navigation animation to finish completely before fetching
+      task = InteractionManager.runAfterInteractions(() => {
+        fetchDashboardData();
+      });
     }
+
+    return () => {
+      if (task) task.cancel();
+    };
   }, [session, user, fetchDashboardData]);
 
   return { data, loading, error, refetch: fetchDashboardData };

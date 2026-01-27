@@ -51,7 +51,7 @@ export default function HomeScreen() {
 
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100, paddingTop: 10 }}
             >
                 {/* Loading/Error States */}
                 {isSessionLoading || isHydrating ? (
@@ -95,7 +95,8 @@ export default function HomeScreen() {
                         <View style={{ flex: 1 }}>
                             <DiscoveryCard
                                 matchingBillets={data.cycle.matchingBillets || 0}
-                                onStartExploring={() => router.push('/(tabs)/discovery' as any)}
+                                onStartExploring={() => router.push('/(tabs)/assignments' as any)}
+                                onJobPreferencesPress={() => router.push('/(tabs)/profile' as any)}
                             />
                         </View>
 
@@ -107,7 +108,7 @@ export default function HomeScreen() {
                                 status: "Pending"
                             } : undefined}
                             // @ts-ignore - Route needs to be created
-                            onPress={() => router.push('/(tabs)/admin/leave' as any)}
+                            onPress={() => router.push('/(tabs)/admin' as any)}
                         />
                     </View>
                 )}

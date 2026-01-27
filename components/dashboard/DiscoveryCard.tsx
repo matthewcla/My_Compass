@@ -7,9 +7,10 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 interface DiscoveryCardProps {
     matchingBillets: number;
     onStartExploring?: () => void;
+    onJobPreferencesPress?: () => void;
 }
 
-export function DiscoveryCard({ matchingBillets, onStartExploring }: DiscoveryCardProps) {
+export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferencesPress }: DiscoveryCardProps) {
     const scale = useSharedValue(1);
 
     const animatedButtonStyle = useAnimatedStyle(() => {
@@ -83,6 +84,7 @@ export function DiscoveryCard({ matchingBillets, onStartExploring }: DiscoveryCa
 
             {/* Secondary Actions: Preferences */}
             <TouchableOpacity
+                onPress={onJobPreferencesPress}
                 className="h-16 bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex-row items-center justify-between"
                 style={{ elevation: 2 }}
             >

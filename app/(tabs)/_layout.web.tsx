@@ -127,6 +127,7 @@ export default function TabLayout() {
                     <Tabs
                         screenOptions={{
                             tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+                            tabBarShowLabel: false,
                             headerShown: false,
                             tabBarStyle: {
                                 position: 'absolute',

@@ -42,6 +42,7 @@ export default function TabLayout() {
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+          tabBarShowLabel: false,
           headerTintColor: Colors[colorScheme ?? 'light'].text,
           header: Platform.OS === 'web' && isDesktop ? () => <WebHeader /> : undefined,
           headerShown: Platform.OS === 'web' ? isDesktop : false,

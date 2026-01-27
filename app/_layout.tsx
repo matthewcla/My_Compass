@@ -1,6 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -11,6 +12,7 @@ import '../global.css';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { initDatabase } from '@/services/storage';
+import AppDrawerContent from '@/components/navigation/AppDrawerContent';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -98,15 +100,31 @@ export default function RootLayout() {
       <SessionProvider>
         <StatusBar style="auto" />
         <AuthGuard>
-          <Stack>
-            <Stack.Screen name="(hub)" options={{ headerShown: false }} />
-            <Stack.Screen name="(assignment)" options={{ headerShown: false }} />
-            <Stack.Screen name="(pcs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-            <Stack.Screen name="(profile)" options={{ headerShown: false }} />
-            <Stack.Screen name="sign-in" options={{ headerShown: false }} />
-            <Stack.Screen name="leave" options={{ presentation: 'modal', headerShown: false }} />
-          </Stack>
+          <Drawer
+            drawerContent={(props) => <AppDrawerContent {...props} />}
+            screenOptions={{ headerShown: false }}
+          >
+            <Drawer.Screen name="(hub)" options={{ headerShown: false }} />
+            <Drawer.Screen name="(assignment)" options={{ headerShown: false }} />
+            <Drawer.Screen name="(pcs)" options={{ headerShown: false }} />
+            <Drawer.Screen name="(admin)" options={{ headerShown: false }} />
+            <Drawer.Screen name="(profile)" options={{ headerShown: false }} />
+            <Drawer.Screen
+              name="sign-in"
+              options={{
+                headerShown: false,
+                drawerItemStyle: { display: 'none' },
+                swipeEnabled: false,
+              }}
+            />
+            <Drawer.Screen
+              name="leave"
+              options={{
+                headerShown: false,
+                drawerItemStyle: { display: 'none' },
+              }}
+            />
+          </Drawer>
         </AuthGuard>
       </SessionProvider>
     </SafeAreaProvider>

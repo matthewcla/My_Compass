@@ -5,10 +5,10 @@ import { useRouter, usePathname } from 'expo-router';
 
 const MENU_ITEMS = [
   { label: 'Home Hub', route: '/(hub)/dashboard' },
-  { label: 'My Assignment', route: '/(tabs)/assignments' },
-  { label: 'My PCS', route: '/(tabs)/pcs' },
-  { label: 'My Admin', route: '/(tabs)/admin' },
-  { label: 'My Profile', route: '/(tabs)/profile' },
+  { label: 'My Assignment', route: '/(assignment)/assignments' },
+  { label: 'My PCS', route: '/(pcs)/pcs' },
+  { label: 'My Admin', route: '/(admin)/admin' },
+  { label: 'My Profile', route: '/(profile)/profile' },
 ];
 
 export default function AppDrawerContent(props: DrawerContentComponentProps) {

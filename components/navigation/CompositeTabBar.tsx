@@ -12,13 +12,20 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
   const activeColor = '#0F172A'; // slate-900 (Navy-ish)
   const inactiveColor = '#94A3B8'; // slate-400
 
+  // Filter out hidden routes (href: null)
+  const visibleRoutes = state.routes.filter((route) => {
+    const { options } = descriptors[route.key];
+    // @ts-ignore: specific to expo-router
+    return options.href !== null;
+  });
+
   // Helper to render dynamic tab
   const renderDynamicTab = (index: number) => {
-    const route = state.routes[index];
+    const route = visibleRoutes[index];
     if (!route) return <View className="flex-1" />;
 
     const { options } = descriptors[route.key];
-    const isFocused = state.index === index;
+    const isFocused = state.routes[state.index].key === route.key;
     const color = isFocused ? activeColor : inactiveColor;
 
     const label =

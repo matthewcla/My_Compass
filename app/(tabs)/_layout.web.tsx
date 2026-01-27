@@ -123,80 +123,82 @@ export default function TabLayout() {
                     visible={accountDrawerVisible}
                     onClose={() => setAccountDrawerVisible(false)}
                 />
-                <Tabs
-                    screenOptions={{
-                        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-                        headerShown: false,
-                        tabBarStyle: {
-                            position: 'absolute',
-                            borderTopWidth: 0,
-                            elevation: 0,
-                            shadowOpacity: 0,
-                            height: 80, // Slightly taller for better touch area with absolute
-                            paddingBottom: 20, // Adjust for Home Indicator usually
-                        },
-                        tabBarBackground: () => <GlassBackground />,
-                    }}>
-                    <Tabs.Screen
-                        name="index"
-                        options={{
-                            title: 'Home',
-                            // tabBarLabel: 'Home', // Optional if title is enough, but consistently nice
-                            tabBarIcon: ({ color }) => <Home size={24} color={color} strokeWidth={1.5} />,
-                        }}
-                    />
-                    <Tabs.Screen
-                        name="assignments/index"
-                        options={{
-                            title: 'Assign',
-                            tabBarLabel: 'Assign',
-                            headerTitle: 'My Assignment',
-                            tabBarIcon: ({ color }) => <Anchor size={24} color={color} strokeWidth={1.5} />,
-                        }}
-                    />
-                    <Tabs.Screen
-                        name="pcs/index"
-                        options={{
-                            title: 'PCS',
-                            tabBarLabel: 'PCS',
-                            headerTitle: 'My PCS',
-                            tabBarIcon: ({ color }) => <Map size={24} color={color} strokeWidth={1.5} />,
-                        }}
-                    />
-                    <Tabs.Screen
-                        name="admin/index"
-                        options={{
-                            title: 'Admin',
-                            tabBarLabel: 'Admin',
-                            headerTitle: 'My Admin',
-                            tabBarIcon: ({ color }) => <FileText size={24} color={color} strokeWidth={1.5} />,
-                        }}
-                    />
-                    <Tabs.Screen
-                        name="profile/index"
-                        options={{
-                            title: 'Profile',
-                            tabBarLabel: 'Profile',
-                            headerTitle: 'My Profile',
-                            tabBarIcon: ({ color }) => <User size={24} color={color} strokeWidth={1.5} />,
-                        }}
-                    />
-                    <Tabs.Screen
-                        name="settings_placeholder"
-                        options={{
-                            title: 'Account',
-                            tabBarLabel: '',
+                <View style={{ flex: 1, paddingBottom: insets.bottom }}>
+                    <Tabs
+                        screenOptions={{
+                            tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
                             headerShown: false,
-                            tabBarIcon: ({ color }) => <CircleUser size={24} color={color} strokeWidth={1.5} />,
-                        }}
-                        listeners={() => ({
-                            tabPress: (e) => {
-                                e.preventDefault();
-                                setAccountDrawerVisible(true);
+                            tabBarStyle: {
+                                position: 'absolute',
+                                borderTopWidth: 0,
+                                elevation: 0,
+                                shadowOpacity: 0,
+                                height: 80, // Slightly taller for better touch area with absolute
+                                paddingBottom: 20, // Adjust for Home Indicator usually
                             },
-                        })}
-                    />
-                </Tabs>
+                            tabBarBackground: () => <GlassBackground />,
+                        }}>
+                        <Tabs.Screen
+                            name="index"
+                            options={{
+                                title: 'Home',
+                                // tabBarLabel: 'Home', // Optional if title is enough, but consistently nice
+                                tabBarIcon: ({ color }) => <Home size={24} color={color} strokeWidth={1.5} />,
+                            }}
+                        />
+                        <Tabs.Screen
+                            name="assignments/index"
+                            options={{
+                                title: 'Assign',
+                                tabBarLabel: 'Assign',
+                                headerTitle: 'My Assignment',
+                                tabBarIcon: ({ color }) => <Anchor size={24} color={color} strokeWidth={1.5} />,
+                            }}
+                        />
+                        <Tabs.Screen
+                            name="pcs/index"
+                            options={{
+                                title: 'PCS',
+                                tabBarLabel: 'PCS',
+                                headerTitle: 'My PCS',
+                                tabBarIcon: ({ color }) => <Map size={24} color={color} strokeWidth={1.5} />,
+                            }}
+                        />
+                        <Tabs.Screen
+                            name="admin/index"
+                            options={{
+                                title: 'Admin',
+                                tabBarLabel: 'Admin',
+                                headerTitle: 'My Admin',
+                                tabBarIcon: ({ color }) => <FileText size={24} color={color} strokeWidth={1.5} />,
+                            }}
+                        />
+                        <Tabs.Screen
+                            name="profile/index"
+                            options={{
+                                title: 'Profile',
+                                tabBarLabel: 'Profile',
+                                headerTitle: 'My Profile',
+                                tabBarIcon: ({ color }) => <User size={24} color={color} strokeWidth={1.5} />,
+                            }}
+                        />
+                        <Tabs.Screen
+                            name="settings_placeholder"
+                            options={{
+                                title: 'Account',
+                                tabBarLabel: '',
+                                headerShown: false,
+                                tabBarIcon: ({ color }) => <CircleUser size={24} color={color} strokeWidth={1.5} />,
+                            }}
+                            listeners={() => ({
+                                tabPress: (e) => {
+                                    e.preventDefault();
+                                    setAccountDrawerVisible(true);
+                                },
+                            })}
+                        />
+                    </Tabs>
+                </View>
             </>
         );
     }

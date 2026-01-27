@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SyncStatus, SyncStatusSchema } from './schema';
+import { SyncStatusSchema } from './schema';
 
 export const PREFERENCE_REGIONS = [
     'Mid-Atlantic',
@@ -41,6 +41,7 @@ export const UserSchema = z.object({
      */
     email: z.string().email().optional(),
     rank: z.string().optional(), // Pay grade or rank abbreviation
+    rating: z.string().optional(), // Enlisted rating (e.g., "IT", "ET")
     title: z.string().optional(), // Billet title / role
     uic: z.string().optional(), // Current unit
     preferences: z.object({

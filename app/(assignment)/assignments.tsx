@@ -129,13 +129,7 @@ export default function AssignmentsScreen() {
 
           {renderDeck()}
 
-          {/* Temporary Footer / Controls hint */}
-          <View style={{ paddingBottom: insets.bottom + 120 }} className="items-center">
-            {/* Increased padding to 120 to ensure text sits ABOVE the floating tab bar */}
-            <Text className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-              Swipe Right to LIKE • Up to LOVE • Left to PASS
-            </Text>
-          </View>
+          {/* Temporary Footer / Controls hint - Removed */}
         </View>
       </GestureHandlerRootView>
     </>

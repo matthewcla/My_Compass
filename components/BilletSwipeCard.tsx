@@ -302,28 +302,13 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
 
                         {/* Body Content */}
                         <View className="flex-1 p-6">
-                            <View className="bg-blue-50/50 border-l-4 border-blue-900 p-4 rounded-r-2xl mb-8">
-                                <View className="flex-row items-center gap-2 mb-1">
-                                    <MessageSquare size={12} color={COLORS.blue900} />
-                                    <Text className="text-blue-900 font-bold text-[10px] uppercase">Detailer's Note</Text>
+                            <View className="flex-1 bg-blue-50/50 border-l-4 border-blue-900 p-6 rounded-r-2xl mb-2 justify-center">
+                                <View className="flex-row items-center gap-2 mb-3">
+                                    <MessageSquare size={14} color={COLORS.blue900} />
+                                    <Text className="text-blue-900 font-bold text-xs uppercase tracking-wider">Detailer's Note</Text>
                                 </View>
-                                <Text className="text-slate-700 italic text-sm">"{data.detailerNote}"</Text>
+                                <Text className="text-slate-700 italic text-base leading-relaxed">"{data.detailerNote}"</Text>
                             </View>
-
-                            <InfoSection icon={Award} title="Professional Requirements" color="blue">
-                                <View className="flex-row gap-3">
-                                    <View className="flex-1 bg-slate-50 p-3 rounded-2xl">
-                                        <Text className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Rating</Text>
-                                        <Text className="font-bold text-slate-800">{data.rank} • {data.rate}</Text>
-                                    </View>
-                                    <View className="flex-1 bg-slate-50 p-3 rounded-2xl">
-                                        <Text className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Manning</Text>
-                                        <Text className="font-bold text-slate-800">{data.career.manning}</Text>
-                                    </View>
-                                </View>
-                                <DataPill label="NEC Required" value={data.career.nec} />
-                                <DataPill label="Warfare Qual" value={data.career.warfare} />
-                            </InfoSection>
                         </View>
 
                         {/* Trigger Bar */}
@@ -411,6 +396,22 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                                         contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }} // Increased bottom padding for scroll content
                                         showsVerticalScrollIndicator={false}
                                     >
+                                        {/* Professional Requirements - Moved from Main Card */}
+                                        <InfoSection icon={Award} title="Professional Requirements" color="blue">
+                                            <View className="flex-row gap-3">
+                                                <View className="flex-1 bg-slate-50 p-3 rounded-2xl">
+                                                    <Text className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Rating</Text>
+                                                    <Text className="font-bold text-slate-800">{data.rank} • {data.rate}</Text>
+                                                </View>
+                                                <View className="flex-1 bg-slate-50 p-3 rounded-2xl">
+                                                    <Text className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Manning</Text>
+                                                    <Text className="font-bold text-slate-800">{data.career.manning}</Text>
+                                                </View>
+                                            </View>
+                                            <DataPill label="NEC Required" value={data.career.nec} />
+                                            <DataPill label="Warfare Qual" value={data.career.warfare} />
+                                        </InfoSection>
+
                                         {/* Financials */}
                                         <InfoSection icon={DollarSign} title="Estimated Financials" color="green">
                                             <View style={{ backgroundColor: COLORS.green50, padding: 14, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>

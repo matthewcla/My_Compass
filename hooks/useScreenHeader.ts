@@ -8,7 +8,11 @@ export function useScreenHeader(title: string, subtitle: string | React.ReactNod
     useFocusEffect(
         useCallback(() => {
             // When screen comes into focus, set the header
-            setHeader(title, subtitle);
+            // Use requestAnimationFrame to avoid "update on unmounted component" or race conditions
+            // during initial mount if the screen is immediately focused.
+            requestAnimationFrame(() => {
+                setHeader(title, subtitle);
+            });
         }, [title, subtitle, setHeader])
     );
 }

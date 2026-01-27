@@ -9,10 +9,12 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
+import { AccountDrawer } from '@/components/AccountDrawer';
+import AppDrawerContent from '@/components/navigation/AppDrawerContent';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { initDatabase } from '@/services/storage';
-import AppDrawerContent from '@/components/navigation/AppDrawerContent';
+import { useUIStore } from '@/store/useUIStore';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -99,6 +101,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SessionProvider>
         <StatusBar style="auto" />
+        <AccountDrawer
+          visible={useUIStore((state) => state.isAccountDrawerOpen)}
+          onClose={() => useUIStore.getState().closeAccountDrawer()}
+        />
         <AuthGuard>
           <Drawer
             drawerContent={(props) => <AppDrawerContent {...props} />}

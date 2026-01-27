@@ -1,6 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { Bell } from 'lucide-react-native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { Bell, Menu } from 'lucide-react-native';
 import React from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +16,7 @@ export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHea
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
+    const navigation = useNavigation();
 
     const handleAlert = () => {
         Alert.alert("Notifications", "No new alerts at this time.");
@@ -29,13 +31,22 @@ export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHea
             }}
             className="flex-row justify-between items-start z-50 bg-gray-100 dark:bg-black"
         >
-            <View className="flex-1 mr-4">
-                <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    {title}
-                </Text>
-                <Text className="text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest text-xs mt-1">
-                    {subtitle}
-                </Text>
+            <View className="flex-row items-center flex-1 mr-4">
+                <Pressable
+                    onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+                    className="mr-4 mt-1"
+                    hitSlop={8}
+                >
+                    <Menu color={colors.text} size={28} />
+                </Pressable>
+                <View>
+                    <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                        {title}
+                    </Text>
+                    <Text className="text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest text-xs mt-1">
+                        {subtitle}
+                    </Text>
+                </View>
             </View>
 
             <Pressable

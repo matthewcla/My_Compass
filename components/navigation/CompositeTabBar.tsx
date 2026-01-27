@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Pressable, Text } from 'react-native';
+import { useUIStore } from '@/store/useUIStore';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Home, Inbox, User } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
+import { Home, Inbox, UserCircle } from 'lucide-react-native';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
 
 export default function CompositeTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const router = useRouter();
@@ -32,8 +32,8 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
       options.tabBarLabel !== undefined
         ? options.tabBarLabel
         : options.title !== undefined
-        ? options.title
-        : route.name;
+          ? options.title
+          : route.name;
 
     const onPress = () => {
       const event = navigation.emit({
@@ -79,7 +79,9 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
       {/* Slot 1 (Fixed): Home */}
       <Pressable
         onPress={() => {
-          router.dismissAll();
+          if (router.canGoBack()) {
+            router.dismissAll();
+          }
           router.replace('/(hub)/dashboard');
         }}
         className="flex-1 items-center justify-center gap-1"
@@ -103,12 +105,12 @@ export default function CompositeTabBar({ state, descriptors, navigation }: Bott
       {/* Slot 4 (Dynamic): 2nd Tab */}
       {renderDynamicTab(1)}
 
-      {/* Slot 5 (Fixed): Profile */}
+      {/* Slot 5 (Fixed): User Menu */}
       <Pressable
-        onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+        onPress={() => useUIStore.getState().openAccountDrawer()}
         className="flex-1 items-center justify-center gap-1"
       >
-        <User size={24} color={inactiveColor} />
+        <UserCircle size={24} color={inactiveColor} />
         <Text style={{ color: inactiveColor, fontSize: 10 }}>Profile</Text>
       </Pressable>
     </View>

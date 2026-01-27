@@ -1,14 +1,14 @@
+import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
+import { usePathname, useRouter } from 'expo-router';
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
-import { useRouter, usePathname } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
 
 const MENU_ITEMS = [
   { label: 'Home Hub', route: '/(hub)/dashboard' },
   { label: 'My Assignment', route: '/(assignment)/assignments' },
-  { label: 'My PCS', route: '/(pcs)/pcs' },
-  { label: 'My Admin', route: '/(admin)/admin' },
-  { label: 'My Profile', route: '/(profile)/profile' },
+  { label: 'My PCS', route: '/(pcs)/orders' },
+  { label: 'My Admin', route: '/(admin)/requests' },
+  { label: 'My Profile', route: '/(profile)/preferences' },
 ];
 
 export default function AppDrawerContent(props: DrawerContentComponentProps) {
@@ -38,20 +38,18 @@ export default function AppDrawerContent(props: DrawerContentComponentProps) {
               <Pressable
                 key={item.label}
                 onPress={() => router.push(item.route as any)}
-                className={`p-4 rounded-xl flex-row items-center ${
-                  isActive
+                className={`p-4 rounded-xl flex-row items-center ${isActive
                     ? 'bg-slate-100 dark:bg-slate-800'
                     : 'active:bg-slate-50 dark:active:bg-slate-900'
-                }`}
+                  }`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isActive }}
               >
                 <Text
-                  className={`text-base font-medium ${
-                    isActive
+                  className={`text-base font-medium ${isActive
                       ? 'text-blue-600 dark:text-blue-400'
                       : 'text-slate-700 dark:text-slate-300'
-                  }`}
+                    }`}
                 >
                   {item.label}
                 </Text>

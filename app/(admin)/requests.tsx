@@ -22,7 +22,7 @@ export default function AdminRequests() {
         isSyncingRequests
     } = useLeaveStore();
 
-    useScreenHeader("ADMIN", "Requests");
+    useScreenHeader("LEAVE", "Requests & Status");
 
     // Mock User ID for Phase 1
     const MOCK_USER_ID = 'user-123';

@@ -2,12 +2,12 @@ import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { Text, View } from 'react-native';
 
 export default function AdminPayStatus() {
-    useScreenHeader("PAY", "Pay & Status");
+    useScreenHeader("ADMIN", "Requests & Status");
     return (
         <View className="flex-1 bg-slate-50 dark:bg-black">
             {/* <ScreenHeader title="PAY" subtitle="Pay & Status" /> */}
             <View className="flex-1 items-center justify-center">
-                <Text className="text-slate-900 dark:text-white text-xl font-bold">Pay & Status</Text>
+                <Text className="text-slate-900 dark:text-white text-xl font-bold">Requests & Status</Text>
             </View>
         </View>
     );

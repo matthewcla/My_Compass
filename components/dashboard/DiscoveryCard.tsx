@@ -33,7 +33,7 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
     };
 
     return (
-        <View className="flex-1 flex flex-col min-h-0 gap-3">
+        <View className="flex-1 flex flex-col min-h-0 gap-6">
             {/* Primary Hero Card: Start Discovery */}
             <View
                 className="flex-1 rounded-2xl shadow-lg relative overflow-hidden flex flex-col group"

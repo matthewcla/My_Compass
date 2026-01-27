@@ -69,13 +69,14 @@ export function DiscoveryCard({ matchingBillets, onStartExploring }: DiscoveryCa
                         onPressOut={handlePressOut}
                     >
                         <Animated.View
-                            className="w-full bg-white py-3.5 rounded-xl shadow-sm flex-row items-center justify-center gap-2"
                             style={animatedButtonStyle}
                             // @ts-ignore
                             sharedTransitionTag="explore-btn"
                         >
-                            <Text className="font-bold text-sm text-slate-900">Start Exploring</Text>
-                            <ArrowRight size={16} color="#0f172a" />
+                            <View className="w-full bg-white dark:bg-slate-200 z-20 py-3.5 rounded-xl shadow-sm flex-row items-center justify-center gap-2">
+                                <Text className="font-bold text-sm text-slate-900">Start Exploring</Text>
+                                <ArrowRight size={16} color="#0f172a" />
+                            </View>
                         </Animated.View>
                     </Pressable>
                 </View>

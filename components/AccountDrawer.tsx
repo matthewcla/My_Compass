@@ -1,9 +1,10 @@
 import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
 import { useUser } from '@/store/useUserStore';
+import { getShadow } from '@/utils/getShadow';
 import { LogOut, Minimize, Settings, UserCircle, X } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Modal, Platform, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { Modal, Platform, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 
 interface AccountDrawerProps {
     visible: boolean;
@@ -41,42 +42,57 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
             animationType="slide"
             onRequestClose={onClose}
         >
-            <View style={styles.overlay}>
+            <View className="flex-1 justify-end">
                 {/* Backdrop tap to close */}
-                <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1}>
-                    <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }} />
+                <TouchableOpacity className="absolute inset-0" onPress={onClose} activeOpacity={1}>
+                    <View className="flex-1 bg-black/30" />
                 </TouchableOpacity>
 
                 {/* Drawer Content */}
-                <View style={[styles.drawer, { backgroundColor: isDark ? '#1e293b' : '#ffffff' }]}>
+                <View
+                    className="rounded-t-3xl p-5 max-h-[80%]"
+                    style={[
+                        { backgroundColor: isDark ? '#1e293b' : '#ffffff' },
+                        getShadow({
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: -2,
+                            },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 4,
+                            elevation: 5,
+                        })
+                    ]}
+                >
                     {/* Handle/Header */}
-                    <View style={styles.header}>
-                        <View style={styles.handle} />
-                        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                    <View className="items-center mb-5 relative">
+                        <View className="w-10 h-1 bg-slate-300 rounded-sm mb-2.5" />
+                        <TouchableOpacity onPress={onClose} className="absolute right-0 top-0">
                             <X size={24} color={theme.text} />
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.content}>
-                        <View style={styles.userInfo}>
-                            <View style={styles.avatarPlaceholder}>
+                    <View className="gap-4">
+                        <View className="items-center mb-5">
+                            <View className="mb-3">
                                 <UserCircle size={64} color={theme.tint} strokeWidth={1} />
                             </View>
-                            <Text style={[styles.userName, { color: theme.text }]}>{user?.displayName || 'Guest'}</Text>
-                            <Text style={[styles.userRank, { color: theme.text, opacity: 0.6 }]}>{user?.rank || ''} • {user?.title || ''}</Text>
+                            <Text className="text-xl font-bold mb-1" style={{ color: theme.text }}>{user?.displayName || 'Guest'}</Text>
+                            <Text className="text-sm uppercase tracking-[1px]" style={{ color: theme.text, opacity: 0.6 }}>{user?.rank || ''} • {user?.title || ''}</Text>
                         </View>
 
-                        <View style={styles.separator} />
+                        <View className="h-px bg-slate-200 my-2" />
 
                         {isPWA && (
-                            <TouchableOpacity style={styles.menuItem} onPress={handleExitFullScreen}>
+                            <TouchableOpacity className="flex-row items-center gap-3 py-3 px-4 rounded-xl bg-[rgba(0,0,0,0.03)]" onPress={handleExitFullScreen}>
                                 <Minimize size={20} color={theme.text} />
-                                <Text style={[styles.menuText, { color: theme.text }]}>Exit Full Screen</Text>
+                                <Text className="text-base font-semibold" style={{ color: theme.text }}>Exit Full Screen</Text>
                             </TouchableOpacity>
                         )}
 
                         <TouchableOpacity
-                            style={styles.menuItem}
+                            className="flex-row items-center gap-3 py-3 px-4 rounded-xl bg-[rgba(0,0,0,0.03)]"
                             onPress={() => {
                                 onClose();
                                 // @ts-ignore
@@ -84,15 +100,18 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
                             }}
                         >
                             <Settings size={20} color={theme.text} />
-                            <Text style={[styles.menuText, { color: theme.text }]}>Profile Settings</Text>
+                            <Text className="text-base font-semibold" style={{ color: theme.text }}>Profile Settings</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.menuItem} onPress={() => {
-                            onClose();
-                            signOut();
-                        }}>
+                        <TouchableOpacity
+                            className="flex-row items-center gap-3 py-3 px-4 rounded-xl bg-[rgba(0,0,0,0.03)]"
+                            onPress={() => {
+                                onClose();
+                                signOut();
+                            }}
+                        >
                             <LogOut size={20} color="#ef4444" />
-                            <Text style={[styles.menuText, { color: '#ef4444' }]}>Log Out</Text>
+                            <Text className="text-base font-semibold" style={{ color: '#ef4444' }}>Log Out</Text>
                         </TouchableOpacity>
                     </View>
                     {/* Bottom Safe Area Spacer */}
@@ -102,79 +121,3 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        justifyContent: 'flex-end',
-    },
-    drawer: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: -2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-        maxHeight: '80%',
-    },
-    header: {
-        alignItems: 'center',
-        marginBottom: 20,
-        position: 'relative',
-    },
-    handle: {
-        width: 40,
-        height: 4,
-        backgroundColor: '#cbd5e1',
-        borderRadius: 2,
-        marginBottom: 10,
-    },
-    closeButton: {
-        position: 'absolute',
-        right: 0,
-        top: 0,
-    },
-    content: {
-        gap: 16,
-    },
-    userInfo: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    avatarPlaceholder: {
-        marginBottom: 12,
-    },
-    userName: {
-        fontSize: 20,
-        fontWeight: '700',
-        marginBottom: 4,
-    },
-    userRank: {
-        fontSize: 14,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    separator: {
-        height: 1,
-        backgroundColor: '#e2e8f0',
-        marginVertical: 8,
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 12,
-        backgroundColor: 'rgba(0,0,0,0.03)',
-    },
-    menuText: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-});

@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StartupAnimation from '@/components/StartupAnimation';
 import { useSession } from '@/lib/ctx';
+import { getShadow } from '@/utils/getShadow';
 
 /**
  * Okta Login Screen with Cinematic Startup
@@ -112,11 +113,13 @@ export default function SignInScreen() {
                                 borderRadius: BUTTON_RADIUS,
                                 backgroundColor: 'transparent',
                                 // Deterministic Shadow Props
-                                shadowColor: '#1e3a8a',
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowRadius: 10,
-                                // Shadow Opacity toggles, but layout props remain constant
-                                shadowOpacity: isDark ? 0 : 0.25,
+                                ...getShadow({
+                                    shadowColor: '#1e3a8a',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowRadius: 10,
+                                    // Shadow Opacity toggles, but layout props remain constant
+                                    shadowOpacity: isDark ? 0 : 0.25,
+                                }),
                             }}
                         >
                             <Pressable

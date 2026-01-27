@@ -1,5 +1,5 @@
 import { useSession } from '@/lib/ctx';
-import { getDashboardCache, saveDashboardCache } from '@/services/storage';
+import { storage } from '@/services/storage';
 import { useUser } from '@/store/useUserStore';
 import { DashboardData } from '@/types/dashboard';
 import { logger } from '@/utils/logger';
@@ -84,7 +84,7 @@ export function useDashboardData() {
       // Persist to offline cache (SQLite)
       // Constraint: Auth tokens are NOT stored here. Only dashboard data.
       try {
-        await saveDashboardCache(user.id, mockData);
+        await storage.saveDashboardCache(user.id, mockData);
       } catch (saveErr) {
         logger.error('Failed to save dashboard cache', saveErr);
         // Do not fail the request if caching fails; UI still has fresh data.
@@ -95,7 +95,7 @@ export function useDashboardData() {
 
       // Offline Fallback Strategy
       try {
-        const cached = await getDashboardCache(user.id);
+        const cached = await storage.getDashboardCache(user.id);
         if (cached) {
           logger.info('Loaded dashboard data from offline cache');
           setData(cached);

@@ -1,5 +1,6 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
+import { getShadow } from '@/utils/getShadow';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, ChevronRight, Search, SlidersHorizontal } from 'lucide-react-native';
 import React from 'react';
@@ -36,7 +37,7 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
             {/* Primary Hero Card: Start Discovery */}
             <View
                 className="flex-1 rounded-2xl shadow-lg relative overflow-hidden flex flex-col group"
-                style={{ shadowColor: '#e2e8f0', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 5 }}
+                style={getShadow({ shadowColor: '#e2e8f0', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 5 })}
             >
                 <LinearGradient
                     colors={['#1e293b', '#020617']}
@@ -90,7 +91,7 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
             <TouchableOpacity
                 onPress={onJobPreferencesPress}
                 activeOpacity={0.8}
-                style={{ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 }}
+                style={getShadow({ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 })}
             >
                 <GlassView
                     intensity={60}

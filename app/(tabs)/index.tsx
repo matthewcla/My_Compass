@@ -9,7 +9,7 @@ import { useIsHydrating, useUser } from '@/store/useUserStore';
 import { formatRank } from '@/utils/format';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Platform, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
@@ -41,7 +41,7 @@ export default function HomeScreen() {
     };
 
     return (
-        <View className="flex-1 bg-systemGray6" style={{ paddingTop: Platform.OS === 'web' ? 24 : insets.top }}>
+        <View className="flex-1 bg-systemGray6">
             {/* Header - Fixed at Top */}
             {/* Header - Fixed at Top */}
             <ScreenHeader

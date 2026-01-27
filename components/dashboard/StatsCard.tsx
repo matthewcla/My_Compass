@@ -12,7 +12,7 @@ interface StatsCardProps {
 
 export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: StatsCardProps) {
     const totalSaved = liked + superLiked;
-    const radius = 14;
+    const radius = 12.5;
     const strokeWidth = Platform.OS === 'web' ? 6 : 4;
     // Approximation of the donut visual - in a real app this would likely be calculated based on data
     // The mockup had a static hardcoded visual, so we will replicate that "look" loosely:

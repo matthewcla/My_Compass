@@ -9,7 +9,6 @@ import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
 import { useUserStore } from '@/store/useUserStore';
 import { formatRank } from '@/utils/format';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useShallow } from 'zustand/react/shallow';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -62,28 +61,22 @@ export default function HubDashboard() {
     // Loading state
     if (loading && !data) {
         return (
-            <LinearGradient
-                colors={['#0f172a', '#1e293b']} // Slate-900 to Slate-800
-                style={{ flex: 1 }}
-            >
+            <View className="flex-1 bg-slate-50 dark:bg-slate-950">
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <HubSkeleton />
-            </LinearGradient>
+            </View>
         );
     }
 
     // Error state with fallback
     if (error && !data) {
         return (
-            <LinearGradient
-                colors={['#0f172a', '#1e293b']}
-                style={{ flex: 1 }}
-            >
+            <View className="flex-1 bg-slate-50 dark:bg-slate-950">
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <View className="flex-1 items-center justify-center px-8">
                     <Text className="text-slate-400 text-center">{error}</Text>
                 </View>
-            </LinearGradient>
+            </View>
         );
     }
 
@@ -141,10 +134,7 @@ export default function HubDashboard() {
     };
 
     return (
-        <LinearGradient
-            colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
-            style={{ flex: 1 }}
-        >
+        <View className="flex-1 bg-slate-50 dark:bg-slate-950">
             <FlashList
                 data={sections}
                 renderItem={renderItem}
@@ -157,6 +147,6 @@ export default function HubDashboard() {
                     paddingBottom: 100 + insets.bottom,
                 }}
             />
-        </LinearGradient>
+        </View>
     );
 }

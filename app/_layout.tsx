@@ -3,6 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,6 +12,7 @@ import '../global.css';
 import { AccountDrawer } from '@/components/AccountDrawer';
 import GlobalHeader from '@/components/navigation/GlobalHeader';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
+import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
@@ -70,6 +72,12 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
   const [dbInitialized, setDbInitialized] = useState(false);
+  const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    const color = colorScheme === 'dark' ? '#0f172a' : '#ffffff';
+    SystemUI.setBackgroundColorAsync(color);
+  }, [colorScheme]);
 
   const isAccountDrawerOpen = useUIStore((state) => state.isAccountDrawerOpen);
 

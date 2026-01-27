@@ -28,10 +28,10 @@ export function LeaveCard({ balance, pendingRequest, onPress }: LeaveCardProps) 
             {pendingRequest && (
                 <View className="bg-orange-50 rounded-lg pl-3 pr-2 py-1.5 border border-orange-100 flex-col items-end">
                     <View className="flex-row items-center gap-1 mb-0.5">
-                        <Text className="text-[9px] font-bold text-orange-700 uppercase">Pending</Text>
+                        <Text className="text-xs font-bold text-orange-700 uppercase">Pending</Text>
                         <Clock size={12} color="#c2410c" />
                     </View>
-                    <Text className="text-[10px] text-orange-800 font-medium">{pendingRequest.dates}</Text>
+                    <Text className="text-xs text-orange-800 font-medium">{pendingRequest.dates}</Text>
                 </View>
             )}
         </TouchableOpacity>

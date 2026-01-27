@@ -63,28 +63,28 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
                 </View>
             </View>
 
-            <View className="flex-row gap-2">
+            <View className="flex-row gap-4 h-12">
                 <Pressable
                     onPress={onPressSuperLiked}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    hitSlop={{ top: 15, bottom: 15, left: 10, right: 10 }}
                     style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
-                    className="flex-1 bg-rose-50 rounded-lg py-1.5 flex flex-col items-center justify-center border border-rose-100/50"
+                    className="flex-1 bg-rose-50 rounded-lg flex flex-col items-center justify-center border border-rose-100/50 h-full"
                 >
                     <Star size={14} color="#F43F5E" fill="#F43F5E" className="text-rose-500 mb-0.5" />
                     <Text className="text-[10px] font-bold text-rose-700 leading-none">{superLiked}</Text>
                 </Pressable>
                 <Pressable
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    hitSlop={{ top: 15, bottom: 15, left: 10, right: 10 }}
                     style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
-                    className="flex-1 bg-blue-50 rounded-lg py-1.5 flex flex-col items-center justify-center border border-blue-100/50"
+                    className="flex-1 bg-blue-50 rounded-lg flex flex-col items-center justify-center border border-blue-100/50 h-full"
                 >
                     <ThumbsUp size={14} color="#3B82F6" className="text-blue-500 mb-0.5" />
                     <Text className="text-[10px] font-bold text-blue-700 leading-none">{liked}</Text>
                 </Pressable>
                 <Pressable
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    hitSlop={{ top: 15, bottom: 15, left: 10, right: 10 }}
                     style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
-                    className="flex-1 bg-slate-100 rounded-lg py-1.5 flex flex-col items-center justify-center border border-slate-200/50"
+                    className="flex-1 bg-slate-100 rounded-lg flex flex-col items-center justify-center border border-slate-200/50 h-full"
                 >
                     <X size={14} color="#64748B" className="text-slate-500 mb-0.5" />
                     <Text className="text-[10px] font-bold text-slate-600 leading-none">{passed}</Text>

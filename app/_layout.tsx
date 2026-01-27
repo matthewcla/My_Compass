@@ -9,10 +9,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
 import { AccountDrawer } from '@/components/AccountDrawer';
+import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { initDatabase } from '@/services/storage';
 import { useUIStore } from '@/store/useUIStore';
+import { View } from 'react-native';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -106,15 +108,18 @@ export default function RootLayout() {
           onClose={() => useUIStore.getState().closeAccountDrawer()}
         />
         <AuthGuard>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(hub)" />
-            <Stack.Screen name="(assignment)" />
-            <Stack.Screen name="(pcs)" />
-            <Stack.Screen name="(admin)" />
-            <Stack.Screen name="(profile)" />
-            <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
-            <Stack.Screen name="leave" />
-          </Stack>
+          <View className="flex-1 bg-white dark:bg-black">
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(hub)" />
+              <Stack.Screen name="(assignment)" />
+              <Stack.Screen name="(pcs)" />
+              <Stack.Screen name="(admin)" />
+              <Stack.Screen name="(profile)" />
+              <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="leave" />
+            </Stack>
+            <GlobalTabBar />
+          </View>
         </AuthGuard>
       </SessionProvider>
     </SafeAreaProvider>

@@ -8,7 +8,7 @@ import { useSession } from '@/lib/ctx';
 import { useIsHydrating, useUser } from '@/store/useUserStore';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Platform, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
@@ -34,7 +34,7 @@ export default function HomeScreen() {
     };
 
     return (
-        <View className="flex-1 bg-systemGray6">
+        <View className="flex-1 bg-systemGray6" style={{ paddingTop: Platform.OS === 'web' ? 24 : insets.top }}>
             {/* Header - Fixed at Top */}
             {/* Header - Fixed at Top */}
             <ScreenHeader

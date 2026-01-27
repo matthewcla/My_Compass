@@ -1,6 +1,6 @@
 import { Star, ThumbsUp, X } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 interface StatsCardProps {
@@ -13,7 +13,7 @@ interface StatsCardProps {
 export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: StatsCardProps) {
     const totalSaved = liked + superLiked;
     const radius = 14;
-    const strokeWidth = 3;
+    const strokeWidth = Platform.OS === 'web' ? 6 : 4;
     // Approximation of the donut visual - in a real app this would likely be calculated based on data
     // The mockup had a static hardcoded visual, so we will replicate that "look" loosely:
     // "border-slate-50 border-r-emerald-500 border-t-emerald-500" 

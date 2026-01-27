@@ -60,9 +60,10 @@ export default function GlobalTabBar() {
     const config = SPOKE_CONFIG[currentSpoke];
 
     // Colors
-    const activeColor = '#0F172A'; // slate-900
-    const inactiveColor = '#94A3B8'; // slate-400
-    const activeBg = '#F1F5F9'; // slate-100
+    const isDark = colorScheme === 'dark';
+    const activeColor = isDark ? '#FFFFFF' : '#0F172A'; // White vs Slate-900
+    const inactiveColor = isDark ? '#64748B' : '#94A3B8'; // Slate-500 vs Slate-400
+    // const activeBg = isDark ? '#1E293B' : '#F1F5F9'; // Slate-800 vs Slate-100 (Not used directly, but good for ref)
 
     // Helper to render a tab item
     const renderTab = (
@@ -90,7 +91,7 @@ export default function GlobalTabBar() {
         return (
             <Pressable
                 onPress={() => router.push(route as any)}
-                className={`flex-1 items-center justify-center gap-1 h-full ${isActive ? 'bg-slate-50' : ''}`}
+                className={`flex-1 items-center justify-center gap-1 h-full ${isActive ? 'bg-slate-50 dark:bg-slate-800' : ''}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isActive }}
             >
@@ -113,7 +114,7 @@ export default function GlobalTabBar() {
                 height: 60 + insets.bottom, // Standard height + safe area
                 ...styles.shadow
             }}
-            className="flex-row bg-white border-t border-slate-200"
+            className="flex-row bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
         >
             {/* 1. HOME (Fixed) */}
             {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox'))}

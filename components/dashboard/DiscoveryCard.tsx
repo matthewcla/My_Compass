@@ -59,7 +59,7 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
                 </View>
 
                 {/* Content Section - Pushed to bottom with flex spacer using justify-end */}
-                <View className="relative z-10 flex-1 justify-end p-5 pt-0">
+                <View className="relative z-10 flex-1 justify-end p-5 pt-[5px]">
                     <View className="flex-row items-center gap-3 mb-6">
                         <Text className="text-5xl font-bold text-white tracking-tight">{matchingBillets}</Text>
                         <View className="flex flex-col">

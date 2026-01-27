@@ -9,13 +9,13 @@ import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
 import { useUserStore } from '@/store/useUserStore';
 import { formatRank } from '@/utils/format';
+import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useShallow } from 'zustand/react/shallow';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FlashList } from '@shopify/flash-list';
+import { useShallow } from 'zustand/react/shallow';
 
 export default function HubDashboard() {
     const router = useRouter();
@@ -95,33 +95,27 @@ export default function HubDashboard() {
         switch (item) {
             case 'status':
                 return (
-                    <View style={{ marginBottom: 12 }}>
-                        <StatusCard
-                            nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                            daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
-                        />
-                    </View>
+                    <StatusCard
+                        nextCycle={data?.cycle?.cycleId ?? '24-02'}
+                        daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
+                    />
                 );
             case 'discovery':
                 return (
-                    <View style={{ marginBottom: 24 }}>
-                        <DiscoveryCard
-                            matchingBillets={data?.cycle?.matchingBillets ?? 0}
-                            onStartExploring={handleStartExploring}
-                            onJobPreferencesPress={handleJobPreferencesPress}
-                        />
-                    </View>
+                    <DiscoveryCard
+                        matchingBillets={data?.cycle?.matchingBillets ?? 0}
+                        onStartExploring={handleStartExploring}
+                        onJobPreferencesPress={handleJobPreferencesPress}
+                    />
                 );
             case 'stats':
                 return (
-                    <View style={{ marginBottom: 24 }}>
-                        <StatsCard
-                            liked={data?.stats?.liked ?? 0}
-                            superLiked={data?.stats?.superLiked ?? 0}
-                            passed={data?.stats?.passed ?? 0}
-                            onPressSuperLiked={handleSuperLikedPress}
-                        />
-                    </View>
+                    <StatsCard
+                        liked={data?.stats?.liked ?? 0}
+                        superLiked={data?.stats?.superLiked ?? 0}
+                        passed={data?.stats?.passed ?? 0}
+                        onPressSuperLiked={handleSuperLikedPress}
+                    />
                 );
             case 'leave':
                 return (
@@ -148,6 +142,7 @@ export default function HubDashboard() {
             <FlashList
                 data={sections}
                 renderItem={renderItem}
+                ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
                 // @ts-expect-error: estimatedItemSize is missing in the type definition of @shopify/flash-list v2.2.0 despite being mandatory
                 estimatedItemSize={150}
                 style={{ flex: 1 }}

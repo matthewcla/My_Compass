@@ -41,7 +41,7 @@ export function DiscoveryCard({ matchingBillets, onStartExploring }: DiscoveryCa
                 />
 
                 {/* Decorative Blur / Glow */}
-                <View className="absolute -top-10 -right-10 w-32 h-32 bg-teal-500 opacity-20 rounded-full blur-3xl" />
+                <View className="absolute -top-10 -right-10 w-32 h-32 bg-teal-500 opacity-20 blur-3xl" />
 
                 <View className="relative z-10 flex-row justify-between items-start p-5 pb-0">
                     <View>

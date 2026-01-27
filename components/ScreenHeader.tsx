@@ -33,7 +33,7 @@ export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHea
                 <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
                     {title}
                 </Text>
-                <Text className="text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest text-xs mt-1">
+                <Text className="text-blue-700 dark:text-blue-400 font-bold uppercase tracking-widest text-xs mt-1">
                     {subtitle}
                 </Text>
             </View>

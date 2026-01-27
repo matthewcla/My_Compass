@@ -20,12 +20,12 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
     // This implies about 50% emerald (top and right) and 50% slate (bottom and left).
 
     return (
-        <View className="bg-white rounded-xl p-3 border border-slate-100 flex flex-col justify-between" style={{ shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: { width: 0, height: 4 }, shadowRadius: 10, elevation: 4 }}>
+        <View className="bg-card rounded-xl p-3 border border-subtle flex flex-col justify-between" style={{ shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: { width: 0, height: 4 }, shadowRadius: 10, elevation: 4 }}>
             <View className="flex-row justify-between items-start mb-2">
                 <View>
                     <Text className="text-slate-400 text-[9px] font-bold uppercase tracking-widest">My Shortlist</Text>
                     <View className="flex-row items-baseline gap-1 mt-0.5">
-                        <Text className="text-xl font-bold text-slate-800 tracking-tight">{totalSaved}</Text>
+                        <Text className="text-xl font-bold text-primary tracking-tight">{totalSaved}</Text>
                         <Text className="text-[10px] text-slate-400 font-medium">Billets Saved</Text>
                     </View>
                 </View>

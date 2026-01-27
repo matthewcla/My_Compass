@@ -19,7 +19,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: '(hub)',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -52,7 +52,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     } else if (session && inAuthGroup) {
       // User is authenticated but still on sign-in page
       // Redirect to main app and replace history to prevent back navigation to login
-      router.replace('/(tabs)');
+      router.replace('/(hub)/dashboard');
     }
   }, [session, isLoading, segments]);
 
@@ -99,7 +99,11 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <AuthGuard>
           <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(hub)" options={{ headerShown: false }} />
+            <Stack.Screen name="(assignment)" options={{ headerShown: false }} />
+            <Stack.Screen name="(pcs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+            <Stack.Screen name="(profile)" options={{ headerShown: false }} />
             <Stack.Screen name="sign-in" options={{ headerShown: false }} />
             <Stack.Screen name="leave" options={{ presentation: 'modal', headerShown: false }} />
           </Stack>

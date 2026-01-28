@@ -19,9 +19,11 @@ const FINAL_SCALE = 0.8;
 const FINAL_TRANSLATE_Y = -50;
 
 // Animation Timing
-const SPRING_CONFIG = { mass: 1, damping: 15, stiffness: 120 };
-const TEXT_REVEAL_DELAY = 400; // Overlap with Logo Spring (approx 50%)
+const FADE_IN_DURATION = 800;
+const DWELL_DURATION = 500;
+const TEXT_REVEAL_DELAY = 200; // Relative to start of move phase
 const TEXT_DURATION = 800;
+const SPRING_CONFIG = { mass: 1, damping: 15, stiffness: 120 };
 
 interface StartupAnimationProps {
     onAnimationComplete: () => void;
@@ -31,10 +33,8 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
     const { height: screenHeight } = useWindowDimensions();
 
     // Shared Values
-    // Cold Boot: Logo starts visible (Opacity 1), Scale 0, Center (0)
-    // Warm Boot: Final State (Opacity 1, Scale 0.8, Translate -50)
-    const logoScale = useSharedValue(0);
-    const logoOpacity = useSharedValue(1); // STRICT: Always 1 for Cold Boot per requirements
+    const logoScale = useSharedValue(1); // Start full size
+    const logoOpacity = useSharedValue(0); // Start invisible (Void)
     const textOpacity = useSharedValue(0);
     const textTranslateY = useSharedValue(20);
     const containerTranslateY = useSharedValue(0);
@@ -53,45 +53,51 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
                     textOpacity.value = 1;
                     textTranslateY.value = 0;
 
-                    // Haptics & Notification
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     onAnimationComplete();
                 } else {
-                    // COLD BOOT: Run Animation
+                    // COLD BOOT: Cinematic Fade-In Sequence
 
-                    // 1. Logo Physics (Scale & Translation)
-                    // Note: User requested "Physics ... for Logo translation/scale".
-                    // We interpret "Logo translation" as the container move-up to FINAL_TRANSLATE_Y.
+                    // Stage 1: The Reveal (Fade In)
+                    logoOpacity.value = withTiming(1, { duration: FADE_IN_DURATION });
 
-                    logoScale.value = withSpring(FINAL_SCALE, SPRING_CONFIG);
-                    containerTranslateY.value = withSpring(FINAL_TRANSLATE_Y, SPRING_CONFIG, (finished) => {
-                        if (finished) {
-                            runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
-                            runOnJS(onAnimationComplete)();
-                        }
-                    });
+                    // Stage 2: The Breath (Dwell)
+                    setTimeout(() => {
+                        // Stage 3: The Departure (Move & Scale)
+                        logoScale.value = withSpring(FINAL_SCALE, SPRING_CONFIG);
+                        containerTranslateY.value = withSpring(FINAL_TRANSLATE_Y, SPRING_CONFIG, (finished) => {
+                            if (finished) {
+                                runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+                                runOnJS(onAnimationComplete)();
+                            }
+                        });
 
-                    // 2. Text Reveal (Parallel with overlap)
-                    textOpacity.value = withDelay(TEXT_REVEAL_DELAY, withTiming(1, { duration: TEXT_DURATION }));
-                    textTranslateY.value = withDelay(TEXT_REVEAL_DELAY, withTiming(0, {
-                        duration: TEXT_DURATION,
-                        easing: Easing.out(Easing.exp)
-                    }));
+                        // Text Reveal
+                        textOpacity.value = withDelay(TEXT_REVEAL_DELAY, withTiming(1, { duration: TEXT_DURATION }));
+                        textTranslateY.value = withDelay(TEXT_REVEAL_DELAY, withTiming(0, {
+                            duration: TEXT_DURATION,
+                            easing: Easing.out(Easing.exp)
+                        }));
 
-                    // Persist for next time
+                    }, FADE_IN_DURATION + DWELL_DURATION);
+
                     await AsyncStorage.setItem('hasLaunched', 'true');
                 }
             } catch (error) {
                 console.error('Error checking first launch:', error);
-                // Fallback to Cold Boot logic if error
-                logoScale.value = withSpring(FINAL_SCALE, SPRING_CONFIG);
-                containerTranslateY.value = withSpring(FINAL_TRANSLATE_Y, SPRING_CONFIG, (finished) => {
-                    if (finished) {
-                        runOnJS(onAnimationComplete)();
-                    }
-                });
-                textOpacity.value = withDelay(TEXT_REVEAL_DELAY, withTiming(1, { duration: TEXT_DURATION }));
-                textTranslateY.value = withDelay(TEXT_REVEAL_DELAY, withTiming(0, { duration: TEXT_DURATION }));
+
+                // Fallback: Immediate Fade In & Move
+                logoOpacity.value = withTiming(1, { duration: FADE_IN_DURATION });
+                setTimeout(() => {
+                    logoScale.value = withSpring(FINAL_SCALE, SPRING_CONFIG);
+                    containerTranslateY.value = withSpring(FINAL_TRANSLATE_Y, SPRING_CONFIG, (finished) => {
+                        if (finished) {
+                            runOnJS(onAnimationComplete)();
+                        }
+                    });
+                    textOpacity.value = withDelay(TEXT_REVEAL_DELAY, withTiming(1, { duration: TEXT_DURATION }));
+                    textTranslateY.value = withDelay(TEXT_REVEAL_DELAY, withTiming(0, { duration: TEXT_DURATION }));
+                }, FADE_IN_DURATION + DWELL_DURATION);
             }
         };
 

@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
@@ -28,7 +28,9 @@ export const unstable_settings = {
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* shielding */
+});
 
 /**
  * Auth Guard Component
@@ -72,6 +74,9 @@ export default function RootLayout() {
   const [dbInitialized, setDbInitialized] = useState(false);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
 
+  // Track splash state to prevent double-hide race conditions
+  const isSplashHidden = useRef(false);
+
   const isAccountDrawerOpen = useUIStore((state) => state.isAccountDrawerOpen);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
@@ -90,25 +95,39 @@ export default function RootLayout() {
       });
   }, []);
 
+  const hideSplash = useCallback(async () => {
+    if (isSplashHidden.current) return;
+    isSplashHidden.current = true;
+
+    try {
+      await SplashScreen.hideAsync();
+    } catch (e) {
+      // Create a "soft" error or ignore. 
+      // "No native splash screen registered" is common if it auto-hid or was forced.
+      // console.log('Splash hide error:', e); 
+    }
+  }, []);
+
   // Safety Timeout: Force hide splash if app hangs for 2 seconds
   useEffect(() => {
     const timeout = setTimeout(() => {
-      console.warn('Splash Screen Force Hide: Safety Timeout Triggered (2000ms)');
-      SplashScreen.hideAsync();
+      // Only warn if we ACTUALLY had to force it
+      if (!isSplashHidden.current) {
+        console.warn('Splash Screen Force Hide: Safety Timeout Triggered (2000ms)');
+        hideSplash();
+      }
     }, 2000);
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [hideSplash]);
 
   // Orchestration: Hide Splash only when EVERYTHING is ready
   useEffect(() => {
     if (fontsLoaded && dbInitialized && isLayoutReady) {
-      SplashScreen.hideAsync().catch(() => {
-        // Ignore error: "No native splash screen registered"
-      });
+      hideSplash();
       registerForPushNotificationsAsync();
     }
-  }, [fontsLoaded, dbInitialized, isLayoutReady]);
+  }, [fontsLoaded, dbInitialized, isLayoutReady, hideSplash]);
 
   const onLayoutRootView = useCallback(async () => {
     setIsLayoutReady(true);

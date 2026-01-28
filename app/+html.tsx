@@ -42,7 +42,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
           // Safety timeout to remove splash if something hangs, but usually removed by mount
           setTimeout(() => {
             const splash = document.getElementById('splash');
-            if (splash) splash.classList.add('hidden');
+            if (splash) splash.classList.add('app-loaded');
           }, 3000);
         `}} />
       </body>
@@ -50,19 +50,12 @@ export default function Root({ children }: { children: React.ReactNode }) {
   );
 }
 
-const responsiveBackground = `
-body {
-  background-color: #0A1628;
-}
-`;
-
 // Native-Like Web Splash Simulation
 // Matches the native launch screen exactly to prevent white flash
 const globalCss = `
 body {
   background-color: #0A1628;
   margin: 0;
-  padding: 0;
 }
 #splash {
   position: absolute;
@@ -75,10 +68,10 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  transition: opacity 0.5s ease-out;
-  pointer-events: none;
 }
-#splash.hidden {
+.app-loaded {
   opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
 }
 `;

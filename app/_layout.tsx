@@ -3,7 +3,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
@@ -65,11 +65,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const [fontsLoaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
   const [dbInitialized, setDbInitialized] = useState(false);
+  const [isLayoutReady, setIsLayoutReady] = useState(false);
 
   const isAccountDrawerOpen = useUIStore((state) => state.isAccountDrawerOpen);
 
@@ -89,18 +90,38 @@ export default function RootLayout() {
       });
   }, []);
 
+  // Safety Timeout: Force hide splash if app hangs for 2 seconds
   useEffect(() => {
-    if (loaded && dbInitialized) {
+    const timeout = setTimeout(() => {
+      console.warn('Splash Screen Force Hide: Safety Timeout Triggered (2000ms)');
+      SplashScreen.hideAsync();
+    }, 2000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Orchestration: Hide Splash only when EVERYTHING is ready
+  useEffect(() => {
+    if (fontsLoaded && dbInitialized && isLayoutReady) {
       SplashScreen.hideAsync().catch(() => {
         // Ignore error: "No native splash screen registered"
-        // This can happen if the splash screen is already hidden or in certain dev scenarios.
       });
       registerForPushNotificationsAsync();
     }
-  }, [loaded, dbInitialized]);
+  }, [fontsLoaded, dbInitialized, isLayoutReady]);
 
-  if (!loaded || !dbInitialized) {
-    return null;
+  const onLayoutRootView = useCallback(async () => {
+    setIsLayoutReady(true);
+  }, []);
+
+  // Render even if not loaded to allow onLayout to fire
+  // The Splash Screen will cover the "ugly" unstyled content until hideAsync is called
+  if (!fontsLoaded && !error) {
+    // We can optionally return null here if we REALLY don't want to mount children
+    // But to capture onLayout, we typically need to render something.
+    // However, with preventAutoHideAsync, the native splash stays up.
+    // If we return null, onLayout won't fire.
+    // So we MUST render the View.
   }
 
   return (
@@ -112,7 +133,11 @@ export default function RootLayout() {
           onClose={() => useUIStore.getState().closeAccountDrawer()}
         />
         <AuthGuard>
-          <View className="flex-1 bg-white dark:bg-black">
+          <View
+            className="flex-1 bg-white dark:bg-black"
+            onLayout={onLayoutRootView}
+          // Ensure View exists to trigger layout
+          >
             <GlobalHeader />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(hub)" />
@@ -130,3 +155,4 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+

@@ -20,9 +20,10 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
         return undefined;
     }
 
-    // Expo Go on Android does not support expo-notifications in SDK 53+
-    if (Platform.OS === 'android' && Constants.appOwnership === 'expo') {
-        console.log('Skipping Push Notifications on Android Expo Go (not supported).');
+    // Expo Go does not support remote notifications in SDK 53+
+    // We strictly skip this logic when running in Expo Go (both Android and iOS)
+    if (Constants.appOwnership === 'expo') {
+        // console.log('Skipping Push Notifications: Not supported in Expo Go.');
         return undefined;
     }
 

@@ -22,6 +22,7 @@ export default function HubDashboard() {
     const { isLoading: isSessionLoading } = useSession();
     const user = useUserStore(useShallow(state => state.user));
     const insets = useSafeAreaInsets();
+    const router = useRouter(); // Initialize router
     const { data, loading, error } = useDashboardData();
 
     const colorScheme = useColorScheme();

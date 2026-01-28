@@ -12,6 +12,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StartupAnimation from '@/components/StartupAnimation';
+import { prefetchDashboardData } from '@/hooks/useDashboardData';
 import { useSession } from '@/lib/ctx';
 import { getShadow } from '@/utils/getShadow';
 
@@ -34,7 +35,6 @@ import { getShadow } from '@/utils/getShadow';
 export default function SignInScreen() {
     const { signInWithOkta, isSigningIn } = useSession();
     const [error, setError] = useState<string | null>(null);
-    const [showLoginControls, setShowLoginControls] = useState(false);
 
     // Reactive dimensions
     const { width } = useWindowDimensions();
@@ -45,6 +45,10 @@ export default function SignInScreen() {
     const handleSignIn = async () => {
         setError(null);
         try {
+            // PREFETCH-ON-PRESS: Fire data fetch in parallel with OAuth roundtrip
+            // This overlaps network time with authentication for zero-latency feel
+            prefetchDashboardData(); // Fire-and-forget (don't await)
+
             await signInWithOkta();
             // AuthGuard in _layout.tsx will handle navigation on success
         } catch (err) {
@@ -77,118 +81,114 @@ export default function SignInScreen() {
                 {/* 
                    Startup Animation 
                    - Handles only the visuals of the logo and text.
-                   - On completion, triggers the appearance of the login form.
+                   - On completion, Haptics fire (handled internally).
                 */}
                 <StartupAnimation
-                    onAnimationComplete={() => setShowLoginControls(true)}
+                    onAnimationComplete={() => { /* Haptics handled internally now */ }}
                 />
 
-                {/* Login Controls - Only appear after animation */}
-                {showLoginControls && (
-                    <Animated.View
-                        entering={FadeInDown.duration(1200)}
+                {/* Login Controls - Non-Blocking Mount with Staggered Entrance */}
+                <Animated.View
+                    entering={FadeInDown.delay(300).springify()}
+                    style={{
+                        position: 'absolute',
+                        bottom: '25%',
+                        left: 0,
+                        right: 0,
+                        width: '100%',
+                        alignItems: 'center',
+                        paddingHorizontal: 16,
+                        paddingBottom: Platform.OS === 'web' ? insets.bottom : 0
+                    }}
+                >
+                    {/* Spacer to push buttons down relative to the moved-up logo */}
+                    <View className="h-20" />
+
+                    {/* 
+                        DOUBLE-CONTAINER PATTERN (Visual Stability)
+                        Outer: Layout + Shadow
+                        Inner: Border + Content + Clipping
+                    */}
+                    <View
                         style={{
-                            position: 'absolute',
-                            bottom: '25%',
-                            left: 0,
-                            right: 0,
-                            width: '100%',
-                            alignItems: 'center',
-                            paddingHorizontal: 16,
-                            paddingBottom: Platform.OS === 'web' ? insets.bottom : 0
+                            width: buttonWidth,
+                            height: BUTTON_HEIGHT,
+                            borderRadius: BUTTON_RADIUS,
+                            backgroundColor: 'transparent',
+                            // Deterministic Shadow Props
+                            ...getShadow({
+                                shadowColor: '#1e3a8a',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowRadius: 10,
+                                // Shadow Opacity toggles, but layout props remain constant
+                                shadowOpacity: isDark ? 0 : 0.25,
+                            }),
                         }}
                     >
-                        {/* Spacer to push buttons down relative to the moved-up logo */}
-                        <View className="h-20" />
-
-                        {/* 
-                            DOUBLE-CONTAINER PATTERN (Visual Stability)
-                            Outer: Layout + Shadow
-                            Inner: Border + Content + Clipping
-                        */}
-                        <View
-                            style={{
-                                width: buttonWidth,
-                                height: BUTTON_HEIGHT,
-                                borderRadius: BUTTON_RADIUS,
-                                backgroundColor: 'transparent',
-                                // Deterministic Shadow Props
-                                ...getShadow({
-                                    shadowColor: '#1e3a8a',
-                                    shadowOffset: { width: 0, height: 4 },
-                                    shadowRadius: 10,
-                                    // Shadow Opacity toggles, but layout props remain constant
-                                    shadowOpacity: isDark ? 0 : 0.25,
-                                }),
-                            }}
+                        <Pressable
+                            disabled={isSigningIn}
+                            accessibilityRole="button"
+                            accessibilityLabel="Sign In"
+                            accessibilityState={{ disabled: isSigningIn }}
+                            hitSlop={20}
+                            style={{ flex: 1, borderRadius: BUTTON_RADIUS }}
+                            onPress={handleSignIn}
                         >
-                            <Pressable
-                                disabled={isSigningIn}
-                                accessibilityRole="button"
-                                accessibilityLabel="Sign In"
-                                accessibilityState={{ disabled: isSigningIn }}
-                                hitSlop={20}
-                                style={{ flex: 1, borderRadius: BUTTON_RADIUS }}
-                                onPress={handleSignIn}
-                            >
-                                {({ pressed }) => (
-                                    <View
-                                        style={{
-                                            flex: 1,
-                                            borderRadius: BUTTON_RADIUS,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            overflow: 'hidden', // Ensures content stays inside border
+                            {({ pressed }) => (
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        borderRadius: BUTTON_RADIUS,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        overflow: 'hidden', // Ensures content stays inside border
 
-                                            // STYLE DETERMINISM:
-                                            // Border width is ALWAYS 1.
-                                            // Color becomes transparent in Light Mode to match Dark Mode footprint.
-                                            borderWidth: BORDER_WIDTH,
-                                            borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                        // STYLE DETERMINISM:
+                                        // Border width is ALWAYS 1.
+                                        // Color becomes transparent in Light Mode to match Dark Mode footprint.
+                                        borderWidth: BORDER_WIDTH,
+                                        borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'transparent',
 
-                                            backgroundColor: pressed ? buttonPressedColor : buttonBaseColor,
-                                        }}
-                                    >
-                                        {isSigningIn ? (
-                                            <View className="flex-row items-center gap-3">
-                                                <ActivityIndicator size="small" color="white" />
-                                                <Text className="text-white font-bold text-lg">Redirecting...</Text>
-                                            </View>
-                                        ) : (
-                                            <Text className="text-white font-bold text-lg tracking-wider">Sign In with Okta</Text>
-                                        )}
-                                    </View>
-                                )}
-                            </Pressable>
+                                        backgroundColor: pressed ? buttonPressedColor : buttonBaseColor,
+                                    }}
+                                >
+                                    {isSigningIn ? (
+                                        <View className="flex-row items-center gap-3">
+                                            <ActivityIndicator size="small" color="white" />
+                                            <Text className="text-white font-bold text-lg">Redirecting...</Text>
+                                        </View>
+                                    ) : (
+                                        <Text className="text-white font-bold text-lg tracking-wider">Sign In with Okta</Text>
+                                    )}
+                                </View>
+                            )}
+                        </Pressable>
+                    </View>
+
+                    {/* Error message */}
+                    {error && (
+                        <View className="mt-4 px-4 py-3 bg-red-600/15 rounded-lg border border-red-600/30">
+                            <Text className="text-red-300 text-sm text-center">{error}</Text>
                         </View>
-
-                        {/* Error message */}
-                        {error && (
-                            <View className="mt-4 px-4 py-3 bg-red-600/15 rounded-lg border border-red-600/30">
-                                <Text className="text-red-300 text-sm text-center">{error}</Text>
-                            </View>
-                        )}
-                    </Animated.View>
-                )}
+                    )}
+                </Animated.View>
 
                 {/* Footer - Positioned at bottom of screen */}
-                {showLoginControls && (
-                    <Animated.View
-                        entering={FadeInDown.duration(600).delay(100)}
-                        style={{
-                            position: 'absolute',
-                            bottom: 48 + (Platform.OS === 'web' ? insets.bottom : 0),
-                            left: 0,
-                            right: 0,
-                            alignItems: 'center',
-                            paddingHorizontal: 32
-                        }}
-                    >
-                        <Text className="text-xs text-gray-500 text-center leading-[18px]">
-                            Authorized personnel only. Use of this system constitutes consent to monitoring.
-                        </Text>
-                    </Animated.View>
-                )}
+                <Animated.View
+                    entering={FadeInDown.delay(400).springify()}
+                    style={{
+                        position: 'absolute',
+                        bottom: 48 + (Platform.OS === 'web' ? insets.bottom : 0),
+                        left: 0,
+                        right: 0,
+                        alignItems: 'center',
+                        paddingHorizontal: 32
+                    }}
+                >
+                    <Text className="text-xs text-gray-500 text-center leading-[18px]">
+                        Authorized personnel only. Use of this system constitutes consent to monitoring.
+                    </Text>
+                </Animated.View>
             </View>
         </View>
     );

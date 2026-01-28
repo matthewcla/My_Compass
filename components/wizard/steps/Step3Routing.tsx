@@ -3,19 +3,9 @@ import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { FileText, Wallet } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, TextInput, View, useColorScheme } from 'react-native';
+import { Text, TextInput, View, useColorScheme } from 'react-native';
 
-const LEAVE_TYPES = [
-    { id: 'annual', label: 'Annual' },
-    { id: 'emergency', label: 'Emergency' },
-    { id: 'convalescent', label: 'Convalescent' },
-    { id: 'terminal', label: 'Terminal' },
-    { id: 'parental', label: 'Parental' },
-    { id: 'bereavement', label: 'Bereavement' },
-    { id: 'adoption', label: 'Adoption' },
-    { id: 'ptdy', label: 'PTDY' },
-    { id: 'other', label: 'Other' },
-] as const;
+
 
 interface Step3RoutingProps {
     formData: Partial<CreateLeaveRequestPayload>;
@@ -61,30 +51,7 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
                 </View>
             </View>
 
-            {/* 2. Leave Type (Moved from Step 2) */}
-            <View>
-                <Text className="text-lg font-bold text-labelPrimary mb-4">Request Details</Text>
-                <Text className="text-sm font-medium text-labelSecondary mb-2">Leave Type</Text>
-                <View className="flex-row flex-wrap gap-2">
-                    {LEAVE_TYPES.map((type) => (
-                        <Pressable
-                            key={type.id}
-                            onPress={() => onUpdate('leaveType', type.id)}
-                            className={`px-4 py-2 rounded-full border ${formData.leaveType === type.id
-                                ? 'bg-systemBlue border-systemBlue'
-                                : 'bg-systemBackground border-systemGray6'
-                                }`}
-                        >
-                            <Text
-                                className={`${formData.leaveType === type.id ? 'text-white' : 'text-labelSecondary'
-                                    } font-medium`}
-                            >
-                                {type.label}
-                            </Text>
-                        </Pressable>
-                    ))}
-                </View>
-            </View>
+
 
             {/* 3. Remarks */}
             <View>

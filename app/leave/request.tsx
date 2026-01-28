@@ -15,17 +15,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, Vie
 
 // --- Types & Constants ---
 
-const LEAVE_TYPES = [
-    { id: 'annual', label: 'Annual' },
-    { id: 'emergency', label: 'Emergency' },
-    { id: 'convalescent', label: 'Convalescent' },
-    { id: 'terminal', label: 'Terminal' },
-    { id: 'parental', label: 'Parental' },
-    { id: 'bereavement', label: 'Bereavement' },
-    { id: 'adoption', label: 'Adoption' },
-    { id: 'ptdy', label: 'PTDY' },
-    { id: 'other', label: 'Other' },
-] as const;
+
 
 const TOTAL_STEPS = 4;
 
@@ -181,6 +171,10 @@ export default function LeaveRequestScreen() {
     const validateStep = (currentStep: number): boolean => {
         switch (currentStep) {
             case 0: // Dates (Intent)
+                if (!formData.leaveType) {
+                    Alert.alert('Required', 'Please select a Leave Type.');
+                    return false;
+                }
                 if (!formData.startDate || !formData.endDate) {
                     Alert.alert('Required', 'Please enter both start and end dates.');
                     return false;
@@ -197,10 +191,7 @@ export default function LeaveRequestScreen() {
                 }
                 return true;
             case 2: // Routing (Type + Remarks)
-                if (!formData.leaveType) {
-                    Alert.alert('Required', 'Please select a Leave Type.');
-                    return false;
-                }
+
                 return true;
             case 3: // Review (Check) + Verification
                 if (!formData.startDate) return false;
@@ -250,6 +241,7 @@ export default function LeaveRequestScreen() {
             <ScrollView className="flex-1 px-6 pt-6">
                 {step === 0 && (
                     <Step1Intent
+                        leaveType={formData.leaveType}
                         startDate={formData.startDate || ''}
                         endDate={formData.endDate || ''}
                         onUpdate={updateField}

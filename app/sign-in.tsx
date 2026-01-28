@@ -12,6 +12,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import StartupAnimation from '@/components/StartupAnimation';
+import { prefetchDashboardData } from '@/hooks/useDashboardData';
 import { useSession } from '@/lib/ctx';
 import { getShadow } from '@/utils/getShadow';
 
@@ -44,6 +45,10 @@ export default function SignInScreen() {
     const handleSignIn = async () => {
         setError(null);
         try {
+            // PREFETCH-ON-PRESS: Fire data fetch in parallel with OAuth roundtrip
+            // This overlaps network time with authentication for zero-latency feel
+            prefetchDashboardData(); // Fire-and-forget (don't await)
+
             await signInWithOkta();
             // AuthGuard in _layout.tsx will handle navigation on success
         } catch (err) {

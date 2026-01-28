@@ -137,7 +137,7 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
             className="items-center justify-center z-10"
             style={[
                 rootStyle,
-                { alignItems: 'center', justifyContent: 'center', width: '100%' }
+                { alignItems: 'center', justifyContent: 'center', width: '100%', transform: [{ translateY: -50 }] }
             ]}
         >
 

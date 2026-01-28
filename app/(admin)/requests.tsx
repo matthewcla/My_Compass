@@ -22,7 +22,10 @@ export default function AdminRequests() {
         isSyncingRequests
     } = useLeaveStore();
 
-    useScreenHeader("LEAVE", "Requests & Status");
+    useScreenHeader("LEAVE", "Requests & Status", {
+        icon: Plus,
+        onPress: () => router.push('/leave/request')
+    });
 
     // Mock User ID for Phase 1
     const MOCK_USER_ID = 'user-123';
@@ -67,13 +70,7 @@ export default function AdminRequests() {
                 </View>
             )}
 
-            {/* Actions */}
-            <Link href="/leave/request" asChild>
-                <Pressable className="flex-row items-center justify-center bg-systemBlue py-4 rounded-xl shadow-sm mb-8 active:opacity-90">
-                    <Plus color="white" size={24} className="mr-2" strokeWidth={1.5} />
-                    <Text className="text-white font-semibold text-lg">Request Leave</Text>
-                </Pressable>
-            </Link>
+            <View className="h-6" />
 
             {/* Requests List Header */}
             <View className="flex-row justify-between items-center mb-4">

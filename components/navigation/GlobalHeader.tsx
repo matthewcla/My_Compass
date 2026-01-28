@@ -7,6 +7,7 @@ export default function GlobalHeader() {
     const segments = useSegments();
     const title = useHeaderStore((state) => state.title);
     const subtitle = useHeaderStore((state) => state.subtitle);
+    const rightAction = useHeaderStore((state) => state.rightAction);
     const pathname = usePathname();
 
     // Hide on Sign In
@@ -19,6 +20,7 @@ export default function GlobalHeader() {
         <ScreenHeader
             title={title}
             subtitle={subtitle}
+            rightAction={rightAction}
             withSafeArea={true}
         />
     );

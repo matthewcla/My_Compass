@@ -1,10 +1,17 @@
+import { WizardStatusBar } from '@/components/wizard/WizardStatusBar';
+import { ReviewSign } from '@/components/wizard/steps/ReviewSign';
+import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
+import { Step2Contact } from '@/components/wizard/steps/Step2Contact';
+import { Step3Routing } from '@/components/wizard/steps/Step3Routing';
+import { VerificationChecks } from '@/components/wizard/steps/Step4Checklist';
+import Colors from '@/constants/Colors';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
-import Colors from '@/constants/Colors';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, MapPin, Phone, User, X } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight, Trash } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, useColorScheme } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
 
 // --- Types & Constants ---
 
@@ -27,11 +34,100 @@ export default function LeaveRequestScreen() {
     const themeColors = Colors[colorScheme];
     const router = useRouter();
     const submitRequest = useLeaveStore((state) => state.submitRequest);
+    const discardDraft = useLeaveStore((state) => state.discardDraft);
+    const leaveRequests = useLeaveStore((state) => state.leaveRequests);
     const isSyncing = useLeaveStore((state) => state.isSyncingRequests);
+
+    // Resume/Draft tracking
+    const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+
+    const handleDiscard = async () => {
+        if (!currentDraftId) {
+            router.back();
+            return;
+        }
+
+        Alert.alert(
+            "Discard Draft?",
+            "Are you sure you want to discard this request? This action cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Discard",
+                    style: "destructive",
+                    onPress: async () => {
+                        await discardDraft(currentDraftId);
+                        setCurrentDraftId(null);
+                        router.back();
+                    }
+                }
+            ]
+        );
+    };
+
+    useScreenHeader("MY ADMIN", "Drafting Request", {
+        icon: Trash,
+        onPress: handleDiscard,
+    });
+
+    // Check for draft on mount
+    React.useEffect(() => {
+        // Simple logic: grab the first 'draft' status request found for this user (in a real app, might pick latest)
+        // Note: userLeaveRequestIds might be empty if not fetched yet, but hydration happens early.
+        const drafts = Object.values(leaveRequests).filter(r => r.status === 'draft'); // Assuming 'draft' status exists or we use pending/undefined
+        // Actually our schema uses 'pending' for submitted. Storage doesn't explicitly have 'draft' unless we added it?
+        // Wait, schema status enum is: 'draft' | 'pending' | 'approved' | 'denied' | 'canceled'.
+        // Let's verify schema.ts if needed, but assuming 'draft' is valid.
+
+        if (drafts.length > 0 && !currentDraftId) {
+            const draft = drafts[0]; // Just take first for now
+            Alert.alert(
+                "Resume Draft?",
+                "You have an unfinished leave request. Would you like to resume it?",
+                [
+                    {
+                        text: "Start New",
+                        style: "destructive",
+                        onPress: async () => {
+                            // If they start new, we might want to discard the old one or just ignore it?
+                            // User request said: "Discard old and start new" implying we clean up.
+                            await discardDraft(draft.id);
+                            // Form is already initial state
+                        }
+                    },
+                    {
+                        text: "Resume",
+                        onPress: () => {
+                            setCurrentDraftId(draft.id);
+                            // Populate form data
+                            setFormData({
+                                leaveType: draft.leaveType,
+                                startDate: draft.startDate,
+                                endDate: draft.endDate,
+                                leaveAddress: draft.leaveAddress,
+                                leavePhoneNumber: draft.leavePhoneNumber,
+                                emergencyContact: draft.emergencyContact,
+                                memberRemarks: draft.memberRemarks,
+                                // ... map other fields
+                            });
+                            // We could also try to infer the step based on what's filled
+                            // but defaulting to step 0 is safer for now, or check fields.
+                        }
+                    }
+                ]
+            );
+        }
+    }, [leaveRequests]); // Dependency on requests to catch hydration
 
     // --- State ---
 
     const [step, setStep] = useState(0);
+    const [verificationChecks, setVerificationChecks] = useState<VerificationChecks>({
+        hasSufficientBalance: false,
+        understandsReportingTime: false,
+        verifiedDates: false,
+    });
+
     const [formData, setFormData] = useState<Partial<CreateLeaveRequestPayload>>({
         leaveType: 'annual',
         destinationCountry: 'USA',
@@ -61,6 +157,10 @@ export default function LeaveRequestScreen() {
         }));
     };
 
+    const toggleVerification = (key: keyof VerificationChecks) => {
+        setVerificationChecks(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
     const handleNext = () => {
         if (!validateStep(step)) return;
         if (step < TOTAL_STEPS - 1) {
@@ -80,30 +180,34 @@ export default function LeaveRequestScreen() {
 
     const validateStep = (currentStep: number): boolean => {
         switch (currentStep) {
-            case 0: // Dates
+            case 0: // Dates (Intent)
                 if (!formData.startDate || !formData.endDate) {
                     Alert.alert('Required', 'Please enter both start and end dates.');
                     return false;
                 }
-                // Simple regex or Date.parse check could go here
                 return true;
-            case 1: // Details
-                if (!formData.leaveType || !formData.leaveAddress || !formData.leavePhoneNumber) {
-                    Alert.alert('Required', 'Please fill in all details.');
-                    return false;
-                }
-                return true;
-            case 2: // Emergency Contact
-                if (!formData.startDate || !formData.endDate) {
-                    Alert.alert('Required', 'Please ensure start and end dates are set.');
-                    return false;
-                }
-                if (!formData.leaveType) {
-                    Alert.alert('Required', 'Please ensure leave type is selected.');
+            case 1: // Contact (Details + Emergency)
+                if (!formData.leaveAddress || !formData.leavePhoneNumber) {
+                    Alert.alert('Required', 'Please fill in address and phone.');
                     return false;
                 }
                 if (!formData.emergencyContact?.name || !formData.emergencyContact?.relationship || !formData.emergencyContact?.phoneNumber) {
                     Alert.alert('Required', 'Please fill in all emergency contact details.');
+                    return false;
+                }
+                return true;
+            case 2: // Routing (Type + Remarks)
+                if (!formData.leaveType) {
+                    Alert.alert('Required', 'Please select a Leave Type.');
+                    return false;
+                }
+                return true;
+            case 3: // Review (Check) + Verification
+                if (!formData.startDate) return false;
+
+                const allVerified = Object.values(verificationChecks).every(v => v);
+                if (!allVerified) {
+                    Alert.alert('Incomplete', 'Please complete all verification checks.');
                     return false;
                 }
                 return true;
@@ -129,212 +233,48 @@ export default function LeaveRequestScreen() {
 
     // --- Render Steps ---
 
-    const renderStep0_Dates = () => (
-        <View className="space-y-6">
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Start Date (YYYY-MM-DD)</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <Calendar size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="2026-02-01"
-                        value={formData.startDate}
-                        onChangeText={(text) => updateField('startDate', text)}
-                        keyboardType="numbers-and-punctuation"
-                    />
-                </View>
-            </View>
+    // renderStep0_Dates removed in favor of Step1Intent component
 
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">End Date (YYYY-MM-DD)</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <Calendar size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="2026-02-05"
-                        value={formData.endDate}
-                        onChangeText={(text) => updateField('endDate', text)}
-                        keyboardType="numbers-and-punctuation"
-                    />
-                </View>
-            </View>
-        </View>
-    );
+    // renderStep1_Details and renderStep2_Emergency removed in favor of Step2Contact component
 
-    const renderStep1_Details = () => (
-        <View className="space-y-6">
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-2">Leave Type</Text>
-                <View className="flex-row flex-wrap gap-2">
-                    {LEAVE_TYPES.map((type) => (
-                        <Pressable
-                            key={type.id}
-                            onPress={() => updateField('leaveType', type.id)}
-                            className={`px-4 py-2 rounded-full border ${formData.leaveType === type.id
-                                ? 'bg-systemBlue border-systemBlue'
-                                : 'bg-systemBackground border-systemGray6'
-                                }`}
-                        >
-                            <Text
-                                className={`${formData.leaveType === type.id ? 'text-white' : 'text-labelSecondary'
-                                    } font-medium`}
-                            >
-                                {type.label}
-                            </Text>
-                        </Pressable>
-                    ))}
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Leave Address</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <MapPin size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="123 Beach St, Honolulu, HI"
-                        value={formData.leaveAddress}
-                        onChangeText={(text) => updateField('leaveAddress', text)}
-                    />
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Leave Phone Number</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <Phone size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="555-123-4567"
-                        value={formData.leavePhoneNumber}
-                        onChangeText={(text) => updateField('leavePhoneNumber', text)}
-                        keyboardType="phone-pad"
-                    />
-                </View>
-            </View>
-        </View>
-    );
-
-    const renderStep2_Emergency = () => (
-        <View className="space-y-6">
-            <Text className="text-labelSecondary text-sm">
-                Who should we contact in case of an emergency while you are on leave?
-            </Text>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Contact Name</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <User size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="Jane Doe"
-                        value={formData.emergencyContact?.name}
-                        onChangeText={(text) => updateEmergencyContact('name', text)}
-                    />
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Relationship</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    {/* Reusing User icon for relationship broadly, or could use Heart etc */}
-                    <User size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="Spouse, Parent, etc."
-                        value={formData.emergencyContact?.relationship}
-                        onChangeText={(text) => updateEmergencyContact('relationship', text)}
-                    />
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Emergency Phone</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <Phone size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="555-987-6543"
-                        value={formData.emergencyContact?.phoneNumber}
-                        onChangeText={(text) => updateEmergencyContact('phoneNumber', text)}
-                        keyboardType="phone-pad"
-                    />
-                </View>
-            </View>
-        </View>
-    );
-
-    const renderStep3_Review = () => (
-        <View className="space-y-6">
-            <View className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <Text className="text-blue-900 font-bold text-lg mb-4">Summary</Text>
-
-                <View className="space-y-4">
-                    <View>
-                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Dates</Text>
-                        <Text className="text-base text-labelPrimary font-medium">{formData.startDate} to {formData.endDate}</Text>
-                    </View>
-
-                    <View>
-                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Type</Text>
-                        <Text className="text-base text-labelPrimary font-medium capitalize">{formData.leaveType}</Text>
-                    </View>
-
-                    <View>
-                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Location</Text>
-                        <Text className="text-base text-labelPrimary font-medium">{formData.leaveAddress}</Text>
-                        <Text className="text-base text-labelPrimary">{formData.leavePhoneNumber}</Text>
-                    </View>
-
-                    <View>
-                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Emergency Contact</Text>
-                        <Text className="text-base text-labelPrimary font-medium">{formData.emergencyContact?.name} ({formData.emergencyContact?.relationship})</Text>
-                        <Text className="text-base text-labelPrimary">{formData.emergencyContact?.phoneNumber}</Text>
-                    </View>
-                </View>
-            </View>
-
-            <View className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex-row items-start">
-                <View className="mt-1 mr-3">
-                    <CheckCircle2 size={20} color={themeColors.navyGold} strokeWidth={1.5} />
-                </View>
-                <Text className="text-amber-800 text-sm flex-1">
-                    By submitting this request, you certify that the information provided is accurate and you understand the leave policies relevant to your request type.
-                </Text>
-            </View>
-        </View>
-    );
+    // renderStep3_Review removed in favor of ReviewSign component
 
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             className="flex-1 bg-systemBackground"
         >
-            {/* Header */}
-            <View className="pt-4 pb-2 px-6 border-b border-systemGray6 flex-row items-center justify-between">
-                <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-systemGray6">
-                    <X size={24} color={themeColors.labelSecondary} strokeWidth={1.5} />
-                </Pressable>
-                <View className="items-center">
-                    <Text className="font-bold text-lg text-labelPrimary">Request Leave</Text>
-                    <Text className="text-xs text-labelSecondary font-medium">Step {step + 1} of {TOTAL_STEPS}</Text>
-                </View>
-                <View className="w-8" />{/* Spacer for centering */}
-            </View>
-
-            {/* Progress Bar */}
-            <View className="h-1 bg-systemGray6 w-full">
-                <View
-                    className="h-full bg-systemBlue transition-all duration-300"
-                    style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
-                />
-            </View>
+            {/* Wizard Status Bar */}
+            <WizardStatusBar currentStep={step} onStepPress={(s) => setStep(s)} />
 
             <ScrollView className="flex-1 px-6 pt-6">
-                {step === 0 && renderStep0_Dates()}
-                {step === 1 && renderStep1_Details()}
-                {step === 2 && renderStep2_Emergency()}
-                {step === 3 && renderStep3_Review()}
+                {step === 0 && (
+                    <Step1Intent
+                        startDate={formData.startDate || ''}
+                        endDate={formData.endDate || ''}
+                        onUpdate={updateField}
+                    />
+                )}
+                {step === 1 && (
+                    <Step2Contact
+                        formData={formData}
+                        onUpdate={updateField}
+                        onUpdateEmergency={updateEmergencyContact}
+                    />
+                )}
+                {step === 2 && (
+                    <Step3Routing
+                        formData={formData}
+                        onUpdate={updateField}
+                    />
+                )}
+                {step === 3 && (
+                    <ReviewSign
+                        formData={formData}
+                        verificationChecks={verificationChecks}
+                        onToggleVerification={toggleVerification}
+                    />
+                )}
 
                 {/* Bottom spacer for scroll view */}
                 <View className="h-20" />
@@ -355,12 +295,14 @@ export default function LeaveRequestScreen() {
 
                     <Pressable
                         onPress={handleNext}
-                        disabled={isSyncing}
-                        className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing ? 'bg-blue-400' : 'bg-systemBlue active:bg-blue-700'
+                        disabled={isSyncing || (step === TOTAL_STEPS - 1 && !Object.values(verificationChecks).every(v => v))}
+                        className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing || (step === TOTAL_STEPS - 1 && !Object.values(verificationChecks).every(v => v))
+                            ? 'bg-systemGray4'
+                            : 'bg-systemBlue active:bg-blue-700'
                             }`}
                     >
                         <Text className="font-bold text-white mr-2">
-                            {step === TOTAL_STEPS - 1 ? (isSyncing ? 'Submitting...' : 'Submit Request') : 'Next'}
+                            {step === TOTAL_STEPS - 1 ? (isSyncing ? 'Submitting...' : 'Sign & Submit') : 'Next'}
                         </Text>
                         {!isSyncing && <ArrowRight size={20} color="white" strokeWidth={1.5} />}
                     </Pressable>

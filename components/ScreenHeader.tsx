@@ -1,8 +1,8 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { getShadow } from '@/utils/getShadow';
 import { usePathname, useRouter } from 'expo-router';
 import { Bell, CheckCircle2, ChevronRight, FileText, LayoutGrid, User } from 'lucide-react-native';
-import { getShadow } from '@/utils/getShadow';
 import React, { useState } from 'react';
 import { Alert, Modal, Pressable, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface ScreenHeaderProps {
     title: string;
     subtitle: string | React.ReactNode;
+    rightAction?: { icon: any; onPress: () => void } | null;
     withSafeArea?: boolean;
 }
 
@@ -20,7 +21,7 @@ const MENU_ITEMS = [
     { label: 'My Profile', route: '/(profile)/preferences', icon: User, activePath: 'preferences' },
 ];
 
-export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, rightAction, withSafeArea = true }: ScreenHeaderProps) {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
@@ -70,21 +71,41 @@ export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHea
                     </View>
                 </View>
 
-                <Pressable
-                    onPress={handleAlert}
-                    accessibilityLabel="Notifications"
-                    hitSlop={12}
-                    className="mt-2"
-                >
-                    {({ pressed }) => (
-                        <Bell
-                            color={colors.text}
-                            size={24}
-                            strokeWidth={2}
-                            style={{ opacity: pressed ? 0.7 : 1 }}
-                        />
+                <View className="flex-row items-center gap-4 mt-2">
+                    {rightAction && (
+                        <Pressable
+                            onPress={rightAction.onPress}
+                            hitSlop={12}
+                        >
+                            {({ pressed }) => {
+                                const Icon = rightAction.icon;
+                                return (
+                                    <Icon
+                                        color={colors.text}
+                                        size={24}
+                                        strokeWidth={2}
+                                        style={{ opacity: pressed ? 0.7 : 1 }}
+                                    />
+                                );
+                            }}
+                        </Pressable>
                     )}
-                </Pressable>
+
+                    <Pressable
+                        onPress={handleAlert}
+                        accessibilityLabel="Notifications"
+                        hitSlop={12}
+                    >
+                        {({ pressed }) => (
+                            <Bell
+                                color={colors.text}
+                                size={24}
+                                strokeWidth={2}
+                                style={{ opacity: pressed ? 0.7 : 1 }}
+                            />
+                        )}
+                    </Pressable>
+                </View>
             </View>
 
             <Modal
@@ -164,6 +185,6 @@ export function ScreenHeader({ title, subtitle, withSafeArea = true }: ScreenHea
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-        </View>
+        </View >
     );
 }

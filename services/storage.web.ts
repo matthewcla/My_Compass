@@ -1,17 +1,16 @@
 // Web-specific storage implementation
 // SQLite is not available on web, so we use a stub/localStorage implementation
 
+import { DashboardData } from '@/types/dashboard';
 import {
-    Application,
-    Billet,
-    LeaveBalance,
-    LeaveRequest,
-    DashboardCacheSchema
+  Application,
+  Billet,
+  LeaveBalance,
+  LeaveRequest
 } from '@/types/schema';
 import { User } from '@/types/user';
-import { DashboardData } from '@/types/dashboard';
 import { decryptData, encryptData } from '../lib/encryption';
-import { IStorageService, DataIntegrityError } from './storage.interface';
+import { IStorageService } from './storage.interface';
 
 // =============================================================================
 // WEB IMPLEMENTATION
@@ -50,9 +49,9 @@ class WebStorage implements IStorageService {
     const billets = await this.getAllBillets();
     const index = billets.findIndex((b) => b.id === billet.id);
     if (index >= 0) {
-        billets[index] = billet;
+      billets[index] = billet;
     } else {
-        billets.push(billet);
+      billets.push(billet);
     }
     localStorage.setItem(this.BILLETS_KEY, encryptData(JSON.stringify(billets)));
   }
@@ -78,9 +77,9 @@ class WebStorage implements IStorageService {
     const allApps = await this._getAllApplications();
     const index = allApps.findIndex((a) => a.id === app.id);
     if (index >= 0) {
-        allApps[index] = app;
+      allApps[index] = app;
     } else {
-        allApps.push(app);
+      allApps.push(app);
     }
     localStorage.setItem(this.APPLICATIONS_KEY, encryptData(JSON.stringify(allApps)));
   }
@@ -108,9 +107,9 @@ class WebStorage implements IStorageService {
     const allRequests = await this._getAllLeaveRequests();
     const index = allRequests.findIndex((r) => r.id === request.id);
     if (index >= 0) {
-        allRequests[index] = request;
+      allRequests[index] = request;
     } else {
-        allRequests.push(request);
+      allRequests.push(request);
     }
     localStorage.setItem(this.LEAVE_REQUESTS_KEY, encryptData(JSON.stringify(allRequests)));
   }
@@ -123,6 +122,12 @@ class WebStorage implements IStorageService {
   async getUserLeaveRequests(userId: string): Promise<LeaveRequest[]> {
     const requests = await this._getAllLeaveRequests();
     return requests.filter((r) => r.userId === userId);
+  }
+
+  async deleteLeaveRequest(requestId: string): Promise<void> {
+    const allRequests = await this._getAllLeaveRequests();
+    const newRequests = allRequests.filter(r => r.id !== requestId);
+    localStorage.setItem(this.LEAVE_REQUESTS_KEY, encryptData(JSON.stringify(newRequests)));
   }
 
   private async _getAllLeaveRequests(): Promise<LeaveRequest[]> {

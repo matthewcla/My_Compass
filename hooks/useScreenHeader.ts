@@ -2,7 +2,11 @@ import { useHeaderStore } from '@/store/useHeaderStore';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 
-export function useScreenHeader(title: string, subtitle: string | React.ReactNode) {
+export function useScreenHeader(
+    title: string,
+    subtitle: string | React.ReactNode,
+    rightAction?: { icon: any; onPress: () => void }
+) {
     const setHeader = useHeaderStore((state) => state.setHeader);
 
     useFocusEffect(
@@ -11,8 +15,8 @@ export function useScreenHeader(title: string, subtitle: string | React.ReactNod
             // Use requestAnimationFrame to avoid "update on unmounted component" or race conditions
             // during initial mount if the screen is immediately focused.
             requestAnimationFrame(() => {
-                setHeader(title, subtitle);
+                setHeader(title, subtitle, rightAction);
             });
-        }, [title, subtitle, setHeader])
+        }, [title, subtitle, rightAction, setHeader])
     );
 }

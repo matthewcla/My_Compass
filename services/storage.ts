@@ -1,19 +1,20 @@
+import { decryptData, encryptData } from '@/lib/encryption';
+import { DashboardData } from '@/types/dashboard';
 import {
   Application,
   ApplicationSchema,
   Billet,
   BilletSchema,
+  DashboardCacheSchema,
+  initializeSQLiteTables,
   LeaveBalance,
   LeaveBalanceSchema,
   LeaveRequest,
-  LeaveRequestSchema,
-  DashboardCacheSchema,
-  initializeSQLiteTables
+  LeaveRequestSchema
 } from '@/types/schema';
 import { User, UserSchema } from '@/types/user';
-import { DashboardData } from '@/types/dashboard';
 import * as SQLite from 'expo-sqlite';
-import { IStorageService, DataIntegrityError } from './storage.interface';
+import { DataIntegrityError, IStorageService } from './storage.interface';
 
 const DB_NAME = 'my_compass.db';
 
@@ -285,12 +286,18 @@ class SQLiteStorage implements IStorageService {
       INSERT OR REPLACE INTO leave_requests (
         id, user_id, start_date, end_date, charge_days, leave_type,
         leave_address, leave_phone_number, emergency_contact,
+        duty_section, ration_status, pre_review_checks,
         mode_of_travel, destination_country, member_remarks,
         status, status_history, approval_chain, current_approver_id,
         return_reason, denial_reason, created_at, updated_at, submitted_at,
         last_sync_timestamp, sync_status, local_modified_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
+
+    // Encrypt sensitive data
+    const encryptedContact = request.emergencyContact
+      ? encryptData(JSON.stringify(request.emergencyContact))
+      : null;
 
     await db.runAsync(
       sql,
@@ -302,7 +309,10 @@ class SQLiteStorage implements IStorageService {
       request.leaveType,
       request.leaveAddress,
       request.leavePhoneNumber,
-      JSON.stringify(request.emergencyContact),
+      encryptedContact,
+      request.dutySection || null,
+      request.rationStatus || null,
+      request.preReviewChecks ? JSON.stringify(request.preReviewChecks) : null,
       request.modeOfTravel || null,
       request.destinationCountry,
       request.memberRemarks || null,
@@ -344,8 +354,30 @@ class SQLiteStorage implements IStorageService {
     }
   }
 
+  async deleteLeaveRequest(requestId: string): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync('DELETE FROM leave_requests WHERE id = ?', requestId);
+  }
+
   private mapRowToLeaveRequest(row: any): LeaveRequest {
     try {
+      // Decrypt sensitive data
+      let emergencyContact = undefined;
+      if (row.emergency_contact) {
+        try {
+          const decrypted = decryptData(row.emergency_contact);
+          emergencyContact = JSON.parse(decrypted);
+        } catch (e) {
+          console.error('[Storage] Failed to decrypt emergency contact', e);
+          // If decryption fails, maybe it wasn't encrypted? Try parsing raw
+          try {
+            emergencyContact = JSON.parse(row.emergency_contact);
+          } catch (inner) {
+            // Return undefined if unrecoverable
+          }
+        }
+      }
+
       return LeaveRequestSchema.parse({
         id: row.id,
         userId: row.user_id,
@@ -355,7 +387,10 @@ class SQLiteStorage implements IStorageService {
         leaveType: row.leave_type,
         leaveAddress: row.leave_address,
         leavePhoneNumber: row.leave_phone_number,
-        emergencyContact: JSON.parse(row.emergency_contact),
+        emergencyContact: emergencyContact,
+        dutySection: row.duty_section || undefined,
+        rationStatus: row.ration_status || undefined,
+        preReviewChecks: row.pre_review_checks ? JSON.parse(row.pre_review_checks) : undefined,
         modeOfTravel: row.mode_of_travel,
         destinationCountry: row.destination_country,
         memberRemarks: row.member_remarks,
@@ -481,7 +516,7 @@ class SQLiteStorage implements IStorageService {
 
       return JSON.parse(cacheRecord.data) as DashboardData;
     } catch (error) {
-       throw new DataIntegrityError(`Failed to parse DashboardCache for user ${userId}`, error);
+      throw new DataIntegrityError(`Failed to parse DashboardCache for user ${userId}`, error);
     }
   }
 }
@@ -541,6 +576,9 @@ class MockStorage implements IStorageService {
   }
   async getUserLeaveRequests(userId: string): Promise<LeaveRequest[]> {
     return Array.from(this.leaveRequests.values()).filter(r => r.userId === userId);
+  }
+  async deleteLeaveRequest(requestId: string): Promise<void> {
+    this.leaveRequests.delete(requestId);
   }
 
   // Leave Balance

@@ -226,7 +226,10 @@ export const SQLiteTableDefinitions = {
       leave_type TEXT NOT NULL CHECK(leave_type IN ('annual', 'emergency', 'convalescent', 'terminal', 'parental', 'bereavement', 'adoption', 'ptdy', 'other')),
       leave_address TEXT NOT NULL,
       leave_phone_number TEXT NOT NULL,
-      emergency_contact TEXT NOT NULL, -- JSON object
+      emergency_contact TEXT, -- JSON object (Encrypted)
+      duty_section TEXT,
+      ration_status TEXT,
+      pre_review_checks TEXT, -- JSON object
       mode_of_travel TEXT,
       destination_country TEXT NOT NULL DEFAULT 'USA',
       member_remarks TEXT,
@@ -501,6 +504,19 @@ export type Approver = z.infer<typeof ApproverSchema>;
 /**
  * Leave request record (modeled after USAF LeaveWeb structure).
  */
+export const RationStatusSchema = z.enum(['commuted', 'in_kind', 'not_applicable']);
+export type RationStatus = z.infer<typeof RationStatusSchema>;
+
+export const PreReviewChecksSchema = z.object({
+    hasReadPolicy: z.boolean(),
+    hasInformalApproval: z.boolean(),
+    isReadyToSubmit: z.boolean(),
+});
+export type PreReviewChecks = z.infer<typeof PreReviewChecksSchema>;
+
+/**
+ * Leave request record (modeled after USAF LeaveWeb structure).
+ */
 export const LeaveRequestSchema = z.object({
     id: z.string().uuid(),
     userId: z.string().uuid(),
@@ -515,8 +531,12 @@ export const LeaveRequestSchema = z.object({
     leaveAddress: z.string(), // Where member will be during leave
     leavePhoneNumber: z.string(),
 
-    // Emergency contact (required)
-    emergencyContact: EmergencyContactSchema,
+    // Command Details
+    dutySection: z.string().optional(), // e.g. "N1 Admin"
+    rationStatus: RationStatusSchema.optional(),
+
+    // Emergency contact (required for submission, optional for draft)
+    emergencyContact: EmergencyContactSchema.optional(),
 
     // Transportation
     modeOfTravel: z.string().optional(), // POV, Commercial Air, etc.
@@ -524,6 +544,9 @@ export const LeaveRequestSchema = z.object({
 
     // Remarks
     memberRemarks: z.string().optional(),
+
+    // Checklist
+    preReviewChecks: PreReviewChecksSchema.optional(),
 
     // Status workflow
     status: LeaveRequestStatusSchema,
@@ -583,6 +606,32 @@ export interface MyAdminState {
     isSyncingBalance: boolean;
     isSyncingRequests: boolean;
 }
+
+// =============================================================================
+// WIZARD STEP VALIDATION SCHEMAS
+// =============================================================================
+
+export const Step1IntentSchema = LeaveRequestSchema.pick({
+    leaveType: true,
+    startDate: true,
+    endDate: true,
+    chargeDays: true,
+});
+
+export const Step2ContactSchema = LeaveRequestSchema.pick({
+    leaveAddress: true,
+    leavePhoneNumber: true,
+    emergencyContact: true,
+    modeOfTravel: true,
+}).extend({
+    // Enforce emergency contact is present for this step validation
+    emergencyContact: EmergencyContactSchema,
+});
+
+export const Step3CommandSchema = LeaveRequestSchema.pick({
+    dutySection: true,
+    rationStatus: true,
+});
 
 /**
  * Root store interface combining all domain slices.

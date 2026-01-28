@@ -3,7 +3,10 @@ import { storage } from '@/services/storage';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import {
     LeaveRequest,
-    MyAdminState
+    MyAdminState,
+    Step1IntentSchema,
+    Step2ContactSchema,
+    Step3CommandSchema
 } from '@/types/schema';
 import { create } from 'zustand';
 
@@ -33,6 +36,23 @@ interface LeaveActions {
      * Submit a leave request with optimistic updates.
      */
     submitRequest: (payload: CreateLeaveRequestPayload, userId: string) => Promise<void>;
+
+    /**
+     * Update a local draft and persist to storage.
+     * Invalidates preReviewChecks on any edit.
+     */
+    updateDraft: (draftId: string, patch: Partial<LeaveRequest>) => Promise<void>;
+    updateDraftField: (draftId: string, field: keyof LeaveRequest, value: any) => Promise<void>;
+
+    /**
+     * Validate a specific wizard step for a draft.
+     */
+    validateStep: (draftId: string, step: 1 | 2 | 3) => { success: boolean; errors?: any };
+
+    /**
+     * Discard a draft (remove locally and from storage).
+     */
+    discardDraft: (draftId: string) => Promise<void>;
 
     /**
      * Reset store.
@@ -229,6 +249,86 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
                 }
                 return {};
             });
+        }
+    },
+
+    updateDraft: async (draftId: string, patch: Partial<LeaveRequest>) => {
+        const state = get();
+        const existing = state.leaveRequests[draftId];
+
+        if (!existing) {
+            console.error('[useLeaveStore] Draft not found:', draftId);
+            return;
+        }
+
+        // Invalidate checks if any field changed
+        const resetChecks = (existing.preReviewChecks && Object.keys(patch).length > 0)
+            ? { preReviewChecks: undefined }
+            : {};
+
+        const updatedRequest = {
+            ...existing,
+            ...patch,
+            ...resetChecks,
+            localModifiedAt: new Date().toISOString(),
+            // Ensure status remains draft unless explicitly changed (though UI shouldn't be calling this for submitted ones usually)
+        };
+
+        set({
+            leaveRequests: {
+                ...state.leaveRequests,
+                [draftId]: updatedRequest,
+            }
+        });
+
+        // Debounced persistence could be handled here or in UI. 
+        // For now, straightforward async save (fire and forget from UI perspective).
+        try {
+            await storage.saveLeaveRequest(updatedRequest);
+        } catch (error) {
+            console.error('[useLeaveStore] Failed to persist draft update:', error);
+        }
+    },
+
+    updateDraftField: async (draftId: string, field: keyof LeaveRequest, value: any) => {
+        await get().updateDraft(draftId, { [field]: value });
+    },
+
+    validateStep: (draftId: string, step: 1 | 2 | 3) => {
+        const request = get().leaveRequests[draftId];
+        if (!request) return { success: false, errors: ['Draft not found'] };
+
+        let schema;
+        switch (step) {
+            case 1: schema = Step1IntentSchema; break;
+            case 2: schema = Step2ContactSchema; break;
+            case 3: schema = Step3CommandSchema; break;
+            default: return { success: false, errors: ['Invalid step'] };
+        }
+
+        const result = schema.safeParse(request);
+        return {
+            success: result.success,
+            errors: result.success ? undefined : result.error.format()
+        };
+    },
+
+    discardDraft: async (draftId: string) => {
+        // Remove from local state
+        set((state) => {
+            const { [draftId]: _, ...remainingRequests } = state.leaveRequests;
+            const remainingIds = state.userLeaveRequestIds.filter(id => id !== draftId);
+            return {
+                leaveRequests: remainingRequests,
+                userLeaveRequestIds: remainingIds,
+            };
+        });
+
+        // Remove from persistent storage
+        try {
+            await storage.deleteLeaveRequest(draftId);
+        } catch (error) {
+            console.error('[useLeaveStore] Failed to delete draft:', error);
         }
     },
 

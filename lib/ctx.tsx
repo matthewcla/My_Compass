@@ -34,13 +34,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     const [isSigningIn, setIsSigningIn] = useState(false);
     const [hasLoggedOut, setHasLoggedOut] = useState(false);
 
-    // OFFLINE DEV: Auto-inject mock session if no session exists after loading
-    useEffect(() => {
-        if (!isLoading && !session && !hasLoggedOut) {
-            console.log('[Auth] OFFLINE DEV: Auto-injecting mock session token');
-            setSession('mock-offline-dev-token');
-        }
-    }, [isLoading, session, hasLoggedOut]);
+
 
     useEffect(() => {
         if (session && !isLoading) {
@@ -64,6 +58,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
             console.log(`[Auth] Issuer: ${OKTA_ISSUER}`);
             console.log(`[Auth] Client ID: ${CLIENT_ID}`);
             console.log(`[Auth] Redirect URI: ${REDIRECT_URI}`);
+
+            // SIMULATED NETWORK LATENCY (1.5s)
+            // This ensures the user sees the "Redirecting..." state/spinner
+            // providing immediate feedback before the screen unmounts.
+            await new Promise(resolve => setTimeout(resolve, 1500));
 
             // On success, set mock JWT session token
             // In production: would receive actual access_token from Okta

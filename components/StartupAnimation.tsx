@@ -9,14 +9,13 @@ import Animated, {
     runOnJS,
     useAnimatedStyle,
     useSharedValue,
-    withDelay,
     withSpring,
     withTiming
 } from 'react-native-reanimated';
 
 const LOGO_SIZE = 140;
-const FINAL_SCALE = 0.8;
-const FINAL_TRANSLATE_Y = -50;
+const INITIAL_SCALE = 0.6; // Start small
+const FINAL_SCALE = 1.0; // Grow to full size
 
 // Animation Timing
 const FADE_IN_DURATION = 800;
@@ -33,11 +32,10 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
     const { height: screenHeight } = useWindowDimensions();
 
     // Shared Values
-    const logoScale = useSharedValue(1); // Start full size
-    const logoOpacity = useSharedValue(0); // Start invisible (Void)
+    const logoScale = useSharedValue(INITIAL_SCALE); // Start small
+    const logoOpacity = useSharedValue(0); // Start invisible
     const textOpacity = useSharedValue(0);
     const textTranslateY = useSharedValue(20);
-    const containerTranslateY = useSharedValue(0);
 
     useEffect(() => {
         const checkFirstLaunch = async () => {
@@ -49,69 +47,56 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
                     // WARM BOOT: Instant Final State
                     logoScale.value = FINAL_SCALE;
                     logoOpacity.value = 1;
-                    containerTranslateY.value = FINAL_TRANSLATE_Y;
                     textOpacity.value = 1;
                     textTranslateY.value = 0;
 
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     onAnimationComplete();
                 } else {
-                    // COLD BOOT: Cinematic Fade-In Sequence
-
-                    // Stage 1: The Reveal (Fade In)
-                    logoOpacity.value = withTiming(1, { duration: FADE_IN_DURATION });
-
-                    // Stage 2: The Breath (Dwell)
+                    // COLD BOOT: Cinematic Fade-In + Scale-Up Sequence
+                    // Added 500ms delay to allow native splash to fully recede and prevent layout thrashing
                     setTimeout(() => {
-                        // Stage 3: The Departure (Move & Scale)
+                        // Stage 1: The Reveal (Fade In + Scale Up simultaneously)
+                        logoOpacity.value = withTiming(1, { duration: FADE_IN_DURATION });
                         logoScale.value = withSpring(FINAL_SCALE, SPRING_CONFIG);
-                        containerTranslateY.value = withSpring(FINAL_TRANSLATE_Y, SPRING_CONFIG, (finished) => {
+                    }, 500);
+
+
+                    // Stage 2: Text Reveal after logo animation settles
+                    // Adjusted for initial 500ms delay + 800ms fade + 500ms dwell
+                    setTimeout(() => {
+                        textOpacity.value = withTiming(1, { duration: TEXT_DURATION });
+                        textTranslateY.value = withTiming(0, {
+                            duration: TEXT_DURATION,
+                            easing: Easing.out(Easing.exp)
+                        }, (finished) => {
                             if (finished) {
                                 runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
                                 runOnJS(onAnimationComplete)();
                             }
                         });
-
-                        // Text Reveal
-                        textOpacity.value = withDelay(TEXT_REVEAL_DELAY, withTiming(1, { duration: TEXT_DURATION }));
-                        textTranslateY.value = withDelay(TEXT_REVEAL_DELAY, withTiming(0, {
-                            duration: TEXT_DURATION,
-                            easing: Easing.out(Easing.exp)
-                        }));
-
-                    }, FADE_IN_DURATION + DWELL_DURATION);
+                    }, 500 + FADE_IN_DURATION + DWELL_DURATION);
 
                     await AsyncStorage.setItem('hasLaunched', 'true');
                 }
             } catch (error) {
                 console.error('Error checking first launch:', error);
 
-                // Fallback: Immediate Fade In & Move
+                // Fallback: Immediate Fade In + Scale Up
                 logoOpacity.value = withTiming(1, { duration: FADE_IN_DURATION });
+                logoScale.value = withSpring(FINAL_SCALE, SPRING_CONFIG);
                 setTimeout(() => {
-                    logoScale.value = withSpring(FINAL_SCALE, SPRING_CONFIG);
-                    containerTranslateY.value = withSpring(FINAL_TRANSLATE_Y, SPRING_CONFIG, (finished) => {
+                    textOpacity.value = withTiming(1, { duration: TEXT_DURATION });
+                    textTranslateY.value = withTiming(0, { duration: TEXT_DURATION }, (finished) => {
                         if (finished) {
                             runOnJS(onAnimationComplete)();
                         }
                     });
-                    textOpacity.value = withDelay(TEXT_REVEAL_DELAY, withTiming(1, { duration: TEXT_DURATION }));
-                    textTranslateY.value = withDelay(TEXT_REVEAL_DELAY, withTiming(0, { duration: TEXT_DURATION }));
                 }, FADE_IN_DURATION + DWELL_DURATION);
             }
         };
 
         checkFirstLaunch();
-
-        // Web Splash Handoff (Keep existing logic)
-        if (Platform.OS === 'web') {
-            setTimeout(() => {
-                const splash = document.getElementById('splash');
-                if (splash) {
-                    splash.classList.add('hidden');
-                }
-            }, 100);
-        }
 
     }, [onAnimationComplete]);
 
@@ -132,7 +117,7 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
     }) : {};
 
     const rootStyle = useAnimatedStyle(() => ({
-        transform: [{ translateY: containerTranslateY.value }]
+        // Static container - no translation needed
     }));
 
     const logoAnimatedStyle = useAnimatedStyle(() => ({

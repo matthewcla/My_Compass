@@ -202,14 +202,11 @@ export function Step1Intent({
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Select Dates</Text>
                     <View className="bg-cardBackground dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
                         <Calendar
+                            key={colorScheme}
                             current={startDate || undefined}
                             onDayPress={handleDayPress}
                             markingType={'period'}
-                            markedDates={{
-                                [startDate]: { startingDay: true, color: themeColors.tint, textColor: 'white' },
-                                [endDate]: { endingDay: true, color: themeColors.tint, textColor: 'white' },
-                                // In a real app we'd fill the days in between
-                            }}
+                            markedDates={markedDates}
                             theme={{
                                 calendarBackground: isDark ? themeColors.background : '#ffffff',
                                 textSectionTitleColor: isDark ? '#94a3b8' : '#b6c1cd',

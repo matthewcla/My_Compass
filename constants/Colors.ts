@@ -8,7 +8,16 @@ const navyLight = '#1E3A5F';
 const navyGold = '#C9A227';
 
 export const Colors = {
+  blue: {
+    500: '#3b82f6',
+    600: '#2563eb',
+  },
+  green: {
+    500: '#22c55e',
+    600: '#16a34a',
+  },
   gray: {
+    400: '#9ca3af',
     500: '#6b7280',
   },
   light: {

@@ -1,7 +1,7 @@
 
 import { Calendar, CheckCircle2, MapPin, Ship } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 interface WizardStatusBarProps {
     currentStep: number;
@@ -9,10 +9,11 @@ interface WizardStatusBarProps {
 }
 
 const STEPS = [
-    { id: 0, icon: Calendar, label: 'Intent' },
-    { id: 1, icon: MapPin, label: 'Contact' },
-    { id: 2, icon: Ship, label: 'Routing' },
-    { id: 3, icon: CheckCircle2, label: 'Check' },
+    { id: 0, icon: Calendar, label: 'Time' },
+    { id: 1, icon: MapPin, label: 'Location' },
+    { id: 2, icon: Ship, label: 'Command' },
+    { id: 3, icon: CheckCircle2, label: 'Safety' },
+    { id: 4, icon: CheckCircle2, label: 'Review' },
 ];
 
 export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarProps) {
@@ -44,6 +45,12 @@ export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarPro
                                     strokeWidth={isActive ? 2.5 : 2}
                                 />
                             </View>
+                            <Text
+                                className={`text-[10px] font-bold mt-1 ${isActive ? 'text-blue-600 dark:text-blue-400' :
+                                    isCompleted ? 'text-green-600 dark:text-green-500' :
+                                        'text-slate-400'
+                                    }`}
+                            >{step.label}</Text>
                         </Pressable>
 
                         {!isLast && (

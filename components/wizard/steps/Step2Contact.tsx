@@ -1,9 +1,11 @@
 import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
 import { CreateLeaveRequestPayload } from '@/types/api';
-import { Bus, Car, MapPin, Phone, Plane, Train } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { Bus, Car, Globe2, MapPin, Phone, Plane, Train } from 'lucide-react-native';
 import React from 'react';
-import { Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Switch, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 interface Step2ContactProps {
     formData: Partial<CreateLeaveRequestPayload>;
@@ -29,6 +31,61 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
     return (
         <WizardCard title="Location & Travel">
             <View className="space-y-6">
+
+                {/* 0. Location & Legal (Moved from Step 1) */}
+                <View>
+                    <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3 ml-1">
+                        Deployment Status
+                    </Text>
+
+                    <View className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        {/* CONUS Toggle */}
+                        <View className="flex-row items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700/50">
+                            <View className="flex-row items-center flex-1 mr-4">
+                                <View className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center mr-3">
+                                    <MapPin size={16} className="text-blue-600 dark:text-blue-400" />
+                                </View>
+                                <View>
+                                    <Text className="text-base font-bold text-slate-900 dark:text-white">Leave inside CONUS?</Text>
+                                    <Text className="text-xs text-slate-500 mt-0.5">Continental United States</Text>
+                                </View>
+                            </View>
+                            <Switch
+                                value={formData.leaveInConus}
+                                onValueChange={(val) => {
+                                    Haptics.selectionAsync();
+                                    onUpdate('leaveInConus', val);
+                                }}
+                                trackColor={{ false: '#767577', true: '#2563EB' }}
+                                thumbColor={'#FFFFFF'}
+                            />
+                        </View>
+
+                        {/* Destination Country (Conditional) */}
+                        {!formData.leaveInConus && (
+                            <Animated.View entering={FadeIn} exiting={FadeOut}>
+                                <View className="flex-row items-center p-4 bg-slate-50 dark:bg-slate-900/30">
+                                    <View className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 items-center justify-center mr-3">
+                                        <Globe2 size={16} className="text-orange-600 dark:text-orange-400" />
+                                    </View>
+                                    <View className="flex-1">
+                                        <View className="flex-row justify-between mb-1">
+                                            <Text className="text-sm font-bold text-slate-700 dark:text-slate-200">Destination Country</Text>
+                                            <Text className="text-xs text-orange-600 dark:text-orange-400 font-medium">OCONUS Required</Text>
+                                        </View>
+                                        <TextInput
+                                            className="h-10 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 text-slate-900 dark:text-white"
+                                            placeholder="e.g. Japan, Germany, Italy"
+                                            value={formData.destinationCountry}
+                                            onChangeText={(text) => onUpdate('destinationCountry', text)}
+                                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                        />
+                                    </View>
+                                </View>
+                            </Animated.View>
+                        )}
+                    </View>
+                </View>
 
                 {/* 1. Leave Address */}
                 <View className="space-y-3">
@@ -93,8 +150,8 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                                     key={mode.id}
                                     onPress={() => onUpdate('modeOfTravel', mode.id)}
                                     className={`flex-1 min-w-[45%] flex-row items-center justify-center py-4 px-3 rounded-xl border ${isSelected
-                                            ? 'bg-blue-500 border-blue-600 dark:bg-blue-600 dark:border-blue-500'
-                                            : 'bg-gray-50 dark:bg-slate-800/50 border-gray-100 dark:border-gray-700'
+                                        ? 'bg-blue-500 border-blue-600 dark:bg-blue-600 dark:border-blue-500'
+                                        : 'bg-gray-50 dark:bg-slate-800/50 border-gray-100 dark:border-gray-700'
                                         }`}
                                 >
                                     <Icon
@@ -104,8 +161,8 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                                     />
                                     <Text
                                         className={`ml-2 font-medium ${isSelected
-                                                ? 'text-white'
-                                                : 'text-gray-600 dark:text-slate-300'
+                                            ? 'text-white'
+                                            : 'text-gray-600 dark:text-slate-300'
                                             }`}
                                     >
                                         {mode.label}

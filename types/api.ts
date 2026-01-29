@@ -227,6 +227,11 @@ export const CreateLeaveRequestPayloadSchema = z.object({
     modeOfTravel: z.string().optional(),
     destinationCountry: z.string().default('USA'),
     leaveInConus: z.boolean().default(true),
+    // Time & Working Hours
+    startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(), // HH:mm
+    endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional(),   // HH:mm
+    departureWorkingHours: z.string().optional(), // e.g. "0700-1600" or "NONE"
+    returnWorkingHours: z.string().optional(),    // e.g. "0700-1600" or "NONE"
     // Command Details
     dutySection: z.string().optional(),
     deptDiv: z.string().optional(),

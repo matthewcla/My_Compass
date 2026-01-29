@@ -1,4 +1,3 @@
-import { Text } from '@/components/Themed';
 import { GlassView } from '@/components/ui/GlassView';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View, useColorScheme } from 'react-native';
@@ -33,12 +32,12 @@ export function WizardCard({
                 className="flex-1 mx-4 my-2 rounded-2xl overflow-hidden border border-white/20 dark:border-white/10"
             >
                 <View style={{ flex: 1 }}>
-                    {/* Header */}
-                    <View className="px-6 py-5 border-b border-gray-100 dark:border-gray-800/50">
+                    {/* Header Removed */
+                    /* <View className="px-6 py-5 border-b border-gray-100 dark:border-gray-800/50">
                         <Text className="text-xl font-bold tracking-tight">
                             {title}
                         </Text>
-                    </View>
+                    </View> */}
 
                     {/* Body */}
                     {scrollable ? (

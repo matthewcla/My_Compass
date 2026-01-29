@@ -13,7 +13,7 @@ import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Alert, Pressable, Text, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -123,6 +123,10 @@ export default function LeaveRequestScreen() {
         leaveType: 'annual',
         leaveInConus: true,
         destinationCountry: 'USA',
+        startTime: '16:00',
+        endTime: '07:30',
+        departureWorkingHours: '0730-1600',
+        returnWorkingHours: '0730-1600',
         emergencyContact: {
             name: '',
             relationship: '',
@@ -226,8 +230,10 @@ export default function LeaveRequestScreen() {
                         leaveType={formData.leaveType}
                         startDate={formData.startDate || ''}
                         endDate={formData.endDate || ''}
-                        leaveInConus={formData.leaveInConus ?? true}
-                        destinationCountry={formData.destinationCountry ?? 'USA'}
+                        startTime={formData.startTime}
+                        endTime={formData.endTime}
+                        departureWorkingHours={formData.departureWorkingHours}
+                        returnWorkingHours={formData.returnWorkingHours}
                         onUpdate={updateField}
                     />
                 );
@@ -282,13 +288,7 @@ export default function LeaveRequestScreen() {
                         <View className="flex-1">
                             <WizardStatusBar currentStep={deck.step} onStepPress={(s) => deck.goTo(s)} />
                         </View>
-                        <Pressable
-                            onPress={handleDiscard}
-                            className="p-4 mr-2"
-                            hitSlop={10}
-                        >
-                            <X size={24} color="#94a3b8" strokeWidth={2} />
-                        </Pressable>
+                        {/* Close Button Removed */}
                     </View>
 
                     {/* Card Container */}
@@ -298,15 +298,15 @@ export default function LeaveRequestScreen() {
 
                     {/* Footer Navigation */}
                     <View className="border-t border-white/10 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex-row items-center justify-center gap-4">
-                        {!deck.isFirst && (
-                            <Pressable
-                                onPress={deck.back}
-                                className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-slate-800 active:bg-slate-700 border border-slate-700"
-                            >
-                                <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2 opacity-80" strokeWidth={1.5} />
-                                <Text className="font-bold text-slate-300">Back</Text>
-                            </Pressable>
-                        )}
+                        <Pressable
+                            onPress={deck.isFirst ? handleDiscard : deck.back}
+                            className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-slate-800 active:bg-slate-700 border border-slate-700"
+                        >
+                            {!deck.isFirst && <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2 opacity-80" strokeWidth={1.5} />}
+                            <Text className={`font-bold ${deck.isFirst ? "text-red-400" : "text-slate-300"}`}>
+                                {deck.isFirst ? "Cancel" : "Back"}
+                            </Text>
+                        </Pressable>
                         {deck.isLast ? (
                             <View className="flex-1 items-center justify-center">
                                 <SignatureButton

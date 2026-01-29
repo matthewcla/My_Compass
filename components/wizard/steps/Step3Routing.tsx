@@ -1,9 +1,10 @@
 import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
 import { CreateLeaveRequestPayload } from '@/types/api';
+import * as Haptics from 'expo-haptics';
 import { Briefcase, Building2, Phone } from 'lucide-react-native';
 import React from 'react';
-import { Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Pressable, Text, TextInput, View, useColorScheme } from 'react-native';
 
 interface Step3RoutingProps {
     formData: Partial<CreateLeaveRequestPayload>;
@@ -84,21 +85,24 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
                         {RATION_OPTIONS.map((option) => {
                             const isSelected = formData.rationStatus === option.id;
                             return (
-                                <TouchableOpacity
+                                <Pressable
                                     key={option.id}
-                                    onPress={() => onUpdate('rationStatus', option.id)}
+                                    onPress={() => {
+                                        Haptics.selectionAsync();
+                                        onUpdate('rationStatus', option.id);
+                                    }}
                                     className={`flex-1 py-3 px-2 rounded-xl items-center justify-center ${isSelected
-                                            ? 'bg-white dark:bg-slate-700 shadow-sm'
-                                            : 'bg-transparent'
+                                        ? 'bg-white dark:bg-slate-700 shadow-sm'
+                                        : 'bg-transparent'
                                         }`}
                                 >
                                     <Text className={`font-medium ${isSelected
-                                            ? 'text-blue-600 dark:text-blue-400'
-                                            : 'text-gray-500 dark:text-gray-400'
+                                        ? 'text-blue-600 dark:text-blue-400'
+                                        : 'text-gray-500 dark:text-gray-400'
                                         }`}>
                                         {option.label}
                                     </Text>
-                                </TouchableOpacity>
+                                </Pressable>
                             );
                         })}
                     </View>

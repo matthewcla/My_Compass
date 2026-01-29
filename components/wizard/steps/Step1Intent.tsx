@@ -53,6 +53,7 @@ export function Step1Intent({
     // --- Time Picker State ---
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [timeField, setTimeField] = useState<'startTime' | 'endTime' | null>(null);
+    const [hoursField, setHoursField] = useState<'departure' | 'return' | null>(null);
 
     // --- Validation Logic ---
     const calculation = useMemo(() => {
@@ -245,7 +246,7 @@ export function Step1Intent({
                             <View className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-md mr-2">
                                 <Clock size={16} className="text-blue-600 dark:text-blue-400" />
                             </View>
-                            <Text className="font-bold text-slate-700 dark:text-slate-300">Departure (Block 14/16)</Text>
+                            <Text className="font-bold text-slate-700 dark:text-slate-300">Departure</Text>
                         </View>
 
                         <View className="flex-row gap-4">
@@ -260,6 +261,7 @@ export function Step1Intent({
 
                             {/* Working Hours Dropdown Stub */}
                             <Pressable
+                                onPress={() => setHoursField('departure')}
                                 className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
                             // In real app, open modal to select options
                             >
@@ -277,7 +279,7 @@ export function Step1Intent({
                             <View className="bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md mr-2">
                                 <Clock size={16} className="text-orange-600 dark:text-orange-400" />
                             </View>
-                            <Text className="font-bold text-slate-700 dark:text-slate-300">Return (Block 15/16)</Text>
+                            <Text className="font-bold text-slate-700 dark:text-slate-300">Return</Text>
                         </View>
 
                         <View className="flex-row gap-4">
@@ -292,6 +294,7 @@ export function Step1Intent({
 
                             {/* Working Hours Dropdown Stub */}
                             <Pressable
+                                onPress={() => setHoursField('return')}
                                 className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
                             >
                                 <Text className="text-xs text-slate-500 mb-0.5">Working Hours</Text>
@@ -368,6 +371,64 @@ export function Step1Intent({
                 </Modal>
             )}
 
+            {/* Working Hours Picker Modal (Universal) */}
+            <Modal
+                visible={!!hoursField}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setHoursField(null)}
+            >
+                <Pressable
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+                    onPress={() => setHoursField(null)}
+                >
+                    <View className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
+                        <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
+                            <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                                Select Schedule
+                            </Text>
+                            <Pressable onPress={() => setHoursField(null)}>
+                                <View className="bg-slate-200 dark:bg-slate-700 rounded-full p-1">
+                                    <Text className="text-slate-500 dark:text-slate-400 font-bold px-2">Close</Text>
+                                </View>
+                            </Pressable>
+                        </View>
+
+                        <View className="p-4 pb-10 gap-2">
+                            {WORKING_HOURS_OPTIONS.map((option) => {
+                                const currentVal = hoursField === 'departure' ? departureWorkingHours : returnWorkingHours;
+                                const isSelected = currentVal === option.value;
+
+                                return (
+                                    <Pressable
+                                        key={option.value}
+                                        onPress={() => {
+                                            if (hoursField) {
+                                                onUpdate(hoursField === 'departure' ? 'departureWorkingHours' : 'returnWorkingHours', option.value);
+                                                setHoursField(null);
+                                                Haptics.selectionAsync();
+                                            }
+                                        }}
+                                        className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
+                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-500'
+                                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
+                                            }`}
+                                    >
+                                        <Text className={`font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                                            {option.label}
+                                        </Text>
+                                        {isSelected && (
+                                            <View className="w-5 h-5 rounded-full bg-blue-500 items-center justify-center">
+                                                <View className="w-2 h-2 rounded-full bg-white" />
+                                            </View>
+                                        )}
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+                    </View>
+                </Pressable>
+            </Modal>
         </WizardCard>
     );
 }

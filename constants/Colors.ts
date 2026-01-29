@@ -8,6 +8,9 @@ const navyLight = '#1E3A5F';
 const navyGold = '#C9A227';
 
 export const Colors = {
+  gray: {
+    500: '#6b7280',
+  },
   light: {
     text: '#000',
     background: '#fff',

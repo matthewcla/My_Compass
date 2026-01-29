@@ -74,11 +74,11 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                                             <Text className="text-xs text-orange-600 dark:text-orange-400 font-medium">OCONUS Required</Text>
                                         </View>
                                         <TextInput
-                                            className="h-10 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 text-slate-900 dark:text-white"
+                                            className="h-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 text-slate-900 dark:text-white"
                                             placeholder="e.g. Japan, Germany, Italy"
                                             value={formData.destinationCountry}
                                             onChangeText={(text) => onUpdate('destinationCountry', text)}
-                                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                            placeholderTextColor={Colors.gray[500]}
                                         />
                                     </View>
                                 </View>
@@ -92,7 +92,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         LEAVE ADDRESS
                     </Text>
-                    <View className="flex-row items-start bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                    <View className="flex-row items-start bg-gray-50 dark:bg-slate-900 rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
                         <MapPin
                             size={20}
                             color={themeColors.tint}
@@ -102,7 +102,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                         <TextInput
                             className="flex-1 text-base text-gray-900 dark:text-white min-h-[80px]"
                             placeholder="Full address where you can be reached..."
-                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                            placeholderTextColor={Colors.gray[500]}
                             value={formData.leaveAddress}
                             onChangeText={(text) => handleTextChange('leaveAddress', text)}
                             multiline
@@ -117,7 +117,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         LEAVE PHONE NUMBER
                     </Text>
-                    <View className="flex-row items-center bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                    <View className="flex-row items-center bg-gray-50 dark:bg-slate-900 rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
                         <Phone
                             size={20}
                             color={themeColors.tint}
@@ -127,7 +127,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                         <TextInput
                             className="flex-1 text-base text-gray-900 dark:text-white"
                             placeholder="555-123-4567"
-                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                            placeholderTextColor={Colors.gray[500]}
                             value={formData.leavePhoneNumber}
                             onChangeText={(text) => handleTextChange('leavePhoneNumber', text)}
                             keyboardType="phone-pad"
@@ -151,7 +151,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                                     onPress={() => onUpdate('modeOfTravel', mode.id)}
                                     className={`flex-1 min-w-[45%] flex-row items-center justify-center py-4 px-3 rounded-xl border ${isSelected
                                         ? 'bg-blue-500 border-blue-600 dark:bg-blue-600 dark:border-blue-500'
-                                        : 'bg-gray-50 dark:bg-slate-800/50 border-gray-100 dark:border-gray-700'
+                                        : 'bg-gray-50 dark:bg-slate-900 border-gray-100 dark:border-slate-700'
                                         }`}
                                 >
                                     <Icon

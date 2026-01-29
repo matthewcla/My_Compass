@@ -181,7 +181,7 @@ export function Step1Intent({
                             // stub interaction
                             Haptics.selectionAsync();
                         }}
-                        className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700"
+                        className="bg-inputBackground p-4 rounded-xl border border-slate-200 dark:border-slate-700"
                     >
                         <View className="flex-row justify-between items-center">
                             <Text className="text-base font-bold text-slate-900 dark:text-white capitalize">{leaveType || 'Annual'}</Text>
@@ -193,7 +193,7 @@ export function Step1Intent({
                 {/* 2. Premium Calendar */}
                 <View>
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Select Dates</Text>
-                    <View className="bg-white dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <View className="bg-cardBackground dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
                         <Calendar
                             current={startDate || undefined}
                             onDayPress={handleDayPress}
@@ -241,7 +241,8 @@ export function Step1Intent({
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">Time & Schedule</Text>
 
                     {/* Start Block */}
-                    <View className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                    {/* Start Block */}
+                    <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                         <View className="flex-row items-center mb-3">
                             <View className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-md mr-2">
                                 <Clock size={16} className="text-blue-600 dark:text-blue-400" />
@@ -274,7 +275,8 @@ export function Step1Intent({
                     </View>
 
                     {/* End Block */}
-                    <View className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                    {/* End Block */}
+                    <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                         <View className="flex-row items-center mb-3">
                             <View className="bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md mr-2">
                                 <Clock size={16} className="text-orange-600 dark:text-orange-400" />

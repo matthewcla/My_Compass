@@ -35,6 +35,10 @@ export const Colors = {
     navyGold: navyGold,
     labelPrimary: '#000000',
     labelSecondary: '#3C3C43',
+    cardBackground: '#FFFFFF',
+    wizardCardBackground: '#FFFFFF',
+    inputBackground: '#F8FAFC',
+    accentText: systemBlueLight,
 
     status: {
       success: '#16a34a',
@@ -57,6 +61,10 @@ export const Colors = {
     navyGold: navyGold,
     labelPrimary: '#FFFFFF',
     labelSecondary: '#EBEBF5',
+    cardBackground: '#1E293B',
+    wizardCardBackground: '#1E293B',
+    inputBackground: '#0F172A',
+    accentText: '#FFFFFF',
 
     status: {
       success: '#4ade80',

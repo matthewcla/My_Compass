@@ -38,7 +38,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                         Deployment Status
                     </Text>
 
-                    <View className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <View className="bg-inputBackground rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                         {/* CONUS Toggle */}
                         <View className="flex-row items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700/50">
                             <View className="flex-row items-center flex-1 mr-4">
@@ -46,7 +46,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                                     <MapPin size={16} className="text-blue-600 dark:text-blue-400" />
                                 </View>
                                 <View>
-                                    <Text className="text-base font-bold text-slate-900 dark:text-white">Leave inside CONUS?</Text>
+                                    <Text className="text-base font-bold text-labelPrimary dark:text-white">Leave inside CONUS?</Text>
                                     <Text className="text-xs text-slate-500 mt-0.5">Continental United States</Text>
                                 </View>
                             </View>
@@ -74,7 +74,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                                             <Text className="text-xs text-orange-600 dark:text-orange-400 font-medium">OCONUS Required</Text>
                                         </View>
                                         <TextInput
-                                            className="h-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 text-slate-900 dark:text-white"
+                                            className="h-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 text-labelPrimary dark:text-white"
                                             placeholder="e.g. Japan, Germany, Italy"
                                             value={formData.destinationCountry}
                                             onChangeText={(text) => onUpdate('destinationCountry', text)}
@@ -92,7 +92,8 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         LEAVE ADDRESS
                     </Text>
-                    <View className="flex-row items-start bg-gray-50 dark:bg-slate-900 rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
+
+                    <View className="flex-row items-start bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
                         <MapPin
                             size={20}
                             color={themeColors.tint}
@@ -100,7 +101,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                             strokeWidth={2}
                         />
                         <TextInput
-                            className="flex-1 text-base text-gray-900 dark:text-white min-h-[80px]"
+                            className="flex-1 text-base text-labelPrimary dark:text-white min-h-[80px]"
                             placeholder="Full address where you can be reached..."
                             placeholderTextColor={Colors.gray[500]}
                             value={formData.leaveAddress}
@@ -117,7 +118,8 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         LEAVE PHONE NUMBER
                     </Text>
-                    <View className="flex-row items-center bg-gray-50 dark:bg-slate-900 rounded-2xl p-4 border border-gray-100 dark:border-slate-700">
+
+                    <View className="flex-row items-center bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
                         <Phone
                             size={20}
                             color={themeColors.tint}
@@ -125,7 +127,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                             strokeWidth={2}
                         />
                         <TextInput
-                            className="flex-1 text-base text-gray-900 dark:text-white"
+                            className="flex-1 text-base text-labelPrimary dark:text-white"
                             placeholder="555-123-4567"
                             placeholderTextColor={Colors.gray[500]}
                             value={formData.leavePhoneNumber}
@@ -151,7 +153,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                                     onPress={() => onUpdate('modeOfTravel', mode.id)}
                                     className={`flex-1 min-w-[45%] flex-row items-center justify-center py-4 px-3 rounded-xl border ${isSelected
                                         ? 'bg-blue-500 border-blue-600 dark:bg-blue-600 dark:border-blue-500'
-                                        : 'bg-gray-50 dark:bg-slate-900 border-gray-100 dark:border-slate-700'
+                                        : 'bg-inputBackground border-slate-200 dark:border-slate-700'
                                         }`}
                                 >
                                     <Icon
@@ -173,7 +175,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                     </View>
                 </View>
 
-            </View>
-        </WizardCard>
+            </View >
+        </WizardCard >
     );
 }

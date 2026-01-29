@@ -73,6 +73,12 @@ export function Step1Intent({
     const markedDates = useMemo(() => {
         let marks: any = {};
 
+        // Premium Range Colors
+        // Light Mode: Use a solid light blue (Tailwind blue-100 equivalent) for a distinct "connected" strip
+        // Dark Mode: Use the app's Navy Light (#1E3A5F) for consistency and premium feel
+        const rangeColor = isDark ? Colors.dark.navyLight : '#DBEAFE';
+        const rangeTextColor = isDark ? '#FFFFFF' : themeColors.tint;
+
         if (startDate && endDate) {
             // Force Noon to avoid timezone boundary issues with midnight dates
             const start = new Date(startDate + 'T12:00:00');
@@ -83,7 +89,8 @@ export function Step1Intent({
 
                 range.forEach((date: Date) => {
                     const dateStr = format(date, 'yyyy-MM-dd');
-                    let mark: any = { color: `${themeColors.tint}20`, textColor: themeColors.tint };
+                    // Intermediate days use the premium range color
+                    let mark: any = { color: rangeColor, textColor: rangeTextColor };
 
                     if (dateStr === startDate) {
                         mark = { ...mark, startingDay: true, color: themeColors.tint, textColor: 'white' };
@@ -101,7 +108,7 @@ export function Step1Intent({
         }
 
         return marks;
-    }, [startDate, endDate, themeColors.tint]);
+    }, [startDate, endDate, themeColors.tint, isDark]);
 
     // Handle Day Press (Range Selection)
     const handleDayPress = (day: DateData) => {

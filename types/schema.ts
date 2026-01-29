@@ -554,6 +554,8 @@ export const LeaveRequestSchema = z.object({
 
     // Command Details
     dutySection: z.string().optional(), // e.g. "N1 Admin"
+    deptDiv: z.string().optional(),
+    dutyPhone: z.string().optional(),
     rationStatus: RationStatusSchema.optional(),
 
     // Emergency contact (required for submission, optional for draft)
@@ -639,21 +641,28 @@ export const Step1IntentSchema = LeaveRequestSchema.pick({
     startDate: true,
     endDate: true,
     chargeDays: true,
+    leaveInConus: true,
+    destinationCountry: true,
 });
 
 export const Step2ContactSchema = LeaveRequestSchema.pick({
     leaveAddress: true,
     leavePhoneNumber: true,
-    emergencyContact: true,
     modeOfTravel: true,
-}).extend({
-    // Enforce emergency contact is present for this step validation
-    emergencyContact: EmergencyContactSchema,
 });
 
 export const Step3CommandSchema = LeaveRequestSchema.pick({
     dutySection: true,
+    deptDiv: true,
+    dutyPhone: true,
     rationStatus: true,
+});
+
+export const Step4SafetySchema = LeaveRequestSchema.pick({
+    emergencyContact: true,
+    memberRemarks: true,
+}).extend({
+    emergencyContact: EmergencyContactSchema,
 });
 
 /**

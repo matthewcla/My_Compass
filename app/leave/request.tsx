@@ -4,20 +4,24 @@ import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
 import { Step2Contact } from '@/components/wizard/steps/Step2Contact';
 import { Step3Routing } from '@/components/wizard/steps/Step3Routing';
 import { VerificationChecks } from '@/components/wizard/steps/Step4Checklist';
+import { Step4Safety } from '@/components/wizard/steps/Step4Safety';
 import Colors from '@/constants/Colors';
-import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { useCinematicDeck } from '@/hooks/useCinematicDeck';
+import { useHeaderStore } from '@/store/useHeaderStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Trash } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- Types & Constants ---
 
+// --- Types & Constants ---
 
-
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 export default function LeaveRequestScreen() {
     const colorScheme = useColorScheme() ?? 'light';
@@ -27,6 +31,15 @@ export default function LeaveRequestScreen() {
     const discardDraft = useLeaveStore((state) => state.discardDraft);
     const leaveRequests = useLeaveStore((state) => state.leaveRequests);
     const isSyncing = useLeaveStore((state) => state.isSyncingRequests);
+    const setHeaderVisible = useHeaderStore((state) => state.setVisible);
+
+    // Hide Global Header
+    useFocusEffect(
+        React.useCallback(() => {
+            setHeaderVisible(false);
+            return () => setHeaderVisible(true);
+        }, [setHeaderVisible])
+    );
 
     // Resume/Draft tracking
     const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
@@ -55,22 +68,13 @@ export default function LeaveRequestScreen() {
         );
     };
 
-    useScreenHeader("MY ADMIN", "Drafting Request", {
-        icon: Trash,
-        onPress: handleDiscard,
-    });
-
     // Check for draft on mount
     React.useEffect(() => {
-        // Simple logic: grab the first 'draft' status request found for this user (in a real app, might pick latest)
-        // Note: userLeaveRequestIds might be empty if not fetched yet, but hydration happens early.
-        const drafts = Object.values(leaveRequests).filter(r => r.status === 'draft'); // Assuming 'draft' status exists or we use pending/undefined
-        // Actually our schema uses 'pending' for submitted. Storage doesn't explicitly have 'draft' unless we added it?
-        // Wait, schema status enum is: 'draft' | 'pending' | 'approved' | 'denied' | 'canceled'.
-        // Let's verify schema.ts if needed, but assuming 'draft' is valid.
+        // Simple logic: grab the first 'draft' status request found for this user
+        const drafts = Object.values(leaveRequests).filter(r => r.status === 'draft');
 
         if (drafts.length > 0 && !currentDraftId) {
-            const draft = drafts[0]; // Just take first for now
+            const draft = drafts[0];
             Alert.alert(
                 "Resume Draft?",
                 "You have an unfinished leave request. Would you like to resume it?",
@@ -79,17 +83,13 @@ export default function LeaveRequestScreen() {
                         text: "Start New",
                         style: "destructive",
                         onPress: async () => {
-                            // If they start new, we might want to discard the old one or just ignore it?
-                            // User request said: "Discard old and start new" implying we clean up.
                             await discardDraft(draft.id);
-                            // Form is already initial state
                         }
                     },
                     {
                         text: "Resume",
                         onPress: () => {
                             setCurrentDraftId(draft.id);
-                            // Populate form data
                             setFormData({
                                 leaveType: draft.leaveType,
                                 startDate: draft.startDate,
@@ -98,20 +98,20 @@ export default function LeaveRequestScreen() {
                                 leavePhoneNumber: draft.leavePhoneNumber,
                                 emergencyContact: draft.emergencyContact,
                                 memberRemarks: draft.memberRemarks,
-                                // ... map other fields
+                                modeOfTravel: draft.modeOfTravel,
+                                dutySection: draft.dutySection,
+                                deptDiv: draft.deptDiv,
+                                dutyPhone: draft.dutyPhone,
+                                rationStatus: draft.rationStatus as any,
                             });
-                            // We could also try to infer the step based on what's filled
-                            // but defaulting to step 0 is safer for now, or check fields.
                         }
                     }
                 ]
             );
         }
-    }, [leaveRequests]); // Dependency on requests to catch hydration
+    }, [leaveRequests]);
 
     // --- State ---
-
-    const [step, setStep] = useState(0);
     const [verificationChecks, setVerificationChecks] = useState<VerificationChecks>({
         hasSufficientBalance: false,
         understandsReportingTime: false,
@@ -120,6 +120,7 @@ export default function LeaveRequestScreen() {
 
     const [formData, setFormData] = useState<Partial<CreateLeaveRequestPayload>>({
         leaveType: 'annual',
+        leaveInConus: true,
         destinationCountry: 'USA',
         emergencyContact: {
             name: '',
@@ -151,26 +152,9 @@ export default function LeaveRequestScreen() {
         setVerificationChecks(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    const handleNext = () => {
-        if (!validateStep(step)) return;
-        if (step < TOTAL_STEPS - 1) {
-            setStep(step + 1);
-        } else {
-            handleSubmit();
-        }
-    };
-
-    const handleBack = () => {
-        if (step > 0) {
-            setStep(step - 1);
-        } else {
-            router.back();
-        }
-    };
-
     const validateStep = (currentStep: number): boolean => {
         switch (currentStep) {
-            case 0: // Dates (Intent)
+            case 0: // Step 1: Intent
                 if (!formData.leaveType) {
                     Alert.alert('Required', 'Please select a Leave Type.');
                     return false;
@@ -180,20 +164,23 @@ export default function LeaveRequestScreen() {
                     return false;
                 }
                 return true;
-            case 1: // Contact (Details + Emergency)
+            case 1: // Step 2: Contact (Location/Travel)
                 if (!formData.leaveAddress || !formData.leavePhoneNumber) {
                     Alert.alert('Required', 'Please fill in address and phone.');
                     return false;
                 }
+                // Removed Emergency Contact validation from here
+                return true;
+            case 2: // Step 3: Command
+                // Optional fields mostly, but verify strictness if needed
+                return true;
+            case 3: // Step 4: Safety
                 if (!formData.emergencyContact?.name || !formData.emergencyContact?.relationship || !formData.emergencyContact?.phoneNumber) {
                     Alert.alert('Required', 'Please fill in all emergency contact details.');
                     return false;
                 }
                 return true;
-            case 2: // Routing (Type + Remarks)
-
-                return true;
-            case 3: // Review (Check) + Verification
+            case 4: // Step 5: Review
                 if (!formData.startDate) return false;
 
                 const allVerified = Object.values(verificationChecks).every(v => v);
@@ -209,11 +196,8 @@ export default function LeaveRequestScreen() {
 
     const handleSubmit = async () => {
         try {
-            // Mock User ID for now (In real app, get from auth context/store)
             const currentUserId = "user-123";
-
             await submitRequest(formData as CreateLeaveRequestPayload, currentUserId);
-
             Alert.alert("Success", "Leave request submitted successfully!", [
                 { text: "OK", onPress: () => router.back() }
             ]);
@@ -222,84 +206,128 @@ export default function LeaveRequestScreen() {
         }
     };
 
-    // --- Render Steps ---
+    const deck = useCinematicDeck({
+        totalSteps: TOTAL_STEPS,
+        onComplete: handleSubmit,
+    });
 
-    // renderStep0_Dates removed in favor of Step1Intent component
+    const handleNext = () => {
+        if (!validateStep(deck.step)) return;
+        deck.next();
+    };
 
-    // renderStep1_Details and renderStep2_Emergency removed in favor of Step2Contact component
-
-    // renderStep3_Review removed in favor of ReviewSign component
-
-    return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1 bg-systemBackground"
-        >
-            {/* Wizard Status Bar */}
-            <WizardStatusBar currentStep={step} onStepPress={(s) => setStep(s)} />
-
-            <ScrollView className="flex-1 px-6 pt-6">
-                {step === 0 && (
+    const renderCard = () => {
+        switch (deck.step) {
+            case 0:
+                return (
                     <Step1Intent
+                        key="step0"
                         leaveType={formData.leaveType}
                         startDate={formData.startDate || ''}
                         endDate={formData.endDate || ''}
+                        leaveInConus={formData.leaveInConus ?? true}
+                        destinationCountry={formData.destinationCountry ?? 'USA'}
                         onUpdate={updateField}
                     />
-                )}
-                {step === 1 && (
+                );
+            case 1:
+                return (
                     <Step2Contact
+                        key="step1"
                         formData={formData}
                         onUpdate={updateField}
-                        onUpdateEmergency={updateEmergencyContact}
                     />
-                )}
-                {step === 2 && (
+                );
+            case 2:
+                return (
                     <Step3Routing
+                        key="step2"
                         formData={formData}
                         onUpdate={updateField}
                     />
-                )}
-                {step === 3 && (
+                );
+            case 3:
+                return (
+                    <Step4Safety
+                        key="safety"
+                        formData={formData}
+                        onUpdate={updateField}
+                    />
+                );
+            case 4:
+                return (
                     <ReviewSign
+                        key="step4"
                         formData={formData}
                         verificationChecks={verificationChecks}
                         onToggleVerification={toggleVerification}
                     />
-                )}
+                );
+            default:
+                return null;
+        }
+    };
 
-                {/* Bottom spacer for scroll view */}
-                <View className="h-20" />
-            </ScrollView>
+    return (
+        <View className="flex-1 bg-slate-950">
+            <LinearGradient
+                colors={['#0f172a', '#020617']} // slate-900 to slate-950
+                style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+            />
+            <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={{ flex: 1 }}
+                >
+                    <View className="flex-1">
+                        {/* Wizard Header with Close Button */}
+                        <View className="flex-row items-center justify-between bg-slate-900/50">
+                            <View className="flex-1">
+                                <WizardStatusBar currentStep={deck.step} onStepPress={(s) => deck.goTo(s)} />
+                            </View>
+                            <Pressable
+                                onPress={handleDiscard}
+                                className="p-4 mr-2"
+                                hitSlop={10}
+                            >
+                                <X size={24} color="#94a3b8" strokeWidth={2} />
+                            </Pressable>
+                        </View>
 
-            {/* Footer Navigation */}
-            <View className="p-6 border-t border-systemGray6 bg-systemBackground safe-area-bottom">
-                <View className="flex-row gap-4">
-                    {step > 0 && (
-                        <Pressable
-                            onPress={handleBack}
-                            className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-systemGray6 active:bg-systemGray6"
-                        >
-                            <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2" strokeWidth={1.5} />
-                            <Text className="font-bold text-labelSecondary">Back</Text>
-                        </Pressable>
-                    )}
+                        {/* Card Container */}
+                        <View className="flex-1 px-4 pt-4">
+                            {renderCard()}
+                        </View>
 
-                    <Pressable
-                        onPress={handleNext}
-                        disabled={isSyncing || (step === TOTAL_STEPS - 1 && !Object.values(verificationChecks).every(v => v))}
-                        className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing || (step === TOTAL_STEPS - 1 && !Object.values(verificationChecks).every(v => v))
-                            ? 'bg-systemGray4'
-                            : 'bg-systemBlue active:bg-blue-700'
-                            }`}
-                    >
-                        <Text className="font-bold text-white mr-2">
-                            {step === TOTAL_STEPS - 1 ? (isSyncing ? 'Submitting...' : 'Sign & Submit') : 'Next'}
-                        </Text>
-                        {!isSyncing && <ArrowRight size={20} color="white" strokeWidth={1.5} />}
-                    </Pressable>
-                </View>
-            </View>
-        </KeyboardAvoidingView>
+                        {/* Footer Navigation */}
+                        <View className="border-t border-white/10 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex-row items-center justify-center gap-4">
+                            {!deck.isFirst && (
+                                <Pressable
+                                    onPress={deck.back}
+                                    className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-slate-800 active:bg-slate-700 border border-slate-700"
+                                >
+                                    <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2 opacity-80" strokeWidth={1.5} />
+                                    <Text className="font-bold text-slate-300">Back</Text>
+                                </Pressable>
+                            )}
+
+                            <Pressable
+                                onPress={handleNext}
+                                disabled={isSyncing || (deck.isLast && !Object.values(verificationChecks).every(v => v))}
+                                className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing || (deck.isLast && !Object.values(verificationChecks).every(v => v))
+                                    ? 'bg-slate-800 border border-slate-700 opacity-50'
+                                    : 'bg-blue-600 active:bg-blue-500 shadow-lg shadow-blue-900/20'
+                                    }`}
+                            >
+                                <Text className="font-bold text-white mr-2">
+                                    {deck.isLast ? (isSyncing ? 'Submitting...' : 'Sign & Submit') : 'Next'}
+                                </Text>
+                                {!isSyncing && <ArrowRight size={20} color="white" strokeWidth={1.5} />}
+                            </Pressable>
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
+            </SafeAreaView>
+        </View>
     );
 }

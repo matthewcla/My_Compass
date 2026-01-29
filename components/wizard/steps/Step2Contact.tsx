@@ -1,123 +1,122 @@
-
+import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
 import { CreateLeaveRequestPayload } from '@/types/api';
-import { MapPin, Phone, User } from 'lucide-react-native';
+import { Bus, Car, MapPin, Phone, Plane, Train } from 'lucide-react-native';
 import React from 'react';
-import { Text, TextInput, View, useColorScheme } from 'react-native';
-
-// LEAVE_TYPES moved to Step3Routing
+import { Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 interface Step2ContactProps {
     formData: Partial<CreateLeaveRequestPayload>;
     onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
-    onUpdateEmergency: (field: keyof CreateLeaveRequestPayload['emergencyContact'], value: string) => void;
 }
 
-export function Step2Contact({ formData, onUpdate, onUpdateEmergency }: Step2ContactProps) {
+export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
+    const isDark = colorScheme === 'dark';
 
     const handleTextChange = (field: keyof CreateLeaveRequestPayload, value: string) => {
-        // PII Safety: Logs are sanitized by default via utils/logger if we log.
-        // But explicitly ensuring we don't log raw here.
-        // User requirement: ZERO console.log of these values.
         onUpdate(field, value);
     };
 
+    const MODES = [
+        { id: 'Air', label: 'Air', icon: Plane },
+        { id: 'Car', label: 'Car', icon: Car },
+        { id: 'Train', label: 'Train', icon: Train },
+        { id: 'Bus', label: 'Bus', icon: Bus },
+    ];
+
     return (
-        <View className="space-y-8">
-            {/* 1. Leave Type */}
-            {/* 1. Leave Type Removed - Moved to Step 3 */}
+        <WizardCard title="Location & Travel">
+            <View className="space-y-6">
 
-            {/* 2. Contact Details */}
-            <View className="space-y-4">
-                <Text className="text-lg font-bold text-labelPrimary">Contact Details</Text>
-
-                {/* Address */}
-                <View>
-                    <Text className="text-sm font-medium text-labelSecondary mb-1">Leave Address</Text>
-                    <View className="flex-row items-start bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                        <MapPin size={20} color={themeColors.labelSecondary} className="mr-3 mt-1" strokeWidth={1.5} />
+                {/* 1. Leave Address */}
+                <View className="space-y-3">
+                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+                        LEAVE ADDRESS
+                    </Text>
+                    <View className="flex-row items-start bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                        <MapPin
+                            size={20}
+                            color={themeColors.tint}
+                            className="mr-3 mt-1"
+                            strokeWidth={2}
+                        />
                         <TextInput
-                            className="flex-1 text-base text-labelPrimary min-h-[60px]"
-                            placeholder="123 Beach St, Honolulu, HI"
+                            className="flex-1 text-base text-gray-900 dark:text-white min-h-[80px]"
+                            placeholder="Full address where you can be reached..."
+                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                             value={formData.leaveAddress}
                             onChangeText={(text) => handleTextChange('leaveAddress', text)}
                             multiline
                             textAlignVertical="top"
-                            // PII: Explicitly false per requirements
-                            secureTextEntry={false}
+                            autoCapitalize="words"
                         />
                     </View>
                 </View>
 
-                {/* Phone */}
-                <View>
-                    <Text className="text-sm font-medium text-labelSecondary mb-1">Leave Phone Number</Text>
-                    <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                        <Phone size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
+                {/* 2. Leave Phone */}
+                <View className="space-y-3">
+                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+                        LEAVE PHONE NUMBER
+                    </Text>
+                    <View className="flex-row items-center bg-gray-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                        <Phone
+                            size={20}
+                            color={themeColors.tint}
+                            className="mr-3"
+                            strokeWidth={2}
+                        />
                         <TextInput
-                            className="flex-1 text-base text-labelPrimary"
+                            className="flex-1 text-base text-gray-900 dark:text-white"
                             placeholder="555-123-4567"
+                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                             value={formData.leavePhoneNumber}
                             onChangeText={(text) => handleTextChange('leavePhoneNumber', text)}
                             keyboardType="phone-pad"
-                            secureTextEntry={false}
                         />
                     </View>
                 </View>
+
+                {/* 3. Mode of Travel */}
+                <View className="space-y-3">
+                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+                        MODE OF TRAVEL
+                    </Text>
+                    <View className="flex-row flex-wrap gap-3">
+                        {MODES.map((mode) => {
+                            const isSelected = formData.modeOfTravel === mode.id;
+                            const Icon = mode.icon;
+
+                            return (
+                                <TouchableOpacity
+                                    key={mode.id}
+                                    onPress={() => onUpdate('modeOfTravel', mode.id)}
+                                    className={`flex-1 min-w-[45%] flex-row items-center justify-center py-4 px-3 rounded-xl border ${isSelected
+                                            ? 'bg-blue-500 border-blue-600 dark:bg-blue-600 dark:border-blue-500'
+                                            : 'bg-gray-50 dark:bg-slate-800/50 border-gray-100 dark:border-gray-700'
+                                        }`}
+                                >
+                                    <Icon
+                                        size={18}
+                                        color={isSelected ? 'white' : (isDark ? '#94a3b8' : '#64748b')}
+                                        strokeWidth={2}
+                                    />
+                                    <Text
+                                        className={`ml-2 font-medium ${isSelected
+                                                ? 'text-white'
+                                                : 'text-gray-600 dark:text-slate-300'
+                                            }`}
+                                    >
+                                        {mode.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
+
             </View>
-
-            {/* 3. Emergency Contact */}
-            <View className="space-y-4">
-                <Text className="text-lg font-bold text-labelPrimary">Emergency Contact</Text>
-                <Text className="text-labelSecondary text-sm -mt-2">
-                    Who should we contact in case of an emergency?
-                </Text>
-
-                <View>
-                    <Text className="text-sm font-medium text-labelSecondary mb-1">Name</Text>
-                    <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                        <User size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                        <TextInput
-                            className="flex-1 text-base text-labelPrimary"
-                            placeholder="Jane Doe"
-                            value={formData.emergencyContact?.name}
-                            onChangeText={(text) => onUpdateEmergency('name', text)}
-                            secureTextEntry={false}
-                        />
-                    </View>
-                </View>
-
-                <View>
-                    <Text className="text-sm font-medium text-labelSecondary mb-1">Relationship</Text>
-                    <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                        <User size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                        <TextInput
-                            className="flex-1 text-base text-labelPrimary"
-                            placeholder="Spouse, Parent, etc."
-                            value={formData.emergencyContact?.relationship}
-                            onChangeText={(text) => onUpdateEmergency('relationship', text)}
-                            secureTextEntry={false}
-                        />
-                    </View>
-                </View>
-
-                <View>
-                    <Text className="text-sm font-medium text-labelSecondary mb-1">Emergency Phone</Text>
-                    <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                        <Phone size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                        <TextInput
-                            className="flex-1 text-base text-labelPrimary"
-                            placeholder="555-987-6543"
-                            value={formData.emergencyContact?.phoneNumber}
-                            onChangeText={(text) => onUpdateEmergency('phoneNumber', text)}
-                            keyboardType="phone-pad"
-                            secureTextEntry={false}
-                        />
-                    </View>
-                </View>
-            </View>
-        </View>
+        </WizardCard>
     );
 }

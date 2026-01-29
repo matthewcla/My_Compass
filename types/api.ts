@@ -226,6 +226,12 @@ export const CreateLeaveRequestPayloadSchema = z.object({
     }),
     modeOfTravel: z.string().optional(),
     destinationCountry: z.string().default('USA'),
+    leaveInConus: z.boolean().default(true),
+    // Command Details
+    dutySection: z.string().optional(),
+    deptDiv: z.string().optional(),
+    dutyPhone: z.string().optional(),
+    rationStatus: z.enum(['commuted', 'in_kind', 'not_applicable']).optional(),
     memberRemarks: z.string().max(1000).optional(),
 });
 export type CreateLeaveRequestPayload = z.infer<typeof CreateLeaveRequestPayloadSchema>;

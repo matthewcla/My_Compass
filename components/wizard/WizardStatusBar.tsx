@@ -17,7 +17,7 @@ const STEPS = [
 
 export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarProps) {
     return (
-        <View className="flex-row items-center justify-between px-8 py-4 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+        <View className="flex-row items-center justify-between px-8 pt-4 pb-2">
             {STEPS.map((step, index) => {
                 const isLast = index === STEPS.length - 1;
                 const Icon = step.icon;
@@ -33,10 +33,10 @@ export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarPro
                             className="items-center justify-center z-10"
                         >
                             <View className={`w-10 h-10 rounded-full items-center justify-center border-2 ${isActive
-                                    ? 'border-blue-600 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                    : isCompleted
-                                        ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
-                                        : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
+                                ? 'border-blue-600 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                : isCompleted
+                                    ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
+                                    : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
                                 }`}>
                                 <Icon
                                     size={18}

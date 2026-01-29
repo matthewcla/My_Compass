@@ -8,11 +8,16 @@ export default function GlobalHeader() {
     const title = useHeaderStore((state) => state.title);
     const subtitle = useHeaderStore((state) => state.subtitle);
     const rightAction = useHeaderStore((state) => state.rightAction);
+    const isVisible = useHeaderStore((state) => state.isVisible);
     const pathname = usePathname();
 
     // Hide on Sign In
     // Also check if we are on the root index (splash) if needed, currently just sign-in
     if (segments[0] === 'sign-in') return null;
+
+    // Explicit visibility check
+    if (!isVisible) return null;
+
     // Also hide if no title is set (optional safety)
     if (!title) return null;
 

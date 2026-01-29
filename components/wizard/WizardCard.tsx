@@ -1,7 +1,7 @@
 import { Text } from '@/components/Themed';
 import { GlassView } from '@/components/ui/GlassView';
 import React from 'react';
-import { ScrollView, View, useColorScheme } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View, useColorScheme } from 'react-native';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 
 interface WizardCardProps {
@@ -23,7 +23,7 @@ export function WizardCard({
 
     return (
         <Animated.View
-            entering={FadeInRight.springify().damping(18)}
+            entering={FadeInRight.springify().mass(1.2).stiffness(150).damping(22)}
             exiting={FadeOutLeft.duration(200)}
             style={{ flex: 1 }}
         >
@@ -42,14 +42,20 @@ export function WizardCard({
 
                     {/* Body */}
                     {scrollable ? (
-                        <ScrollView
-                            className="flex-1"
-                            contentContainerClassName="p-6"
-                            showsVerticalScrollIndicator={false}
-                            keyboardShouldPersistTaps="handled"
+                        <KeyboardAvoidingView
+                            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                            style={{ flex: 1 }}
+                            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
                         >
-                            {children}
-                        </ScrollView>
+                            <ScrollView
+                                className="flex-1"
+                                contentContainerClassName="p-6"
+                                showsVerticalScrollIndicator={false}
+                                keyboardShouldPersistTaps="handled"
+                            >
+                                {children}
+                            </ScrollView>
+                        </KeyboardAvoidingView>
                     ) : (
                         <View className="flex-1 p-6">
                             {children}

@@ -1,13 +1,13 @@
-
 import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { differenceInDays, isValid, parseISO } from 'date-fns';
+import * as Haptics from 'expo-haptics';
 import { Calendar, Globe2, MapPin } from 'lucide-react-native';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable, Switch, Text, TextInput, View, useColorScheme } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
 
 const LEAVE_TYPES = [
     { id: 'annual', label: 'Annual' },
@@ -67,6 +67,41 @@ export function Step1Intent({
     const projectedBalance = availableDays - chargeDays;
     const isOverdraft = projectedBalance < 0;
 
+    // --- Premium Animations ---
+    const shakeStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{
+                translateX: isOverdraft
+                    ? withSequence(
+                        withTiming(-5, { duration: 50 }),
+                        withTiming(5, { duration: 50 }),
+                        withTiming(-5, { duration: 50 }),
+                        withTiming(5, { duration: 50 }),
+                        withTiming(0, { duration: 50 })
+                    )
+                    : 0
+            }]
+        };
+    }, [isOverdraft]);
+
+    // Haptic effect on error
+    useEffect(() => {
+        if (isOverdraft) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+    }, [isOverdraft]);
+
+    const handleUpdate = (field: keyof CreateLeaveRequestPayload, value: any) => {
+        // Haptic feedback for interactions
+        if (field === 'leaveInConus') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } else if (field === 'startDate' || field === 'endDate') {
+            // Subtle tick for typing/date changes (debouncing might be needed for rigorous typing, but okay for direct prop update here)
+            Haptics.selectionAsync();
+        }
+        onUpdate(field, value);
+    };
+
     return (
 
         <WizardCard title="Request Details" scrollable={false}>
@@ -90,13 +125,13 @@ export function Step1Intent({
                             <Text className="text-xl font-bold text-slate-300 dark:text-slate-600">-</Text>
                         </View>
 
-                        {/* Cost */}
-                        <View className="items-center">
+                        {/* Cost - Animated Shake */}
+                        <Animated.View style={shakeStyle} className="items-center">
                             <Text className={`text-2xl font-bold ${isOverdraft ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}>
                                 {chargeDays.toFixed(1)}
                             </Text>
                             <Text className={`text-xs font-medium ${isOverdraft ? 'text-red-500/60' : 'text-blue-600/60 dark:text-blue-400/60'}`}>Cost</Text>
-                        </View>
+                        </Animated.View>
 
                         {/* Operator */}
                         <View className="mb-2">
@@ -134,7 +169,10 @@ export function Step1Intent({
                             return (
                                 <Pressable
                                     key={type.id}
-                                    onPress={() => onUpdate('leaveType', type.id)}
+                                    onPress={() => {
+                                        Haptics.selectionAsync();
+                                        onUpdate('leaveType', type.id);
+                                    }}
                                     className={`px-4 py-2 rounded-full border ${isSelected
                                         ? 'bg-blue-600 border-blue-600 dark:bg-blue-600 dark:border-blue-500'
                                         : 'bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700'
@@ -167,7 +205,7 @@ export function Step1Intent({
                                     className="flex-1 text-base font-medium text-slate-900 dark:text-white"
                                     placeholder="YYYY-MM-DD"
                                     value={startDate}
-                                    onChangeText={(text) => onUpdate('startDate', text)}
+                                    onChangeText={(text) => handleUpdate('startDate', text)}
                                     keyboardType="numbers-and-punctuation"
                                     placeholderTextColor={themeColors.labelSecondary} // Using approximated color from basic theme
                                 />
@@ -183,7 +221,7 @@ export function Step1Intent({
                                     className="flex-1 text-base font-medium text-slate-900 dark:text-white"
                                     placeholder="YYYY-MM-DD"
                                     value={endDate}
-                                    onChangeText={(text) => onUpdate('endDate', text)}
+                                    onChangeText={(text) => handleUpdate('endDate', text)}
                                     keyboardType="numbers-and-punctuation"
                                     placeholderTextColor={themeColors.labelSecondary}
                                 />
@@ -220,7 +258,7 @@ export function Step1Intent({
                             </View>
                             <Switch
                                 value={leaveInConus}
-                                onValueChange={(val) => onUpdate('leaveInConus', val)}
+                                onValueChange={(val) => handleUpdate('leaveInConus', val)}
                                 trackColor={{ false: '#767577', true: '#2563EB' }}
                                 thumbColor={'#FFFFFF'}
                             />
@@ -242,7 +280,7 @@ export function Step1Intent({
                                             className="h-10 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 text-slate-900 dark:text-white"
                                             placeholder="e.g. Japan, Germany, Italy"
                                             value={destinationCountry}
-                                            onChangeText={(text) => onUpdate('destinationCountry', text)}
+                                            onChangeText={(text) => handleUpdate('destinationCountry', text)}
                                             placeholderTextColor={themeColors.labelSecondary}
                                         />
                                     </View>

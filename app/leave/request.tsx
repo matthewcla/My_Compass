@@ -1,3 +1,4 @@
+import { SignatureButton } from '@/components/ui/SignatureButton';
 import { WizardStatusBar } from '@/components/wizard/WizardStatusBar';
 import { ReviewSign } from '@/components/wizard/steps/ReviewSign';
 import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
@@ -14,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Alert, Pressable, Text, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- Types & Constants ---
@@ -275,58 +276,60 @@ export default function LeaveRequestScreen() {
                 style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
             />
             <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                    style={{ flex: 1 }}
-                >
-                    <View className="flex-1">
-                        {/* Wizard Header with Close Button */}
-                        <View className="flex-row items-center justify-between bg-slate-900/50">
-                            <View className="flex-1">
-                                <WizardStatusBar currentStep={deck.step} onStepPress={(s) => deck.goTo(s)} />
-                            </View>
+                <View className="flex-1">
+                    {/* Wizard Header with Close Button */}
+                    <View className="flex-row items-center justify-between bg-slate-900/50">
+                        <View className="flex-1">
+                            <WizardStatusBar currentStep={deck.step} onStepPress={(s) => deck.goTo(s)} />
+                        </View>
+                        <Pressable
+                            onPress={handleDiscard}
+                            className="p-4 mr-2"
+                            hitSlop={10}
+                        >
+                            <X size={24} color="#94a3b8" strokeWidth={2} />
+                        </Pressable>
+                    </View>
+
+                    {/* Card Container */}
+                    <View className="flex-1 px-4 pt-4">
+                        {renderCard()}
+                    </View>
+
+                    {/* Footer Navigation */}
+                    <View className="border-t border-white/10 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex-row items-center justify-center gap-4">
+                        {!deck.isFirst && (
                             <Pressable
-                                onPress={handleDiscard}
-                                className="p-4 mr-2"
-                                hitSlop={10}
+                                onPress={deck.back}
+                                className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-slate-800 active:bg-slate-700 border border-slate-700"
                             >
-                                <X size={24} color="#94a3b8" strokeWidth={2} />
+                                <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2 opacity-80" strokeWidth={1.5} />
+                                <Text className="font-bold text-slate-300">Back</Text>
                             </Pressable>
-                        </View>
-
-                        {/* Card Container */}
-                        <View className="flex-1 px-4 pt-4">
-                            {renderCard()}
-                        </View>
-
-                        {/* Footer Navigation */}
-                        <View className="border-t border-white/10 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex-row items-center justify-center gap-4">
-                            {!deck.isFirst && (
-                                <Pressable
-                                    onPress={deck.back}
-                                    className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-slate-800 active:bg-slate-700 border border-slate-700"
-                                >
-                                    <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2 opacity-80" strokeWidth={1.5} />
-                                    <Text className="font-bold text-slate-300">Back</Text>
-                                </Pressable>
-                            )}
-
+                        )}
+                        {deck.isLast ? (
+                            <View className="flex-1 items-center justify-center">
+                                <SignatureButton
+                                    onSign={handleSubmit}
+                                    isSubmitting={isSyncing}
+                                    disabled={!Object.values(verificationChecks).every(v => v)}
+                                />
+                            </View>
+                        ) : (
                             <Pressable
                                 onPress={handleNext}
-                                disabled={isSyncing || (deck.isLast && !Object.values(verificationChecks).every(v => v))}
-                                className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing || (deck.isLast && !Object.values(verificationChecks).every(v => v))
+                                disabled={isSyncing}
+                                className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing
                                     ? 'bg-slate-800 border border-slate-700 opacity-50'
                                     : 'bg-blue-600 active:bg-blue-500 shadow-lg shadow-blue-900/20'
                                     }`}
                             >
-                                <Text className="font-bold text-white mr-2">
-                                    {deck.isLast ? (isSyncing ? 'Submitting...' : 'Sign & Submit') : 'Next'}
-                                </Text>
+                                <Text className="font-bold text-white mr-2">Next</Text>
                                 {!isSyncing && <ArrowRight size={20} color="white" strokeWidth={1.5} />}
                             </Pressable>
-                        </View>
+                        )}
                     </View>
-                </KeyboardAvoidingView>
+                </View>
             </SafeAreaView>
         </View>
     );

@@ -88,11 +88,13 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
                                 <Pressable
                                     key={option.id}
                                     onPress={() => {
-                                        Haptics.selectionAsync();
+                                        Haptics.selectionAsync().catch(() => {
+                                            // Ignore haptics error
+                                        });
                                         onUpdate('rationStatus', option.id);
                                     }}
                                     className={`flex-1 py-3 px-2 rounded-xl items-center justify-center ${isSelected
-                                        ? 'bg-white dark:bg-slate-700 shadow-sm'
+                                        ? 'bg-white dark:bg-slate-700'
                                         : 'bg-transparent'
                                         }`}
                                 >

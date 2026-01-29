@@ -28,14 +28,14 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
 
     return (
         <WizardCard title="Command Coverage">
-            <View className="space-y-6">
+            <View className="gap-6">
 
                 {/* Group 1: Duty Info */}
-                <View className="space-y-3">
+                <View className="gap-3">
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         DUTY INFORMATION
                     </Text>
-                    <View className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 space-y-4">
+                    <View className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 gap-4">
 
                         {/* Duty Section */}
                         <View className="flex-row items-center border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -77,7 +77,7 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
                 </View>
 
                 {/* Group 2: Ration Status */}
-                <View className="space-y-3">
+                <View className="gap-3">
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         RATION STATUS
                     </Text>

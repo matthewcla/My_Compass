@@ -17,11 +17,11 @@ export function ReviewSign({ formData, verificationChecks, onToggleVerification 
     const themeColors = Colors[colorScheme];
 
     return (
-        <View className="space-y-6">
+        <View className="gap-6">
             <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50">
                 <Text className="text-blue-900 dark:text-blue-100 font-bold text-lg mb-4">Summary</Text>
 
-                <View className="space-y-4">
+                <View className="gap-4">
                     <View>
                         <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Dates</Text>
                         <Text className="text-base text-labelPrimary font-medium">{formData.startDate} to {formData.endDate}</Text>

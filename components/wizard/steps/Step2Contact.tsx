@@ -30,7 +30,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
 
     return (
         <WizardCard title="Location & Travel">
-            <View className="space-y-6">
+            <View className="gap-6">
 
                 {/* 0. Location & Legal (Moved from Step 1) */}
                 <View>
@@ -88,7 +88,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                 </View>
 
                 {/* 1. Leave Address */}
-                <View className="space-y-3">
+                <View className="gap-3">
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         LEAVE ADDRESS
                     </Text>
@@ -113,7 +113,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                 </View>
 
                 {/* 2. Leave Phone */}
-                <View className="space-y-3">
+                <View className="gap-3">
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         LEAVE PHONE NUMBER
                     </Text>
@@ -136,7 +136,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                 </View>
 
                 {/* 3. Mode of Travel */}
-                <View className="space-y-3">
+                <View className="gap-3">
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         MODE OF TRAVEL
                     </Text>

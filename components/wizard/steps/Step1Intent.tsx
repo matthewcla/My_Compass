@@ -169,7 +169,7 @@ export function Step1Intent({
 
     return (
         <WizardCard title="Request Details" scrollable={true}>
-            <View className="space-y-6 pb-24">
+            <View className="gap-6 pb-24">
                 {/* 1. Leave Type (unchanged logic, just compact) */}
                 <View>
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Leave Category</Text>
@@ -236,7 +236,7 @@ export function Step1Intent({
                 </View>
 
                 {/* 3. Time & Working Hours Logic */}
-                <View className="space-y-4">
+                <View className="gap-4">
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">Time & Schedule</Text>
 
                     {/* Start Block */}

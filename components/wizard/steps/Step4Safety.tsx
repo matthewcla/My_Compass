@@ -31,21 +31,21 @@ export function Step4Safety({ formData, onUpdate }: Step4SafetyProps) {
 
     return (
         <WizardCard title="Safety & Remarks">
-            <View className="space-y-8">
+            <View className="gap-8">
 
                 {/* Section 1: Emergency Contact */}
-                <View className="space-y-4">
-                    <View className="flex-row items-center space-x-2">
+                <View className="gap-4">
+                    <View className="flex-row items-center gap-2">
                         <UserPlus size={22} color={themeColors.tint} strokeWidth={2} />
                         <Text className="text-lg font-bold text-gray-900 dark:text-white">
                             Emergency Contact
                         </Text>
                     </View>
 
-                    <View className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 space-y-4">
+                    <View className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 gap-4">
 
                         {/* Name */}
-                        <View className="space-y-2">
+                        <View className="gap-2">
                             <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Name</Text>
                             <View className="flex-row items-center bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-3">
                                 <User size={18} color={themeColors.tabIconDefault} className="mr-3" />
@@ -60,7 +60,7 @@ export function Step4Safety({ formData, onUpdate }: Step4SafetyProps) {
                         </View>
 
                         {/* Relationship */}
-                        <View className="space-y-2">
+                        <View className="gap-2">
                             <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Relationship</Text>
                             <View className="flex-row items-center bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-3">
                                 <User size={18} color={themeColors.tabIconDefault} className="mr-3" />
@@ -75,7 +75,7 @@ export function Step4Safety({ formData, onUpdate }: Step4SafetyProps) {
                         </View>
 
                         {/* Phone */}
-                        <View className="space-y-2">
+                        <View className="gap-2">
                             <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Phone Number</Text>
                             <View className="flex-row items-center bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-3">
                                 <Phone size={18} color={themeColors.tabIconDefault} className="mr-3" />
@@ -94,8 +94,8 @@ export function Step4Safety({ formData, onUpdate }: Step4SafetyProps) {
                 </View>
 
                 {/* Section 2: Remarks */}
-                <View className="space-y-4">
-                    <View className="flex-row items-center space-x-2">
+                <View className="gap-4">
+                    <View className="flex-row items-center gap-2">
                         <FileText size={22} color={themeColors.tint} strokeWidth={2} />
                         <Text className="text-lg font-bold text-gray-900 dark:text-white">
                             Member Remarks

@@ -324,22 +324,21 @@ export function Step1Intent({
 
 
                 {/* Compact HUD (Bottom) */}
-                <Animated.View
-                    style={shakeStyle}
-                    className="mt-4 bg-white dark:bg-slate-800 p-4 rounded-2xl flex-row justify-between items-center shadow-sm border border-slate-200 dark:border-slate-700"
-                >
-                    <View>
-                        <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Leave Charge</Text>
-                        <Text className="text-slate-900 dark:text-white font-bold text-lg">
-                            {chargeableDays.toFixed(1)} <Text className="text-sm font-normal text-slate-500 dark:text-slate-400">Days</Text>
-                        </Text>
-                    </View>
-                    <View className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700" />
-                    <View className="items-end">
-                        <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Remaining Balance</Text>
-                        <Text className={`font-bold text-lg ${isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                            {projectedBalance.toFixed(1)}
-                        </Text>
+                <Animated.View style={shakeStyle}>
+                    <View className="mt-4 bg-white dark:bg-slate-800 p-4 rounded-2xl flex-row justify-between items-center shadow-sm border border-slate-200 dark:border-slate-700">
+                        <View>
+                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Leave Charge</Text>
+                            <Text className="text-slate-900 dark:text-white font-bold text-lg">
+                                {chargeableDays.toFixed(1)} <Text className="text-sm font-normal text-slate-500 dark:text-slate-400">Days</Text>
+                            </Text>
+                        </View>
+                        <View className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700" />
+                        <View className="items-end">
+                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Remaining Balance</Text>
+                            <Text className={`font-bold text-lg ${isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                                {projectedBalance.toFixed(1)}
+                            </Text>
+                        </View>
                     </View>
                 </Animated.View>
 

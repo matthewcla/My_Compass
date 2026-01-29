@@ -64,13 +64,13 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                         {/* Destination Country (Conditional) */}
                         {!formData.leaveInConus && (
                             <Animated.View entering={FadeIn} exiting={FadeOut}>
-                                <View className="flex-row items-center p-4 bg-slate-50 dark:bg-slate-900/30">
+                                <View className="flex-row items-center p-4 bg-white dark:bg-slate-900/30">
                                     <View className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 items-center justify-center mr-3">
                                         <Globe2 size={16} className="text-orange-600 dark:text-orange-400" />
                                     </View>
                                     <View className="flex-1">
                                         <View className="flex-row justify-between mb-1">
-                                            <Text className="text-sm font-bold text-slate-700 dark:text-slate-200">Destination Country</Text>
+                                            <Text className="text-sm font-bold text-labelPrimary">Destination Country</Text>
                                             <Text className="text-xs text-orange-600 dark:text-orange-400 font-medium">OCONUS Required</Text>
                                         </View>
                                         <TextInput

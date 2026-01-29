@@ -287,11 +287,11 @@ class SQLiteStorage implements IStorageService {
         id, user_id, start_date, end_date, charge_days, leave_type,
         leave_address, leave_phone_number, emergency_contact,
         duty_section, ration_status, pre_review_checks,
-        mode_of_travel, destination_country, member_remarks,
+        mode_of_travel, destination_country, normal_working_hours, leave_in_conus, member_remarks,
         status, status_history, approval_chain, current_approver_id,
         return_reason, denial_reason, created_at, updated_at, submitted_at,
         last_sync_timestamp, sync_status, local_modified_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
 
     // Encrypt sensitive data
@@ -315,6 +315,8 @@ class SQLiteStorage implements IStorageService {
       request.preReviewChecks ? JSON.stringify(request.preReviewChecks) : null,
       request.modeOfTravel || null,
       request.destinationCountry,
+      request.normalWorkingHours,
+      request.leaveInConus ? 1 : 0,
       request.memberRemarks || null,
       request.status,
       JSON.stringify(request.statusHistory),
@@ -393,6 +395,8 @@ class SQLiteStorage implements IStorageService {
         preReviewChecks: row.pre_review_checks ? JSON.parse(row.pre_review_checks) : undefined,
         modeOfTravel: row.mode_of_travel,
         destinationCountry: row.destination_country,
+        normalWorkingHours: row.normal_working_hours,
+        leaveInConus: Boolean(row.leave_in_conus),
         memberRemarks: row.member_remarks,
         status: row.status,
         statusHistory: JSON.parse(row.status_history),

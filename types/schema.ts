@@ -232,6 +232,8 @@ export const SQLiteTableDefinitions = {
       pre_review_checks TEXT, -- JSON object
       mode_of_travel TEXT,
       destination_country TEXT NOT NULL DEFAULT 'USA',
+      normal_working_hours TEXT DEFAULT '0700-1600',
+      leave_in_conus INTEGER DEFAULT 1,
       member_remarks TEXT,
       status TEXT NOT NULL CHECK(status IN ('draft', 'pending', 'approved', 'denied', 'returned', 'cancelled')),
       status_history TEXT NOT NULL, -- JSON array
@@ -280,6 +282,25 @@ async function runMigrations(db: { execAsync: (sql: string) => Promise<void> }):
         // Column already exists - this is expected for new databases
         if (!e.message?.includes('duplicate column name')) {
             console.error('[DB Migration] Error adding preferences column:', e);
+        }
+    }
+
+    // Migration 2: Add normal_working_hours and leave_in_conus to leave_requests table
+    try {
+        await db.execAsync(`ALTER TABLE leave_requests ADD COLUMN normal_working_hours TEXT DEFAULT '0700-1600';`);
+        console.log('[DB Migration] Added normal_working_hours column to leave_requests table');
+    } catch (e: any) {
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding normal_working_hours column:', e);
+        }
+    }
+
+    try {
+        await db.execAsync(`ALTER TABLE leave_requests ADD COLUMN leave_in_conus INTEGER DEFAULT 1;`);
+        console.log('[DB Migration] Added leave_in_conus column to leave_requests table');
+    } catch (e: any) {
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding leave_in_conus column:', e);
         }
     }
 }
@@ -541,6 +562,8 @@ export const LeaveRequestSchema = z.object({
     // Transportation
     modeOfTravel: z.string().optional(), // POV, Commercial Air, etc.
     destinationCountry: z.string().default('USA'),
+    normalWorkingHours: z.string().default('0700-1600'),
+    leaveInConus: z.boolean().default(true),
 
     // Remarks
     memberRemarks: z.string().optional(),

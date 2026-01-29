@@ -193,7 +193,7 @@ export function Step1Intent({
                 {/* 2. Premium Calendar */}
                 <View>
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Select Dates</Text>
-                    <View className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <View className="bg-white dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
                         <Calendar
                             current={startDate || undefined}
                             onDayPress={handleDayPress}
@@ -204,7 +204,7 @@ export function Step1Intent({
                                 // In a real app we'd fill the days in between
                             }}
                             theme={{
-                                calendarBackground: isDark ? '#1e293b' : '#ffffff',
+                                calendarBackground: isDark ? themeColors.background : '#ffffff',
                                 textSectionTitleColor: isDark ? '#94a3b8' : '#b6c1cd',
                                 selectedDayBackgroundColor: themeColors.tint,
                                 selectedDayTextColor: '#ffffff',
@@ -241,7 +241,7 @@ export function Step1Intent({
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">Time & Schedule</Text>
 
                     {/* Start Block */}
-                    <View className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <View className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                         <View className="flex-row items-center mb-3">
                             <View className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-md mr-2">
                                 <Clock size={16} className="text-blue-600 dark:text-blue-400" />
@@ -274,7 +274,7 @@ export function Step1Intent({
                     </View>
 
                     {/* End Block */}
-                    <View className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <View className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                         <View className="flex-row items-center mb-3">
                             <View className="bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md mr-2">
                                 <Clock size={16} className="text-orange-600 dark:text-orange-400" />
@@ -348,7 +348,7 @@ export function Step1Intent({
                     animationType="fade"
                     onRequestClose={() => setShowTimePicker(false)}
                 >
-                    <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }} onPress={() => setShowTimePicker(false)}>
+                    <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }} onPress={() => setShowTimePicker(false)}>
                         <View className="bg-white dark:bg-slate-800 pb-8 pt-4 rounded-t-3xl">
                             <View className="flex-row justify-between px-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
                                 <Text className="text-lg font-bold text-slate-900 dark:text-white">
@@ -379,7 +379,7 @@ export function Step1Intent({
                 onRequestClose={() => setHoursField(null)}
             >
                 <Pressable
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}
                     onPress={() => setHoursField(null)}
                 >
                     <View className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
@@ -410,7 +410,7 @@ export function Step1Intent({
                                             }
                                         }}
                                         className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-500'
+                                            ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
                                             : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
                                             }`}
                                     >

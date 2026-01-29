@@ -35,27 +35,27 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         DUTY INFORMATION
                     </Text>
-                    <View className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 gap-4">
+                    <View className="bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700 gap-4">
 
                         {/* Duty Section */}
-                        <View className="flex-row items-center border-b border-gray-200 dark:border-gray-700 pb-2">
+                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 pb-2">
                             <Briefcase size={20} color={themeColors.tint} className="mr-3" strokeWidth={2} />
                             <TextInput
-                                className="flex-1 text-base text-gray-900 dark:text-white"
+                                className="flex-1 text-base text-labelPrimary dark:text-white"
                                 placeholder="Duty Section (e.g. N1 Admin)"
-                                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                placeholderTextColor={Colors.gray[500]}
                                 value={formData.dutySection}
                                 onChangeText={(text) => handleTextChange('dutySection', text)}
                             />
                         </View>
 
                         {/* Dept/Div */}
-                        <View className="flex-row items-center border-b border-gray-200 dark:border-gray-700 pb-2">
+                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 pb-2">
                             <Building2 size={20} color={themeColors.tint} className="mr-3" strokeWidth={2} />
                             <TextInput
-                                className="flex-1 text-base text-gray-900 dark:text-white"
+                                className="flex-1 text-base text-labelPrimary dark:text-white"
                                 placeholder="Dept / Div"
-                                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                placeholderTextColor={Colors.gray[500]}
                                 value={formData.deptDiv}
                                 onChangeText={(text) => handleTextChange('deptDiv', text)}
                             />
@@ -65,9 +65,9 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
                         <View className="flex-row items-center">
                             <Phone size={20} color={themeColors.tint} className="mr-3" strokeWidth={2} />
                             <TextInput
-                                className="flex-1 text-base text-gray-900 dark:text-white"
+                                className="flex-1 text-base text-labelPrimary dark:text-white"
                                 placeholder="Duty Phone"
-                                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                placeholderTextColor={Colors.gray[500]}
                                 value={formData.dutyPhone}
                                 onChangeText={(text) => handleTextChange('dutyPhone', text)}
                                 keyboardType="phone-pad"
@@ -81,7 +81,7 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
                     <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
                         RATION STATUS
                     </Text>
-                    <View className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-2 border border-slate-100 dark:border-slate-700 flex-row">
+                    <View className="bg-inputBackground rounded-2xl p-2 border border-slate-200 dark:border-slate-700 flex-row">
                         {RATION_OPTIONS.map((option) => {
                             const isSelected = formData.rationStatus === option.id;
                             return (
@@ -94,7 +94,7 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
                                         onUpdate('rationStatus', option.id);
                                     }}
                                     className={`flex-1 py-3 px-2 rounded-xl items-center justify-center ${isSelected
-                                        ? 'bg-white dark:bg-slate-700'
+                                        ? 'bg-white dark:bg-slate-700 shadow-sm'
                                         : 'bg-transparent'
                                         }`}
                                 >

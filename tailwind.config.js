@@ -22,6 +22,10 @@ module.exports = {
         systemBackground: "rgb(var(--color-background) / <alpha-value>)",
         labelPrimary: "rgb(var(--color-label-primary) / <alpha-value>)",
         labelSecondary: "rgb(var(--color-label-secondary) / <alpha-value>)",
+        cardBackground: "rgb(var(--color-card-background) / <alpha-value>)",
+        wizardCardBackground: "rgb(var(--color-wizard-card-background) / <alpha-value>)",
+        inputBackground: "rgb(var(--color-input-background) / <alpha-value>)",
+        accentText: "rgb(var(--color-accent-text) / <alpha-value>)",
       },
       fontFamily: {
         sans: ['System', 'Inter', 'Roboto', 'sans-serif'],

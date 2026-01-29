@@ -27,9 +27,9 @@ export function WizardCard({
             style={{ flex: 1 }}
         >
             <GlassView
-                intensity={isDark ? 30 : 50}
+                intensity={isDark ? 30 : 90}
                 tint={isDark ? 'dark' : 'light'}
-                className="flex-1 mx-4 my-2 rounded-2xl overflow-hidden border border-white/20 dark:border-white/10"
+                className="flex-1 mx-4 my-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 md:mx-auto md:w-full md:max-w-2xl bg-wizardCardBackground/50 dark:bg-wizardCardBackground"
             >
                 <View style={{ flex: 1 }}>
                     {/* Header Removed */
@@ -48,7 +48,7 @@ export function WizardCard({
                         >
                             <ScrollView
                                 className="flex-1"
-                                contentContainerClassName="p-6"
+                                contentContainerClassName="p-6 web:p-8"
                                 showsVerticalScrollIndicator={false}
                                 keyboardShouldPersistTaps="handled"
                             >
@@ -63,7 +63,7 @@ export function WizardCard({
 
                     {/* Sticky Footer */}
                     {footer && (
-                        <View className="px-6 py-5 bg-gray-50/50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-gray-800/50">
+                        <View className="px-6 py-5 bg-cardBackground dark:bg-slate-900/50 border-t border-gray-100 dark:border-gray-800/50">
                             {footer}
                         </View>
                     )}

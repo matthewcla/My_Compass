@@ -5,32 +5,62 @@
 @layer base {
   :root {
     /* System Colors - Light Mode */
-    --color-system-gray: 142 142 147; /* #8E8E93 */
-    --color-system-gray6: 242 242 247; /* #F2F2F7 */
-    --color-system-blue: 0 122 255; /* #007AFF */
+    --color-system-gray: 142 142 147;
+    /* #8E8E93 */
+    --color-system-gray6: 242 242 247;
+    /* #F2F2F7 */
+    --color-system-blue: 0 122 255;
+    /* #007AFF */
 
     /* Semantic Colors - Light Mode */
-    --color-background: 255 255 255; /* #FFFFFF */
-    --color-foreground: 0 0 0; /* #000000 */
+    --color-background: 255 255 255;
+    /* #FFFFFF */
+    --color-foreground: 0 0 0;
+    /* #000000 */
     --color-label-primary: 0 0 0;
-    --color-label-secondary: 60 60 67; /* #3C3C43 */
+    --color-label-secondary: 60 60 67;
+    /* #3C3C43 */
+    --color-card-background: 255 255 255;
+    /* #FFFFFF */
+    --color-wizard-card-background: 255 255 255;
+    /* #FFFFFF */
+    --color-input-background: 248 250 252;
+    /* #F8FAFC */
+    --color-accent-text: 0 122 255;
+    /* #007AFF */
 
     /* Brand Colors */
-    --color-navy-blue: 10 22 40; /* #0A1628 */
-    --color-navy-gold: 201 162 39; /* #C9A227 */
+    --color-navy-blue: 10 22 40;
+    /* #0A1628 */
+    --color-navy-gold: 201 162 39;
+    /* #C9A227 */
   }
 
   .dark {
     /* System Colors - Dark Mode */
-    --color-system-gray: 142 142 147; /* #8E8E93 */
-    --color-system-gray6: 28 28 30; /* #1C1C1E */
-    --color-system-blue: 10 132 255; /* #0A84FF */
+    --color-system-gray: 142 142 147;
+    /* #8E8E93 */
+    --color-system-gray6: 28 28 30;
+    /* #1C1C1E */
+    --color-system-blue: 10 132 255;
+    /* #0A84FF */
 
     /* Semantic Colors - Dark Mode */
-    --color-background: 0 0 0; /* #000000 */
-    --color-foreground: 255 255 255; /* #FFFFFF */
+    --color-background: 0 0 0;
+    /* #000000 */
+    --color-foreground: 255 255 255;
+    /* #FFFFFF */
     --color-label-primary: 255 255 255;
-    --color-label-secondary: 235 235 245; /* #EBEBF5 */
+    --color-label-secondary: 235 235 245;
+    /* #EBEBF5 */
+    --color-card-background: 30 41 59;
+    /* Slate 800 */
+    --color-wizard-card-background: 30 41 59;
+    /* Slate 800 */
+    --color-input-background: 15 23 42;
+    /* Slate 900 */
+    --color-accent-text: 255 255 255;
+    /* #FFFFFF */
 
     /* Brand Colors - Dark Mode */
     --color-navy-blue: 10 22 40;
@@ -40,15 +70,29 @@
   @media (prefers-color-scheme: dark) {
     :root {
       /* System Colors - Dark Mode */
-      --color-system-gray: 142 142 147; /* #8E8E93 */
-      --color-system-gray6: 28 28 30; /* #1C1C1E */
-      --color-system-blue: 10 132 255; /* #0A84FF */
+      --color-system-gray: 142 142 147;
+      /* #8E8E93 */
+      --color-system-gray6: 28 28 30;
+      /* #1C1C1E */
+      --color-system-blue: 10 132 255;
+      /* #0A84FF */
 
       /* Semantic Colors - Dark Mode */
-      --color-background: 0 0 0; /* #000000 */
-      --color-foreground: 255 255 255; /* #FFFFFF */
+      --color-background: 0 0 0;
+      /* #000000 */
+      --color-foreground: 255 255 255;
+      /* #FFFFFF */
       --color-label-primary: 255 255 255;
-      --color-label-secondary: 235 235 245; /* #EBEBF5 */
+      --color-label-secondary: 235 235 245;
+      /* #EBEBF5 */
+      --color-card-background: 30 41 59;
+      /* Slate 800 */
+      --color-wizard-card-background: 30 41 59;
+      /* Slate 800 */
+      --color-input-background: 15 23 42;
+      /* Slate 900 */
+      --color-accent-text: 255 255 255;
+      /* #FFFFFF */
 
       /* Brand Colors - Dark Mode */
       --color-navy-blue: 10 22 40;
@@ -61,9 +105,11 @@
   .bg-card {
     @apply bg-white dark:bg-slate-900;
   }
+
   .text-primary {
     @apply text-slate-900 dark:text-slate-50;
   }
+
   .border-subtle {
     @apply border-slate-100 dark:border-slate-800;
   }

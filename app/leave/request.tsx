@@ -16,7 +16,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Alert, Pressable, Text, View, useColorScheme } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // --- Types & Constants ---
 
@@ -27,6 +27,7 @@ const TOTAL_STEPS = 5;
 export default function LeaveRequestScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
+    const insets = useSafeAreaInsets();
     const router = useRouter();
     const submitRequest = useLeaveStore((state) => state.submitRequest);
     const discardDraft = useLeaveStore((state) => state.discardDraft);
@@ -300,15 +301,17 @@ export default function LeaveRequestScreen() {
     };
 
     return (
-        <View className="flex-1 bg-slate-950">
-            <LinearGradient
-                colors={['#0f172a', '#020617']} // slate-900 to slate-950
-                style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
-            />
+        <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+            {colorScheme === 'dark' && (
+                <LinearGradient
+                    colors={['#0f172a', '#020617']} // slate-900 to slate-950
+                    style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+                />
+            )}
             <SafeAreaView style={{ flex: 1 }} edges={['top']}>
                 <View className="flex-1">
                     {/* Wizard Header with Close Button */}
-                    <View className="flex-row items-center justify-between bg-slate-900/50">
+                    <View className="flex-row items-center justify-between bg-white/80 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10">
                         <View className="flex-1">
                             <WizardStatusBar currentStep={deck.step} onStepPress={(s) => deck.goTo(s)} />
                         </View>
@@ -316,16 +319,19 @@ export default function LeaveRequestScreen() {
                     </View>
 
                     {/* Card Container */}
-                    <View className="flex-1 px-4 pt-4">
+                    <View className="flex-1 native:px-4 native:pt-4">
                         {renderCard()}
                     </View>
 
                     {/* Footer Navigation */}
-                    <View className="border-t border-white/10 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex-row items-center justify-between gap-3">
+                    <View
+                        className="border-t border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-6 pt-4 flex-row items-center justify-between gap-3"
+                        style={{ paddingBottom: Math.max(insets.bottom, 20) }}
+                    >
                         {/* Persistent Exit (X) Button */}
                         <Pressable
                             onPress={handleExit}
-                            className="w-14 items-center justify-center p-4 rounded-xl bg-slate-800 active:bg-slate-700 border border-slate-700"
+                            className="w-14 items-center justify-center p-4 rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
                             accessibilityLabel="Exit Wizard"
                         >
                             <X size={24} color={themeColors.labelSecondary} strokeWidth={2} />
@@ -336,10 +342,10 @@ export default function LeaveRequestScreen() {
                             {!deck.isFirst && (
                                 <Pressable
                                     onPress={deck.back}
-                                    className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-slate-800 active:bg-slate-700 border border-slate-700"
+                                    className="w-14 items-center justify-center p-4 rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
+                                    accessibilityLabel="Go Back"
                                 >
-                                    <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2 opacity-80" strokeWidth={1.5} />
-                                    <Text className="font-bold text-slate-300">Back</Text>
+                                    <ArrowLeft size={24} color={themeColors.labelSecondary} strokeWidth={2} />
                                 </Pressable>
                             )}
 

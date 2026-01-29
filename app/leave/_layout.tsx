@@ -6,10 +6,8 @@ export default function LeaveLayout() {
             <Stack.Screen
                 name="request"
                 options={{
-                    headerShown: true, // Allow Global Header to pass through (controlled by _layout above or global config)
-                    headerTitle: '', // Let GlobalHeader handle content via store
-                    headerTransparent: true, // We render our own via GlobalHeader usually
-                    // Removing modal presentation to feel like "Zero Latency" flow
+                    headerShown: false,
+                    presentation: 'card',
                 }}
             />
             <Stack.Screen

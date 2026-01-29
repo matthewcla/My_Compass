@@ -1,7 +1,8 @@
 
+import Colors from '@/constants/Colors';
 import { Calendar, CheckCircle2, MapPin, Ship } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, useColorScheme } from 'react-native';
 
 interface WizardStatusBarProps {
     currentStep: number;
@@ -17,6 +18,9 @@ const STEPS = [
 ];
 
 export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarProps) {
+    const colorScheme = useColorScheme() ?? 'light';
+    const isDark = colorScheme === 'dark';
+
     return (
         <View className="flex-row items-center justify-between px-8 pt-4 pb-2">
             {STEPS.map((step, index) => {
@@ -24,6 +28,13 @@ export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarPro
                 const Icon = step.icon;
                 const isActive = index === currentStep;
                 const isCompleted = index < currentStep;
+
+                // Determine Icon Color based on state and theme (Semantic Colors)
+                const getIconColor = () => {
+                    if (isActive) return isDark ? Colors.blue[500] : Colors.blue[600];
+                    if (isCompleted) return isDark ? Colors.green[500] : Colors.green[600];
+                    return isDark ? Colors.gray[500] : Colors.gray[400];
+                };
 
                 return (
                     <React.Fragment key={step.id}>
@@ -41,14 +52,14 @@ export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarPro
                                 }`}>
                                 <Icon
                                     size={18}
-                                    color={isActive ? '#2563EB' : isCompleted ? '#16A34A' : '#9CA3AF'}
+                                    color={getIconColor()}
                                     strokeWidth={isActive ? 2.5 : 2}
                                 />
                             </View>
                             <Text
                                 className={`text-[10px] font-bold mt-1 ${isActive ? 'text-blue-600 dark:text-blue-400' :
                                     isCompleted ? 'text-green-600 dark:text-green-500' :
-                                        'text-slate-400'
+                                        'text-slate-400 dark:text-gray-500'
                                     }`}
                             >{step.label}</Text>
                         </Pressable>

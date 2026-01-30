@@ -45,6 +45,8 @@ export const generateDraftRequest = (userId: string): LeaveRequest => {
         // Transportation
         modeOfTravel: undefined,
         destinationCountry: 'USA',
+        normalWorkingHours: '0700-1600',
+        leaveInConus: true,
 
         // Remarks
         memberRemarks: undefined,

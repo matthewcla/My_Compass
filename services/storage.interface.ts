@@ -4,6 +4,7 @@ import {
   Billet,
   LeaveBalance,
   LeaveRequest,
+  LeaveRequestDefaults,
 } from '@/types/schema';
 import { User } from '@/types/user';
 
@@ -40,6 +41,10 @@ export interface IStorageService {
   // Leave Balance
   saveLeaveBalance(balance: LeaveBalance): Promise<void>;
   getLeaveBalance(userId: string): Promise<LeaveBalance | null>;
+
+  // Leave Defaults
+  saveLeaveDefaults(userId: string, defaults: LeaveRequestDefaults): Promise<void>;
+  getLeaveDefaults(userId: string): Promise<LeaveRequestDefaults | null>;
 
   // Dashboard
   saveDashboardCache(userId: string, data: DashboardData): Promise<void>;

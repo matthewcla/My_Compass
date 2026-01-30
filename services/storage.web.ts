@@ -6,7 +6,8 @@ import {
   Application,
   Billet,
   LeaveBalance,
-  LeaveRequest
+  LeaveRequest,
+  LeaveRequestDefaults
 } from '@/types/schema';
 import { User } from '@/types/user';
 import { decryptData, encryptData } from '../lib/encryption';
@@ -145,6 +146,19 @@ class WebStorage implements IStorageService {
 
   async getLeaveBalance(userId: string): Promise<LeaveBalance | null> {
     const data = localStorage.getItem(this.LEAVE_BALANCE_KEY + userId);
+    return data ? JSON.parse(decryptData(data)) : null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Leave Defaults
+  // ---------------------------------------------------------------------------
+
+  async saveLeaveDefaults(userId: string, defaults: LeaveRequestDefaults): Promise<void> {
+    localStorage.setItem('my_compass_leave_defaults_' + userId, encryptData(JSON.stringify(defaults)));
+  }
+
+  async getLeaveDefaults(userId: string): Promise<LeaveRequestDefaults | null> {
+    const data = localStorage.getItem('my_compass_leave_defaults_' + userId);
     return data ? JSON.parse(decryptData(data)) : null;
   }
 

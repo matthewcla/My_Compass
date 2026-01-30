@@ -15,10 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Alert, Modal, Pressable, Text, View, useColorScheme } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-
-// --- Types & Constants ---
 
 // --- Types & Constants ---
 
@@ -45,53 +43,23 @@ export default function LeaveRequestScreen() {
 
     // Resume/Draft tracking
     const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+    const [showExitModal, setShowExitModal] = useState(false);
 
-    const handleExit = async () => {
-        Alert.alert(
-            "Save Draft?",
-            "Would you like to save this request as a draft before exiting?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Discard",
-                    style: "destructive",
-                    onPress: async () => {
-                        if (currentDraftId) {
-                            await discardDraft(currentDraftId);
-                        }
-                        router.back();
-                    }
-                },
-                {
-                    text: "Save & Exit",
-                    onPress: () => {
-                        // Drafts are auto-saved in the store logic (assuming auto-save or simple persistence),
-                        // but if we need an explicit 'save' action, we'd trigger it here.
-                        // For now, based on typical draft patterns in this app, we just exit, 
-                        // as the form data state is local unless persisted.
-                        // Wait - checking codebase context:
-                        // 'leaveRequests' in store seems to hold drafts? 
-                        // The user prompt implies we CAN save.
-                        // Use existing 'status: draft' logic or just back out?
-                        // If we simply back out, is it saved?
-                        // "Make the control persistent in each step of leave drafting"
-                        // I'll assume for now simply backing out keeps the state if it WAS a draft,
-                        // or effectively 'pauses' it. 
-                        // However, strictly speaking, we might need to upsert a draft here.
-                        // Given I don't see an explicit 'saveDraft' function imported, 
-                        // and `discardDraft` exists...
-                        // I will stick to router.back() for 'Save' effectively leaving it 'as is' in memory if using a persist store,
-                        // or technically 'abandoning' if not persisted.
-                        // Re-reading `useEffect` on mount: it checks `leaveRequests` for drafts.
-                        // So drafts must be saved to `leaveRequests`.
-                        // I should probably ensure the current state is saved.
-                        // BUT, for this task, I am just wiring the UI. 
-                        // I will just router.back() for "Save" which implies "Don't Delete".
-                        router.back();
-                    }
-                }
-            ]
-        );
+    const handleExit = () => {
+        setShowExitModal(true);
+    };
+
+    const confirmExit = async (action: 'discard' | 'save') => {
+        setShowExitModal(false);
+        if (action === 'discard') {
+            if (currentDraftId) {
+                await discardDraft(currentDraftId);
+            }
+            router.back();
+        } else {
+            // Save & Exit (default behavior: back out, store persists state)
+            router.back();
+        }
     };
 
     // Check for draft on mount
@@ -374,6 +342,53 @@ export default function LeaveRequestScreen() {
                     </View>
                 </View>
             </SafeAreaView>
+
+            {/* Exit Confirmation Modal */}
+            <Modal
+                transparent
+                visible={showExitModal}
+                animationType="fade"
+                onRequestClose={() => setShowExitModal(false)}
+            >
+                <View className="flex-1 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
+                    <View className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+                        <View className="p-6 items-center">
+                            <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
+                                Save Draft?
+                            </Text>
+                            <Text className="text-slate-500 dark:text-slate-400 text-center mb-6">
+                                Would you like to save this request as a draft before exiting?
+                            </Text>
+
+                            <View className="w-full gap-3">
+                                {/* Save & Exit */}
+                                <Pressable
+                                    onPress={() => confirmExit('save')}
+                                    className="w-full py-3 bg-blue-600 rounded-xl items-center active:bg-blue-700"
+                                >
+                                    <Text className="text-white font-semibold">Save & Exit</Text>
+                                </Pressable>
+
+                                {/* Discard */}
+                                <Pressable
+                                    onPress={() => confirmExit('discard')}
+                                    className="w-full py-3 bg-red-50 dark:bg-red-900/20 rounded-xl items-center active:bg-red-100 dark:active:bg-red-900/30"
+                                >
+                                    <Text className="text-red-600 dark:text-red-400 font-semibold">Discard</Text>
+                                </Pressable>
+
+                                {/* Cancel */}
+                                <Pressable
+                                    onPress={() => setShowExitModal(false)}
+                                    className="w-full py-3 mt-2 items-center"
+                                >
+                                    <Text className="text-slate-500 dark:text-slate-400 font-medium">Cancel</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }

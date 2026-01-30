@@ -26,7 +26,7 @@ type SpokeConfig = {
 
 const SPOKE_CONFIG: Record<string, SpokeConfig> = {
     '(assignment)': {
-        primary: { label: 'Explore', route: '/(assignment)/assignments', icon: Compass },
+        primary: { label: 'Discover', route: '/(assignment)/assignments', icon: Compass },
         secondary: { label: 'Cycle', route: '/(assignment)/cycle', icon: Target },
     },
     '(pcs)': {

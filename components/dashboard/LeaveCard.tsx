@@ -139,7 +139,7 @@ export function LeaveCard({ balance, requests = [], onPressRequest, onQuickReque
                                         </Pressable>
                                         <Pressable
                                             onPress={onQuickRequest}
-                                            className="px-3 py-2 rounded-lg bg-blue-600 flex-row items-center gap-1.5"
+                                            className="px-3 py-2 rounded-lg bg-blue-600 dark:bg-blue-500 flex-row items-center gap-1.5"
                                         >
                                             <Plus size={12} color="white" />
                                             <Text className="text-xs font-bold text-white">New</Text>

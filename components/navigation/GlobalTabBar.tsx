@@ -156,7 +156,7 @@ export default function GlobalTabBar() {
                     elevation: 5,
                 })
             }}
-            className={`flex-row bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 ${isHubMode ? 'justify-around' : ''}`}
+            className={`flex-row w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 ${isHubMode ? 'justify-around' : ''}`}
         >
             {/* 1. HOME (Fixed) */}
             {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox'))}

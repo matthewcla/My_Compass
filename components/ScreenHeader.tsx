@@ -51,7 +51,7 @@ export function ScreenHeader({
         <View className="z-50">
             <View
                 style={{
-                    paddingTop: (withSafeArea ? insets.top : 0) + (isInline ? 8 : 12),
+                    paddingTop: (withSafeArea ? Math.max(insets.top, 20) : 0) + (isInline ? 8 : 12),
                     paddingHorizontal: 16,
                     paddingBottom: isInline ? 8 : 12
                 }}

@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
 import { AccountDrawer } from '@/components/AccountDrawer';
+import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
@@ -93,10 +94,12 @@ export default function RootLayout() {
     setIsLayoutReady(true);
   }, []);
 
+  const colorScheme = useColorScheme();
+
   return (
     <SafeAreaProvider>
       <SessionProvider>
-        <StatusBar style="auto" />
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
         <View
           className="flex-1 bg-white dark:bg-black"
           onLayout={onLayoutRootView}

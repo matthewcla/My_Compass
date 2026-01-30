@@ -3,6 +3,7 @@ import { storage } from '@/services/storage';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import {
     LeaveRequest,
+    LeaveRequestDefaults,
     MyAdminState,
     Step1IntentSchema,
     Step2ContactSchema,
@@ -31,6 +32,16 @@ interface LeaveActions {
      * Fetch leave data (balance) from API and populate store.
      */
     fetchLeaveData: (userId: string) => Promise<void>;
+
+    /**
+     * Fetch user defaults for leave requests.
+     */
+    fetchUserDefaults: (userId: string) => Promise<void>;
+
+    /**
+     * Generate a quick draft based on smart defaults.
+     */
+    generateQuickDraft: (type: 'weekend' | 'standard', userId: string) => LeaveRequest;
 
     /**
      * Submit a leave request with optimistic updates.
@@ -66,6 +77,7 @@ const INITIAL_STATE: MyAdminState = {
     leaveBalance: null,
     leaveRequests: {},
     userLeaveRequestIds: [],
+    userDefaults: null,
     lastBalanceSyncAt: null,
     isSyncingBalance: false,
     isSyncingRequests: false,
@@ -107,6 +119,77 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         }
     },
 
+    fetchUserDefaults: async (userId: string) => {
+        try {
+            const defaults = await storage.getLeaveDefaults(userId);
+            set({ userDefaults: defaults });
+        } catch (error) {
+            console.error('Failed to fetch user defaults', error);
+        }
+    },
+
+    generateQuickDraft: (type: 'weekend' | 'standard', userId: string) => {
+        const state = get();
+        const defaults = state.userDefaults;
+        const now = new Date();
+        const draftId = generateUUID();
+
+        let startDate = '';
+        let endDate = '';
+        // Mock calculation for charge days, real logic would use a utility
+        const chargeDays = 0;
+
+        if (type === 'weekend') {
+            // Next Friday logic
+            // (5 - day + 7) % 7. If 0 (Friday), use next week? Or today?
+            // "Next Friday" usually means upcoming Friday.
+            const daysUntilFriday = (5 - now.getDay() + 7) % 7;
+            const nextFriday = new Date(now);
+            nextFriday.setDate(now.getDate() + daysUntilFriday);
+            nextFriday.setHours(16, 0, 0, 0); // 16:00
+
+            const followingMonday = new Date(nextFriday);
+            followingMonday.setDate(nextFriday.getDate() + 3);
+            followingMonday.setHours(7, 0, 0, 0); // 07:00
+
+            startDate = nextFriday.toISOString();
+            endDate = followingMonday.toISOString();
+        }
+
+        const draft: LeaveRequest = {
+            id: draftId,
+            userId,
+            startDate,
+            endDate,
+            chargeDays,
+            leaveType: 'annual',
+            leaveAddress: defaults?.leaveAddress || '',
+            leavePhoneNumber: defaults?.leavePhoneNumber || '',
+            emergencyContact: defaults?.emergencyContact,
+            dutySection: defaults?.dutySection,
+            deptDiv: defaults?.deptDiv,
+            dutyPhone: defaults?.dutyPhone,
+            rationStatus: defaults?.rationStatus,
+            modeOfTravel: 'POV',
+            destinationCountry: 'USA',
+            normalWorkingHours: '0700-1600',
+            leaveInConus: true,
+            status: 'draft',
+            statusHistory: [{
+                status: 'draft',
+                timestamp: new Date().toISOString(),
+                comments: 'Generated Quick Draft',
+            }],
+            approvalChain: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            lastSyncTimestamp: new Date().toISOString(),
+            syncStatus: 'pending_upload',
+        };
+
+        return draft;
+    },
+
     submitRequest: async (payload: CreateLeaveRequestPayload, userId: string) => {
         set({ isSyncingRequests: true });
 
@@ -115,6 +198,17 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         // -------------------------------------------------------------------------
         const tempId = generateUUID();
         const now = new Date().toISOString();
+
+        // Extract defaults from payload
+        const newDefaults: LeaveRequestDefaults = {
+            leaveAddress: payload.leaveAddress,
+            leavePhoneNumber: payload.leavePhoneNumber,
+            emergencyContact: payload.emergencyContact,
+            dutySection: payload.dutySection,
+            deptDiv: payload.deptDiv,
+            dutyPhone: payload.dutyPhone,
+            rationStatus: payload.rationStatus,
+        };
 
         // Create optimistic request object
         // Note: We need to map payload to full LeaveRequest schema
@@ -131,6 +225,8 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             emergencyContact: payload.emergencyContact,
             modeOfTravel: payload.modeOfTravel,
             destinationCountry: payload.destinationCountry,
+            normalWorkingHours: '0700-1600',
+            leaveInConus: payload.leaveInConus,
             memberRemarks: payload.memberRemarks,
             status: 'pending', // Optimistically assume it goes to pending
             statusHistory: [{
@@ -145,20 +241,22 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             syncStatus: 'pending_upload',
         };
 
-        // Update Store
+        // Update Store (Requests + Defaults)
         set((state) => ({
             leaveRequests: {
                 ...state.leaveRequests,
                 [tempId]: optimisticRequest,
             },
             userLeaveRequestIds: [...state.userLeaveRequestIds, tempId],
+            userDefaults: newDefaults,
         }));
 
-        // Persist Optimistic State
+        // Persist Optimistic State & Defaults
         try {
             await storage.saveLeaveRequest(optimisticRequest);
+            await storage.saveLeaveDefaults(userId, newDefaults);
         } catch (e) {
-            console.error('Failed to save optimistic leave request to storage', e);
+            console.error('Failed to save optimistic leave request or defaults to storage', e);
         }
 
         try {

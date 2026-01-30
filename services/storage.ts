@@ -10,6 +10,8 @@ import {
   LeaveBalance,
   LeaveBalanceSchema,
   LeaveRequest,
+  LeaveRequestDefaults,
+  LeaveRequestDefaultsSchema,
   LeaveRequestSchema
 } from '@/types/schema';
 import { User, UserSchema } from '@/types/user';
@@ -481,6 +483,45 @@ class SQLiteStorage implements IStorageService {
   }
 
   // ---------------------------------------------------------------------------
+  // Leave Defaults
+  // ---------------------------------------------------------------------------
+
+  async saveLeaveDefaults(userId: string, defaults: LeaveRequestDefaults): Promise<void> {
+    const db = await this.getDB();
+    const serialized = JSON.stringify(defaults);
+    const encrypted = encryptData(serialized);
+    const now = new Date().toISOString();
+
+    const sql = `
+      INSERT OR REPLACE INTO leave_defaults (
+        user_id, data, last_sync_timestamp, sync_status
+      ) VALUES (?, ?, ?, ?);
+    `;
+
+    await db.runAsync(
+      sql,
+      userId,
+      encrypted,
+      now,
+      'synced'
+    );
+  }
+
+  async getLeaveDefaults(userId: string): Promise<LeaveRequestDefaults | null> {
+    const db = await this.getDB();
+    try {
+      const result = await db.getFirstAsync<any>('SELECT * FROM leave_defaults WHERE user_id = ?', userId);
+      if (!result) return null;
+
+      const decrypted = decryptData(result.data);
+      const parsed = JSON.parse(decrypted);
+      return LeaveRequestDefaultsSchema.parse(parsed);
+    } catch (error) {
+      throw new DataIntegrityError(`Failed to parse LeaveDefaults for user ${userId}`, error);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Dashboard
   // ---------------------------------------------------------------------------
 
@@ -535,6 +576,7 @@ class MockStorage implements IStorageService {
   private applications = new Map<string, Application>();
   private leaveRequests = new Map<string, LeaveRequest>();
   private leaveBalances = new Map<string, LeaveBalance>();
+  private leaveDefaults = new Map<string, LeaveRequestDefaults>();
   private dashboardCache = new Map<string, DashboardData>();
 
   async init(): Promise<void> {
@@ -591,6 +633,14 @@ class MockStorage implements IStorageService {
   }
   async getLeaveBalance(userId: string): Promise<LeaveBalance | null> {
     return this.leaveBalances.get(userId) || null;
+  }
+
+  // Leave Defaults
+  async saveLeaveDefaults(userId: string, defaults: LeaveRequestDefaults): Promise<void> {
+    this.leaveDefaults.set(userId, defaults);
+  }
+  async getLeaveDefaults(userId: string): Promise<LeaveRequestDefaults | null> {
+    return this.leaveDefaults.get(userId) || null;
   }
 
   // Dashboard

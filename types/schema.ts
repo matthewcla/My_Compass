@@ -253,6 +253,16 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_leave_requests_user_id ON leave_requests(user_id);
     CREATE INDEX IF NOT EXISTS idx_leave_requests_status ON leave_requests(status);
   `,
+
+    leave_defaults: `
+    CREATE TABLE IF NOT EXISTS leave_defaults (
+      user_id TEXT PRIMARY KEY,
+      data TEXT NOT NULL, -- Encrypted JSON blob
+      last_sync_timestamp TEXT NOT NULL,
+      sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+  `,
 } as const;
 
 /**
@@ -627,6 +637,7 @@ export interface MyAdminState {
     leaveBalance: LeaveBalance | null;
     leaveRequests: Record<string, LeaveRequest>; // Indexed by request ID
     userLeaveRequestIds: string[]; // Quick lookup of current user's requests
+    userDefaults: LeaveRequestDefaults | null;
     lastBalanceSyncAt: string | null;
     isSyncingBalance: boolean;
     isSyncingRequests: boolean;
@@ -664,6 +675,21 @@ export const Step4SafetySchema = LeaveRequestSchema.pick({
 }).extend({
     emergencyContact: EmergencyContactSchema,
 });
+
+/**
+ * Smart Defaults for Leave Requests.
+ * Subset of LeaveRequest that is persisted to speed up data entry.
+ */
+export const LeaveRequestDefaultsSchema = LeaveRequestSchema.pick({
+    leaveAddress: true,
+    leavePhoneNumber: true,
+    emergencyContact: true,
+    dutySection: true,
+    deptDiv: true,
+    dutyPhone: true,
+    rationStatus: true,
+});
+export type LeaveRequestDefaults = z.infer<typeof LeaveRequestDefaultsSchema>;
 
 /**
  * Root store interface combining all domain slices.

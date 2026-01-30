@@ -517,7 +517,10 @@ class SQLiteStorage implements IStorageService {
       const parsed = JSON.parse(decrypted);
       return LeaveRequestDefaultsSchema.parse(parsed);
     } catch (error) {
-      throw new DataIntegrityError(`Failed to parse LeaveDefaults for user ${userId}`, error);
+      console.error(`[Storage] Data Corruption detected for LeaveDefaults (User ${userId}). Resetting defaults.`, error);
+      // Self-healing: Delete corrupted record so we can start fresh next time
+      await db.runAsync('DELETE FROM leave_defaults WHERE user_id = ?', userId);
+      return null;
     }
   }
 

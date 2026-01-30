@@ -29,6 +29,14 @@ const generateUUID = () => {
 export type SwipeDirection = 'left' | 'right' | 'up';
 export type SwipeDecision = 'nope' | 'like' | 'super';
 
+export type FilterState = {
+    payGrade: string[];
+    designator: string[]; // Kept for schema compatibility, though less relevant for enlisted
+    location: string[];
+};
+
+export type DiscoveryMode = 'real' | 'sandbox';
+
 interface AssignmentActions {
     /**
      * Fetch billets from "API" (Mock) and populate store.
@@ -46,6 +54,21 @@ interface AssignmentActions {
     swipe: (billetId: string, direction: SwipeDirection, userId: string) => Promise<void>;
 
     /**
+     * Switch between Real and Sandbox modes.
+     */
+    setMode: (mode: DiscoveryMode) => void;
+
+    /**
+     * Update filters for Sandbox mode.
+     */
+    updateSandboxFilters: (filters: Partial<FilterState>) => void;
+
+    /**
+     * Undo the last swipe action.
+     */
+    undo: () => void;
+
+    /**
      * Reset store to initial state (useful for logout/testing).
      */
     resetStore: () => void;
@@ -55,40 +78,64 @@ export type AssignmentStore = MyAssignmentState & {
     // New State for Swipe Deck
     billetStack: string[];
     cursor: number;
-    decisionMap: Record<string, SwipeDecision>;
+
+    // Discovery Mode State
+    mode: DiscoveryMode;
+    sandboxFilters: FilterState;
+
+    // Dual Decision Bins
+    realDecisions: Record<string, SwipeDecision>;
+    sandboxDecisions: Record<string, SwipeDecision>;
 } & AssignmentActions;
 
-const INITIAL_STATE: MyAssignmentState & { billetStack: string[]; cursor: number; decisionMap: Record<string, SwipeDecision> } = {
+const INITIAL_STATE: MyAssignmentState & {
+    billetStack: string[];
+    cursor: number;
+    mode: DiscoveryMode;
+    sandboxFilters: FilterState;
+    realDecisions: Record<string, SwipeDecision>;
+    sandboxDecisions: Record<string, SwipeDecision>;
+} = {
     billets: {},
     applications: {},
     userApplicationIds: [],
     lastBilletSyncAt: null,
     isSyncingBillets: false,
     isSyncingApplications: false,
+
     // New State
     billetStack: [],
     cursor: 0,
-    decisionMap: {},
+
+    // Discovery Mode Defaults
+    mode: 'real',
+    sandboxFilters: {
+        payGrade: ['E-6'], // Default to user's rank
+        designator: [],
+        location: []
+    },
+    realDecisions: {},
+    sandboxDecisions: {},
 };
 
 // =============================================================================
-// MOCK DATA
+// MOCK DATA (Persona: IT1 Samuel P. Wilson)
 // =============================================================================
 
 const MOCK_BILLETS: Billet[] = [
     {
-        id: 'b1-uss-ford',
-        title: 'OPERATIONS OFFICER',
-        uic: '21234',
-        location: 'NORFOLK, VA',
-        payGrade: 'O-4',
-        designator: '1110',
+        id: 'b1-uss-halsey',
+        title: 'NETWORK SYSTEM ADMIN',
+        uic: '21345',
+        location: 'SAN DIEGO, CA',
+        payGrade: 'E-6',
+        nec: 'H08A', // CANES System Admin
         dutyType: 'SEA',
         reportNotLaterThan: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // ~3 months out
-        billetDescription: 'Primary OPSO for USS GERALD R FORD. Top secret clearance required.',
+        billetDescription: 'Lead SysAdmin for USS HALSEY (DDG-97). Security+ required. CANES migration experience preferred.',
         compass: {
             matchScore: 98,
-            contextualNarrative: 'Perfect fit for your recent DH tour and sub-specialty.',
+            contextualNarrative: 'This billet is an exceptional match for your profile. Your recent shore tour combined with your NEC H08A certification positions you perfectly to lead the CANES migration team. Completing this sea duty tour will be a strong discriminator for Chief selection next cycle.',
             isBuyItNowEligible: true,
             lockStatus: 'open',
         },
@@ -96,18 +143,18 @@ const MOCK_BILLETS: Billet[] = [
         syncStatus: 'synced',
     },
     {
-        id: 'b2-uni-washington',
-        title: 'NROTC INSTRUCTOR',
-        uic: '66789',
-        location: 'SEATTLE, WA',
-        payGrade: 'O-3',
-        designator: '1110',
+        id: 'b2-nctams-pac',
+        title: 'COMM CENTER SUPERVISOR',
+        uic: '66890',
+        location: 'WAHIAWA, HI',
+        payGrade: 'E-6',
+        nec: 'H04A', // Transmission Systems Tech
         dutyType: 'SHORE',
         reportNotLaterThan: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Navigation instructor at University of Washington NROTC unit.',
+        billetDescription: 'Watch Supervisor at NCTAMS PAC. Shift work involved.',
         compass: {
-            matchScore: 85,
-            contextualNarrative: 'Good shore duty opportunity for graduate education.',
+            matchScore: 89,
+            contextualNarrative: 'A solid leadership opportunity in a high-vis shore command. While slightly outside your core sys-admin track, the Watch Supervisor qualification offered here is highly valued. This tour offers stability for your family while broadening your operational comms experience.',
             isBuyItNowEligible: true,
             lockStatus: 'open',
         },
@@ -115,19 +162,210 @@ const MOCK_BILLETS: Billet[] = [
         syncStatus: 'synced',
     },
     {
-        id: 'b3-pentagon',
-        title: 'JUNIOR STAFF OFFICER',
-        uic: '00011',
-        location: 'ARLINGTON, VA',
-        payGrade: 'O-3',
-        designator: '1110',
-        dutyType: 'SHORE',
+        id: 'b3-devgru',
+        title: 'EX TACTICAL COMMS',
+        uic: '00012',
+        location: 'VIRGINIA BEACH, VA',
+        payGrade: 'E-6',
+        nec: 'H09A', // Expeditionary Force
+        dutyType: 'SEA',
         reportNotLaterThan: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'OPNAV N3/N5 Staff. High visibility role.',
+        billetDescription: 'Expeditionary communications support. Screening required.',
+        compass: {
+            matchScore: 94,
+            contextualNarrative: 'An elite, high-tempo assignment reserved for top performers. Your consistent "Early Promote" evaluations make you a prime candidate. This role requires rigorous screening but offers unparalleled training in tactical comms and direct support to special operations forces.',
+            isBuyItNowEligible: false, // Not BIN eligible (needs screening)
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    // --- DUMMY DATA FOR TESTING ---
+    {
+        id: 'b4-uss-gerald-r-ford',
+        title: 'SECURITY MANAGER',
+        uic: '23456',
+        location: 'NORFOLK, VA',
+        payGrade: 'E-6',
+        nec: '741A', // Information Systems Technician
+        dutyType: 'SEA',
+        reportNotLaterThan: new Date(Date.now() + 150 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Manage security protocols and clearances for crew.',
+        compass: {
+            matchScore: 85,
+            contextualNarrative: 'Leverage your attention to detail in this critical program management role. As the Security Manager for a CVN, you will oversee thousands of clearances, giving you direct access to the Command Triad. Ideally suited for someone looking to demonstrate administrative excellence at scale.',
+            isBuyItNowEligible: true,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b5-nioc-hawaii',
+        title: 'CYBER ANALYST',
+        uic: '34567',
+        location: 'PEARL HARBOR, HI',
+        payGrade: 'E-6',
+        nec: 'H10A', // Cyber Defense Analyst
+        dutyType: 'SHORE',
+        reportNotLaterThan: new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Analyze network traffic for threats.',
         compass: {
             matchScore: 92,
-            contextualNarrative: 'Strong career progression role.',
-            isBuyItNowEligible: false, // Not BIN eligible
+            contextualNarrative: 'Your background in network defense makes you an immediate asset here. This role focuses on active threat hunting and incident response. It is a technical heavy-hitter tour that will qualify you for high-level civilian sector certifications like CISSP and CEH.',
+            isBuyItNowEligible: true,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b6-uss-ronald-reagan',
+        title: 'NETWORK ADMIN',
+        uic: '45678',
+        location: 'YOKOSUKA, JAPAN',
+        payGrade: 'E-6',
+        nec: 'H08A',
+        dutyType: 'SEA',
+        reportNotLaterThan: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Maintain shipboard networks during deployment.',
+        compass: {
+            matchScore: 88,
+            contextualNarrative: 'Forward Deployed Naval Forces (FDNF) experience is a career accelerator. This sea tour in Japan offers high operational tempo and the chance to lead a large division. While demanding, the promotion rates for sailors completing this tour are significantly above average.',
+            isBuyItNowEligible: true,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b7-ncts-san-diego',
+        title: 'SATCOM OPERATOR',
+        uic: '56789',
+        location: 'SAN DIEGO, CA',
+        payGrade: 'E-5',
+        nec: 'V01A', // SATCOM
+        dutyType: 'SHORE',
+        reportNotLaterThan: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Operate satellite communications equipment.',
+        compass: {
+            matchScore: 75,
+            contextualNarrative: 'A functional shore duty that keeps you in San Diego. While the technical scope is slightly below your extensive experience, it offers a predictable schedule allowing for college education or off-duty certification work. Good for work-life balance.',
+            isBuyItNowEligible: true,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b8-uss-constitution',
+        title: 'PUBLIC AFFAIRS',
+        uic: '67890',
+        location: 'BOSTON, MA',
+        payGrade: 'E-6',
+        nec: 'A01A', // Public Affairs
+        dutyType: 'SHORE',
+        reportNotLaterThan: new Date(Date.now() + 200 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Historic ship duty, public interface required.',
+        compass: {
+            matchScore: 60,
+            contextualNarrative: 'A rare "Special Duty" assignment aboard "Old Ironsides." This is a pivot away from your technical track but offers a unique, once-in-a-lifetime experience. Excellent for public speaking and heritage engagement, though it may pause your technical NEC progression.',
+            isBuyItNowEligible: false,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b9-pers-40',
+        title: 'DETAILER ASSISTANT',
+        uic: '78901',
+        location: 'MILLINGTON, TN',
+        payGrade: 'E-6',
+        nec: '803R', // Recruiter/Detailer
+        dutyType: 'SHORE',
+        reportNotLaterThan: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Assist in detailer assignments and records.',
+        compass: {
+            matchScore: 80,
+            contextualNarrative: 'Gain "inside baseball" knowledge of the detailing process. Working directly at NPC gives you insight into how slates are built and careers are managed. Networking opportunities here are immense, though the location is less desirable than fleet concentration areas.',
+            isBuyItNowEligible: true,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b10-uss-zumwalt',
+        title: 'WEAPONS SYS TECH',
+        uic: '89012',
+        location: 'SAN DIEGO, CA',
+        payGrade: 'E-6',
+        nec: 'V02A',
+        dutyType: 'SEA',
+        reportNotLaterThan: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Advanced weapons system maintenance.',
+        compass: {
+            matchScore: 82,
+            contextualNarrative: 'Work on the cutting edge of naval technology aboard the DDG-1000 class. This platform requires technicians who can adapt to new, often experimental systems. Your troubleshooting history suggests you would thrive in this dynamic engineering environment.',
+            isBuyItNowEligible: true,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b11-navwar',
+        title: 'PROJECT MANAGER',
+        uic: '90123',
+        location: 'SAN DIEGO, CA',
+        payGrade: 'E-7', // Higher rank for variety
+        nec: 'H12A',
+        dutyType: 'SHORE',
+        reportNotLaterThan: new Date(Date.now() + 240 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Manage NAVWAR IT projects.',
+        compass: {
+            matchScore: 70,
+            contextualNarrative: 'This is a stretch assignment typically slated for an E-7, but your package is competitive for a waiver. It involves high-level acquisition program management. Success here would be a definitive "sustained superior performance" indicator for your Chief package.',
+            isBuyItNowEligible: false,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b12-uss-america',
+        title: 'RADIO DIV SUPER',
+        uic: '01234',
+        location: 'SASEBO, JAPAN',
+        payGrade: 'E-6',
+        nec: 'H04A',
+        dutyType: 'SEA',
+        reportNotLaterThan: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'Leading Radio division on LHA-6.',
+        compass: {
+            matchScore: 90,
+            contextualNarrative: 'An urgent fill for a critical leadership gap. You would be stepping immediately into a Division Leading Petty Officer (DLPO) role on a forward-deployed big deck amphib. The responsibility is massive, but the rewards and visibility are equally significant.',
+            isBuyItNowEligible: true,
+            lockStatus: 'open',
+        },
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    },
+    {
+        id: 'b13-pentagon',
+        title: 'JOINT STAFF SUPPORT',
+        uic: '10101',
+        location: 'ARLINGTON, VA',
+        payGrade: 'E-6',
+        nec: 'H08A',
+        dutyType: 'SHORE',
+        reportNotLaterThan: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000).toISOString(),
+        billetDescription: 'IT support for Joint Staff J6.',
+        compass: {
+            matchScore: 95,
+            contextualNarrative: 'The ultimate prestige shore duty. You will be supporting flag officers and senior civilians in the Joint Staff environment. Requires impeccable bearing, top-tier technical skills, and a TS/SCI clearance. This is a "purple" assignment that looks fantastic on a resume.',
+            isBuyItNowEligible: true,
             lockStatus: 'open',
         },
         lastSyncTimestamp: new Date().toISOString(),
@@ -158,37 +396,84 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             billets: billetRecord,
             billetStack: newStack, // Initialize stack
             cursor: 0,             // Reset cursor on full refresh
-            decisionMap: {},       // Clear decisions on full refresh
+            realDecisions: {},       // Clear decisions on full refresh
+            sandboxDecisions: {},
             lastBilletSyncAt: new Date().toISOString(),
             isSyncingBillets: false,
         });
     },
 
+    setMode: (mode: DiscoveryMode) => {
+        set({ mode });
+    },
+
+    updateSandboxFilters: (filters: Partial<FilterState>) => {
+        set((state) => ({
+            sandboxFilters: {
+                ...state.sandboxFilters,
+                ...filters
+            }
+        }));
+    },
+
+    undo: () => {
+        const { cursor, mode, billetStack, realDecisions, sandboxDecisions } = get();
+        if (cursor <= 0) return;
+
+        const previousCursor = cursor - 1;
+        const billetIdToRemove = billetStack[previousCursor];
+
+        // Determine which map to clean up
+        if (mode === 'real') {
+            const newDecisions = { ...realDecisions };
+            delete newDecisions[billetIdToRemove];
+            set({
+                cursor: previousCursor,
+                realDecisions: newDecisions
+            });
+        } else {
+            const newDecisions = { ...sandboxDecisions };
+            delete newDecisions[billetIdToRemove];
+            set({
+                cursor: previousCursor,
+                sandboxDecisions: newDecisions
+            });
+        }
+    },
+
     swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
-        const { cursor, decisionMap, buyItNow } = get();
+        const { cursor, realDecisions, sandboxDecisions, buyItNow, mode } = get();
 
         // 1. Determine Decision based on Direction
         let decision: SwipeDecision = 'nope';
         if (direction === 'right') decision = 'like';
         else if (direction === 'up') decision = 'super';
 
-        // 2. Optimistic Update of Cursor and Decision Map
-        set({
-            cursor: cursor + 1,
-            decisionMap: {
-                ...decisionMap,
-                [billetId]: decision
+        // 2. Select Target Bin based on Mode
+        if (mode === 'real') {
+            set({
+                cursor: cursor + 1,
+                realDecisions: {
+                    ...realDecisions,
+                    [billetId]: decision
+                }
+            });
+
+            // 3. Handle Side Effects (Transactions) - ONLY IN REAL MODE
+            // If Right or Up, we want to attempt a lock (Apply).
+            if (decision === 'like' || decision === 'super') {
+                await buyItNow(billetId, userId);
             }
-        });
-
-        // 3. Handle Side Effects (Transactions)
-        // If Right or Up, we want to attempt a lock (Apply).
-        if (decision === 'like' || decision === 'super') {
-            // Re-use existing Buy-It-Now logic which handles optimistic locking + persistence
-            await buyItNow(billetId, userId);
+        } else {
+            // SANDBOX MODE: No network transactions, just local state
+            set({
+                cursor: cursor + 1,
+                sandboxDecisions: {
+                    ...sandboxDecisions,
+                    [billetId]: decision
+                }
+            });
         }
-
-        // If 'nope', we just move on. No backend impact in this MVP.
     },
 
     buyItNow: async (billetId: string, userId: string) => {

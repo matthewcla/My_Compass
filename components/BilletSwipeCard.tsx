@@ -1,3 +1,4 @@
+import { useColorScheme } from '@/components/useColorScheme';
 import { Billet } from '@/types/schema';
 import { enrichBillet } from '@/utils/billetAdapter';
 import { getShadow } from '@/utils/getShadow';
@@ -65,14 +66,27 @@ const COLORS = {
 
 // --- Helper Components ---
 const InfoSection = ({ icon: Icon, title, children, color = 'blue' }: { icon: React.ElementType; title: string; children: React.ReactNode; color?: 'blue' | 'green' | 'purple' }) => {
-    const iconColor = color === 'green' ? COLORS.green600 : color === 'purple' ? COLORS.purple600 : COLORS.blue600;
-    const titleColor = color === 'green' ? COLORS.green600 : color === 'purple' ? COLORS.purple600 : COLORS.blue600;
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
+    // Dynamic Icon Colors
+    const iconColor = color === 'green'
+        ? (isDark ? '#4ade80' : COLORS.green600)
+        : color === 'purple'
+            ? (isDark ? '#c084fc' : COLORS.purple600)
+            : (isDark ? '#60a5fa' : COLORS.blue600);
+
+    const titleColorStyle = color === 'green'
+        ? 'text-green-600 dark:text-green-400'
+        : color === 'purple'
+            ? 'text-purple-600 dark:text-purple-400'
+            : 'text-blue-600 dark:text-blue-400';
 
     return (
         <View style={{ marginBottom: 24 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <Icon size={14} color={iconColor} strokeWidth={2.5} />
-                <Text style={{ fontWeight: '700', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: titleColor }}>
+                <Text className={`font-bold text-xs uppercase tracking-widest ${titleColorStyle}`}>
                     {title}
                 </Text>
             </View>
@@ -84,9 +98,9 @@ const InfoSection = ({ icon: Icon, title, children, color = 'blue' }: { icon: Re
 };
 
 const DataPill = ({ label, value }: { label: string; value: string }) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.slate50 }}>
-        <Text style={{ color: COLORS.slate400, fontSize: 14 }}>{label}</Text>
-        <Text style={{ color: COLORS.slate800, fontWeight: '700', fontSize: 14 }}>{value}</Text>
+    <View className="flex-row justify-between items-center py-2 border-b border-slate-50 dark:border-slate-800">
+        <Text className="text-slate-400 text-sm">{label}</Text>
+        <Text className="text-slate-800 dark:text-slate-200 font-bold text-sm">{value}</Text>
     </View>
 );
 
@@ -96,12 +110,15 @@ interface BilletSwipeCardProps {
     onSwipe: (direction: 'left' | 'right' | 'up') => void;
     active: boolean;
     index: number;
+    isSandbox?: boolean;
 }
 
 // --- Main Component ---
-export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeCardProps) {
+export function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = false }: BilletSwipeCardProps) {
     const data = useMemo(() => enrichBillet(billet), [billet]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
 
     const cardHeight = useSharedValue(0);
     const translateX = useSharedValue(0);
@@ -284,15 +301,12 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                 {/* Main Card */}
                 {/* 1. Outer Container: Shadow & Positioning */}
                 <View
+                    className="w-full h-full rounded-[40px] bg-white dark:bg-slate-900"
                     style={{
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: 40, // 2.5rem
-                        backgroundColor: 'white',
                         ...getShadow({
-                            shadowColor: '#000',
+                            shadowColor: isSandbox ? COLORS.purple600 : (isDark ? COLORS.blue500 : '#000'),
                             shadowOffset: { width: 0, height: 10 },
-                            shadowOpacity: 0.3,
+                            shadowOpacity: (isSandbox || isDark) ? 0.6 : 0.3,
                             shadowRadius: 20,
                             elevation: 10,
                         }),
@@ -300,7 +314,7 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                 >
                     {/* 2. Inner Container: Clipping & Border */}
                     <View
-                        className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 flex flex-col"
+                        className="w-full h-full bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col"
                     >
                         {/* Header */}
                         <View className="relative w-full bg-slate-900" style={{ height: HEADER_HEIGHT }}>
@@ -337,41 +351,27 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                         </View>
 
                         {/* Body Content */}
-                        <View className="flex-1 p-6">
-                            <View className="flex-1 bg-blue-50/50 border-l-4 border-blue-900 p-6 rounded-r-2xl mb-2 justify-center">
+                        <View className="flex-1 p-6 justify-center">
+                            <View className="bg-blue-50/50 dark:bg-blue-900/10 border-l-4 border-blue-900 dark:border-blue-500 pl-4 py-6 pr-4 rounded-r-2xl mb-2">
                                 <View className="flex-row items-center gap-2 mb-3">
-                                    <MessageSquare size={14} color={COLORS.blue900} />
-                                    <Text className="text-blue-900 font-bold text-xs uppercase tracking-wider">Detailer's Note</Text>
+                                    <MessageSquare size={14} color={isDark ? '#3b82f6' : COLORS.blue900} />
+                                    <Text className="text-blue-900 dark:text-blue-400 font-bold text-xs uppercase tracking-wider">Detailer's Note</Text>
                                 </View>
-                                <Text className="text-slate-700 italic text-base leading-relaxed">"{data.detailerNote}"</Text>
+                                <Text className="text-slate-700 dark:text-slate-300 italic text-base leading-relaxed">"{data.detailerNote}"</Text>
                             </View>
                         </View>
 
-                        {/* Trigger Bar */}
-                        <View
-                            style={{
-                                height: 70, // Increased to avoid corner clipping
-                                backgroundColor: COLORS.white,
-                                borderTopWidth: 1,
-                                borderTopColor: COLORS.slate100,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                paddingBottom: 8,
-                            }}
+                        {/* Trigger Bar - Padded to clear external controls */}
+                        <TouchableOpacity
+                            onPress={openDrawer}
+                            activeOpacity={0.9}
+                            className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-[50px]"
                         >
-                            <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                gap: 6,
-                                backgroundColor: COLORS.slate50,
-                                paddingVertical: 8,
-                                paddingHorizontal: 16,
-                                borderRadius: 20
-                            }}>
-                                <Text style={{ color: COLORS.blue600, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, fontSize: 13 }}>Show Details</Text>
-                                <ChevronUp size={18} color={COLORS.blue600} strokeWidth={2.5} />
+                            <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl pointer-events-none">
+                                <Text className="text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-widest text-[13px]">Show Details</Text>
+                                <ChevronUp size={18} color={isDark ? '#60a5fa' : COLORS.blue600} strokeWidth={2.5} />
                             </View>
-                        </View>
+                        </TouchableOpacity>
 
                         {/* Drawer Overlay */}
                         {isDrawerOpen && (
@@ -394,15 +394,8 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
 
                                 {/* Drawer Panel - Full Height */}
                                 <View
+                                    className="absolute bottom-0 left-0 right-0 h-[95%] bg-white dark:bg-slate-900 rounded-t-[32px] overflow-hidden"
                                     style={{
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: '95%',
-                                        backgroundColor: COLORS.white,
-                                        borderTopLeftRadius: 32,
-                                        borderTopRightRadius: 32,
                                         ...getShadow({
                                             shadowColor: '#000',
                                             shadowOffset: { width: 0, height: -4 },
@@ -410,20 +403,13 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                                             shadowRadius: 16,
                                             elevation: 10,
                                         }),
-                                        overflow: 'hidden',
                                     }}
                                 >
                                     {/* Drawer Header - Title Only */}
-                                    <View style={{
-                                        paddingHorizontal: 20,
-                                        paddingVertical: 16,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: COLORS.slate100,
-                                        alignItems: 'center'
-                                    }}>
+                                    <View className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 items-center">
                                         {/* Drag Handle */}
-                                        <View style={{ width: 40, height: 4, backgroundColor: COLORS.slate400, borderRadius: 2, marginBottom: 12 }} />
-                                        <Text style={{ fontSize: 16, fontWeight: '800', color: COLORS.slate900, textTransform: 'uppercase', letterSpacing: 1 }}>
+                                        <View className="w-10 h-1 bg-slate-400 rounded-full mb-3" />
+                                        <Text className="text-base font-extrabold text-slate-900 dark:text-white uppercase tracking-widest">
                                             Assignment Details
                                         </Text>
                                     </View>
@@ -437,13 +423,13 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                                         {/* Professional Requirements - Moved from Main Card */}
                                         <InfoSection icon={Award} title="Professional Requirements" color="blue">
                                             <View className="flex-row gap-3">
-                                                <View className="flex-1 bg-slate-50 p-3 rounded-2xl">
+                                                <View className="flex-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl">
                                                     <Text className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Rating</Text>
-                                                    <Text className="font-bold text-slate-800">{data.rank} • {data.rate}</Text>
+                                                    <Text className="font-bold text-slate-800 dark:text-slate-200">{data.rank} • {data.rate}</Text>
                                                 </View>
-                                                <View className="flex-1 bg-slate-50 p-3 rounded-2xl">
+                                                <View className="flex-1 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl">
                                                     <Text className="text-[10px] text-slate-400 uppercase font-bold mb-0.5">Manning</Text>
-                                                    <Text className="font-bold text-slate-800">{data.career.manning}</Text>
+                                                    <Text className="font-bold text-slate-800 dark:text-slate-200">{data.career.manning}</Text>
                                                 </View>
                                             </View>
                                             <DataPill label="NEC Required" value={data.career.nec} />
@@ -452,18 +438,18 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
 
                                         {/* Financials */}
                                         <InfoSection icon={DollarSign} title="Estimated Financials" color="green">
-                                            <View style={{ backgroundColor: COLORS.green50, padding: 14, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                                                <Text style={{ color: COLORS.green800, fontWeight: '900', fontSize: 18 }}>{data.financials.bah}</Text>
-                                                <View style={{ alignItems: 'flex-end' }}>
-                                                    <Text style={{ fontSize: 11, color: COLORS.green600, textTransform: 'uppercase', fontWeight: '700' }}>Monthly BAH</Text>
-                                                    <Text style={{ fontSize: 10, color: COLORS.green700, opacity: 0.7, fontWeight: '500' }}>E-6 Dependents Rate</Text>
+                                            <View className="bg-green-50 dark:bg-green-900/20 p-3.5 rounded-xl flex-row justify-between items-center mb-1.5">
+                                                <Text className="text-green-800 dark:text-green-400 font-black text-lg">{data.financials.bah}</Text>
+                                                <View className="items-end">
+                                                    <Text className="text-[11px] text-green-600 dark:text-green-400 uppercase font-bold">Monthly BAH</Text>
+                                                    <Text className="text-[10px] text-green-700 dark:text-green-500 opacity-70 font-medium">E-6 Dependents Rate</Text>
                                                 </View>
                                             </View>
                                             <DataPill label="Cost of Living" value={data.financials.colIndex} />
-                                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingTop: 6 }}>
+                                            <View className="flex-row flex-wrap gap-1.5 pt-1.5">
                                                 {data.financials.specialPay.map((pay, i) => (
-                                                    <View key={i} style={{ backgroundColor: COLORS.white, borderWidth: 1, borderColor: COLORS.green600, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 }}>
-                                                        <Text style={{ fontSize: 11, fontWeight: '700', color: COLORS.green700 }}>+ {pay}</Text>
+                                                    <View key={i} className="bg-white dark:bg-slate-800 border border-green-600 dark:border-green-500 px-2.5 py-0.5 rounded-full">
+                                                        <Text className="text-[11px] font-bold text-green-700 dark:text-green-400">+ {pay}</Text>
                                                     </View>
                                                 ))}
                                             </View>
@@ -471,63 +457,45 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
 
                                         {/* Family & Quality of Life */}
                                         <InfoSection icon={Home} title="Family & Quality of Life" color="purple">
-                                            <View style={{ flexDirection: 'row', gap: 8 }}>
-                                                <View style={{ flex: 1, backgroundColor: COLORS.slate50, padding: 10, borderRadius: 12, alignItems: 'center' }}>
+                                            <View className="flex-row gap-2">
+                                                <View className="flex-1 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl items-center">
                                                     <GraduationCap size={20} color={COLORS.slate400} />
-                                                    <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.slate800, marginTop: 4 }}>{data.lifestyle.schools}/5</Text>
-                                                    <Text style={{ fontSize: 10, color: COLORS.slate400, textTransform: 'uppercase' }}>Schools</Text>
+                                                    <Text className="text-[13px] font-bold text-slate-800 dark:text-slate-200 mt-1">{data.lifestyle.schools}/5</Text>
+                                                    <Text className="text-[10px] text-slate-400 uppercase">Schools</Text>
                                                 </View>
-                                                <View style={{ flex: 1, backgroundColor: COLORS.slate50, padding: 10, borderRadius: 12, alignItems: 'center' }}>
+                                                <View className="flex-1 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl items-center">
                                                     <Users size={20} color={COLORS.slate400} />
-                                                    <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.slate800, marginTop: 4 }}>{data.lifestyle.spouseJobs}</Text>
-                                                    <Text style={{ fontSize: 10, color: COLORS.slate400, textTransform: 'uppercase' }}>Spouse Job</Text>
+                                                    <Text className="text-[13px] font-bold text-slate-800 dark:text-slate-200 mt-1">{data.lifestyle.spouseJobs}</Text>
+                                                    <Text className="text-[10px] text-slate-400 uppercase">Spouse Job</Text>
                                                 </View>
-                                                <View style={{ flex: 1, backgroundColor: COLORS.slate50, padding: 10, borderRadius: 12, alignItems: 'center' }}>
+                                                <View className="flex-1 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl items-center">
                                                     <Clock size={20} color={COLORS.slate400} />
-                                                    <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.slate800, marginTop: 4 }}>{data.lifestyle.commute}</Text>
-                                                    <Text style={{ fontSize: 10, color: COLORS.slate400, textTransform: 'uppercase' }}>Commute</Text>
+                                                    <Text className="text-[13px] font-bold text-slate-800 dark:text-slate-200 mt-1">{data.lifestyle.commute}</Text>
+                                                    <Text className="text-[10px] text-slate-400 uppercase">Commute</Text>
                                                 </View>
                                             </View>
                                         </InfoSection>
 
                                         {/* Command Mission */}
-                                        <View style={{ marginTop: 8 }}>
-                                            <Text style={{ fontSize: 11, color: COLORS.slate400, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>Command Mission</Text>
-                                            <Text style={{ color: COLORS.slate600, fontSize: 13, lineHeight: 20 }}>{data.description}</Text>
+                                        <View className="mt-2">
+                                            <Text className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Command Mission</Text>
+                                            <Text className="text-slate-600 dark:text-slate-400 text-[13px] leading-5">{data.description}</Text>
                                         </View>
-                                        <View style={{ height: 20 }} />
+                                        <View className="h-5" />
                                     </ScrollView>
 
                                     {/* Fixed Footer - Matches Trigger Bar Exactly */}
-                                    <View
-                                        style={{
-                                            height: 70,
-                                            backgroundColor: COLORS.white,
-                                            borderTopWidth: 1,
-                                            borderTopColor: COLORS.slate100,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            paddingBottom: 8,
-                                        }}
+                                    {/* Fixed Footer - Matches Trigger Bar Exactly */}
+                                    <TouchableOpacity
+                                        onPress={closeDrawer}
+                                        activeOpacity={0.9}
+                                        className="w-full bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-[50px]"
                                     >
-                                        <TouchableOpacity
-                                            onPress={closeDrawer}
-                                            activeOpacity={0.8}
-                                        >
-                                            <View style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                gap: 6,
-                                                backgroundColor: COLORS.slate50,
-                                                paddingVertical: 8,
-                                                paddingHorizontal: 16,
-                                                borderRadius: 20
-                                            }}>
-                                                <Text style={{ color: COLORS.blue600, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, fontSize: 13 }}>Close Details</Text>
-                                                <ChevronDown size={18} color={COLORS.blue600} strokeWidth={2.5} />
-                                            </View>
-                                        </TouchableOpacity>
-                                    </View>
+                                        <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl pointer-events-none">
+                                            <Text className="text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-widest text-[13px]">Close Details</Text>
+                                            <ChevronDown size={18} color={isDark ? '#60a5fa' : COLORS.blue600} strokeWidth={2.5} />
+                                        </View>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         )}

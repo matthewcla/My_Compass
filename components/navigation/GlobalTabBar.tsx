@@ -26,7 +26,11 @@ type SpokeConfig = {
 
 const SPOKE_CONFIG: Record<string, SpokeConfig> = {
     '(assignment)': {
-        primary: { label: 'Explore', route: '/(assignment)/assignments', icon: Compass },
+        primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
+        secondary: { label: 'Cycle', route: '/(assignment)/cycle', icon: Target },
+    },
+    '(career)': {
+        primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
         secondary: { label: 'Cycle', route: '/(assignment)/cycle', icon: Target },
     },
     '(pcs)': {
@@ -60,7 +64,7 @@ export default function GlobalTabBar() {
     // Effect to update activeSpoke based on navigation
     React.useEffect(() => {
         // Known spokes list
-        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)'];
+        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)', '(career)'];
 
         if (KNOWN_SPOKES.includes(currentSpoke)) {
             // If we are in a known spoke, update the store

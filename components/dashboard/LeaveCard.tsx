@@ -1,11 +1,9 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
-import { useLeaveStore } from '@/store/useLeaveStore';
 import { getShadow } from '@/utils/getShadow';
 import { Clock, Zap } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
-import { useShallow } from 'zustand/react/shallow';
 
 interface LeaveCardProps {
     balance: number;
@@ -21,7 +19,7 @@ export function LeaveCard({ balance, pendingRequest, onPress, onQuickRequest }: 
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    const hasDefaults = useLeaveStore(useShallow(state => !!state.userDefaults));
+
 
     return (
         <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={getShadow({ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 })}>
@@ -51,7 +49,7 @@ export function LeaveCard({ balance, pendingRequest, onPress, onQuickRequest }: 
                             <Text className="text-sm text-orange-800 dark:text-orange-200 font-bold">{pendingRequest.dates}</Text>
                         </View>
                     ) : (
-                        hasDefaults && onQuickRequest && (
+                        onQuickRequest && (
                             <Pressable
                                 onPress={(e) => {
                                     e.stopPropagation();

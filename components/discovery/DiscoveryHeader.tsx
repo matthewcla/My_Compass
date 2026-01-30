@@ -91,7 +91,7 @@ export function DiscoveryHeader({
                         height: 32,
                         left: 2,
                         borderRadius: 9999,
-                        backgroundColor: isSandbox ? '#4f46e5' : (isDark ? '#334155' : '#0f172a'),
+                        backgroundColor: isSandbox ? '#4f46e5' : (isDark ? '#2563eb' : '#0f172a'),
                     }}
                 />
 

@@ -1,6 +1,7 @@
 import { BilletSwipeCard } from '@/components/BilletSwipeCard';
 import { BilletControlBar } from '@/components/discovery/BilletControlBar';
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader';
+import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Stack, useRouter } from 'expo-router';
@@ -24,6 +25,8 @@ export default function DiscoveryScreen() {
         sandboxDecisions,
         fetchBillets
     } = useAssignmentStore();
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
 
     // Initial Fetch
     useEffect(() => {
@@ -158,7 +161,11 @@ export default function DiscoveryScreen() {
                                             style={{
                                                 zIndex: 0,
                                                 opacity: 0.3,
-                                                transform: [{ translateY: 70 }, { scale: 0.9 }]
+                                                transform: [{ translateY: 70 }, { scale: 0.9 }],
+                                                shadowColor: mode === 'sandbox' ? '#9333ea' : (isDark ? '#3b82f6' : '#000'),
+                                                shadowOpacity: (mode === 'sandbox' || isDark) ? 0.3 : 0.1,
+                                                shadowOffset: { width: 0, height: 4 },
+                                                elevation: 5
                                             }}
                                             pointerEvents="none"
                                         />
@@ -167,14 +174,27 @@ export default function DiscoveryScreen() {
                                     {/* Back Card (Next) - Middle */}
                                     {filteredBillets[deck.step + 1] && (
                                         <View
-                                            className="absolute w-full h-full bg-slate-100 dark:bg-slate-800 rounded-[40px] border border-slate-200 dark:border-slate-700 shadow-sm"
+                                            className="absolute w-full h-full"
                                             style={{
                                                 zIndex: 5,
-                                                opacity: 0.6,
-                                                transform: [{ translateY: 35 }, { scale: 0.95 }]
+                                                opacity: 0.9, // Higher opacity to see content
+                                                transform: [{ translateY: 35 }, { scale: 0.95 }],
+                                                shadowColor: mode === 'sandbox' ? '#9333ea' : (isDark ? '#3b82f6' : '#000'),
+                                                shadowOpacity: (mode === 'sandbox' || isDark) ? 0.3 : 0.1,
+                                                shadowOffset: { width: 0, height: 4 },
+                                                elevation: 5
                                             }}
                                             pointerEvents="none"
-                                        />
+                                        >
+                                            <BilletSwipeCard
+                                                key={filteredBillets[deck.step + 1].id}
+                                                index={0} // Force internal scale to 1, let container handle stack scale
+                                                active={false}
+                                                billet={filteredBillets[deck.step + 1]}
+                                                onSwipe={() => { }}
+                                                isSandbox={mode === 'sandbox'}
+                                            />
+                                        </View>
                                     )}
 
                                     {/* Front Card (Current) - Active */}
@@ -182,7 +202,7 @@ export default function DiscoveryScreen() {
                                         <View className="flex-1 z-10">
                                             <BilletSwipeCard
                                                 key={currentBillet.id}
-                                                index={deck.step}
+                                                index={0}
                                                 active={true}
                                                 billet={currentBillet}
                                                 onSwipe={handleSwipe}

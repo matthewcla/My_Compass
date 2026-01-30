@@ -304,9 +304,9 @@ export function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = fa
                     className="w-full h-full rounded-[40px] bg-white dark:bg-slate-900"
                     style={{
                         ...getShadow({
-                            shadowColor: '#000',
+                            shadowColor: isSandbox ? COLORS.purple600 : (isDark ? COLORS.blue500 : '#000'),
                             shadowOffset: { width: 0, height: 10 },
-                            shadowOpacity: 0.3,
+                            shadowOpacity: (isSandbox || isDark) ? 0.6 : 0.3,
                             shadowRadius: 20,
                             elevation: 10,
                         }),
@@ -362,14 +362,16 @@ export function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = fa
                         </View>
 
                         {/* Trigger Bar - Padded to clear external controls */}
-                        <View
-                            className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-10"
+                        <TouchableOpacity
+                            onPress={openDrawer}
+                            activeOpacity={0.9}
+                            className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-[50px]"
                         >
-                            <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl">
+                            <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl pointer-events-none">
                                 <Text className="text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-widest text-[13px]">Show Details</Text>
                                 <ChevronUp size={18} color={isDark ? '#60a5fa' : COLORS.blue600} strokeWidth={2.5} />
                             </View>
-                        </View>
+                        </TouchableOpacity>
 
                         {/* Drawer Overlay */}
                         {isDrawerOpen && (
@@ -483,19 +485,17 @@ export function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = fa
                                     </ScrollView>
 
                                     {/* Fixed Footer - Matches Trigger Bar Exactly */}
-                                    <View
-                                        className="h-[70px] bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-center items-center pb-2"
+                                    {/* Fixed Footer - Matches Trigger Bar Exactly */}
+                                    <TouchableOpacity
+                                        onPress={closeDrawer}
+                                        activeOpacity={0.9}
+                                        className="w-full bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-[50px]"
                                     >
-                                        <TouchableOpacity
-                                            onPress={closeDrawer}
-                                            activeOpacity={0.8}
-                                        >
-                                            <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl">
-                                                <Text className="text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-widest text-[13px]">Close Details</Text>
-                                                <ChevronDown size={18} color={isDark ? '#60a5fa' : COLORS.blue600} strokeWidth={2.5} />
-                                            </View>
-                                        </TouchableOpacity>
-                                    </View>
+                                        <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl pointer-events-none">
+                                            <Text className="text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-widest text-[13px]">Close Details</Text>
+                                            <ChevronDown size={18} color={isDark ? '#60a5fa' : COLORS.blue600} strokeWidth={2.5} />
+                                        </View>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         )}

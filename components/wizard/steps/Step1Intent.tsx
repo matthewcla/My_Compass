@@ -21,6 +21,18 @@ const WORKING_HOURS_OPTIONS = [
     { label: 'None (Non-Workday)', value: 'NONE' },
 ] as const;
 
+const LEAVE_TYPE_OPTIONS = [
+    { label: 'Annual Leave', value: 'annual' },
+    { label: 'Emergency Leave', value: 'emergency' },
+    { label: 'Convalescent Leave', value: 'convalescent' },
+    { label: 'Terminal Leave', value: 'terminal' },
+    { label: 'Parental Leave', value: 'parental' },
+    { label: 'Bereavement Leave', value: 'bereavement' },
+    { label: 'Adoption Leave', value: 'adoption' },
+    { label: 'Permissive TDY (PTDY)', value: 'ptdy' },
+    { label: 'Other', value: 'other' },
+] as const;
+
 interface Step1IntentProps {
     leaveType?: string;
     startDate: string;
@@ -54,6 +66,7 @@ export function Step1Intent({
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [timeField, setTimeField] = useState<'startTime' | 'endTime' | null>(null);
     const [hoursField, setHoursField] = useState<'departure' | 'return' | null>(null);
+    const [showLeaveTypePicker, setShowLeaveTypePicker] = useState(false);
 
     // --- Validation Logic ---
     const calculation = useMemo(() => {
@@ -178,20 +191,25 @@ export function Step1Intent({
     return (
         <WizardCard title="Request Details" scrollable={true}>
             <View className="gap-6 pb-24">
-                {/* 1. Leave Type (unchanged logic, just compact) */}
+                {/* 1. Leave Type */}
                 <View>
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Leave Category</Text>
                     <Pressable
                         onPress={() => {
-                            // Cycle or open modal - keeping simple for refactor scope
-                            const types = ['Annual', 'Emergency', 'Convalescent'];
-                            // stub interaction
+                            setShowLeaveTypePicker(true);
                             Haptics.selectionAsync();
                         }}
                         className="bg-inputBackground p-4 rounded-xl border border-slate-200 dark:border-slate-700"
                     >
                         <View className="flex-row justify-between items-center">
-                            <Text className="text-base font-bold text-slate-900 dark:text-white capitalize">{leaveType || 'Annual'}</Text>
+                            <View>
+                                <Text className="text-base font-bold text-slate-900 dark:text-white capitalize">
+                                    {LEAVE_TYPE_OPTIONS.find(o => o.value === leaveType)?.label || 'Annual Leave'}
+                                </Text>
+                                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    {leaveType ? 'Category selected' : 'Standard chargeable leave'}
+                                </Text>
+                            </View>
                             <Text className="text-blue-500 font-medium">Change</Text>
                         </View>
                     </Pressable>
@@ -416,6 +434,62 @@ export function Step1Intent({
                                                 setHoursField(null);
                                                 Haptics.selectionAsync();
                                             }
+                                        }}
+                                        className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
+                                            ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
+                                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
+                                            }`}
+                                    >
+                                        <Text className={`font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                                            {option.label}
+                                        </Text>
+                                        {isSelected && (
+                                            <View className="w-5 h-5 rounded-full bg-blue-500 items-center justify-center">
+                                                <View className="w-2 h-2 rounded-full bg-white" />
+                                            </View>
+                                        )}
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+                    </View>
+                </Pressable>
+            </Modal>
+
+            {/* Leave Type Picker Modal */}
+            <Modal
+                visible={showLeaveTypePicker}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowLeaveTypePicker(false)}
+            >
+                <Pressable
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}
+                    onPress={() => setShowLeaveTypePicker(false)}
+                >
+                    <View className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
+                        <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
+                            <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                                Select Leave Category
+                            </Text>
+                            <Pressable onPress={() => setShowLeaveTypePicker(false)}>
+                                <View className="bg-slate-200 dark:bg-slate-700 rounded-full p-1">
+                                    <Text className="text-slate-500 dark:text-slate-400 font-bold px-2">Close</Text>
+                                </View>
+                            </Pressable>
+                        </View>
+
+                        <View className="p-4 pb-10 gap-2">
+                            {LEAVE_TYPE_OPTIONS.map((option) => {
+                                const isSelected = (leaveType || 'annual') === option.value;
+
+                                return (
+                                    <Pressable
+                                        key={option.value}
+                                        onPress={() => {
+                                            onUpdate('leaveType', option.value);
+                                            setShowLeaveTypePicker(false);
+                                            Haptics.selectionAsync();
                                         }}
                                         className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
                                             ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'

@@ -2,18 +2,21 @@ import { DiscoveryCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
+import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
+import { useLeaveStore } from '@/store/useLeaveStore';
 import { useUserStore } from '@/store/useUserStore';
+import { LeaveRequest } from '@/types/schema';
 import { formatRate } from '@/utils/format';
 import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -21,11 +24,22 @@ export default function HubDashboard() {
     const router = useRouter();
     const { isLoading: isSessionLoading } = useSession();
     const user = useUserStore(useShallow(state => state.user));
+    const generateQuickDraft = useLeaveStore(state => state.generateQuickDraft);
+    const fetchUserDefaults = useLeaveStore(state => state.fetchUserDefaults);
     const insets = useSafeAreaInsets();
     const { data, loading, error } = useDashboardData();
 
+    const [quickDraft, setQuickDraft] = useState<LeaveRequest | null>(null);
+
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+
+    // Hydrate defaults on mount
+    React.useEffect(() => {
+        if (user?.id) {
+            fetchUserDefaults(user.id);
+        }
+    }, [user?.id, fetchUserDefaults]);
 
     // Header Logic: Display personalized welcome or generic fallback
     const renderGreeting = () => {
@@ -52,6 +66,23 @@ export default function HubDashboard() {
     };
 
     const handleLeavePress = () => {
+        router.push('/leave' as any);
+    };
+
+    const handleQuickLeavePress = () => {
+        if (!user) return;
+        const draft = generateQuickDraft('weekend', user.id);
+        setQuickDraft(draft);
+    };
+
+    const handleQuickLeaveSubmit = () => {
+        setQuickDraft(null);
+        Alert.alert("Success", "Leave request submitted successfully!");
+    };
+
+    const handleQuickLeaveEdit = () => {
+        setQuickDraft(null);
+        // Ideally pass draft params to wizard, but for now just navigate to leave root
         router.push('/leave' as any);
     };
 
@@ -128,6 +159,7 @@ export default function HubDashboard() {
                                 : undefined
                         }
                         onPress={handleLeavePress}
+                        onQuickRequest={handleQuickLeavePress}
                     />
                 );
             default:
@@ -153,6 +185,29 @@ export default function HubDashboard() {
                     paddingBottom: 100 + insets.bottom,
                 }}
             />
+
+            {/* Quick Leave Modal Overlay */}
+            <Modal
+                visible={!!quickDraft}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setQuickDraft(null)}
+            >
+                <View className="flex-1 justify-center items-center bg-black/60 relative">
+                    <Pressable
+                        className="absolute inset-0"
+                        onPress={() => setQuickDraft(null)}
+                    />
+
+                    {quickDraft && (
+                        <QuickLeaveTicket
+                            draft={quickDraft}
+                            onSubmit={handleQuickLeaveSubmit}
+                            onEdit={handleQuickLeaveEdit}
+                        />
+                    )}
+                </View>
+            </Modal>
         </LinearGradient>
     );
 }

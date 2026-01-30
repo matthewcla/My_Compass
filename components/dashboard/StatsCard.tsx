@@ -13,6 +13,8 @@ interface StatsCardProps {
     onPressSuperLiked?: () => void;
 }
 
+const HIT_SLOP = { top: 15, bottom: 15, left: 10, right: 10 };
+
 export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: StatsCardProps) {
     const totalSaved = liked + superLiked;
     const radius = 12.5;
@@ -73,7 +75,7 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
             <View className="flex-row gap-4 h-14">
                 <Pressable
                     onPress={onPressSuperLiked}
-                    hitSlop={{ top: 15, bottom: 15, left: 10, right: 10 }}
+                    hitSlop={HIT_SLOP}
                     style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                     className="flex-1 bg-rose-50 dark:bg-rose-500/20 rounded-lg flex flex-col items-center justify-center border border-rose-100/50 dark:border-rose-500/30 h-full gap-1"
                 >
@@ -81,7 +83,7 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
                     <Text className="text-xs font-bold text-rose-700 dark:text-rose-300 leading-none">{superLiked}</Text>
                 </Pressable>
                 <Pressable
-                    hitSlop={{ top: 15, bottom: 15, left: 10, right: 10 }}
+                    hitSlop={HIT_SLOP}
                     style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                     className="flex-1 bg-blue-50 dark:bg-blue-500/20 rounded-lg flex flex-col items-center justify-center border border-blue-100/50 dark:border-blue-500/30 h-full gap-1"
                 >
@@ -89,7 +91,7 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
                     <Text className="text-xs font-bold text-blue-700 dark:text-blue-300 leading-none">{liked}</Text>
                 </Pressable>
                 <Pressable
-                    hitSlop={{ top: 15, bottom: 15, left: 10, right: 10 }}
+                    hitSlop={HIT_SLOP}
                     style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                     className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex flex-col items-center justify-center border border-slate-200/50 dark:border-slate-600/50 h-full gap-1"
                 >

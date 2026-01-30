@@ -12,7 +12,7 @@ import { useHeaderStore } from '@/store/useHeaderStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Alert, Modal, Pressable, Text, View, useColorScheme } from 'react-native';
@@ -63,7 +63,33 @@ export default function LeaveRequestScreen() {
     };
 
     // Check for draft on mount
+    const { draftId } = useLocalSearchParams();
+
     React.useEffect(() => {
+        // 1. Direct Draft Link (from Hub Card)
+        if (draftId && typeof draftId === 'string') {
+            const draft = leaveRequests[draftId];
+            if (draft) {
+                setCurrentDraftId(draft.id);
+                setFormData({
+                    leaveType: draft.leaveType,
+                    startDate: draft.startDate,
+                    endDate: draft.endDate,
+                    leaveAddress: draft.leaveAddress,
+                    leavePhoneNumber: draft.leavePhoneNumber,
+                    emergencyContact: draft.emergencyContact,
+                    memberRemarks: draft.memberRemarks,
+                    modeOfTravel: draft.modeOfTravel,
+                    dutySection: draft.dutySection,
+                    deptDiv: draft.deptDiv,
+                    dutyPhone: draft.dutyPhone,
+                    rationStatus: draft.rationStatus as any,
+                });
+                return;
+            }
+        }
+
+        // 2. Auto-discovery (Fallback)
         // Simple logic: grab the first 'draft' status request found for this user
         const drafts = Object.values(leaveRequests).filter(r => r.status === 'draft');
 
@@ -103,7 +129,7 @@ export default function LeaveRequestScreen() {
                 ]
             );
         }
-    }, [leaveRequests]);
+    }, [leaveRequests, draftId]);
 
     // --- State ---
     const [verificationChecks, setVerificationChecks] = useState<VerificationChecks>({

@@ -31,6 +31,13 @@ export default function HubDashboard() {
 
     const [quickDraft, setQuickDraft] = useState<LeaveRequest | null>(null);
 
+    const leaveRequests = useLeaveStore(useShallow(state =>
+        state.userLeaveRequestIds
+            .map(id => state.leaveRequests[id])
+            .filter(Boolean)
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    ));
+
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
@@ -86,10 +93,10 @@ export default function HubDashboard() {
         router.push('/leave' as any);
     };
 
-    const handleSuperLikedPress = () => {
+    const handleSuperLikedPress = React.useCallback(() => {
         // Navigate to saved billets filtered by super-liked
         router.push('/(assignment)/assignments' as any);
-    };
+    }, [router]);
 
     // Loading state
     if (loading && !data) {
@@ -118,6 +125,8 @@ export default function HubDashboard() {
             </LinearGradient>
         );
     }
+
+
 
 
 
@@ -153,12 +162,14 @@ export default function HubDashboard() {
                 return (
                     <LeaveCard
                         balance={data?.leave?.currentBalance ?? 0}
-                        pendingRequest={
-                            data?.leave?.pendingRequestsCount
-                                ? { dates: 'Mar 15-22', status: 'Pending' }
-                                : undefined
-                        }
-                        onPress={handleLeavePress}
+                        requests={leaveRequests}
+                        onPressRequest={(req) => {
+                            if (req.status === 'draft') {
+                                router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
+                            } else {
+                                router.push(`/leave/${req.id}` as any);
+                            }
+                        }}
                         onQuickRequest={handleQuickLeavePress}
                     />
                 );

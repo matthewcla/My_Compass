@@ -112,6 +112,7 @@ export default function RootLayout() {
             <Stack.Screen name="(profile)" />
             <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
             <Stack.Screen name="leave" />
+            <Stack.Screen name="(career)" />
           </Stack>
           {/* AccountDrawer is rendered AFTER Stack to ensure navigation context is available */}
           <AccountDrawer

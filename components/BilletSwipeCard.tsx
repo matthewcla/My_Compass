@@ -110,10 +110,11 @@ interface BilletSwipeCardProps {
     onSwipe: (direction: 'left' | 'right' | 'up') => void;
     active: boolean;
     index: number;
+    isSandbox?: boolean;
 }
 
 // --- Main Component ---
-export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeCardProps) {
+export function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = false }: BilletSwipeCardProps) {
     const data = useMemo(() => enrichBillet(billet), [billet]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const colorScheme = useColorScheme();
@@ -350,8 +351,8 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                         </View>
 
                         {/* Body Content */}
-                        <View className="flex-1 p-6">
-                            <View className="flex-1 bg-blue-50/50 dark:bg-blue-900/10 border-l-4 border-blue-900 dark:border-blue-500 p-6 rounded-r-2xl mb-2 justify-center">
+                        <View className="flex-1 p-6 justify-center">
+                            <View className="bg-blue-50/50 dark:bg-blue-900/10 border-l-4 border-blue-900 dark:border-blue-500 pl-4 py-6 pr-4 rounded-r-2xl mb-2">
                                 <View className="flex-row items-center gap-2 mb-3">
                                     <MessageSquare size={14} color={isDark ? '#3b82f6' : COLORS.blue900} />
                                     <Text className="text-blue-900 dark:text-blue-400 font-bold text-xs uppercase tracking-wider">Detailer's Note</Text>
@@ -360,9 +361,9 @@ export function BilletSwipeCard({ billet, onSwipe, active, index }: BilletSwipeC
                             </View>
                         </View>
 
-                        {/* Trigger Bar */}
+                        {/* Trigger Bar - Padded to clear external controls */}
                         <View
-                            className="h-[70px] bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-center items-center pb-2"
+                            className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-10"
                         >
                             <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl">
                                 <Text className="text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-widest text-[13px]">Show Details</Text>

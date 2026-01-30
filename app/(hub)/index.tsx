@@ -65,7 +65,7 @@ export default function HubDashboard() {
 
     // Navigation Handlers
     const handleStartExploring = () => {
-        router.push('/(assignment)/assignments' as any);
+        router.push('/(career)/discovery' as any);
     };
 
     const handleJobPreferencesPress = () => {

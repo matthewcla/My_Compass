@@ -24,13 +24,13 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 <View className="flex-row items-center gap-2.5">
                     <Calendar size={16} color={iconColor} />
                     <View>
-                        <Text className="text-blue-900 dark:text-blue-100 text-xs font-bold leading-none mb-0.5">Cycle Closed</Text>
-                        <Text className="text-blue-700 dark:text-blue-300 text-[10px] leading-tight">
+                        <Text className="text-blue-900 dark:text-blue-100 text-sm font-bold leading-none mb-1">Cycle Closed</Text>
+                        <Text className="text-blue-700 dark:text-blue-300 text-xs leading-tight">
                             {nextCycle} opens in <Text className="font-bold">{daysUntilOpen} days</Text>.
                         </Text>
                     </View>
                 </View>
-                <Text className="text-[9px] font-bold text-blue-600 dark:text-blue-900 bg-blue-100 dark:bg-blue-400 px-2 py-1 rounded-full overflow-hidden">
+                <Text className="text-[10px] font-bold text-blue-600 dark:text-blue-900 bg-blue-100 dark:bg-blue-400 px-2 py-1 rounded-full overflow-hidden">
                     Prep Mode
                 </Text>
             </GlassView>

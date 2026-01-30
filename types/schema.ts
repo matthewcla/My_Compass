@@ -226,9 +226,14 @@ export const SQLiteTableDefinitions = {
       leave_type TEXT NOT NULL CHECK(leave_type IN ('annual', 'emergency', 'convalescent', 'terminal', 'parental', 'bereavement', 'adoption', 'ptdy', 'other')),
       leave_address TEXT NOT NULL,
       leave_phone_number TEXT NOT NULL,
-      emergency_contact TEXT NOT NULL, -- JSON object
+      emergency_contact TEXT, -- JSON object (Encrypted)
+      duty_section TEXT,
+      ration_status TEXT,
+      pre_review_checks TEXT, -- JSON object
       mode_of_travel TEXT,
       destination_country TEXT NOT NULL DEFAULT 'USA',
+      normal_working_hours TEXT DEFAULT '0700-1600',
+      leave_in_conus INTEGER DEFAULT 1,
       member_remarks TEXT,
       status TEXT NOT NULL CHECK(status IN ('draft', 'pending', 'approved', 'denied', 'returned', 'cancelled')),
       status_history TEXT NOT NULL, -- JSON array
@@ -247,6 +252,16 @@ export const SQLiteTableDefinitions = {
     );
     CREATE INDEX IF NOT EXISTS idx_leave_requests_user_id ON leave_requests(user_id);
     CREATE INDEX IF NOT EXISTS idx_leave_requests_status ON leave_requests(status);
+  `,
+
+    leave_defaults: `
+    CREATE TABLE IF NOT EXISTS leave_defaults (
+      user_id TEXT PRIMARY KEY,
+      data TEXT NOT NULL, -- Encrypted JSON blob
+      last_sync_timestamp TEXT NOT NULL,
+      sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
   `,
 } as const;
 
@@ -277,6 +292,25 @@ async function runMigrations(db: { execAsync: (sql: string) => Promise<void> }):
         // Column already exists - this is expected for new databases
         if (!e.message?.includes('duplicate column name')) {
             console.error('[DB Migration] Error adding preferences column:', e);
+        }
+    }
+
+    // Migration 2: Add normal_working_hours and leave_in_conus to leave_requests table
+    try {
+        await db.execAsync(`ALTER TABLE leave_requests ADD COLUMN normal_working_hours TEXT DEFAULT '0700-1600';`);
+        console.log('[DB Migration] Added normal_working_hours column to leave_requests table');
+    } catch (e: any) {
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding normal_working_hours column:', e);
+        }
+    }
+
+    try {
+        await db.execAsync(`ALTER TABLE leave_requests ADD COLUMN leave_in_conus INTEGER DEFAULT 1;`);
+        console.log('[DB Migration] Added leave_in_conus column to leave_requests table');
+    } catch (e: any) {
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding leave_in_conus column:', e);
         }
     }
 }
@@ -501,6 +535,19 @@ export type Approver = z.infer<typeof ApproverSchema>;
 /**
  * Leave request record (modeled after USAF LeaveWeb structure).
  */
+export const RationStatusSchema = z.enum(['commuted', 'in_kind', 'not_applicable']);
+export type RationStatus = z.infer<typeof RationStatusSchema>;
+
+export const PreReviewChecksSchema = z.object({
+    hasReadPolicy: z.boolean(),
+    hasInformalApproval: z.boolean(),
+    isReadyToSubmit: z.boolean(),
+});
+export type PreReviewChecks = z.infer<typeof PreReviewChecksSchema>;
+
+/**
+ * Leave request record (modeled after USAF LeaveWeb structure).
+ */
 export const LeaveRequestSchema = z.object({
     id: z.string().uuid(),
     userId: z.string().uuid(),
@@ -515,15 +562,26 @@ export const LeaveRequestSchema = z.object({
     leaveAddress: z.string(), // Where member will be during leave
     leavePhoneNumber: z.string(),
 
-    // Emergency contact (required)
-    emergencyContact: EmergencyContactSchema,
+    // Command Details
+    dutySection: z.string().optional(), // e.g. "N1 Admin"
+    deptDiv: z.string().optional(),
+    dutyPhone: z.string().optional(),
+    rationStatus: RationStatusSchema.optional(),
+
+    // Emergency contact (required for submission, optional for draft)
+    emergencyContact: EmergencyContactSchema.optional(),
 
     // Transportation
     modeOfTravel: z.string().optional(), // POV, Commercial Air, etc.
     destinationCountry: z.string().default('USA'),
+    normalWorkingHours: z.string().default('0700-1600'),
+    leaveInConus: z.boolean().default(true),
 
     // Remarks
     memberRemarks: z.string().optional(),
+
+    // Checklist
+    preReviewChecks: PreReviewChecksSchema.optional(),
 
     // Status workflow
     status: LeaveRequestStatusSchema,
@@ -579,10 +637,59 @@ export interface MyAdminState {
     leaveBalance: LeaveBalance | null;
     leaveRequests: Record<string, LeaveRequest>; // Indexed by request ID
     userLeaveRequestIds: string[]; // Quick lookup of current user's requests
+    userDefaults: LeaveRequestDefaults | null;
     lastBalanceSyncAt: string | null;
     isSyncingBalance: boolean;
     isSyncingRequests: boolean;
 }
+
+// =============================================================================
+// WIZARD STEP VALIDATION SCHEMAS
+// =============================================================================
+
+export const Step1IntentSchema = LeaveRequestSchema.pick({
+    leaveType: true,
+    startDate: true,
+    endDate: true,
+    chargeDays: true,
+    leaveInConus: true,
+    destinationCountry: true,
+});
+
+export const Step2ContactSchema = LeaveRequestSchema.pick({
+    leaveAddress: true,
+    leavePhoneNumber: true,
+    modeOfTravel: true,
+});
+
+export const Step3CommandSchema = LeaveRequestSchema.pick({
+    dutySection: true,
+    deptDiv: true,
+    dutyPhone: true,
+    rationStatus: true,
+});
+
+export const Step4SafetySchema = LeaveRequestSchema.pick({
+    emergencyContact: true,
+    memberRemarks: true,
+}).extend({
+    emergencyContact: EmergencyContactSchema,
+});
+
+/**
+ * Smart Defaults for Leave Requests.
+ * Subset of LeaveRequest that is persisted to speed up data entry.
+ */
+export const LeaveRequestDefaultsSchema = LeaveRequestSchema.pick({
+    leaveAddress: true,
+    leavePhoneNumber: true,
+    emergencyContact: true,
+    dutySection: true,
+    deptDiv: true,
+    dutyPhone: true,
+    rationStatus: true,
+});
+export type LeaveRequestDefaults = z.infer<typeof LeaveRequestDefaultsSchema>;
 
 /**
  * Root store interface combining all domain slices.

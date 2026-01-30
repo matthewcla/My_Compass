@@ -1,11 +1,12 @@
+import { DashboardData } from '@/types/dashboard';
 import {
   Application,
   Billet,
   LeaveBalance,
   LeaveRequest,
+  LeaveRequestDefaults,
 } from '@/types/schema';
 import { User } from '@/types/user';
-import { DashboardData } from '@/types/dashboard';
 
 export class DataIntegrityError extends Error {
   constructor(message: string, public originalError?: unknown) {
@@ -35,10 +36,15 @@ export interface IStorageService {
   saveLeaveRequest(request: LeaveRequest): Promise<void>;
   getLeaveRequest(id: string): Promise<LeaveRequest | null>;
   getUserLeaveRequests(userId: string): Promise<LeaveRequest[]>;
+  deleteLeaveRequest(requestId: string): Promise<void>;
 
   // Leave Balance
   saveLeaveBalance(balance: LeaveBalance): Promise<void>;
   getLeaveBalance(userId: string): Promise<LeaveBalance | null>;
+
+  // Leave Defaults
+  saveLeaveDefaults(userId: string, defaults: LeaveRequestDefaults): Promise<void>;
+  getLeaveDefaults(userId: string): Promise<LeaveRequestDefaults | null>;
 
   // Dashboard
   saveDashboardCache(userId: string, data: DashboardData): Promise<void>;

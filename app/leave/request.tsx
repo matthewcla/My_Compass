@@ -1,40 +1,125 @@
+import { SignatureButton } from '@/components/ui/SignatureButton';
+import { WizardStatusBar } from '@/components/wizard/WizardStatusBar';
+import { ReviewSign } from '@/components/wizard/steps/ReviewSign';
+import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
+import { Step2Contact } from '@/components/wizard/steps/Step2Contact';
+import { Step3Routing } from '@/components/wizard/steps/Step3Routing';
+import { VerificationChecks } from '@/components/wizard/steps/Step4Checklist';
+import { Step4Safety } from '@/components/wizard/steps/Step4Safety';
+import Colors from '@/constants/Colors';
+import { useCinematicDeck } from '@/hooks/useCinematicDeck';
+import { useHeaderStore } from '@/store/useHeaderStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
-import Colors from '@/constants/Colors';
-import { useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, MapPin, Phone, User, X } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, useColorScheme } from 'react-native';
+import { Alert, Modal, Pressable, Text, View, useColorScheme } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // --- Types & Constants ---
 
-const LEAVE_TYPES = [
-    { id: 'annual', label: 'Annual' },
-    { id: 'emergency', label: 'Emergency' },
-    { id: 'convalescent', label: 'Convalescent' },
-    { id: 'terminal', label: 'Terminal' },
-    { id: 'parental', label: 'Parental' },
-    { id: 'bereavement', label: 'Bereavement' },
-    { id: 'adoption', label: 'Adoption' },
-    { id: 'ptdy', label: 'PTDY' },
-    { id: 'other', label: 'Other' },
-] as const;
-
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 export default function LeaveRequestScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
+    const insets = useSafeAreaInsets();
     const router = useRouter();
     const submitRequest = useLeaveStore((state) => state.submitRequest);
+    const discardDraft = useLeaveStore((state) => state.discardDraft);
+    const leaveRequests = useLeaveStore((state) => state.leaveRequests);
     const isSyncing = useLeaveStore((state) => state.isSyncingRequests);
+    const setHeaderVisible = useHeaderStore((state) => state.setVisible);
+
+    // Hide Global Header
+    useFocusEffect(
+        React.useCallback(() => {
+            setHeaderVisible(false);
+            return () => setHeaderVisible(true);
+        }, [setHeaderVisible])
+    );
+
+    // Resume/Draft tracking
+    const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+    const [showExitModal, setShowExitModal] = useState(false);
+
+    const handleExit = () => {
+        setShowExitModal(true);
+    };
+
+    const confirmExit = async (action: 'discard' | 'save') => {
+        setShowExitModal(false);
+        if (action === 'discard') {
+            if (currentDraftId) {
+                await discardDraft(currentDraftId);
+            }
+            router.back();
+        } else {
+            // Save & Exit (default behavior: back out, store persists state)
+            router.back();
+        }
+    };
+
+    // Check for draft on mount
+    React.useEffect(() => {
+        // Simple logic: grab the first 'draft' status request found for this user
+        const drafts = Object.values(leaveRequests).filter(r => r.status === 'draft');
+
+        if (drafts.length > 0 && !currentDraftId) {
+            const draft = drafts[0];
+            Alert.alert(
+                "Resume Draft?",
+                "You have an unfinished leave request. Would you like to resume it?",
+                [
+                    {
+                        text: "Start New",
+                        style: "destructive",
+                        onPress: async () => {
+                            await discardDraft(draft.id);
+                        }
+                    },
+                    {
+                        text: "Resume",
+                        onPress: () => {
+                            setCurrentDraftId(draft.id);
+                            setFormData({
+                                leaveType: draft.leaveType,
+                                startDate: draft.startDate,
+                                endDate: draft.endDate,
+                                leaveAddress: draft.leaveAddress,
+                                leavePhoneNumber: draft.leavePhoneNumber,
+                                emergencyContact: draft.emergencyContact,
+                                memberRemarks: draft.memberRemarks,
+                                modeOfTravel: draft.modeOfTravel,
+                                dutySection: draft.dutySection,
+                                deptDiv: draft.deptDiv,
+                                dutyPhone: draft.dutyPhone,
+                                rationStatus: draft.rationStatus as any,
+                            });
+                        }
+                    }
+                ]
+            );
+        }
+    }, [leaveRequests]);
 
     // --- State ---
+    const [verificationChecks, setVerificationChecks] = useState<VerificationChecks>({
+        hasSufficientBalance: false,
+        understandsReportingTime: false,
+        verifiedDates: false,
+    });
 
-    const [step, setStep] = useState(0);
     const [formData, setFormData] = useState<Partial<CreateLeaveRequestPayload>>({
         leaveType: 'annual',
+        leaveInConus: true,
         destinationCountry: 'USA',
+        startTime: '16:00',
+        endTime: '07:30',
+        departureWorkingHours: '0730-1600',
+        returnWorkingHours: '0730-1600',
         emergencyContact: {
             name: '',
             relationship: '',
@@ -61,49 +146,44 @@ export default function LeaveRequestScreen() {
         }));
     };
 
-    const handleNext = () => {
-        if (!validateStep(step)) return;
-        if (step < TOTAL_STEPS - 1) {
-            setStep(step + 1);
-        } else {
-            handleSubmit();
-        }
-    };
-
-    const handleBack = () => {
-        if (step > 0) {
-            setStep(step - 1);
-        } else {
-            router.back();
-        }
+    const toggleVerification = (key: keyof VerificationChecks) => {
+        setVerificationChecks(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     const validateStep = (currentStep: number): boolean => {
         switch (currentStep) {
-            case 0: // Dates
+            case 0: // Step 1: Intent
+                if (!formData.leaveType) {
+                    Alert.alert('Required', 'Please select a Leave Type.');
+                    return false;
+                }
                 if (!formData.startDate || !formData.endDate) {
                     Alert.alert('Required', 'Please enter both start and end dates.');
                     return false;
                 }
-                // Simple regex or Date.parse check could go here
                 return true;
-            case 1: // Details
-                if (!formData.leaveType || !formData.leaveAddress || !formData.leavePhoneNumber) {
-                    Alert.alert('Required', 'Please fill in all details.');
+            case 1: // Step 2: Contact (Location/Travel)
+                if (!formData.leaveAddress || !formData.leavePhoneNumber) {
+                    Alert.alert('Required', 'Please fill in address and phone.');
                     return false;
                 }
+                // Removed Emergency Contact validation from here
                 return true;
-            case 2: // Emergency Contact
-                if (!formData.startDate || !formData.endDate) {
-                    Alert.alert('Required', 'Please ensure start and end dates are set.');
-                    return false;
-                }
-                if (!formData.leaveType) {
-                    Alert.alert('Required', 'Please ensure leave type is selected.');
-                    return false;
-                }
+            case 2: // Step 3: Command
+                // Optional fields mostly, but verify strictness if needed
+                return true;
+            case 3: // Step 4: Safety
                 if (!formData.emergencyContact?.name || !formData.emergencyContact?.relationship || !formData.emergencyContact?.phoneNumber) {
                     Alert.alert('Required', 'Please fill in all emergency contact details.');
+                    return false;
+                }
+                return true;
+            case 4: // Step 5: Review
+                if (!formData.startDate) return false;
+
+                const allVerified = Object.values(verificationChecks).every(v => v);
+                if (!allVerified) {
+                    Alert.alert('Incomplete', 'Please complete all verification checks.');
                     return false;
                 }
                 return true;
@@ -114,11 +194,8 @@ export default function LeaveRequestScreen() {
 
     const handleSubmit = async () => {
         try {
-            // Mock User ID for now (In real app, get from auth context/store)
             const currentUserId = "user-123";
-
             await submitRequest(formData as CreateLeaveRequestPayload, currentUserId);
-
             Alert.alert("Success", "Leave request submitted successfully!", [
                 { text: "OK", onPress: () => router.back() }
             ]);
@@ -127,245 +204,191 @@ export default function LeaveRequestScreen() {
         }
     };
 
-    // --- Render Steps ---
+    const deck = useCinematicDeck({
+        totalSteps: TOTAL_STEPS,
+        onComplete: handleSubmit,
+    });
 
-    const renderStep0_Dates = () => (
-        <View className="space-y-6">
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Start Date (YYYY-MM-DD)</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <Calendar size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="2026-02-01"
-                        value={formData.startDate}
-                        onChangeText={(text) => updateField('startDate', text)}
-                        keyboardType="numbers-and-punctuation"
+    const handleNext = () => {
+        if (!validateStep(deck.step)) return;
+        deck.next();
+    };
+
+    const renderCard = () => {
+        switch (deck.step) {
+            case 0:
+                return (
+                    <Step1Intent
+                        key="step0"
+                        leaveType={formData.leaveType}
+                        startDate={formData.startDate || ''}
+                        endDate={formData.endDate || ''}
+                        startTime={formData.startTime}
+                        endTime={formData.endTime}
+                        departureWorkingHours={formData.departureWorkingHours}
+                        returnWorkingHours={formData.returnWorkingHours}
+                        onUpdate={updateField}
                     />
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">End Date (YYYY-MM-DD)</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <Calendar size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="2026-02-05"
-                        value={formData.endDate}
-                        onChangeText={(text) => updateField('endDate', text)}
-                        keyboardType="numbers-and-punctuation"
+                );
+            case 1:
+                return (
+                    <Step2Contact
+                        key="step1"
+                        formData={formData}
+                        onUpdate={updateField}
                     />
-                </View>
-            </View>
-        </View>
-    );
-
-    const renderStep1_Details = () => (
-        <View className="space-y-6">
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-2">Leave Type</Text>
-                <View className="flex-row flex-wrap gap-2">
-                    {LEAVE_TYPES.map((type) => (
-                        <Pressable
-                            key={type.id}
-                            onPress={() => updateField('leaveType', type.id)}
-                            className={`px-4 py-2 rounded-full border ${formData.leaveType === type.id
-                                ? 'bg-systemBlue border-systemBlue'
-                                : 'bg-systemBackground border-systemGray6'
-                                }`}
-                        >
-                            <Text
-                                className={`${formData.leaveType === type.id ? 'text-white' : 'text-labelSecondary'
-                                    } font-medium`}
-                            >
-                                {type.label}
-                            </Text>
-                        </Pressable>
-                    ))}
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Leave Address</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <MapPin size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="123 Beach St, Honolulu, HI"
-                        value={formData.leaveAddress}
-                        onChangeText={(text) => updateField('leaveAddress', text)}
+                );
+            case 2:
+                return (
+                    <Step3Routing
+                        key="step2"
+                        formData={formData}
+                        onUpdate={updateField}
                     />
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Leave Phone Number</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <Phone size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="555-123-4567"
-                        value={formData.leavePhoneNumber}
-                        onChangeText={(text) => updateField('leavePhoneNumber', text)}
-                        keyboardType="phone-pad"
+                );
+            case 3:
+                return (
+                    <Step4Safety
+                        key="safety"
+                        formData={formData}
+                        onUpdate={updateField}
                     />
-                </View>
-            </View>
-        </View>
-    );
-
-    const renderStep2_Emergency = () => (
-        <View className="space-y-6">
-            <Text className="text-labelSecondary text-sm">
-                Who should we contact in case of an emergency while you are on leave?
-            </Text>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Contact Name</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <User size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="Jane Doe"
-                        value={formData.emergencyContact?.name}
-                        onChangeText={(text) => updateEmergencyContact('name', text)}
+                );
+            case 4:
+                return (
+                    <ReviewSign
+                        key="step4"
+                        formData={formData}
+                        verificationChecks={verificationChecks}
+                        onToggleVerification={toggleVerification}
                     />
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Relationship</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    {/* Reusing User icon for relationship broadly, or could use Heart etc */}
-                    <User size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="Spouse, Parent, etc."
-                        value={formData.emergencyContact?.relationship}
-                        onChangeText={(text) => updateEmergencyContact('relationship', text)}
-                    />
-                </View>
-            </View>
-
-            <View>
-                <Text className="text-sm font-medium text-labelSecondary mb-1">Emergency Phone</Text>
-                <View className="flex-row items-center bg-systemGray6 rounded-xl px-4 py-3 border border-systemGray6">
-                    <Phone size={20} color={themeColors.labelSecondary} className="mr-3" strokeWidth={1.5} />
-                    <TextInput
-                        className="flex-1 text-base text-labelPrimary"
-                        placeholder="555-987-6543"
-                        value={formData.emergencyContact?.phoneNumber}
-                        onChangeText={(text) => updateEmergencyContact('phoneNumber', text)}
-                        keyboardType="phone-pad"
-                    />
-                </View>
-            </View>
-        </View>
-    );
-
-    const renderStep3_Review = () => (
-        <View className="space-y-6">
-            <View className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <Text className="text-blue-900 font-bold text-lg mb-4">Summary</Text>
-
-                <View className="space-y-4">
-                    <View>
-                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Dates</Text>
-                        <Text className="text-base text-labelPrimary font-medium">{formData.startDate} to {formData.endDate}</Text>
-                    </View>
-
-                    <View>
-                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Type</Text>
-                        <Text className="text-base text-labelPrimary font-medium capitalize">{formData.leaveType}</Text>
-                    </View>
-
-                    <View>
-                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Location</Text>
-                        <Text className="text-base text-labelPrimary font-medium">{formData.leaveAddress}</Text>
-                        <Text className="text-base text-labelPrimary">{formData.leavePhoneNumber}</Text>
-                    </View>
-
-                    <View>
-                        <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Emergency Contact</Text>
-                        <Text className="text-base text-labelPrimary font-medium">{formData.emergencyContact?.name} ({formData.emergencyContact?.relationship})</Text>
-                        <Text className="text-base text-labelPrimary">{formData.emergencyContact?.phoneNumber}</Text>
-                    </View>
-                </View>
-            </View>
-
-            <View className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex-row items-start">
-                <View className="mt-1 mr-3">
-                    <CheckCircle2 size={20} color={themeColors.navyGold} strokeWidth={1.5} />
-                </View>
-                <Text className="text-amber-800 text-sm flex-1">
-                    By submitting this request, you certify that the information provided is accurate and you understand the leave policies relevant to your request type.
-                </Text>
-            </View>
-        </View>
-    );
+                );
+            default:
+                return null;
+        }
+    };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1 bg-systemBackground"
-        >
-            {/* Header */}
-            <View className="pt-4 pb-2 px-6 border-b border-systemGray6 flex-row items-center justify-between">
-                <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-systemGray6">
-                    <X size={24} color={themeColors.labelSecondary} strokeWidth={1.5} />
-                </Pressable>
-                <View className="items-center">
-                    <Text className="font-bold text-lg text-labelPrimary">Request Leave</Text>
-                    <Text className="text-xs text-labelSecondary font-medium">Step {step + 1} of {TOTAL_STEPS}</Text>
-                </View>
-                <View className="w-8" />{/* Spacer for centering */}
-            </View>
-
-            {/* Progress Bar */}
-            <View className="h-1 bg-systemGray6 w-full">
-                <View
-                    className="h-full bg-systemBlue transition-all duration-300"
-                    style={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
+        <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+            {colorScheme === 'dark' && (
+                <LinearGradient
+                    colors={['#0f172a', '#020617']} // slate-900 to slate-950
+                    style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
                 />
-            </View>
+            )}
+            <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+                <View className="flex-1">
+                    {/* Wizard Header with Close Button */}
+                    <View className="flex-row items-center justify-between bg-white/80 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10">
+                        <View className="flex-1">
+                            <WizardStatusBar currentStep={deck.step} onStepPress={(s) => deck.goTo(s)} />
+                        </View>
+                        {/* Close Button Removed */}
+                    </View>
 
-            <ScrollView className="flex-1 px-6 pt-6">
-                {step === 0 && renderStep0_Dates()}
-                {step === 1 && renderStep1_Details()}
-                {step === 2 && renderStep2_Emergency()}
-                {step === 3 && renderStep3_Review()}
+                    {/* Card Container */}
+                    <View className="flex-1 native:px-4 native:pt-4">
+                        {renderCard()}
+                    </View>
 
-                {/* Bottom spacer for scroll view */}
-                <View className="h-20" />
-            </ScrollView>
-
-            {/* Footer Navigation */}
-            <View className="p-6 border-t border-systemGray6 bg-systemBackground safe-area-bottom">
-                <View className="flex-row gap-4">
-                    {step > 0 && (
-                        <Pressable
-                            onPress={handleBack}
-                            className="flex-1 flex-row items-center justify-center p-4 rounded-xl bg-systemGray6 active:bg-systemGray6"
-                        >
-                            <ArrowLeft size={20} color={themeColors.labelSecondary} className="mr-2" strokeWidth={1.5} />
-                            <Text className="font-bold text-labelSecondary">Back</Text>
-                        </Pressable>
-                    )}
-
-                    <Pressable
-                        onPress={handleNext}
-                        disabled={isSyncing}
-                        className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing ? 'bg-blue-400' : 'bg-systemBlue active:bg-blue-700'
-                            }`}
+                    {/* Footer Navigation */}
+                    <View
+                        className="border-t border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-6 pt-4 flex-row items-center justify-between gap-3"
+                        style={{ paddingBottom: Math.max(insets.bottom, 20) }}
                     >
-                        <Text className="font-bold text-white mr-2">
-                            {step === TOTAL_STEPS - 1 ? (isSyncing ? 'Submitting...' : 'Submit Request') : 'Next'}
-                        </Text>
-                        {!isSyncing && <ArrowRight size={20} color="white" strokeWidth={1.5} />}
-                    </Pressable>
+                        {/* Persistent Exit (X) Button */}
+                        <Pressable
+                            onPress={handleExit}
+                            className="w-14 items-center justify-center p-4 rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
+                            accessibilityLabel="Exit Wizard"
+                        >
+                            <X size={24} color={themeColors.labelSecondary} strokeWidth={2} />
+                        </Pressable>
+
+                        {/* Navigation Group */}
+                        <View className="flex-1 flex-row gap-3">
+                            {!deck.isFirst && (
+                                <Pressable
+                                    onPress={deck.back}
+                                    className="w-14 items-center justify-center p-4 rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
+                                    accessibilityLabel="Go Back"
+                                >
+                                    <ArrowLeft size={24} color={themeColors.labelSecondary} strokeWidth={2} />
+                                </Pressable>
+                            )}
+
+                            {deck.isLast ? (
+                                <View className="flex-1 items-center justify-center">
+                                    <SignatureButton
+                                        onSign={handleSubmit}
+                                        isSubmitting={isSyncing}
+                                        disabled={!Object.values(verificationChecks).every(v => v)}
+                                    />
+                                </View>
+                            ) : (
+                                <Pressable
+                                    onPress={handleNext}
+                                    disabled={isSyncing}
+                                    className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing
+                                        ? 'bg-slate-800 border border-slate-700 opacity-50'
+                                        : 'bg-blue-600 active:bg-blue-500 shadow-lg shadow-blue-900/20'
+                                        }`}
+                                >
+                                    <Text className="font-bold text-white mr-2">Next</Text>
+                                    {!isSyncing && <ArrowRight size={20} color="white" strokeWidth={1.5} />}
+                                </Pressable>
+                            )}
+                        </View>
+                    </View>
                 </View>
-            </View>
-        </KeyboardAvoidingView>
+            </SafeAreaView>
+
+            {/* Exit Confirmation Modal */}
+            <Modal
+                transparent
+                visible={showExitModal}
+                animationType="fade"
+                onRequestClose={() => setShowExitModal(false)}
+            >
+                <View className="flex-1 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
+                    <View className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+                        <View className="p-6 items-center">
+                            <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
+                                Save Draft?
+                            </Text>
+                            <Text className="text-slate-500 dark:text-slate-400 text-center mb-6">
+                                Would you like to save this request as a draft before exiting?
+                            </Text>
+
+                            <View className="w-full gap-3">
+                                {/* Save & Exit */}
+                                <Pressable
+                                    onPress={() => confirmExit('save')}
+                                    className="w-full py-3 bg-blue-600 rounded-xl items-center active:bg-blue-700"
+                                >
+                                    <Text className="text-white font-semibold">Save & Exit</Text>
+                                </Pressable>
+
+                                {/* Discard */}
+                                <Pressable
+                                    onPress={() => confirmExit('discard')}
+                                    className="w-full py-3 bg-red-50 dark:bg-red-900/20 rounded-xl items-center active:bg-red-100 dark:active:bg-red-900/30"
+                                >
+                                    <Text className="text-red-600 dark:text-red-400 font-semibold">Discard</Text>
+                                </Pressable>
+
+                                {/* Cancel */}
+                                <Pressable
+                                    onPress={() => setShowExitModal(false)}
+                                    className="w-full py-3 mt-2 items-center"
+                                >
+                                    <Text className="text-slate-500 dark:text-slate-400 font-medium">Cancel</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </View>
     );
 }

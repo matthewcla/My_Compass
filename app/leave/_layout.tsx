@@ -6,8 +6,8 @@ export default function LeaveLayout() {
             <Stack.Screen
                 name="request"
                 options={{
-                    presentation: 'modal',
                     headerShown: false,
+                    presentation: 'card',
                 }}
             />
             <Stack.Screen

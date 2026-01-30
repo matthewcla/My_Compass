@@ -2,6 +2,7 @@ import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
 import { useUser } from '@/store/useUserStore';
 import { getShadow } from '@/utils/getShadow';
+import { router } from 'expo-router';
 import { LogOut, Minimize, Settings, UserCircle, X } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Modal, Platform, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
@@ -95,7 +96,6 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
                             className="flex-row items-center gap-3 py-3 px-4 rounded-xl bg-[rgba(0,0,0,0.03)]"
                             onPress={() => {
                                 onClose();
-                                // @ts-ignore
                                 router.push('/(profile)/preferences');
                             }}
                         >

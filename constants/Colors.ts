@@ -8,6 +8,18 @@ const navyLight = '#1E3A5F';
 const navyGold = '#C9A227';
 
 export const Colors = {
+  blue: {
+    500: '#3b82f6',
+    600: '#2563eb',
+  },
+  green: {
+    500: '#22c55e',
+    600: '#16a34a',
+  },
+  gray: {
+    400: '#9ca3af',
+    500: '#6b7280',
+  },
   light: {
     text: '#000',
     background: '#fff',
@@ -23,6 +35,10 @@ export const Colors = {
     navyGold: navyGold,
     labelPrimary: '#000000',
     labelSecondary: '#3C3C43',
+    cardBackground: '#FFFFFF',
+    wizardCardBackground: '#FFFFFF',
+    inputBackground: '#F8FAFC',
+    accentText: systemBlueLight,
 
     status: {
       success: '#16a34a',
@@ -45,6 +61,10 @@ export const Colors = {
     navyGold: navyGold,
     labelPrimary: '#FFFFFF',
     labelSecondary: '#EBEBF5',
+    cardBackground: '#1E293B',
+    wizardCardBackground: '#1E293B',
+    inputBackground: '#0F172A',
+    accentText: '#FFFFFF',
 
     status: {
       success: '#4ade80',

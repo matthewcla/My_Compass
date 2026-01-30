@@ -103,8 +103,8 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
                             <SlidersHorizontal size={20} color={isDark ? "#94A3B8" : "#64748B"} />
                         </View>
                         <View>
-                            <Text className="text-sm font-bold text-slate-800 dark:text-white">Job Preferences</Text>
-                            <Text className="text-xs text-slate-400">Last updated 24 days ago</Text>
+                            <Text className="text-base font-bold text-slate-800 dark:text-white">Job Preferences</Text>
+                            <Text className="text-sm text-slate-500">Last updated 24 days ago</Text>
                         </View>
                     </View>
                     <ChevronRight size={20} color={isDark ? "#475569" : "#cbd5e1"} />

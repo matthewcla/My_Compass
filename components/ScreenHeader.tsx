@@ -12,6 +12,7 @@ interface ScreenHeaderProps {
     subtitle: string | React.ReactNode;
     rightAction?: { icon: any; onPress: () => void } | null;
     withSafeArea?: boolean;
+    variant?: 'large' | 'inline';
 }
 
 const MENU_ITEMS = [
@@ -21,7 +22,13 @@ const MENU_ITEMS = [
     { label: 'My Profile', route: '/(profile)/preferences', icon: User, activePath: 'preferences' },
 ];
 
-export function ScreenHeader({ title, subtitle, rightAction, withSafeArea = true }: ScreenHeaderProps) {
+export function ScreenHeader({
+    title,
+    subtitle,
+    rightAction,
+    withSafeArea = true,
+    variant = 'large'
+}: ScreenHeaderProps) {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
@@ -38,40 +45,42 @@ export function ScreenHeader({ title, subtitle, rightAction, withSafeArea = true
         router.push(route as any);
     };
 
+    const isInline = variant === 'inline';
+
     return (
         <View className="z-50">
             <View
                 style={{
-                    paddingTop: (withSafeArea ? insets.top : 0) + 20,
-                    paddingHorizontal: 20,
-                    paddingBottom: 20
+                    paddingTop: (withSafeArea ? Math.max(insets.top, 20) : 0) + (isInline ? 8 : 12),
+                    paddingHorizontal: 16,
+                    paddingBottom: isInline ? 8 : 12
                 }}
-                className="flex-row justify-between items-start bg-gray-100 dark:bg-black relative z-50"
+                className={`flex-row justify-between items-center bg-gray-100 dark:bg-black relative z-50`}
             >
                 <View className="flex-row items-center flex-1 mr-4">
                     <Pressable
                         onPress={() => setMenuVisible(true)}
-                        className="mr-4 mt-1"
+                        className="mr-4"
                         hitSlop={12}
                     >
                         {/* REPLACEMENT: LayoutGrid for 'System/Function' Context Switcher */}
                         <LayoutGrid
                             color={colors.text}
-                            size={28}
+                            size={isInline ? 24 : 28}
                             strokeWidth={2} // TACTICAL: Increased weight
                         />
                     </Pressable>
-                    <View>
-                        <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                    <View className={isInline ? "flex-row items-baseline gap-2" : ""}>
+                        <Text className={`${isInline ? 'text-lg' : 'text-2xl'} font-black text-slate-900 dark:text-white uppercase tracking-tight`}>
                             {title}
                         </Text>
-                        <Text className="text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest text-xs mt-1">
+                        <Text className={`text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest ${isInline ? 'text-[10px]' : 'text-sm mt-1'}`}>
                             {subtitle}
                         </Text>
                     </View>
                 </View>
 
-                <View className="flex-row items-center gap-4 mt-2">
+                <View className="flex-row items-center gap-4">
                     {rightAction && (
                         <Pressable
                             onPress={rightAction.onPress}
@@ -82,7 +91,7 @@ export function ScreenHeader({ title, subtitle, rightAction, withSafeArea = true
                                 return (
                                     <Icon
                                         color={colors.text}
-                                        size={24}
+                                        size={isInline ? 20 : 24}
                                         strokeWidth={2}
                                         style={{ opacity: pressed ? 0.7 : 1 }}
                                     />
@@ -99,7 +108,7 @@ export function ScreenHeader({ title, subtitle, rightAction, withSafeArea = true
                         {({ pressed }) => (
                             <Bell
                                 color={colors.text}
-                                size={24}
+                                size={isInline ? 20 : 24}
                                 strokeWidth={2}
                                 style={{ opacity: pressed ? 0.7 : 1 }}
                             />
@@ -118,7 +127,7 @@ export function ScreenHeader({ title, subtitle, rightAction, withSafeArea = true
                     <View className="flex-1 bg-black/50 backdrop-blur-sm">
                         <View
                             style={{
-                                marginTop: (withSafeArea ? insets.top : 0) + 70,
+                                marginTop: (withSafeArea ? insets.top : 0) + (isInline ? 50 : 70),
                                 marginLeft: 20
                             }}
                         >

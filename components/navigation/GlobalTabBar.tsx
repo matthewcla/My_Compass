@@ -16,7 +16,7 @@ import {
     UserCircle
 } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type SpokeConfig = {
@@ -117,11 +117,12 @@ export default function GlobalTabBar() {
             );
 
         const color = isActive ? activeColor : inactiveColor;
+        const isHubMode = !config;
 
         return (
             <Pressable
                 onPress={() => router.push(route as any)}
-                className={`flex-1 items-center justify-center gap-1 h-full ${isActive ? 'bg-slate-50 dark:bg-slate-800' : ''}`}
+                className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full ${isActive ? 'bg-slate-50 dark:bg-slate-800' : ''}`}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isActive }}
             >
@@ -130,18 +131,21 @@ export default function GlobalTabBar() {
                     color={color}
                     strokeWidth={isActive ? 2.5 : 2}
                 />
-                <Text style={{ color, fontSize: 10, fontWeight: isActive ? '600' : '400' }}>
+                <Text style={{ color, fontSize: 11, fontWeight: isActive ? '600' : '400' }}>
                     {label}
                 </Text>
             </Pressable>
         );
     };
 
+    const isHubMode = !config;
+    const HEIGHT = Platform.select({ web: 60, default: 56 });
+
     return (
         <View
             style={{
                 paddingBottom: insets.bottom,
-                height: 60 + insets.bottom, // Standard height + safe area
+                height: HEIGHT + insets.bottom,
                 ...getShadow({
                     shadowColor: "#000",
                     shadowOffset: {
@@ -153,35 +157,27 @@ export default function GlobalTabBar() {
                     elevation: 5,
                 })
             }}
-            className="flex-row bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
+            className={`flex-row w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 ${isHubMode ? 'justify-around' : ''}`}
         >
             {/* 1. HOME (Fixed) */}
             {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox'))}
 
             {/* 2. SPOKE PRIMARY (Dynamic) */}
-            {config ? (
-                renderTab(config.primary.label, config.primary.route, config.primary.icon)
-            ) : (
-                <View className="flex-1" /> // Placeholder to maintain spacing in Hub
-            )}
+            {config && renderTab(config.primary.label, config.primary.route, config.primary.icon)}
 
             {/* 3. INBOX (Fixed - Center) */}
             {renderTab('Inbox', '/inbox', Inbox, pathname.includes('/inbox'))}
 
             {/* 4. SPOKE SECONDARY (Dynamic) */}
-            {config ? (
-                renderTab(config.secondary.label, config.secondary.route, config.secondary.icon)
-            ) : (
-                <View className="flex-1" /> // Placeholder
-            )}
+            {config && renderTab(config.secondary.label, config.secondary.route, config.secondary.icon)}
 
             {/* 5. PROFILE (Fixed - User Menu) */}
             <Pressable
                 onPress={() => useUIStore.getState().openAccountDrawer()}
-                className="flex-1 items-center justify-center gap-1 h-full"
+                className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full`}
             >
                 <UserCircle size={24} color={inactiveColor} />
-                <Text style={{ color: inactiveColor, fontSize: 10 }}>Profile</Text>
+                <Text style={{ color: inactiveColor, fontSize: 11 }}>Profile</Text>
             </Pressable>
         </View>
     );

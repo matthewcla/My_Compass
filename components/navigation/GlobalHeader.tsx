@@ -9,6 +9,7 @@ export default function GlobalHeader() {
     const subtitle = useHeaderStore((state) => state.subtitle);
     const rightAction = useHeaderStore((state) => state.rightAction);
     const isVisible = useHeaderStore((state) => state.isVisible);
+    const variant = useHeaderStore((state) => state.variant);
     const pathname = usePathname();
 
     // Hide on Sign In
@@ -27,6 +28,7 @@ export default function GlobalHeader() {
             subtitle={subtitle}
             rightAction={rightAction}
             withSafeArea={true}
+            variant={variant}
         />
     );
 }

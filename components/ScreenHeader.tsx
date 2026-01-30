@@ -42,16 +42,16 @@ export function ScreenHeader({ title, subtitle, rightAction, withSafeArea = true
         <View className="z-50">
             <View
                 style={{
-                    paddingTop: (withSafeArea ? insets.top : 0) + 20,
-                    paddingHorizontal: 20,
-                    paddingBottom: 20
+                    paddingTop: (withSafeArea ? insets.top : 0) + 12,
+                    paddingHorizontal: 16,
+                    paddingBottom: 12
                 }}
-                className="flex-row justify-between items-start bg-gray-100 dark:bg-black relative z-50"
+                className="flex-row justify-between items-center bg-gray-100 dark:bg-black relative z-50"
             >
                 <View className="flex-row items-center flex-1 mr-4">
                     <Pressable
                         onPress={() => setMenuVisible(true)}
-                        className="mr-4 mt-1"
+                        className="mr-4"
                         hitSlop={12}
                     >
                         {/* REPLACEMENT: LayoutGrid for 'System/Function' Context Switcher */}
@@ -62,16 +62,16 @@ export function ScreenHeader({ title, subtitle, rightAction, withSafeArea = true
                         />
                     </Pressable>
                     <View>
-                        <Text className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                        <Text className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
                             {title}
                         </Text>
-                        <Text className="text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest text-xs mt-1">
+                        <Text className="text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest text-sm mt-1">
                             {subtitle}
                         </Text>
                     </View>
                 </View>
 
-                <View className="flex-row items-center gap-4 mt-2">
+                <View className="flex-row items-center gap-4">
                     {rightAction && (
                         <Pressable
                             onPress={rightAction.onPress}

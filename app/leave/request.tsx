@@ -266,6 +266,8 @@ export default function LeaveRequestScreen() {
                 return !!(formData.startDate && formData.endDate && formData.leaveType);
             case 1: // Location
                 return !!(formData.leaveAddress && formData.leavePhoneNumber);
+            case 2: // Command
+                return !!(formData.dutySection && formData.deptDiv && formData.dutyPhone && formData.rationStatus);
             case 3: // Safety
                 return !!(formData.emergencyContact?.name && formData.emergencyContact?.phoneNumber);
             default:
@@ -296,6 +298,12 @@ export default function LeaveRequestScreen() {
             return;
         }
         // Step 3 (Routing) is technically optional or has defaults, but if we had checks we'd scroll to index 2.
+
+        if (!validateStep(2)) {
+            Alert.alert('Required', 'Please complete Command & Duty details (Step 3).');
+            scrollToSection(2);
+            return;
+        }
 
         if (!validateStep(3)) {
             Alert.alert('Required', 'Please complete Emergency Contact (Step 4).');
@@ -483,7 +491,7 @@ export default function LeaveRequestScreen() {
                                         <SignatureButton
                                             onSign={handleSubmit}
                                             isSubmitting={isSyncing}
-                                            disabled={!(validateStep(0) && validateStep(1) && validateStep(3))}
+                                            disabled={!(validateStep(0) && validateStep(1) && validateStep(2) && validateStep(3))}
                                         />
                                     </View>
                                 </View>

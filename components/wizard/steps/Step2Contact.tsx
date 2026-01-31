@@ -114,7 +114,7 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingRight: 20, gap: 12 }}
+                        contentContainerStyle={{ paddingRight: 40, gap: 12 }}
                     >
                         {MODES.map((mode, index) => {
                             const isSelected = formData.modeOfTravel === mode.id;
@@ -136,8 +136,8 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                                         }}
                                         activeOpacity={0.7}
                                         className={`w-28 h-28 p-3 rounded-2xl border-2 justify-between ${isSelected
-                                                ? `${activeBg} ${activeBorder}`
-                                                : 'bg-inputBackground border-transparent'
+                                            ? `${activeBg} ${activeBorder}`
+                                            : 'bg-inputBackground border-transparent'
                                             }`}
                                     >
                                         <View className={`w-10 h-10 rounded-full items-center justify-center ${isSelected ? 'bg-blue-500' : 'bg-slate-200 dark:bg-slate-700'

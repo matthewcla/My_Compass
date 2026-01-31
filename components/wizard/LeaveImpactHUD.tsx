@@ -60,7 +60,7 @@ export function LeaveImpactHUD({ chargeableDays, projectedBalance, isOverdraft }
                         <Text className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             Leave Charge
                         </Text>
-                        <Animated.View style={chargeStyle} className="flex-row items-baseline">
+                        <Animated.View style={[chargeStyle, { flexDirection: 'row', alignItems: 'flex-end' }]}>
                             <Text className="text-xl font-bold text-slate-900 dark:text-white">
                                 {chargeableDays.toFixed(1)}
                             </Text>

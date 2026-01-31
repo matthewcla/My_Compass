@@ -41,7 +41,7 @@ export function AliveInput({ icon, containerClassName, style, ...props }: AliveI
     return (
         <Animated.View
             className={`flex-row items-center bg-inputBackground rounded-2xl border px-4 shadow-sm ${containerClassName}`}
-            style={[animatedStyle]}
+            style={[{ flexDirection: 'row', alignItems: 'center' }, animatedStyle]}
         >
             {icon && <View className="mr-3">{icon}</View>}
             <TextInput

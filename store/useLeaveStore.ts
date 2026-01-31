@@ -39,6 +39,11 @@ interface LeaveActions {
     fetchUserDefaults: (userId: string) => Promise<void>;
 
     /**
+     * Fetch all local/persisted requests for user (Hydration).
+     */
+    fetchUserRequests: (userId: string) => Promise<void>;
+
+    /**
      * Generate a quick draft based on smart defaults.
      */
     generateQuickDraft: (type: 'weekend' | 'standard', userId: string) => LeaveRequest;
@@ -54,6 +59,11 @@ interface LeaveActions {
      */
     updateDraft: (draftId: string, patch: Partial<LeaveRequest>) => Promise<void>;
     updateDraftField: (draftId: string, field: keyof LeaveRequest, value: any) => Promise<void>;
+
+    /**
+     * Create a new draft in the store and persistence.
+     */
+    createDraft: (draft: LeaveRequest) => Promise<void>;
 
     /**
      * Validate a specific wizard step for a draft.
@@ -125,6 +135,26 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             set({ userDefaults: defaults });
         } catch (error) {
             console.error('Failed to fetch user defaults', error);
+        }
+    },
+
+    fetchUserRequests: async (userId: string) => {
+        set({ isSyncingRequests: true });
+        try {
+            const requests = await storage.getUserLeaveRequests(userId);
+            const requestMap = requests.reduce((acc, req) => {
+                acc[req.id] = req;
+                return acc;
+            }, {} as Record<string, LeaveRequest>);
+
+            set({
+                leaveRequests: requestMap,
+                userLeaveRequestIds: requests.map(r => r.id),
+                isSyncingRequests: false
+            });
+        } catch (error) {
+            console.error('Failed to fetch user requests:', error);
+            set({ isSyncingRequests: false });
         }
     },
 
@@ -385,6 +415,22 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             await storage.saveLeaveRequest(updatedRequest);
         } catch (error) {
             console.error('[useLeaveStore] Failed to persist draft update:', error);
+        }
+    },
+
+    createDraft: async (draft: LeaveRequest) => {
+        set((state) => ({
+            leaveRequests: {
+                ...state.leaveRequests,
+                [draft.id]: draft,
+            },
+            userLeaveRequestIds: [...state.userLeaveRequestIds, draft.id],
+        }));
+
+        try {
+            await storage.saveLeaveRequest(draft);
+        } catch (error) {
+            console.error('[useLeaveStore] Failed to persist new draft:', error);
         }
     },
 

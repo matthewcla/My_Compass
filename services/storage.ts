@@ -16,6 +16,7 @@ import {
 } from '@/types/schema';
 import { User, UserSchema } from '@/types/user';
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 import { DataIntegrityError, IStorageService } from './storage.interface';
 
 const DB_NAME = 'my_compass.db';
@@ -659,8 +660,112 @@ class MockStorage implements IStorageService {
 // EXPORT
 // =============================================================================
 
+// =============================================================================
+// WEB IMPLEMENTATION (localStorage)
+// =============================================================================
+
+class WebStorage implements IStorageService {
+  async init(): Promise<void> {
+    // No-op for localStorage
+  }
+
+  // --- Helpers ---
+  private getItem<T>(key: string): T | null {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+  }
+
+  private setItem(key: string, value: any): void {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  // --- User ---
+  async saveUser(user: User): Promise<void> {
+    this.setItem(`user_${user.id}`, user);
+  }
+  async getUser(id: string): Promise<User | null> {
+    return this.getItem<User>(`user_${id}`);
+  }
+
+  // --- Billets ---
+  async saveBillet(billet: Billet): Promise<void> {
+    this.setItem(`billet_${billet.id}`, billet);
+  }
+  async getBillet(id: string): Promise<Billet | null> {
+    return this.getItem<Billet>(`billet_${id}`);
+  }
+  async getAllBillets(): Promise<Billet[]> {
+    const keys = Object.keys(localStorage);
+    return keys.filter(k => k.startsWith('billet_'))
+      .map(k => this.getItem<Billet>(k)!);
+  }
+
+  // --- Applications ---
+  async saveApplication(app: Application): Promise<void> {
+    this.setItem(`app_${app.id}`, app);
+  }
+  async getApplication(id: string): Promise<Application | null> {
+    return this.getItem<Application>(`app_${id}`);
+  }
+  async getUserApplications(userId: string): Promise<Application[]> {
+    const keys = Object.keys(localStorage);
+    return keys.filter(k => k.startsWith('app_'))
+      .map(k => this.getItem<Application>(k)!)
+      .filter(a => a.userId === userId);
+  }
+
+  // --- Leave Requests ---
+  async saveLeaveRequest(request: LeaveRequest): Promise<void> {
+    this.setItem(`leave_${request.id}`, request);
+  }
+  async getLeaveRequest(id: string): Promise<LeaveRequest | null> {
+    return this.getItem<LeaveRequest>(`leave_${id}`);
+  }
+  async getUserLeaveRequests(userId: string): Promise<LeaveRequest[]> {
+    const keys = Object.keys(localStorage);
+    return keys.filter(k => k.startsWith('leave_'))
+      .map(k => this.getItem<LeaveRequest>(k)!)
+      .filter(r => r.userId === userId);
+  }
+  async deleteLeaveRequest(requestId: string): Promise<void> {
+    localStorage.removeItem(`leave_${requestId}`);
+  }
+
+  // --- Leave Balance ---
+  async saveLeaveBalance(balance: LeaveBalance): Promise<void> {
+    this.setItem(`balance_${balance.userId}`, balance);
+  }
+  async getLeaveBalance(userId: string): Promise<LeaveBalance | null> {
+    return this.getItem<LeaveBalance>(`balance_${userId}`);
+  }
+
+  // --- Defaults ---
+  async saveLeaveDefaults(userId: string, defaults: LeaveRequestDefaults): Promise<void> {
+    this.setItem(`defaults_${userId}`, defaults);
+  }
+  async getLeaveDefaults(userId: string): Promise<LeaveRequestDefaults | null> {
+    return this.getItem<LeaveRequestDefaults>(`defaults_${userId}`);
+  }
+
+  // --- Dashboard ---
+  async saveDashboardCache(userId: string, data: DashboardData): Promise<void> {
+    this.setItem(`dash_${userId}`, data);
+  }
+  async getDashboardCache(userId: string): Promise<DashboardData | null> {
+    return this.getItem<DashboardData>(`dash_${userId}`);
+  }
+}
+
+// =============================================================================
+// EXPORT
+// =============================================================================
+
 // Determine which service to use
 const useMocks = process.env.EXPO_PUBLIC_USE_MOCKS === 'true';
 
 // Export the service instance
-export const storage: IStorageService = useMocks ? new MockStorage() : new SQLiteStorage();
+export const storage: IStorageService = useMocks
+  ? new MockStorage()
+  : Platform.OS === 'web'
+    ? new WebStorage()
+    : new SQLiteStorage();

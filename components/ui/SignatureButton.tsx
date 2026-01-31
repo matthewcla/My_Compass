@@ -78,6 +78,7 @@ export function SignatureButton({ onSign, isSubmitting, disabled }: SignatureBut
         stopHaptics();
         setIsComplete(true);
         scale.value = withSpring(1);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         // Delay slighty to show success state before callback
@@ -106,7 +107,7 @@ export function SignatureButton({ onSign, isSubmitting, disabled }: SignatureBut
                                 left: 0,
                                 top: 0,
                                 bottom: 0,
-                                backgroundColor: 'rgba(255,255,255,0.2)',
+                                backgroundColor: 'rgba(255,255,255,0.3)', // Increased opacity for visibility
                             },
                             animatedProgressStyle
                         ]}

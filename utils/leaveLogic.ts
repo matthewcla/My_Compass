@@ -70,7 +70,12 @@ export function calculateLeave(
     }
 
     if (end < start) {
-        return { chargeableDays: 0, projectedBalance: currentBalance, isOverdraft: false, errors: ['End date cannot be before start date'] };
+        return {
+            chargeableDays: 0,
+            projectedBalance: currentBalance, // FORCE RESET to current balance
+            isOverdraft: false,
+            errors: ['End date cannot be before start date']
+        };
     }
 
     // Basic day difference (inclusive usually, but we refine based on rules)

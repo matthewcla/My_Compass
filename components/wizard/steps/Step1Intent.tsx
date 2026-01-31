@@ -4,9 +4,9 @@ import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { calculateLeave } from '@/utils/leaveLogic';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { eachDayOfInterval, format } from 'date-fns';
+import { addDays, eachDayOfInterval, format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
-import { AlertCircle, Clock } from 'lucide-react-native';
+import { AlertCircle, Clock, Lock } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
@@ -128,20 +128,58 @@ export function Step1Intent({
     // Handle Day Press (Range Selection)
     const handleDayPress = (day: DateData) => {
         Haptics.selectionAsync();
-        if (!startDate || (startDate && endDate)) {
-            // New range start
+
+        // Scenario 1: No Start Date (Initial) -> Set Start
+        if (!startDate) {
             onUpdate('startDate', day.dateString);
-            onUpdate('endDate', '');
-        } else {
-            // Range end
-            if (day.dateString < startDate) {
-                // If selected before start, reset start
-                onUpdate('startDate', day.dateString);
-            } else {
-                onUpdate('endDate', day.dateString);
+            return;
+        }
+
+        // Scenario 2: Start Date exists.
+        // If we are setting the "End Date" logic (i.e., simplifying to 2-tap range)
+        // Check if the tapped day is BEFORE the current start date.
+        if (day.dateString < startDate) {
+            // User tapped a day BEFORE the start.
+            // Intuition: They want this to be the NEW Start Date.
+            // We should auto-bump the End Date if the old End Date is now invalid,
+            // OR just reset the End Date?
+            // "Smart Correction": Set new Start. If old End exists and is valid, keep it. 
+            // If old End is now invalid (< new Start), clear it or push it.
+
+            onUpdate('startDate', day.dateString);
+
+            if (endDate && day.dateString > endDate) {
+                // New start is after old end (Wait, logic check: tapped < start. So if tapped < start, and start < end, then tapped < end. Safe.)
+                // But wait, if they Tap WAY before? All good.
             }
+
+            // However, there is a case where we might want to just reset the range if they tap backwards.
+            // Let's stick to the prompt requirement: "Smart Date Correction".
+            // If newStart > currentEnd, auto-update End.
+            // Here we are handling "New Start < Old Start".
+        } else if (day.dateString === startDate) {
+            // Tapped same day. Deselect? Or ignored? Let's treat as Start/End same day (1 day leave).
+            onUpdate('endDate', day.dateString);
+        } else {
+            // User tapped AFTER Start Date. This is the End Date.
+            onUpdate('endDate', day.dateString);
         }
     };
+
+    // Smart Correction Effect: Ensure End Date is never before Start Date
+    // This catches manual updates or weird state flows.
+    React.useEffect(() => {
+        if (startDate && endDate) {
+            if (endDate < startDate) {
+                // Invalid state detected.
+                // Auto-push End Date to Start + 0 (same day) or Start + 1?
+                // Defaulting to "Same Day" (1 day leave) is safest minimum.
+                // Or clear it? The requirement said "auto-update End = newStart + 1".
+                const newEnd = addDays(new Date(startDate), 1);
+                onUpdate('endDate', format(newEnd, 'yyyy-MM-dd'));
+            }
+        }
+    }, [startDate, endDate]);
 
     // --- Time Handling ---
     const handleTimeChange = (event: any, selectedDate?: Date) => {
@@ -275,14 +313,14 @@ export function Step1Intent({
                         </View>
 
                         <View className="flex-row gap-4">
-                            {/* Time Picker */}
-                            <Pressable
-                                onPress={() => openTimePicker('startTime')}
-                                className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
-                            >
-                                <Text className="text-xs text-slate-500 mb-0.5">Time</Text>
-                                <Text className="font-bold text-slate-900 dark:text-white">{startTime}</Text>
-                            </Pressable>
+                            {/* Time Picker (LOCKED) */}
+                            <View className="flex-1 bg-slate-100 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600 opacity-80">
+                                <View className="flex-row justify-between items-center">
+                                    <Text className="text-xs text-slate-400 mb-0.5">Time</Text>
+                                    <Lock size={12} className="text-slate-400" />
+                                </View>
+                                <Text className="font-bold text-slate-500 dark:text-slate-400">{startTime}</Text>
+                            </View>
 
                             {/* Working Hours Dropdown Stub */}
                             <Pressable
@@ -309,14 +347,14 @@ export function Step1Intent({
                         </View>
 
                         <View className="flex-row gap-4">
-                            {/* Time Picker */}
-                            <Pressable
-                                onPress={() => openTimePicker('endTime')}
-                                className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
-                            >
-                                <Text className="text-xs text-slate-500 mb-0.5">Time</Text>
-                                <Text className="font-bold text-slate-900 dark:text-white">{endTime}</Text>
-                            </Pressable>
+                            {/* Time Picker (LOCKED) */}
+                            <View className="flex-1 bg-slate-100 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600 opacity-80">
+                                <View className="flex-row justify-between items-center">
+                                    <Text className="text-xs text-slate-400 mb-0.5">Time</Text>
+                                    <Lock size={12} className="text-slate-400" />
+                                </View>
+                                <Text className="font-bold text-slate-500 dark:text-slate-400">{endTime}</Text>
+                            </View>
 
                             {/* Working Hours Dropdown Stub */}
                             <Pressable

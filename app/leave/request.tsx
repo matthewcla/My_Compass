@@ -66,8 +66,24 @@ export default function LeaveRequestScreen() {
 
     // Check for draft on mount
     const { draftId } = useLocalSearchParams();
+    const fetchUserRequests = useLeaveStore((state) => state.fetchUserRequests);
+    const userId = "user-123"; // TODO: Auth
+    const [isHydrated, setIsHydrated] = useState(false);
 
     React.useEffect(() => {
+        // Hydrate and then set ready
+        const init = async () => {
+            if (Object.keys(leaveRequests).length === 0) {
+                await fetchUserRequests(userId);
+            }
+            setIsHydrated(true);
+        };
+        init();
+    }, []);
+
+    React.useEffect(() => {
+        if (!isHydrated) return; // Wait for hydration
+
         // 1. Direct Draft Link (from Hub Card)
         if (draftId && typeof draftId === 'string') {
             const draft = leaveRequests[draftId];
@@ -97,41 +113,24 @@ export default function LeaveRequestScreen() {
 
         if (drafts.length > 0 && !currentDraftId) {
             const draft = drafts[0];
-            Alert.alert(
-                "Resume Draft?",
-                "You have an unfinished leave request. Would you like to resume it?",
-                [
-                    {
-                        text: "Start New",
-                        style: "destructive",
-                        onPress: async () => {
-                            await discardDraft(draft.id);
-                        }
-                    },
-                    {
-                        text: "Resume",
-                        onPress: () => {
-                            setCurrentDraftId(draft.id);
-                            setFormData({
-                                leaveType: draft.leaveType,
-                                startDate: draft.startDate,
-                                endDate: draft.endDate,
-                                leaveAddress: draft.leaveAddress,
-                                leavePhoneNumber: draft.leavePhoneNumber,
-                                emergencyContact: draft.emergencyContact,
-                                memberRemarks: draft.memberRemarks,
-                                modeOfTravel: draft.modeOfTravel,
-                                dutySection: draft.dutySection,
-                                deptDiv: draft.deptDiv,
-                                dutyPhone: draft.dutyPhone,
-                                rationStatus: draft.rationStatus as any,
-                            });
-                        }
-                    }
-                ]
-            );
+            console.log("Auto-Resuming Draft:", draft.id);
+            setCurrentDraftId(draft.id);
+            setFormData({
+                leaveType: draft.leaveType,
+                startDate: draft.startDate,
+                endDate: draft.endDate,
+                leaveAddress: draft.leaveAddress,
+                leavePhoneNumber: draft.leavePhoneNumber,
+                emergencyContact: draft.emergencyContact,
+                memberRemarks: draft.memberRemarks,
+                modeOfTravel: draft.modeOfTravel,
+                dutySection: draft.dutySection,
+                deptDiv: draft.deptDiv,
+                dutyPhone: draft.dutyPhone,
+                rationStatus: draft.rationStatus as any,
+            });
         }
-    }, [leaveRequests, draftId]);
+    }, [leaveRequests, draftId, isHydrated]);
 
     // --- State ---
     const [activeStep, setActiveStep] = useState(0);
@@ -158,6 +157,85 @@ export default function LeaveRequestScreen() {
             phoneNumber: '',
         },
     });
+
+    const createDraft = useLeaveStore((state) => state.createDraft);
+    const updateDraft = useLeaveStore((state) => state.updateDraft);
+    const generateQuickDraft = useLeaveStore((state) => state.generateQuickDraft);
+    const userDefaults = useLeaveStore((state) => state.userDefaults);
+
+    // Smart Defaults: Pre-fill on Mount if New Request
+    React.useEffect(() => {
+        if (!draftId && !currentDraftId && userDefaults) {
+            console.log('Applying Smart Defaults from History');
+            setFormData(prev => ({
+                ...prev,
+                leaveAddress: userDefaults.leaveAddress,
+                leavePhoneNumber: userDefaults.leavePhoneNumber,
+                emergencyContact: userDefaults.emergencyContact || prev.emergencyContact,
+                dutySection: userDefaults.dutySection,
+                deptDiv: userDefaults.deptDiv,
+                dutyPhone: userDefaults.dutyPhone,
+                rationStatus: userDefaults.rationStatus as any,
+            }));
+        }
+    }, [draftId, currentDraftId, userDefaults]);
+
+    // Auto-Save / Draft Creation
+    React.useEffect(() => {
+        // Skip initial mount or empty state
+        if (!formData.startDate && !formData.leaveType) return;
+
+        const timer = setTimeout(async () => {
+            if (currentDraftId) {
+                // Update Existing
+                console.log('Auto-Saving Draft:', currentDraftId);
+                // We need to match the LeaveRequest shape somewhat or just patch known fields
+                // The store updateDraft takes Partial<LeaveRequest>.
+                // Mapping formData (CreatePayload) to LeaveRequest partial:
+                const patch: any = { ...formData };
+                await updateDraft(currentDraftId, patch);
+            } else {
+                // Create New Draft if we have minimal viable data
+                // Only create if user has actually interacted (e.g. selected a date)
+                if (formData.startDate) {
+                    console.log('Creating New Auto-Draft');
+                    const userId = "user-123"; // TODO: Get from Auth
+                    const newDraft = generateQuickDraft('standard', userId);
+                    // Override defaults with current form data
+                    Object.assign(newDraft, formData);
+                    await createDraft(newDraft);
+                    setCurrentDraftId(newDraft.id);
+                }
+            }
+        }, 800); // 800ms debounce
+
+        return () => clearTimeout(timer);
+    }, [formData, currentDraftId, createDraft, updateDraft, generateQuickDraft]);
+
+    // Enforce Time Rules: Departure = End of Day, Return = Start of Day
+    React.useEffect(() => {
+        const getShiftTimes = (shiftCode: string = '0730-1600') => {
+            if (shiftCode === 'NONE') return { start: '00:00', end: '00:00' };
+            // Format: HHMM-HHMM
+            const startStr = shiftCode.split('-')[0];
+            const endStr = shiftCode.split('-')[1];
+            const formatTime = (t: string) => `${t.substring(0, 2)}:${t.substring(2)}`;
+            return { start: formatTime(startStr), end: formatTime(endStr) };
+        };
+
+        const dep = getShiftTimes(formData.departureWorkingHours);
+        const ret = getShiftTimes(formData.returnWorkingHours);
+
+        // Only update if different
+        if (formData.startTime !== dep.end || formData.endTime !== ret.start) {
+            console.log('Enforcing Leave Times:', dep.end, ret.start);
+            setFormData(prev => ({
+                ...prev,
+                startTime: dep.end, // Departure at End of Shift
+                endTime: ret.start  // Return at Start of Shift
+            }));
+        }
+    }, [formData.departureWorkingHours, formData.returnWorkingHours]);
 
     // --- Hoisted Logic (Leave Calculation) ---
     const leaveBalance = useLeaveStore((state) => state.leaveBalance);
@@ -198,6 +276,8 @@ export default function LeaveRequestScreen() {
             scrollToSection(1);
             return;
         }
+        // Step 3 (Routing) is technically optional or has defaults, but if we had checks we'd scroll to index 2.
+
         if (!formData.emergencyContact?.name || !formData.emergencyContact?.phoneNumber) {
             Alert.alert('Required', 'Please complete Emergency Contact (Step 4).');
             scrollToSection(3);
@@ -253,6 +333,14 @@ export default function LeaveRequestScreen() {
             scrollViewRef.current?.scrollTo({ y, animated: true });
         }
     };
+
+    if (!isHydrated) {
+        return (
+            <View className="flex-1 items-center justify-center bg-slate-50 dark:bg-slate-950">
+                <Text className="text-slate-500 font-medium">Loading...</Text>
+            </View>
+        );
+    }
 
     return (
         <View className="flex-1 bg-slate-50 dark:bg-slate-950">

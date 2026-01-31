@@ -42,6 +42,7 @@ interface Step1IntentProps {
     departureWorkingHours?: string;
     returnWorkingHours?: string;
     onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    embedded?: boolean;
 }
 
 export function Step1Intent({
@@ -52,7 +53,8 @@ export function Step1Intent({
     endTime = '16:00',
     departureWorkingHours = '0730-1600',
     returnWorkingHours = '0730-1600',
-    onUpdate
+    onUpdate,
+    embedded = false
 }: Step1IntentProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
@@ -189,7 +191,7 @@ export function Step1Intent({
     }, [isOverdraft]);
 
     return (
-        <WizardCard title="Request Details" scrollable={true}>
+        <WizardCard title="Request Details" scrollable={!embedded}>
             <View className="gap-6 pb-24">
                 {/* 1. Leave Type */}
                 <View>
@@ -345,24 +347,7 @@ export function Step1Intent({
                 )}
 
 
-                {/* Compact HUD (Bottom) */}
-                <Animated.View style={shakeStyle}>
-                    <View className="mt-4 bg-white dark:bg-slate-800 p-4 rounded-2xl flex-row justify-between items-center shadow-sm border border-slate-200 dark:border-slate-700">
-                        <View>
-                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Leave Charge</Text>
-                            <Text className="text-slate-900 dark:text-white font-bold text-lg">
-                                {chargeableDays.toFixed(1)} <Text className="text-sm font-normal text-slate-500 dark:text-slate-400">Days</Text>
-                            </Text>
-                        </View>
-                        <View className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700" />
-                        <View className="items-end">
-                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Remaining Balance</Text>
-                            <Text className={`font-bold text-lg ${isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                                {projectedBalance.toFixed(1)}
-                            </Text>
-                        </View>
-                    </View>
-                </Animated.View>
+
 
             </View>
 

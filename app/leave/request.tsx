@@ -1,4 +1,5 @@
 import { SignatureButton } from '@/components/ui/SignatureButton';
+import { LeaveImpactHUD } from '@/components/wizard/LeaveImpactHUD';
 import { WizardStatusBar } from '@/components/wizard/WizardStatusBar';
 import { ReviewSign } from '@/components/wizard/steps/ReviewSign';
 import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
@@ -7,15 +8,15 @@ import { Step3Routing } from '@/components/wizard/steps/Step3Routing';
 import { VerificationChecks } from '@/components/wizard/steps/Step4Checklist';
 import { Step4Safety } from '@/components/wizard/steps/Step4Safety';
 import Colors from '@/constants/Colors';
-import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
+import { calculateLeave } from '@/utils/leaveLogic';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight, X } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { Alert, Modal, Pressable, Text, View, useColorScheme } from 'react-native';
+import { X } from 'lucide-react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { Alert, KeyboardAvoidingView, LayoutChangeEvent, Modal, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // --- Types & Constants ---
@@ -25,6 +26,7 @@ const TOTAL_STEPS = 5;
 export default function LeaveRequestScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
+    const isDark = colorScheme === 'dark';
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const submitRequest = useLeaveStore((state) => state.submitRequest);
@@ -132,6 +134,10 @@ export default function LeaveRequestScreen() {
     }, [leaveRequests, draftId]);
 
     // --- State ---
+    const [activeStep, setActiveStep] = useState(0);
+    const scrollViewRef = useRef<ScrollView>(null);
+    const sectionCoords = useRef<number[]>([]);
+
     const [verificationChecks, setVerificationChecks] = useState<VerificationChecks>({
         hasSufficientBalance: false,
         understandsReportingTime: false,
@@ -153,72 +159,58 @@ export default function LeaveRequestScreen() {
         },
     });
 
+    // --- Hoisted Logic (Leave Calculation) ---
+    const leaveBalance = useLeaveStore((state) => state.leaveBalance);
+    const availableDays = leaveBalance?.currentBalance ?? 0;
+
+    const calculation = useMemo(() => {
+        return calculateLeave({
+            startDate: formData.startDate || '',
+            endDate: formData.endDate || '',
+            startTime: formData.startTime || '00:00',
+            endTime: formData.endTime || '00:00',
+            departureWorkingHours: formData.departureWorkingHours || 'NONE',
+            returnWorkingHours: formData.returnWorkingHours || 'NONE'
+        }, availableDays);
+    }, [formData.startDate, formData.endDate, formData.startTime, formData.endTime, formData.departureWorkingHours, formData.returnWorkingHours, availableDays]);
+
+    const { chargeableDays, projectedBalance, isOverdraft } = calculation;
+
     // --- Helpers ---
 
     const updateField = (field: keyof CreateLeaveRequestPayload, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const updateEmergencyContact = (field: keyof CreateLeaveRequestPayload['emergencyContact'], value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            emergencyContact: {
-                name: '',
-                relationship: '',
-                phoneNumber: '',
-                ...prev.emergencyContact,
-                [field]: value
-            }
-        }));
-    };
-
     const toggleVerification = (key: keyof VerificationChecks) => {
         setVerificationChecks(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    const validateStep = (currentStep: number): boolean => {
-        switch (currentStep) {
-            case 0: // Step 1: Intent
-                if (!formData.leaveType) {
-                    Alert.alert('Required', 'Please select a Leave Type.');
-                    return false;
-                }
-                if (!formData.startDate || !formData.endDate) {
-                    Alert.alert('Required', 'Please enter both start and end dates.');
-                    return false;
-                }
-                return true;
-            case 1: // Step 2: Contact (Location/Travel)
-                if (!formData.leaveAddress || !formData.leavePhoneNumber) {
-                    Alert.alert('Required', 'Please fill in address and phone.');
-                    return false;
-                }
-                // Removed Emergency Contact validation from here
-                return true;
-            case 2: // Step 3: Command
-                // Optional fields mostly, but verify strictness if needed
-                return true;
-            case 3: // Step 4: Safety
-                if (!formData.emergencyContact?.name || !formData.emergencyContact?.relationship || !formData.emergencyContact?.phoneNumber) {
-                    Alert.alert('Required', 'Please fill in all emergency contact details.');
-                    return false;
-                }
-                return true;
-            case 4: // Step 5: Review
-                if (!formData.startDate) return false;
-
-                const allVerified = Object.values(verificationChecks).every(v => v);
-                if (!allVerified) {
-                    Alert.alert('Incomplete', 'Please complete all verification checks.');
-                    return false;
-                }
-                return true;
-            default:
-                return true;
-        }
-    };
-
     const handleSubmit = async () => {
+        // Validate all
+        if (!formData.leaveType || !formData.startDate || !formData.endDate) {
+            Alert.alert('Required', 'Please complete the Leave Request details (Step 1).');
+            scrollToSection(0);
+            return;
+        }
+        if (!formData.leaveAddress || !formData.leavePhoneNumber) {
+            Alert.alert('Required', 'Please complete Location & Travel (Step 2).');
+            scrollToSection(1);
+            return;
+        }
+        if (!formData.emergencyContact?.name || !formData.emergencyContact?.phoneNumber) {
+            Alert.alert('Required', 'Please complete Emergency Contact (Step 4).');
+            scrollToSection(3);
+            return;
+        }
+
+        const allVerified = Object.values(verificationChecks).every(v => v);
+        if (!allVerified) {
+            Alert.alert('Incomplete', 'Please check all verification boxes at the bottom.');
+            scrollToSection(4);
+            return;
+        }
+
         try {
             const currentUserId = "user-123";
             await submitRequest(formData as CreateLeaveRequestPayload, currentUserId);
@@ -230,67 +222,35 @@ export default function LeaveRequestScreen() {
         }
     };
 
-    const deck = useCinematicDeck({
-        totalSteps: TOTAL_STEPS,
-        onComplete: handleSubmit,
-    });
+    // --- Scroll Handling ---
 
-    const handleNext = () => {
-        if (!validateStep(deck.step)) return;
-        deck.next();
+    const handleSectionLayout = (index: number, event: LayoutChangeEvent) => {
+        const layout = event.nativeEvent.layout;
+        sectionCoords.current[index] = layout.y;
     };
 
-    const renderCard = () => {
-        switch (deck.step) {
-            case 0:
-                return (
-                    <Step1Intent
-                        key="step0"
-                        leaveType={formData.leaveType}
-                        startDate={formData.startDate || ''}
-                        endDate={formData.endDate || ''}
-                        startTime={formData.startTime}
-                        endTime={formData.endTime}
-                        departureWorkingHours={formData.departureWorkingHours}
-                        returnWorkingHours={formData.returnWorkingHours}
-                        onUpdate={updateField}
-                    />
-                );
-            case 1:
-                return (
-                    <Step2Contact
-                        key="step1"
-                        formData={formData}
-                        onUpdate={updateField}
-                    />
-                );
-            case 2:
-                return (
-                    <Step3Routing
-                        key="step2"
-                        formData={formData}
-                        onUpdate={updateField}
-                    />
-                );
-            case 3:
-                return (
-                    <Step4Safety
-                        key="safety"
-                        formData={formData}
-                        onUpdate={updateField}
-                    />
-                );
-            case 4:
-                return (
-                    <ReviewSign
-                        key="step4"
-                        formData={formData}
-                        verificationChecks={verificationChecks}
-                        onToggleVerification={toggleVerification}
-                    />
-                );
-            default:
-                return null;
+    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const scrollY = event.nativeEvent.contentOffset.y;
+        const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+        // Offset to trigger "active" state a bit earlier than top-edge
+        const triggerPoint = scrollY + (layoutHeight * 0.3);
+
+        let newActive = 0;
+        for (let i = 0; i < TOTAL_STEPS; i++) {
+            const sectionTop = sectionCoords.current[i] || 0;
+            if (triggerPoint >= sectionTop) {
+                newActive = i;
+            }
+        }
+        if (newActive !== activeStep) {
+            setActiveStep(newActive);
+        }
+    };
+
+    const scrollToSection = (index: number) => {
+        const y = sectionCoords.current[index];
+        if (y !== undefined) {
+            scrollViewRef.current?.scrollTo({ y, animated: true });
         }
     };
 
@@ -304,68 +264,122 @@ export default function LeaveRequestScreen() {
             )}
             <SafeAreaView style={{ flex: 1 }} edges={['top']}>
                 <View className="flex-1">
-                    {/* Wizard Header with Close Button */}
-                    <View className="flex-row items-center justify-between bg-white/80 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10">
-                        <View className="flex-1">
-                            <WizardStatusBar currentStep={deck.step} onStepPress={(s) => deck.goTo(s)} />
-                        </View>
-                        {/* Close Button Removed */}
+                    {/* Header: StatusBar */}
+                    <View className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10 px-4 py-2">
+                        <WizardStatusBar
+                            currentStep={activeStep}
+                            onStepPress={scrollToSection}
+                        />
                     </View>
 
-                    {/* Card Container */}
-                    <View className="flex-1 native:px-4 native:pt-4">
-                        {renderCard()}
-                    </View>
-
-                    {/* Footer Navigation */}
-                    <View
-                        className="border-t border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/80 backdrop-blur-md px-6 pt-4 flex-row items-center justify-between gap-3"
-                        style={{ paddingBottom: Math.max(insets.bottom, 20) }}
+                    {/* Main Scroll Feed */}
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={{ flex: 1 }}
+                        keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0} // Accounts for header
                     >
-                        {/* Persistent Exit (X) Button */}
-                        <Pressable
-                            onPress={handleExit}
-                            className="w-14 items-center justify-center p-4 rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
-                            accessibilityLabel="Exit Wizard"
+                        <ScrollView
+                            ref={scrollViewRef}
+                            className="flex-1"
+                            contentContainerClassName="px-4 pt-4 pb-80" // Large bottom padding for Floating Footer
+                            onScroll={handleScroll}
+                            scrollEventThrottle={16}
+                            keyboardShouldPersistTaps="handled"
                         >
-                            <X size={24} color={themeColors.labelSecondary} strokeWidth={2} />
-                        </Pressable>
+                            {/* 1. Intent */}
+                            <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
+                                <Step1Intent
+                                    leaveType={formData.leaveType}
+                                    startDate={formData.startDate || ''}
+                                    endDate={formData.endDate || ''}
+                                    startTime={formData.startTime}
+                                    endTime={formData.endTime}
+                                    departureWorkingHours={formData.departureWorkingHours}
+                                    returnWorkingHours={formData.returnWorkingHours}
+                                    onUpdate={updateField}
+                                    embedded={true}
+                                />
+                            </View>
 
-                        {/* Navigation Group */}
-                        <View className="flex-1 flex-row gap-3">
-                            {!deck.isFirst && (
-                                <Pressable
-                                    onPress={deck.back}
-                                    className="w-14 items-center justify-center p-4 rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
-                                    accessibilityLabel="Go Back"
-                                >
-                                    <ArrowLeft size={24} color={themeColors.labelSecondary} strokeWidth={2} />
-                                </Pressable>
-                            )}
+                            {/* 2. Contact */}
+                            <View onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
+                                <Step2Contact
+                                    formData={formData}
+                                    onUpdate={updateField}
+                                    embedded={true}
+                                />
+                            </View>
 
-                            {deck.isLast ? (
-                                <View className="flex-1 items-center justify-center">
-                                    <SignatureButton
-                                        onSign={handleSubmit}
-                                        isSubmitting={isSyncing}
-                                        disabled={!Object.values(verificationChecks).every(v => v)}
-                                    />
+                            {/* 3. Routing */}
+                            <View onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
+                                <Step3Routing
+                                    formData={formData}
+                                    onUpdate={updateField}
+                                    embedded={true}
+                                />
+                            </View>
+
+                            {/* 4. Safety */}
+                            <View onLayout={(e) => handleSectionLayout(3, e)} className="mb-6">
+                                <Step4Safety
+                                    formData={formData}
+                                    onUpdate={updateField}
+                                    embedded={true}
+                                />
+                            </View>
+
+                            {/* 5. Review */}
+                            <View onLayout={(e) => handleSectionLayout(4, e)} className="mb-6">
+                                <ReviewSign
+                                    formData={formData}
+                                    verificationChecks={verificationChecks}
+                                    onToggleVerification={toggleVerification}
+                                    embedded={true}
+                                />
+                            </View>
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+
+                    {/* Floating Footer: HUD + Signature */}
+                    <View className="absolute bottom-0 left-0 right-0">
+                        <LinearGradient
+                            colors={[
+                                'transparent',
+                                isDark ? 'rgba(2,6,23,0.95)' : 'rgba(248,250,252,0.95)',
+                                isDark ? '#020617' : '#f8fafc'
+                            ]}
+                            locations={[0, 0.3, 1]}
+                            style={{ paddingBottom: Math.max(insets.bottom, 20) }}
+                            className="pt-12"
+                        >
+                            <View className="px-4">
+                                <LeaveImpactHUD
+                                    chargeableDays={chargeableDays}
+                                    projectedBalance={projectedBalance}
+                                    isOverdraft={isOverdraft}
+                                />
+                                <View className="mt-4 flex-row items-center gap-3">
+                                    {/* Exit Button */}
+                                    <Pressable
+                                        onPress={handleExit}
+                                        className="h-14 w-14 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
+                                        accessibilityLabel="Exit Wizard"
+                                    >
+                                        <X size={24} color={themeColors.labelSecondary} strokeWidth={2} />
+                                    </Pressable>
+
+                                    <View className="flex-1">
+                                        <SignatureButton
+                                            onSign={handleSubmit}
+                                            isSubmitting={isSyncing}
+                                            disabled={!Object.values(verificationChecks).every(v => v)}
+                                        />
+                                    </View>
                                 </View>
-                            ) : (
-                                <Pressable
-                                    onPress={handleNext}
-                                    disabled={isSyncing}
-                                    className={`flex-1 flex-row items-center justify-center p-4 rounded-xl ${isSyncing
-                                        ? 'bg-slate-800 border border-slate-700 opacity-50'
-                                        : 'bg-blue-600 active:bg-blue-500 shadow-lg shadow-blue-900/20'
-                                        }`}
-                                >
-                                    <Text className="font-bold text-white mr-2">Next</Text>
-                                    {!isSyncing && <ArrowRight size={20} color="white" strokeWidth={1.5} />}
-                                </Pressable>
-                            )}
-                        </View>
+                            </View>
+                        </LinearGradient>
                     </View>
+
                 </View>
             </SafeAreaView>
 

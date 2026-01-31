@@ -56,7 +56,7 @@ export function WizardCard({
                             </ScrollView>
                         </KeyboardAvoidingView>
                     ) : (
-                        <View className="flex-1 p-6">
+                        <View className="p-6">
                             {children}
                         </View>
                     )}

@@ -9,9 +9,10 @@ import { Pressable, Text, TextInput, View, useColorScheme } from 'react-native';
 interface Step3RoutingProps {
     formData: Partial<CreateLeaveRequestPayload>;
     onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    embedded?: boolean;
 }
 
-export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
+export function Step3Routing({ formData, onUpdate, embedded = false }: Step3RoutingProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
     const isDark = colorScheme === 'dark';
@@ -27,7 +28,7 @@ export function Step3Routing({ formData, onUpdate }: Step3RoutingProps) {
     ];
 
     return (
-        <WizardCard title="Command Coverage">
+        <WizardCard title="Command Coverage" scrollable={!embedded}>
             <View className="gap-6">
 
                 {/* Group 1: Duty Info */}

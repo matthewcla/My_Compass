@@ -9,9 +9,10 @@ import { Text, TextInput, View, useColorScheme } from 'react-native';
 interface Step4SafetyProps {
     formData: Partial<CreateLeaveRequestPayload>;
     onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    embedded?: boolean;
 }
 
-export function Step4Safety({ formData, onUpdate }: Step4SafetyProps) {
+export function Step4Safety({ formData, onUpdate, embedded = false }: Step4SafetyProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
     const isDark = colorScheme === 'dark';
@@ -30,7 +31,7 @@ export function Step4Safety({ formData, onUpdate }: Step4SafetyProps) {
     };
 
     return (
-        <WizardCard title="Safety & Remarks">
+        <WizardCard title="Safety & Remarks" scrollable={!embedded}>
             <View className="gap-8">
 
                 {/* Section 1: Emergency Contact */}

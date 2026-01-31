@@ -40,8 +40,7 @@ export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarPro
                     <React.Fragment key={step.id}>
                         <Pressable
                             hitSlop={10}
-                            disabled={!isCompleted}
-                            onPress={() => isCompleted && onStepPress(index)}
+                            onPress={() => onStepPress(index)}
                             className="items-center justify-center z-10"
                         >
                             <View className={`w-10 h-10 rounded-full items-center justify-center border-2 ${isActive

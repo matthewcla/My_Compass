@@ -10,9 +10,10 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 interface Step2ContactProps {
     formData: Partial<CreateLeaveRequestPayload>;
     onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    embedded?: boolean;
 }
 
-export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
+export function Step2Contact({ formData, onUpdate, embedded = false }: Step2ContactProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
     const isDark = colorScheme === 'dark';
@@ -29,7 +30,7 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
     ];
 
     return (
-        <WizardCard title="Location & Travel">
+        <WizardCard title="Location & Travel" scrollable={!embedded}>
             <View className="gap-6">
 
                 {/* 0. Location & Legal (Moved from Step 1) */}

@@ -10,14 +10,15 @@ interface ReviewSignProps {
     formData: Partial<CreateLeaveRequestPayload>;
     verificationChecks: VerificationChecks;
     onToggleVerification: (key: keyof VerificationChecks) => void;
+    embedded?: boolean;
 }
 
-export function ReviewSign({ formData, verificationChecks, onToggleVerification }: ReviewSignProps) {
+export function ReviewSign({ formData, verificationChecks, onToggleVerification, embedded = false }: ReviewSignProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
 
     return (
-        <WizardCard title="Review Request" scrollable={true}>
+        <WizardCard title="Review Request" scrollable={!embedded}>
             <View className="gap-6 pb-24">
                 <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50">
                     <Text className="text-blue-900 dark:text-blue-100 font-bold text-lg mb-4">Summary</Text>

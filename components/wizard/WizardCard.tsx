@@ -9,13 +9,15 @@ interface WizardCardProps {
     footer?: React.ReactNode;
     stickyFooter?: boolean;
     scrollable?: boolean;
+    noPadding?: boolean;
 }
 
 export function WizardCard({
     title,
     children,
     footer,
-    scrollable = true
+    scrollable = true,
+    noPadding = false
 }: WizardCardProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -48,7 +50,7 @@ export function WizardCard({
                         >
                             <ScrollView
                                 className="flex-1"
-                                contentContainerClassName="p-6 web:p-8"
+                                contentContainerClassName={noPadding ? undefined : "p-4 md:p-6 web:p-8"}
                                 showsVerticalScrollIndicator={false}
                                 keyboardShouldPersistTaps="handled"
                             >
@@ -56,7 +58,7 @@ export function WizardCard({
                             </ScrollView>
                         </KeyboardAvoidingView>
                     ) : (
-                        <View className="p-6">
+                        <View className={noPadding ? undefined : "p-6"}>
                             {children}
                         </View>
                     )}

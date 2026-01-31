@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js';
+import 'react-native-get-random-values';
 
 // In a real production environment, this key should be managed securely,
 // potentially retrieved from a server or derived from user credentials.

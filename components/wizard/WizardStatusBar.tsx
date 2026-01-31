@@ -7,6 +7,7 @@ import { Pressable, Text, View, useColorScheme } from 'react-native';
 interface WizardStatusBarProps {
     currentStep: number;
     onStepPress: (step: number) => void;
+    errorSteps?: number[];
 }
 
 const STEPS = [
@@ -17,7 +18,7 @@ const STEPS = [
     { id: 4, icon: CheckCircle2, label: 'Review' },
 ];
 
-export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarProps) {
+export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: WizardStatusBarProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
 
@@ -28,9 +29,11 @@ export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarPro
                 const Icon = step.icon;
                 const isActive = index === currentStep;
                 const isCompleted = index < currentStep;
+                const isError = errorSteps.includes(index);
 
                 // Determine Icon Color based on state and theme (Semantic Colors)
                 const getIconColor = () => {
+                    if (isError) return isDark ? Colors.dark.status.error : Colors.light.status.error;
                     if (isActive) return isDark ? Colors.blue[500] : Colors.blue[600];
                     if (isCompleted) return isDark ? Colors.green[500] : Colors.green[600];
                     return isDark ? Colors.gray[500] : Colors.gray[400];
@@ -43,11 +46,13 @@ export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarPro
                             onPress={() => onStepPress(index)}
                             className="items-center justify-center z-10"
                         >
-                            <View className={`w-10 h-10 rounded-full items-center justify-center border-2 ${isActive
-                                ? 'border-blue-600 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                : isCompleted
-                                    ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
+                            <View className={`w-10 h-10 rounded-full items-center justify-center border-2 ${isError
+                                ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20'
+                                : isActive
+                                    ? 'border-blue-600 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                    : isCompleted
+                                        ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
+                                        : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
                                 }`}>
                                 <Icon
                                     size={18}
@@ -56,9 +61,10 @@ export function WizardStatusBar({ currentStep, onStepPress }: WizardStatusBarPro
                                 />
                             </View>
                             <Text
-                                className={`text-[10px] font-bold mt-1 ${isActive ? 'text-blue-600 dark:text-blue-400' :
-                                    isCompleted ? 'text-green-600 dark:text-green-500' :
-                                        'text-slate-400 dark:text-gray-500'
+                                className={`text-[10px] font-bold mt-1 ${isError ? 'text-red-600 dark:text-red-400' :
+                                    isActive ? 'text-blue-600 dark:text-blue-400' :
+                                        isCompleted ? 'text-green-600 dark:text-green-500' :
+                                            'text-slate-400 dark:text-gray-500'
                                     }`}
                             >{step.label}</Text>
                         </Pressable>

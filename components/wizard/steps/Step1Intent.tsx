@@ -236,8 +236,8 @@ export function Step1Intent({
     const showTimeSection = !!startDate && !!endDate;
 
     return (
-        <WizardCard title="Request Details" scrollable={!embedded}>
-            <View className="gap-6 pb-24">
+        <WizardCard title="Request Details" scrollable={!embedded} noPadding={true}>
+            <View className="gap-6 pt-6 pb-6 px-4 md:px-6">
                 {/* 1. Leave Type */}
                 <View>
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Leave Category</Text>

@@ -5,7 +5,6 @@ import { ReviewSign } from '@/components/wizard/steps/ReviewSign';
 import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
 import { Step2Contact } from '@/components/wizard/steps/Step2Contact';
 import { Step3Routing } from '@/components/wizard/steps/Step3Routing';
-import { VerificationChecks } from '@/components/wizard/steps/Step4Checklist';
 import { Step4Safety } from '@/components/wizard/steps/Step4Safety';
 import Colors from '@/constants/Colors';
 import { useHeaderStore } from '@/store/useHeaderStore';
@@ -139,11 +138,7 @@ export default function LeaveRequestScreen() {
     const scrollViewRef = useRef<any>(null);
     const sectionCoords = useRef<number[]>([]);
 
-    const [verificationChecks, setVerificationChecks] = useState<VerificationChecks>({
-        hasSufficientBalance: false,
-        understandsReportingTime: false,
-        verifiedDates: false,
-    });
+
 
     const [formData, setFormData] = useState<Partial<CreateLeaveRequestPayload>>({
         leaveType: 'annual',
@@ -262,36 +257,52 @@ export default function LeaveRequestScreen() {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const toggleVerification = (key: keyof VerificationChecks) => {
-        setVerificationChecks(prev => ({ ...prev, [key]: !prev[key] }));
+
+
+    // --- Validation Logic ---
+    const validateStep = (stepIndex: number): boolean => {
+        switch (stepIndex) {
+            case 0: // Intent
+                return !!(formData.startDate && formData.endDate && formData.leaveType);
+            case 1: // Location
+                return !!(formData.leaveAddress && formData.leavePhoneNumber);
+            case 3: // Safety
+                return !!(formData.emergencyContact?.name && formData.emergencyContact?.phoneNumber);
+            default:
+                return true;
+        }
     };
+
+    const stepErrors = useMemo(() => {
+        const errors: number[] = [];
+        for (let i = 0; i < activeStep; i++) {
+            if (!validateStep(i)) {
+                errors.push(i);
+            }
+        }
+        return errors;
+    }, [activeStep, formData]);
 
     const handleSubmit = async () => {
         // Validate all
-        if (!formData.leaveType || !formData.startDate || !formData.endDate) {
+        if (!validateStep(0)) {
             Alert.alert('Required', 'Please complete the Leave Request details (Step 1).');
             scrollToSection(0);
             return;
         }
-        if (!formData.leaveAddress || !formData.leavePhoneNumber) {
+        if (!validateStep(1)) {
             Alert.alert('Required', 'Please complete Location & Travel (Step 2).');
             scrollToSection(1);
             return;
         }
         // Step 3 (Routing) is technically optional or has defaults, but if we had checks we'd scroll to index 2.
 
-        if (!formData.emergencyContact?.name || !formData.emergencyContact?.phoneNumber) {
+        if (!validateStep(3)) {
             Alert.alert('Required', 'Please complete Emergency Contact (Step 4).');
             scrollToSection(3);
             return;
         }
 
-        const allVerified = Object.values(verificationChecks).every(v => v);
-        if (!allVerified) {
-            Alert.alert('Incomplete', 'Please check all verification boxes at the bottom.');
-            scrollToSection(4);
-            return;
-        }
 
         try {
             const currentUserId = "user-123";
@@ -366,6 +377,7 @@ export default function LeaveRequestScreen() {
                         <WizardStatusBar
                             currentStep={activeStep}
                             onStepPress={scrollToSection}
+                            errorSteps={stepErrors}
                         />
                     </Animated.View>
 
@@ -430,8 +442,6 @@ export default function LeaveRequestScreen() {
                             <View onLayout={(e) => handleSectionLayout(4, e)} className="mb-6">
                                 <ReviewSign
                                     formData={formData}
-                                    verificationChecks={verificationChecks}
-                                    onToggleVerification={toggleVerification}
                                     embedded={true}
                                 />
                             </View>
@@ -473,7 +483,7 @@ export default function LeaveRequestScreen() {
                                         <SignatureButton
                                             onSign={handleSubmit}
                                             isSubmitting={isSyncing}
-                                            disabled={!Object.values(verificationChecks).every(v => v)}
+                                            disabled={false}
                                         />
                                     </View>
                                 </View>

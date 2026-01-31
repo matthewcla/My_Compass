@@ -28,7 +28,10 @@ export const unstable_settings = {
 };
 
 // Safe splash screen helpers that suppress benign errors in dev/Expo Go
-const isSplashError = (e: any) => e?.message?.includes('No native splash screen registered');
+const isSplashError = (e: any) => {
+  const msg = e?.message || '';
+  return msg.includes('No native splash screen registered') || msg.includes("Call 'SplashScreen.show'");
+};
 
 const safeSplashPreventAutoHide = async () => {
   try {

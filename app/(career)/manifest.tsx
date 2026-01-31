@@ -4,7 +4,7 @@ import { SmartBenchItem, useAssignmentStore } from '@/store/useAssignmentStore';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Trash2, Undo2 } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -36,7 +36,7 @@ export default function ManifestScreen() {
         return getManifestItems(activeTab);
     }, [activeTab, getManifestItems, mode]); // Re-fetch when tab changes
 
-    const handlePromote = (billetId: string) => {
+    const handlePromote = useCallback((billetId: string) => {
         const success = promoteToSlate(billetId, 'user-123');
         if (success) {
             showFeedback('Drafted! Added to Slate.', 'success');
@@ -44,20 +44,20 @@ export default function ManifestScreen() {
             console.warn('Slate is full');
             showFeedback('Slate Full.', 'warning');
         }
-    };
+    }, [promoteToSlate, showFeedback]);
 
-    const handleRemove = async (billetId: string) => {
+    const handleRemove = useCallback(async (billetId: string) => {
         // Move to Archive (Nope)
         await swipe(billetId, 'left', 'user-123');
         showFeedback('Archived.', 'info');
-    };
+    }, [swipe, showFeedback]);
 
-    const handleRecover = (billetId: string) => {
+    const handleRecover = useCallback((billetId: string) => {
         recoverBillet(billetId);
         showFeedback('Recovered to Candidates.', 'success');
-    };
+    }, [recoverBillet, showFeedback]);
 
-    const renderItem = ({ item }: { item: SmartBenchItem }) => {
+    const renderItem = useCallback(({ item }: { item: SmartBenchItem }) => {
         const isArchived = activeTab === 'archived';
 
         return (
@@ -102,7 +102,7 @@ export default function ManifestScreen() {
                 </View>
             </View>
         );
-    };
+    }, [activeTab, isDark, handleRecover, handleRemove, handlePromote]);
 
     return (
         <View className="flex-1 bg-slate-50 dark:bg-slate-950">
@@ -143,23 +143,25 @@ export default function ManifestScreen() {
                     data={items}
                     renderItem={renderItem}
                     estimatedItemSize={280}
-                    contentContainerStyle={{ paddingBottom: 40 }}
+                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
                     ListEmptyComponent={
-                        <View className="flex-1 items-center justify-center py-20 px-8">
-                            <Text className="text-slate-400 text-lg font-bold mb-2">
-                                {activeTab === 'archived' ? 'No archived items.' : 'No candidates yet.'}
-                            </Text>
-                            <Text className="text-slate-500 text-center text-sm mb-6">
-                                {activeTab === 'archived'
-                                    ? "Items you swipe left on will appear here."
-                                    : "Go to Discovery and swipe right on billets to build your manifest."}
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => router.push('/(career)/discovery')}
-                                className="bg-blue-600 px-6 py-3 rounded-full shadow-lg active:bg-blue-700"
-                            >
-                                <Text className="text-white font-bold text-sm uppercase tracking-wide">Find More</Text>
-                            </TouchableOpacity>
+                        <View style={{ minHeight: 300, flex: 1 }}>
+                            <View className="flex-1 items-center justify-center py-20 px-8">
+                                <Text className="text-slate-400 text-lg font-bold mb-2">
+                                    {activeTab === 'archived' ? 'No archived items.' : 'No candidates yet.'}
+                                </Text>
+                                <Text className="text-slate-500 text-center text-sm mb-6">
+                                    {activeTab === 'archived'
+                                        ? "Items you swipe left on will appear here."
+                                        : "Go to Discovery and swipe right on billets to build your manifest."}
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(career)/discovery')}
+                                    className="bg-blue-600 px-6 py-3 rounded-full shadow-lg active:bg-blue-700"
+                                >
+                                    <Text className="text-white font-bold text-sm uppercase tracking-wide">Find More</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     }
                 />

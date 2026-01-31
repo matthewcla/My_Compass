@@ -14,9 +14,10 @@ import { CreateLeaveRequestPayload } from '@/types/api';
 import { calculateLeave } from '@/utils/leaveLogic';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { X } from 'lucide-react-native';
+import { CheckCircle, X } from 'lucide-react-native';
 import React, { useMemo, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, LayoutChangeEvent, Modal, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { Alert, KeyboardAvoidingView, LayoutChangeEvent, Modal, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // --- Types & Constants ---
@@ -46,6 +47,7 @@ export default function LeaveRequestScreen() {
     // Resume/Draft tracking
     const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
     const [showExitModal, setShowExitModal] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     const handleExit = () => {
         setShowExitModal(true);
@@ -134,7 +136,7 @@ export default function LeaveRequestScreen() {
 
     // --- State ---
     const [activeStep, setActiveStep] = useState(0);
-    const scrollViewRef = useRef<ScrollView>(null);
+    const scrollViewRef = useRef<any>(null);
     const sectionCoords = useRef<number[]>([]);
 
     const [verificationChecks, setVerificationChecks] = useState<VerificationChecks>({
@@ -294,9 +296,13 @@ export default function LeaveRequestScreen() {
         try {
             const currentUserId = "user-123";
             await submitRequest(formData as CreateLeaveRequestPayload, currentUserId);
-            Alert.alert("Success", "Leave request submitted successfully!", [
-                { text: "OK", onPress: () => router.back() }
-            ]);
+
+            // Success Celebration
+            setShowSuccess(true);
+            setTimeout(() => {
+                router.back();
+            }, 2500);
+
         } catch (error) {
             Alert.alert("Error", "Failed to submit leave request.");
         }
@@ -353,12 +359,15 @@ export default function LeaveRequestScreen() {
             <SafeAreaView style={{ flex: 1 }} edges={['top']}>
                 <View className="flex-1">
                     {/* Header: StatusBar */}
-                    <View className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10 px-4 py-2">
+                    <Animated.View
+                        entering={FadeInDown.delay(100).springify()}
+                        className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10 px-4 py-2"
+                    >
                         <WizardStatusBar
                             currentStep={activeStep}
                             onStepPress={scrollToSection}
                         />
-                    </View>
+                    </Animated.View>
 
                     {/* Main Scroll Feed */}
                     <KeyboardAvoidingView
@@ -366,7 +375,8 @@ export default function LeaveRequestScreen() {
                         style={{ flex: 1 }}
                         keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0} // Accounts for header
                     >
-                        <ScrollView
+                        <Animated.ScrollView
+                            entering={FadeInDown.delay(200).springify()}
                             ref={scrollViewRef}
                             className="flex-1"
                             contentContainerClassName="px-4 pt-4 pb-80" // Large bottom padding for Floating Footer
@@ -425,11 +435,14 @@ export default function LeaveRequestScreen() {
                                     embedded={true}
                                 />
                             </View>
-                        </ScrollView>
+                        </Animated.ScrollView>
                     </KeyboardAvoidingView>
 
                     {/* Floating Footer: HUD + Signature */}
-                    <View className="absolute bottom-0 left-0 right-0">
+                    <Animated.View
+                        entering={FadeInDown.delay(400).springify()}
+                        className="absolute bottom-0 left-0 right-0"
+                    >
                         <LinearGradient
                             colors={[
                                 'transparent',
@@ -466,8 +479,7 @@ export default function LeaveRequestScreen() {
                                 </View>
                             </View>
                         </LinearGradient>
-                    </View>
-
+                    </Animated.View>
                 </View>
             </SafeAreaView>
 
@@ -517,6 +529,24 @@ export default function LeaveRequestScreen() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Success Celebration Overlay */}
+            {showSuccess && (
+                <Animated.View
+                    entering={FadeIn}
+                    className="absolute inset-0 z-50 bg-blue-600/95 dark:bg-blue-950/95 items-center justify-center backdrop-blur-lg"
+                >
+                    <Animated.View entering={ZoomIn.delay(200).springify()}>
+                        <CheckCircle size={100} color="white" strokeWidth={2.5} />
+                    </Animated.View>
+                    <Animated.Text entering={FadeInUp.delay(500)} className="text-white text-3xl font-bold mt-8 tracking-tight">
+                        Request Sent!
+                    </Animated.Text>
+                    <Animated.Text entering={FadeInUp.delay(600)} className="text-blue-100 text-lg mt-3 text-center">
+                        Your leave request is on its way{'\n'}to the approver.
+                    </Animated.Text>
+                </Animated.View>
+            )}
         </View>
     );
 }

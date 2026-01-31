@@ -7,6 +7,8 @@ import Animated, {
     runOnJS,
     useAnimatedStyle,
     useSharedValue,
+    withRepeat,
+    withSequence,
     withSpring,
     withTiming
 } from 'react-native-reanimated';
@@ -87,6 +89,22 @@ export function SignatureButton({ onSign, isSubmitting, disabled }: SignatureBut
         }, 500);
     };
 
+    // Auto-Pulse when valid (enabled)
+    React.useEffect(() => {
+        if (!disabled && !isSubmitting && !isComplete) {
+            scale.value = withRepeat(
+                withSequence(
+                    withTiming(1.02, { duration: 1000 }),
+                    withTiming(1, { duration: 1000 })
+                ),
+                -1,
+                true
+            );
+        } else {
+            scale.value = withSpring(1);
+        }
+    }, [disabled, isSubmitting, isComplete]);
+
     return (
         <Animated.View style={[buttonScaleStyle]} className="w-full">
             <Pressable
@@ -95,7 +113,7 @@ export function SignatureButton({ onSign, isSubmitting, disabled }: SignatureBut
                 disabled={disabled || isSubmitting || isComplete}
                 className={`h-14 w-full rounded-xl overflow-hidden relative items-center justify-center border ${disabled
                     ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                    : 'bg-blue-600 border-blue-600'
+                    : 'bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/30'
                     }`}
             >
                 {/* Progress Fill Layer */}
@@ -107,7 +125,7 @@ export function SignatureButton({ onSign, isSubmitting, disabled }: SignatureBut
                                 left: 0,
                                 top: 0,
                                 bottom: 0,
-                                backgroundColor: 'rgba(255,255,255,0.3)', // Increased opacity for visibility
+                                backgroundColor: 'rgba(255,255,255,0.2)',
                             },
                             animatedProgressStyle
                         ]}

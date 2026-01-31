@@ -12,6 +12,7 @@ import { Modal, Platform, Pressable, Text, View, useColorScheme } from 'react-na
 import { Calendar, DateData } from 'react-native-calendars';
 import Animated, { FadeIn, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
 
+
 // --- Types & Constants ---
 const WORKING_HOURS_OPTIONS = [
     { label: 'Standard (07:30 - 16:00)', value: '0730-1600' },
@@ -228,6 +229,12 @@ export function Step1Intent({
         };
     }, [isOverdraft]);
 
+    // SEQUENTIAL REVEAL LOGIC
+    // We only show the Calendar if a Leave Type is selected (or if dates already exist).
+    const showCalendar = !!leaveType || !!startDate;
+    // We only show the Time/Schedule section if we have a valid Date Range.
+    const showTimeSection = !!startDate && !!endDate;
+
     return (
         <WizardCard title="Request Details" scrollable={!embedded}>
             <View className="gap-6 pb-24">
@@ -239,15 +246,15 @@ export function Step1Intent({
                             setShowLeaveTypePicker(true);
                             Haptics.selectionAsync();
                         }}
-                        className="bg-inputBackground p-4 rounded-xl border border-slate-200 dark:border-slate-700"
+                        className="bg-inputBackground p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-[0.98] transition-transform"
                     >
                         <View className="flex-row justify-between items-center">
                             <View>
                                 <Text className="text-base font-bold text-slate-900 dark:text-white capitalize">
-                                    {LEAVE_TYPE_OPTIONS.find(o => o.value === leaveType)?.label || 'Annual Leave'}
+                                    {LEAVE_TYPE_OPTIONS.find(o => o.value === leaveType)?.label || 'Select Category...'}
                                 </Text>
                                 <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    {leaveType ? 'Category selected' : 'Standard chargeable leave'}
+                                    {leaveType ? 'Category selected' : 'Tap to choose leave type'}
                                 </Text>
                             </View>
                             <Text className="text-blue-500 font-medium">Change</Text>
@@ -255,120 +262,121 @@ export function Step1Intent({
                     </Pressable>
                 </View>
 
-                {/* 2. Premium Calendar */}
-                <View>
-                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Select Dates</Text>
-                    <View className="bg-cardBackground dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <Calendar
-                            key={colorScheme}
-                            current={startDate || undefined}
-                            onDayPress={handleDayPress}
-                            markingType={'period'}
-                            markedDates={markedDates}
-                            theme={{
-                                calendarBackground: isDark ? themeColors.background : '#ffffff',
-                                textSectionTitleColor: isDark ? '#94a3b8' : '#b6c1cd',
-                                selectedDayBackgroundColor: themeColors.tint,
-                                selectedDayTextColor: '#ffffff',
-                                todayTextColor: themeColors.tint,
-                                dayTextColor: isDark ? '#e2e8f0' : '#2d4150',
-                                textDisabledColor: isDark ? '#334155' : '#d9e1e8',
-                                arrowColor: themeColors.tint,
-                                monthTextColor: isDark ? '#f8fafc' : '#1e293b',
-                                textDayFontWeight: '600',
-                                textMonthFontWeight: 'bold',
-                                textDayHeaderFontWeight: '500',
-                            }}
-                        />
-                    </View>
-                    {/* Range Display */}
-                    <View className="flex-row justify-between mt-3 px-1">
-                        <View>
-                            <Text className="text-xs text-slate-500 mb-1">Start Date</Text>
-                            <Text className={`font-bold ${startDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
-                                {startDate || 'Select'}
-                            </Text>
+                {/* 2. Premium Calendar (Progressive Reveal) */}
+                {showCalendar && (
+                    <Animated.View entering={FadeIn.delay(100).springify()}>
+                        <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Select Dates</Text>
+                        <View className="bg-cardBackground dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <Calendar
+                                key={colorScheme}
+                                current={startDate || undefined}
+                                onDayPress={handleDayPress}
+                                markingType={'period'}
+                                markedDates={markedDates}
+                                theme={{
+                                    calendarBackground: isDark ? themeColors.background : '#ffffff',
+                                    textSectionTitleColor: isDark ? '#94a3b8' : '#b6c1cd',
+                                    selectedDayBackgroundColor: themeColors.tint,
+                                    selectedDayTextColor: '#ffffff',
+                                    todayTextColor: themeColors.tint,
+                                    dayTextColor: isDark ? '#e2e8f0' : '#2d4150',
+                                    textDisabledColor: isDark ? '#334155' : '#d9e1e8',
+                                    arrowColor: themeColors.tint,
+                                    monthTextColor: isDark ? '#f8fafc' : '#1e293b',
+                                    textDayFontWeight: '600',
+                                    textMonthFontWeight: 'bold',
+                                    textDayHeaderFontWeight: '500',
+                                }}
+                            />
                         </View>
-                        <View className="items-end">
-                            <Text className="text-xs text-slate-500 mb-1">End Date</Text>
-                            <Text className={`font-bold ${endDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
-                                {endDate || 'Select'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* 3. Time & Working Hours Logic */}
-                <View className="gap-4">
-                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">Time & Schedule</Text>
-
-                    {/* Start Block */}
-                    {/* Start Block */}
-                    <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <View className="flex-row items-center mb-3">
-                            <View className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-md mr-2">
-                                <Clock size={16} className="text-blue-600 dark:text-blue-400" />
+                        {/* Range Display */}
+                        <View className="flex-row justify-between mt-3 px-1">
+                            <View>
+                                <Text className="text-xs text-slate-500 mb-1">Start Date</Text>
+                                <Text className={`font-bold ${startDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                                    {startDate || 'Select'}
+                                </Text>
                             </View>
-                            <Text className="font-bold text-slate-700 dark:text-slate-300">Departure</Text>
+                            <View className="items-end">
+                                <Text className="text-xs text-slate-500 mb-1">End Date</Text>
+                                <Text className={`font-bold ${endDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                                    {endDate || 'Select'}
+                                </Text>
+                            </View>
+                        </View>
+                    </Animated.View>
+                )}
+
+                {/* 3. Time & Working Hours Logic (Progressive Reveal) */}
+                {showTimeSection && (
+                    <Animated.View entering={FadeIn.delay(200).springify()} className="gap-4">
+                        <View className="flex-row items-center justify-between">
+                            <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">Time & Schedule</Text>
                         </View>
 
-                        <View className="flex-row gap-4">
-                            {/* Time Picker (LOCKED) */}
-                            <View className="flex-1 bg-slate-100 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600 opacity-80">
-                                <View className="flex-row justify-between items-center">
-                                    <Text className="text-xs text-slate-400 mb-0.5">Time</Text>
+                        {/* Start Block */}
+                        <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <View className="flex-row items-center justify-between mb-3">
+                                <View className="flex-row items-center">
+                                    <View className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-md mr-2">
+                                        <Clock size={16} className="text-blue-600 dark:text-blue-400" />
+                                    </View>
+                                    <View>
+                                        <Text className="font-bold text-slate-700 dark:text-slate-300">Departure</Text>
+                                        <Text className="text-[10px] text-slate-400 font-medium">
+                                            {WORKING_HOURS_OPTIONS.find(o => o.value === departureWorkingHours)?.label || 'Custom'}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <Pressable
+                                    onPress={() => setHoursField('departure')}
+                                    className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600"
+                                >
+                                    <Text className="text-xs font-bold text-slate-600 dark:text-slate-300">Edit Hours</Text>
+                                </Pressable>
+                            </View>
+
+                            <View className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 flex-row justify-between items-center opacity-80">
+                                <Text className="text-xs text-slate-400 font-medium">Locked to End of Working Day</Text>
+                                <View className="flex-row items-center gap-1.5">
+                                    <Text className="font-bold text-slate-500 dark:text-slate-400">{startTime}</Text>
                                     <Lock size={12} className="text-slate-400" />
                                 </View>
-                                <Text className="font-bold text-slate-500 dark:text-slate-400">{startTime}</Text>
                             </View>
-
-                            {/* Working Hours Dropdown Stub */}
-                            <Pressable
-                                onPress={() => setHoursField('departure')}
-                                className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
-                            // In real app, open modal to select options
-                            >
-                                <Text className="text-xs text-slate-500 mb-0.5">Working Hours</Text>
-                                <Text className="font-bold text-slate-900 dark:text-white text-xs truncate" numberOfLines={1}>
-                                    {WORKING_HOURS_OPTIONS.find(o => o.value === departureWorkingHours)?.label || departureWorkingHours}
-                                </Text>
-                            </Pressable>
-                        </View>
-                    </View>
-
-                    {/* End Block */}
-                    {/* End Block */}
-                    <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <View className="flex-row items-center mb-3">
-                            <View className="bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md mr-2">
-                                <Clock size={16} className="text-orange-600 dark:text-orange-400" />
-                            </View>
-                            <Text className="font-bold text-slate-700 dark:text-slate-300">Return</Text>
                         </View>
 
-                        <View className="flex-row gap-4">
-                            {/* Time Picker (LOCKED) */}
-                            <View className="flex-1 bg-slate-100 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600 opacity-80">
-                                <View className="flex-row justify-between items-center">
-                                    <Text className="text-xs text-slate-400 mb-0.5">Time</Text>
+                        {/* End Block */}
+                        <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <View className="flex-row items-center justify-between mb-3">
+                                <View className="flex-row items-center">
+                                    <View className="bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md mr-2">
+                                        <Clock size={16} className="text-orange-600 dark:text-orange-400" />
+                                    </View>
+                                    <View>
+                                        <Text className="font-bold text-slate-700 dark:text-slate-300">Return</Text>
+                                        <Text className="text-[10px] text-slate-400 font-medium">
+                                            {WORKING_HOURS_OPTIONS.find(o => o.value === returnWorkingHours)?.label || 'Custom'}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <Pressable
+                                    onPress={() => setHoursField('return')}
+                                    className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600"
+                                >
+                                    <Text className="text-xs font-bold text-slate-600 dark:text-slate-300">Edit Hours</Text>
+                                </Pressable>
+                            </View>
+
+                            <View className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 flex-row justify-between items-center opacity-80">
+                                <Text className="text-xs text-slate-400 font-medium">Locked to Start of Working Day</Text>
+                                <View className="flex-row items-center gap-1.5">
+                                    <Text className="font-bold text-slate-500 dark:text-slate-400">{endTime}</Text>
                                     <Lock size={12} className="text-slate-400" />
                                 </View>
-                                <Text className="font-bold text-slate-500 dark:text-slate-400">{endTime}</Text>
                             </View>
-
-                            {/* Working Hours Dropdown Stub */}
-                            <Pressable
-                                onPress={() => setHoursField('return')}
-                                className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
-                            >
-                                <Text className="text-xs text-slate-500 mb-0.5">Working Hours</Text>
-                                <Text className="font-bold text-slate-900 dark:text-white text-xs truncate" numberOfLines={1}>
-                                    {WORKING_HOURS_OPTIONS.find(o => o.value === returnWorkingHours)?.label || returnWorkingHours}
-                                </Text>
-                            </Pressable>
                         </View>
-                    </View>
-                </View>
+                    </Animated.View>
+                )}
 
                 {/* Errors / Warnings */}
                 {errors.length > 0 && (

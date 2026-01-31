@@ -69,10 +69,10 @@ export function LeaveCard({ balance, requests = [], onPressRequest, onQuickReque
                         ) : (
                             // Stack State
                             <View className="w-full items-end">
-                                {requests.map((req, index) => {
+                                {activeRequests.map((req, index) => {
                                     // Stack Logic
                                     const isTop = index === 0;
-                                    const zIndex = requests.length - index;
+                                    const zIndex = activeRequests.length - index;
 
                                     return (
                                         <MotiView

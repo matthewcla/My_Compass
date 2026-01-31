@@ -95,7 +95,7 @@ export default function HubDashboard() {
 
     const handleSuperLikedPress = React.useCallback(() => {
         // Navigate to saved billets filtered by super-liked
-        router.push('/(assignment)/assignments' as any);
+        router.push('/(assignment)' as any);
     }, [router]);
 
     // Loading state

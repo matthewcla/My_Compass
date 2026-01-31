@@ -3,26 +3,24 @@ import React from 'react';
 
 export default function CareerLayout() {
     return (
-        <>
-            <Stack
-                screenOptions={{
+        <Stack
+            screenOptions={{
+                headerShown: false,
+            }}
+        >
+            <Stack.Screen
+                name="discovery"
+                options={{
                     headerShown: false,
                 }}
-            >
-                <Stack.Screen
-                    name="discovery"
-                    options={{
-                        headerShown: false,
-                    }}
-                />
-                <Stack.Screen
-                    name="manifest"
-                    options={{
-                        presentation: 'modal',
-                        headerShown: false,
-                    }}
-                />
-            </Stack>
-        </>
+            />
+            <Stack.Screen
+                name="manifest"
+                options={{
+                    presentation: 'modal',
+                    headerShown: false,
+                }}
+            />
+        </Stack>
     );
 }

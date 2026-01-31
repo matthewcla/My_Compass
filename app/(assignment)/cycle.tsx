@@ -60,6 +60,15 @@ export default function CycleScreen() {
     };
 
     const handleRailItemPress = (billetId: string) => {
+        // Check if already in slate
+        const existingApp = Object.values(applications).find(
+            app => app.billetId === billetId && !['withdrawn', 'declined'].includes(app.status)
+        );
+        if (existingApp) {
+            Alert.alert("Already in Slate", "This billet is already in your application slate.");
+            return;
+        }
+
         // Tapping a rail item -> Promote to Slate
         const success = promoteToSlate(billetId, 'user-123'); // TODO: Auth ID
         if (!success) {
@@ -141,7 +150,8 @@ export default function CycleScreen() {
                         {/* H-40 is arbitrary, ManifestRail might adjust height dynamically */}
                         <ManifestRail
                             items={manifestCandidates}
-                            onItemPress={handleRailItemPress}
+                            onSelect={(billet) => handleRailItemPress(billet.id)}
+                            onSeeAll={() => router.push('/(career)/manifest')}
                         />
                     </View>
 
@@ -150,8 +160,8 @@ export default function CycleScreen() {
                         <Pressable
                             onPress={handleSubmit}
                             className={`w-full flex-row items-center justify-center gap-2 py-4 rounded-xl shadow-lg ${activeApps.length > 0
-                                    ? 'bg-blue-600 active:bg-blue-700'
-                                    : 'bg-slate-300 dark:bg-slate-700'
+                                ? 'bg-blue-600 active:bg-blue-700'
+                                : 'bg-slate-300 dark:bg-slate-700'
                                 }`}
                             disabled={activeApps.length === 0}
                         >

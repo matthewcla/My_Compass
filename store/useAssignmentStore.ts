@@ -464,7 +464,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     undo: () => {
-        const { cursor, mode, billetStack, realDecisions, sandboxDecisions } = get();
+        const { cursor, mode, billetStack, realDecisions, sandboxDecisions, applications, userApplicationIds } = get();
         if (cursor <= 0) return;
 
         const previousCursor = cursor - 1;
@@ -474,9 +474,24 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         if (mode === 'real') {
             const newDecisions = { ...realDecisions };
             delete newDecisions[billetIdToRemove];
+
+            // FIX: Remove orphaned application if last action was a 'promote'
+            const appToRemove = Object.values(applications).find(
+                app => app.billetId === billetIdToRemove && app.status === 'draft'
+            );
+            let updatedApplications = applications;
+            let updatedUserIds = userApplicationIds;
+            if (appToRemove) {
+                updatedApplications = { ...applications };
+                delete updatedApplications[appToRemove.id];
+                updatedUserIds = userApplicationIds.filter(id => id !== appToRemove.id);
+            }
+
             set({
                 cursor: previousCursor,
-                realDecisions: newDecisions
+                realDecisions: newDecisions,
+                applications: updatedApplications,
+                userApplicationIds: updatedUserIds
             });
         } else {
             const newDecisions = { ...sandboxDecisions };
@@ -553,7 +568,29 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     // --- CYCLE ACTIONS ---
 
     promoteToSlate: (billetId: string, userId: string): boolean => {
-        const { applications, userApplicationIds } = get();
+        const { applications, userApplicationIds, mode, billets } = get();
+
+        // FIX: Validate mode is 'real' (defensive guard)
+        if (mode !== 'real') {
+            console.warn("Cannot promote to slate in sandbox mode.");
+            return false;
+        }
+
+        // FIX: Check if billet is projected (cannot apply to future vacancies)
+        const billet = billets[billetId];
+        if (billet?.advertisementStatus === 'projected') {
+            console.warn("Cannot apply to projected billets.");
+            return false;
+        }
+
+        // FIX: Check for duplicate application (same billetId)
+        const existingApp = Object.values(applications).find(
+            app => app.billetId === billetId && !['withdrawn', 'declined'].includes(app.status)
+        );
+        if (existingApp) {
+            console.warn("Application for this billet already exists.");
+            return false;
+        }
 
         // 1. Check Constraint: Max 7 Active Applications
         const activeStatuses = ['draft', 'optimistically_locked', 'submitted', 'confirmed'];
@@ -644,13 +681,18 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     withdrawApplication: (appId: string) => {
-        const { applications, userApplicationIds } = get();
+        const { applications, userApplicationIds, realDecisions } = get();
         const targetApp = applications[appId];
 
         if (!targetApp) return;
 
         let updatedApplications = { ...applications };
         let updatedUserIds = [...userApplicationIds];
+
+        // FIX: Clear realDecisions entry for this billet (prevents zombie data)
+        const billetIdToClear = targetApp.billetId;
+        const updatedDecisions = { ...realDecisions };
+        delete updatedDecisions[billetIdToClear];
 
         // 1. Handle Status Change
         if (targetApp.status === 'draft') {
@@ -693,7 +735,8 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         set({
             applications: updatedApplications,
-            userApplicationIds: updatedUserIds
+            userApplicationIds: updatedUserIds,
+            realDecisions: updatedDecisions
         });
     },
 
@@ -716,10 +759,19 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     submitSlate: async () => {
-        const { applications } = get();
+        const { applications, billets } = get();
 
-        // 1. Find Drafts
-        const draftApps = Object.values(applications).filter(app => app.status === 'draft');
+        // 1. Find Drafts (FIX: filter out projected billets)
+        const draftApps = Object.values(applications).filter(app => {
+            if (app.status !== 'draft') return false;
+            const billet = billets[app.billetId];
+            // Skip projected billets - they cannot be submitted
+            if (billet?.advertisementStatus === 'projected') {
+                console.warn(`Skipping submission for projected billet: ${app.billetId}`);
+                return false;
+            }
+            return true;
+        });
         if (draftApps.length === 0) return;
 
         const now = new Date().toISOString();

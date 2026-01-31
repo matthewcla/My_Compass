@@ -31,12 +31,15 @@ export default function HubDashboard() {
 
     const [quickDraft, setQuickDraft] = useState<LeaveRequest | null>(null);
 
-    const leaveRequests = useLeaveStore(useShallow(state =>
-        state.userLeaveRequestIds
-            .map(id => state.leaveRequests[id])
+    const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
+    const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
+
+    const leaveRequests = React.useMemo(() => {
+        return userLeaveRequestIds
+            .map(id => leaveRequestsMap[id])
             .filter(Boolean)
-            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    ));
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    }, [userLeaveRequestIds, leaveRequestsMap]);
 
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';

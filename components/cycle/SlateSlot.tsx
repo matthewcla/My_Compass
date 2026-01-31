@@ -1,0 +1,83 @@
+import { Colors } from '@/constants/Colors';
+import { Application, Billet } from '@/types/schema';
+import { Lock, Unlock, X } from 'lucide-react-native';
+import React from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+
+interface SlateSlotProps {
+    rank: number;
+    application?: Application | null;
+    billet?: Billet | null;
+    onRemove?: () => void;
+    onLock?: () => void;
+}
+
+export const SlateSlot: React.FC<SlateSlotProps> = ({
+    rank,
+    application,
+    billet,
+    onRemove,
+    onLock
+}) => {
+    const isFilled = !!billet;
+    const isLocked = application?.status === 'optimistically_locked' || application?.status === 'submitted';
+
+    return (
+        <View className="mb-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex-row items-center h-20">
+            {/* RANK STRIP */}
+            <View className="w-10 h-full bg-slate-100 dark:bg-slate-700/50 justify-center items-center border-r border-slate-200 dark:border-slate-700">
+                <Text className="text-slate-400 font-bold text-lg">{rank}</Text>
+            </View>
+
+            {/* CONTENT */}
+            <View className="flex-1 px-4 justify-center">
+                {isFilled && billet ? (
+                    <View>
+                        <Text className="font-bold text-slate-900 dark:text-white text-base leading-tight" numberOfLines={1}>
+                            {billet.title}
+                        </Text>
+                        <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            {billet.location} • {billet.payGrade}
+                        </Text>
+                        {application?.status === 'submitted' && (
+                            <Text className="text-[10px] text-green-600 font-bold mt-1">SUBMITTED</Text>
+                        )}
+                        {application?.status === 'optimistically_locked' && (
+                            <Text className="text-[10px] text-amber-600 font-bold mt-1">LOCKED</Text>
+                        )}
+                    </View>
+                ) : (
+                    <Text className="text-slate-400 dark:text-slate-600 italic">Empty Slot</Text>
+                )}
+            </View>
+
+            {/* ACTIONS */}
+            {isFilled && (
+                <View className="flex-row items-center pr-3 gap-1">
+                    {onLock && (
+                        <TouchableOpacity
+                            onPress={onLock}
+                            disabled={isLocked}
+                            className={`p-2 rounded-full ${isLocked ? 'opacity-50' : 'active:bg-slate-100 dark:active:bg-slate-700'}`}
+                        >
+                            {isLocked ? (
+                                <Lock size={18} color={Colors.light.systemGray} />
+                            ) : (
+                                <Unlock size={18} color={Colors.light.systemGray} />
+                            )}
+                        </TouchableOpacity>
+                    )}
+
+                    {onRemove && !isLocked && (
+                        <TouchableOpacity
+                            onPress={onRemove}
+                            className="p-2 rounded-full active:bg-red-50 dark:active:bg-red-900/20"
+                        >
+                            <X size={18} color={Colors.light.status.error} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
+        </View>
+    );
+};

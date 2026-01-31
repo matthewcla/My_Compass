@@ -28,6 +28,7 @@ const generateUUID = () => {
 
 export type SwipeDirection = 'left' | 'right' | 'up';
 export type SwipeDecision = 'nope' | 'like' | 'super';
+export type SmartBenchItem = { billet: Billet; type: 'manifest' | 'suggestion' };
 
 export type FilterState = {
     payGrade: string[];
@@ -68,6 +69,36 @@ interface AssignmentActions {
      */
     undo: () => void;
 
+    // --- CYCLE MANAGEMENT (TACTICAL SLATE) ---
+
+    /**
+     * Create a DRAFT application for a billet.
+     * Throws error if user already has 7 active applications.
+     */
+    draftApplication: (billetId: string, userId: string) => void;
+
+    /**
+     * Remove (if draft) or Withdraw (if submitted) an application.
+     * Triggers re-ranking of remaining applications.
+     */
+    withdrawApplication: (appId: string) => void;
+
+    /**
+     * Reorder application preference ranks based on the provided ID order.
+     */
+    reorderApplications: (orderedAppIds: string[]) => void;
+
+    /**
+     * Submit all DRAFT applications to the server.
+     */
+    submitSlate: () => Promise<void>;
+
+    /**
+     * Get the "Smart Bench" of recommended billets (Manifest + Suggestions).
+     * @returns Array of billets with source type, sorted by matchScore.
+     */
+    getSmartBench: (userId: string) => SmartBenchItem[]; // Selector
+
     /**
      * Reset store to initial state (useful for logout/testing).
      */
@@ -83,6 +114,9 @@ export type AssignmentStore = MyAssignmentState & {
     mode: DiscoveryMode;
     sandboxFilters: FilterState;
 
+    // Cycle State
+    slateDeadline: string; // ISO Timestamp
+
     // Dual Decision Bins
     realDecisions: Record<string, SwipeDecision>;
     sandboxDecisions: Record<string, SwipeDecision>;
@@ -93,6 +127,7 @@ const INITIAL_STATE: MyAssignmentState & {
     cursor: number;
     mode: DiscoveryMode;
     sandboxFilters: FilterState;
+    slateDeadline: string;
     realDecisions: Record<string, SwipeDecision>;
     sandboxDecisions: Record<string, SwipeDecision>;
 } = {
@@ -114,6 +149,8 @@ const INITIAL_STATE: MyAssignmentState & {
         designator: [],
         location: []
     },
+    // Mock Deadline: 72 hours from now
+    slateDeadline: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
     realDecisions: {},
     sandboxDecisions: {},
 };
@@ -461,9 +498,18 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
             // 3. Handle Side Effects (Transactions) - ONLY IN REAL MODE
             // If Right or Up, we want to attempt a lock (Apply).
-            if (decision === 'like' || decision === 'super') {
-                await buyItNow(billetId, userId);
-            }
+            // NOTE: Changing this for "Cycle" feature. 
+            // Swiping Right/Up now just adds to "Manifest" (Decision History).
+            // User must explicitly "Add to Slate" (draftApplication) from the Manifest or Card.
+            // keeping buyItNow only for explicit "Buy It Now" button interactions if needed, 
+            // but standard flow is now Draft -> Submit.
+
+            // However, per previous logic, 'like'/'super' might have triggered buyItNow.
+            // If the prompt implies we are building "Cycle" *instead* of single-transaction BuyItNow for swipes:
+            // "Source A (Manifest): Get all billets from realDecisions where outcome is 'like' or 'super'..."
+            // This implies the swipe ADDS to the Manifest, it does NOT auto-create an application.
+            // So I will REMOVE the auto-buyItNow call here.
+
         } else {
             // SANDBOX MODE: No network transactions, just local state
             set({
@@ -474,6 +520,223 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 }
             });
         }
+    },
+
+    // --- CYCLE ACTIONS ---
+
+    draftApplication: (billetId: string, userId: string) => {
+        const { applications, userApplicationIds, billets } = get();
+
+        // 1. Check Constraint: Max 7 Active Applications
+        const activeStatuses = ['draft', 'optimistically_locked', 'submitted', 'confirmed'];
+        const activeApps = Object.values(applications).filter(app =>
+            activeStatuses.includes(app.status)
+        );
+
+        if (activeApps.length >= 7) {
+            throw new Error("Slate is full. You can only have 7 active applications.");
+        }
+
+        // 2. Determine Preference Rank (Next Available Slot)
+        // We assume 1-based ranking. 
+        const nextRank = activeApps.length + 1;
+
+        // 3. Create Application Record
+        const appId = generateUUID();
+        const now = new Date().toISOString();
+
+        const newApp: Application = {
+            id: appId,
+            billetId,
+            userId,
+            status: 'draft',
+            statusHistory: [{
+                status: 'draft',
+                timestamp: now,
+                reason: 'User added to slate'
+            }],
+            preferenceRank: nextRank,
+            createdAt: now,
+            updatedAt: now,
+            lastSyncTimestamp: now,
+            syncStatus: 'pending_upload',
+            localModifiedAt: now
+        };
+
+        // 4. Update State
+        set(state => ({
+            applications: {
+                ...state.applications,
+                [appId]: newApp
+            },
+            userApplicationIds: [...state.userApplicationIds, appId]
+        }));
+    },
+
+    withdrawApplication: (appId: string) => {
+        const { applications, userApplicationIds } = get();
+        const targetApp = applications[appId];
+
+        if (!targetApp) return;
+
+        let updatedApplications = { ...applications };
+        let updatedUserIds = [...userApplicationIds];
+
+        // 1. Handle Status Change
+        if (targetApp.status === 'draft') {
+            // Hard delete for drafts
+            delete updatedApplications[appId];
+            updatedUserIds = updatedUserIds.filter(id => id !== appId);
+        } else {
+            // Soft delete (withdraw) for submitted/locked
+            updatedApplications[appId] = {
+                ...targetApp,
+                status: 'withdrawn',
+                statusHistory: [
+                    ...targetApp.statusHistory,
+                    {
+                        status: 'withdrawn',
+                        timestamp: new Date().toISOString(),
+                        reason: 'User withdrew application'
+                    }
+                ],
+                updatedAt: new Date().toISOString(),
+                syncStatus: 'pending_upload'
+            };
+        }
+
+        // 2. Re-Ranking Logic (Close the Gap)
+        // Get remaining active apps to re-rank
+        const activeStatuses = ['draft', 'optimistically_locked', 'submitted', 'confirmed'];
+        const remainingApps = Object.values(updatedApplications)
+            .filter(app => activeStatuses.includes(app.status) && app.id !== appId) // Exclude the withdrawn one if we just soft-deleted it
+            .sort((a, b) => (a.preferenceRank || 99) - (b.preferenceRank || 99));
+
+        // Re-assign ranks 1..N
+        remainingApps.forEach((app, index) => {
+            updatedApplications[app.id] = {
+                ...app,
+                preferenceRank: index + 1,
+                updatedAt: new Date().toISOString() // Touch update time
+            };
+        });
+
+        set({
+            applications: updatedApplications,
+            userApplicationIds: updatedUserIds
+        });
+    },
+
+    reorderApplications: (orderedAppIds: string[]) => {
+        const { applications } = get();
+        const updatedApplications = { ...applications };
+
+        orderedAppIds.forEach((id, index) => {
+            if (updatedApplications[id]) {
+                updatedApplications[id] = {
+                    ...updatedApplications[id],
+                    preferenceRank: index + 1,
+                    updatedAt: new Date().toISOString(),
+                    localModifiedAt: new Date().toISOString()
+                };
+            }
+        });
+
+        set({ applications: updatedApplications });
+    },
+
+    submitSlate: async () => {
+        const { applications } = get();
+
+        // 1. Find Drafts
+        const draftApps = Object.values(applications).filter(app => app.status === 'draft');
+        if (draftApps.length === 0) return;
+
+        const now = new Date().toISOString();
+        const updatedApplications = { ...applications };
+
+        // 2. Update Statuses
+        draftApps.forEach(app => {
+            updatedApplications[app.id] = {
+                ...app,
+                status: 'submitted',
+                submittedAt: now,
+                statusHistory: [
+                    ...app.statusHistory,
+                    {
+                        status: 'submitted',
+                        timestamp: now,
+                        reason: 'Slate submission'
+                    }
+                ],
+                updatedAt: now,
+                syncStatus: 'pending_upload'
+            };
+        });
+
+        // 3. Mock API Call
+        console.log(`[Mock API] Submitting Slate: ${draftApps.length} applications`);
+
+        // 4. Update Store
+        set({ applications: updatedApplications });
+    },
+
+    getSmartBench: (userId: string) => {
+        const { billets, realDecisions, applications } = get();
+        const activeAppBilletIds = new Set(
+            Object.values(applications)
+                .filter(app => !['withdrawn', 'declined'].includes(app.status))
+                .map(app => app.billetId)
+        );
+
+        const results: SmartBenchItem[] = [];
+
+        // Source A: Manifest (Liked/Super from Real Mode)
+        // "Real Decisions" keys are billetIds
+        Object.entries(realDecisions).forEach(([billetId, decision]) => {
+            if ((decision === 'like' || decision === 'super') && !activeAppBilletIds.has(billetId)) {
+                const billet = billets[billetId];
+                if (billet) {
+                    results.push({ billet, type: 'manifest' });
+                }
+            }
+        });
+
+        // Source B: Suggestions (If Manifest < 10)
+        // Query billets for matchScore > 85, NOT in decisions, NOT in active apps
+        if (results.length < 10) {
+            const potentialSuggestions = Object.values(billets).filter(billet => {
+                const isDecided = realDecisions[billet.id] !== undefined;
+                const isActive = activeAppBilletIds.has(billet.id);
+                const isHighMatch = billet.compass.matchScore > 85;
+                return !isDecided && !isActive && isHighMatch;
+            });
+
+            // Sort by match score desc to get best suggestions
+            potentialSuggestions.sort((a, b) => b.compass.matchScore - a.compass.matchScore);
+
+            // Add until we hit 10 or run out
+            // Actually prompt says: "If Source A has fewer than 10 items, query billets..."
+            // It doesn't explicitly say "fill up to 10", but simply "Return: Combined array".
+            // However common sense implies we want to show suggestions. 
+            // I'll add all valid suggestions that meet criteria, not just capping total at 10.
+            // But usually "Smart Bench" implies a curated list.
+            // Let's just add all valid suggestions > 85.
+            potentialSuggestions.forEach(billet => {
+                results.push({ billet, type: 'suggestion' });
+            });
+        }
+
+        // Return: Combined array, sorted by matchScore descending (Manifest items first?)
+        // "Return: Combined array, sorted by matchScore descending (Manifest items first)."
+        // This sorting instruction is slightly conflicting. "MatchScore descending" vs "Manifest items first".
+        // I will interpret as: Sort by Type (Manifest=0, Suggestion=1) THEN by MatchScore.
+        return results.sort((a, b) => {
+            if (a.type !== b.type) {
+                return a.type === 'manifest' ? -1 : 1;
+            }
+            return b.billet.compass.matchScore - a.billet.compass.matchScore;
+        });
     },
 
     buyItNow: async (billetId: string, userId: string) => {

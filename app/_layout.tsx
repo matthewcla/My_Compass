@@ -4,6 +4,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
@@ -97,30 +98,32 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <SafeAreaProvider>
-      <SessionProvider>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
-        <View
-          className="flex-1 bg-white dark:bg-black"
-          onLayout={onLayoutRootView}
-        >
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(hub)" />
-            <Stack.Screen name="(assignment)" />
-            <Stack.Screen name="(pcs)" />
-            <Stack.Screen name="(admin)" />
-            <Stack.Screen name="(profile)" />
-            <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
-            <Stack.Screen name="leave" />
-            <Stack.Screen name="(career)" />
-          </Stack>
-          {/* AccountDrawer is rendered AFTER Stack to ensure navigation context is available */}
-          <AccountDrawer
-            visible={isAccountDrawerOpen}
-            onClose={() => useUIStore.getState().closeAccountDrawer()}
-          />
-        </View>
-      </SessionProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <SessionProvider>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
+          <View
+            className="flex-1 bg-white dark:bg-black"
+            onLayout={onLayoutRootView}
+          >
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(hub)" />
+              <Stack.Screen name="(assignment)" />
+              <Stack.Screen name="(pcs)" />
+              <Stack.Screen name="(admin)" />
+              <Stack.Screen name="(profile)" />
+              <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="leave" />
+              <Stack.Screen name="(career)" />
+            </Stack>
+            {/* AccountDrawer is rendered AFTER Stack to ensure navigation context is available */}
+            <AccountDrawer
+              visible={isAccountDrawerOpen}
+              onClose={() => useUIStore.getState().closeAccountDrawer()}
+            />
+          </View>
+        </SessionProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

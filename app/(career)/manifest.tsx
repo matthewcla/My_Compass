@@ -1,161 +1,169 @@
 import { JobCard } from '@/components/JobCard';
-import { useAssignmentStore } from '@/store/useAssignmentStore';
-import { Billet } from '@/types/schema';
+import { useFeedback } from '@/hooks/useFeedback';
+import { SmartBenchItem, useAssignmentStore } from '@/store/useAssignmentStore';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
-import { X } from 'lucide-react-native';
-import React, { useMemo } from 'react';
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { ArrowLeft, Trash2, Undo2 } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Type describing our section data
-type ManifestItem = {
-    type: 'header' | 'billet';
-    title?: string;
-    billet?: Billet;
-    id: string; // valid ID for keys
-};
+type Tab = 'candidates' | 'favorites' | 'archived';
 
 export default function ManifestScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const [activeTab, setActiveTab] = useState<Tab>('candidates');
+    const { showFeedback, FeedbackComponent } = useFeedback();
 
-    // Store Access
     const {
-        billets,
-        mode,
-        realDecisions,
-        sandboxDecisions,
-        applications,
-        buyItNow,
-        isSyncingApplications
+        getManifestItems,
+        promoteToSlate,
+        swipe, // used for removing (swipe left)
+        recoverBillet,
+        mode
     } = useAssignmentStore();
 
-    // 1. Selector Logic
-    const manifestItems = useMemo(() => {
-        const decisions = mode === 'real' ? realDecisions : sandboxDecisions;
-        const savedBilletIds = Object.keys(decisions).filter(id => {
-            const decision = decisions[id];
-            return decision === 'like' || decision === 'super' || decision === 'nope';
-        });
+    const items = useMemo(() => {
+        // If in Sandbox mode, maybe filter differently or show warning?
+        // Assuming Manifest works for real mode primarily, or unified?
+        // Store implementation of getManifestItems depends on realDecisions usually.
+        // Let's assume Manifest is consistent with current mode or just purely real context 
+        // as "Discovery Funnel" usually implies real job hunt.
+        // But let's check store: `getManifestItems` uses `realDecisions`.
+        // So this is strictly for 'Real' mode items.
+        return getManifestItems(activeTab);
+    }, [activeTab, getManifestItems, mode]); // Re-fetch when tab changes
 
-        // Grouping
-        const superIds: string[] = [];
-        const likeIds: string[] = [];
-        const nopeIds: string[] = [];
-
-        savedBilletIds.forEach(id => {
-            if (decisions[id] === 'super') superIds.push(id);
-            else if (decisions[id] === 'like') likeIds.push(id);
-            else if (decisions[id] === 'nope') nopeIds.push(id);
-        });
-
-        const items: ManifestItem[] = [];
-
-        // Build Flattened List with Headers
-        if (superIds.length > 0) {
-            items.push({ type: 'header', title: 'Top 5 Candidates', id: 'section-super' });
-            superIds.forEach(id => {
-                if (billets[id]) items.push({ type: 'billet', billet: billets[id], id: `billet-${id}` });
-            });
+    const handlePromote = (billetId: string) => {
+        const success = promoteToSlate(billetId, 'user-123');
+        if (success) {
+            showFeedback('Drafted! Added to Slate.', 'success');
+        } else {
+            console.warn('Slate is full');
+            showFeedback('Slate Full.', 'warning');
         }
-
-        if (likeIds.length > 0) {
-            items.push({ type: 'header', title: 'Watchlist', id: 'section-like' });
-            likeIds.forEach(id => {
-                if (billets[id]) items.push({ type: 'billet', billet: billets[id], id: `billet-${id}` });
-            });
-        }
-
-        if (nopeIds.length > 0) {
-            items.push({ type: 'header', title: 'Not Interested', id: 'section-nope' });
-            nopeIds.forEach(id => {
-                if (billets[id]) items.push({ type: 'billet', billet: billets[id], id: `billet-${id}` });
-            });
-        }
-
-        return items;
-    }, [mode, realDecisions, sandboxDecisions, billets]);
-
-    // 2. Interaction Handlers
-    const handleBuyPress = async (billetId: string) => {
-        // In this scope, we don't have a user ID easily accessible without auth store.
-        // Assuming a hardcoded user ID logic or passed from store if available,
-        // but looking at store 'swipe' implementation, it receives userId.
-        // For now, I'll use a placeholder 'current-user-id' since auth isn't in scope context,
-        // OR better yet, check if applications already has it to avoid error?
-        // Wait, the store's `buyItNow` requires `userId`.
-        // I will use a dummy ID 'u1-wilson' consistent with persona for now if not available.
-        await buyItNow(billetId, 'u1-wilson');
     };
 
-    const getApplicationStatus = (billetId: string) => {
-        // Find application for this billet
-        const app = Object.values(applications).find(a => a.billetId === billetId);
-        return app?.status;
+    const handleRemove = async (billetId: string) => {
+        // Move to Archive (Nope)
+        await swipe(billetId, 'left', 'user-123');
+        showFeedback('Archived.', 'info');
     };
 
-    // 3. Renderers
-    const renderItem = ({ item }: { item: ManifestItem }) => {
-        if (item.type === 'header') {
-            return (
-                <View className="pt-6 pb-2 px-4 bg-gray-50 dark:bg-slate-950">
-                    <Text className="text-sm font-bold text-gray-500 uppercase tracking-wider">
-                        {item.title}
-                    </Text>
-                </View>
-            );
-        }
+    const handleRecover = (billetId: string) => {
+        recoverBillet(billetId);
+        showFeedback('Recovered to Candidates.', 'success');
+    };
 
-        if (item.type === 'billet' && item.billet) {
-            return (
-                <View className="px-4 py-2">
-                    <JobCard
-                        billet={item.billet}
-                        onBuyPress={handleBuyPress}
-                        isProcessing={isSyncingApplications}
-                        applicationStatus={getApplicationStatus(item.billet?.id)}
-                    />
-                </View>
-            );
-        }
+    const renderItem = ({ item }: { item: SmartBenchItem }) => {
+        const isArchived = activeTab === 'archived';
 
-        return null;
+        return (
+            <View className={`px-4 py-2 ${isArchived ? 'opacity-60 grayscale' : ''}`}>
+                <JobCard
+                    billet={item.billet}
+                    onBuyPress={() => { }} // Replaced by custom actions below
+                    isProcessing={false}
+                    applicationStatus={undefined} // Not an active application
+                />
+
+                {/* Actions Bar */}
+                <View className="flex-row gap-3 mt-2 justify-end">
+                    {isArchived ? (
+                        <TouchableOpacity
+                            onPress={() => handleRecover(item.billet.id)}
+                            className="flex-row items-center gap-2 bg-blue-100 dark:bg-blue-900/30 px-4 py-2 rounded-lg"
+                        >
+                            <Undo2 size={16} className="text-blue-600 dark:text-blue-400" color={isDark ? '#60A5FA' : '#2563EB'} />
+                            <Text className="text-blue-700 dark:text-blue-300 font-bold text-sm">Recover</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <>
+                            {/* Remove Action */}
+                            <TouchableOpacity
+                                onPress={() => handleRemove(item.billet.id)}
+                                className="flex-row items-center gap-2 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg"
+                            >
+                                <Trash2 size={16} className="text-slate-500" color="#64748B" />
+                                <Text className="text-slate-600 dark:text-slate-400 font-medium text-sm">Remove</Text>
+                            </TouchableOpacity>
+
+                            {/* Promote Action */}
+                            <TouchableOpacity
+                                onPress={() => handlePromote(item.billet.id)}
+                                className="flex-row items-center gap-2 bg-blue-600 px-4 py-2 rounded-lg shadow-sm"
+                            >
+                                <Text className="text-white font-bold text-sm">Add to Slate</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </View>
+            </View>
+        );
     };
 
     return (
-        <View className="flex-1 bg-gray-50 dark:bg-slate-950 w-full max-w-2xl mx-auto shadow-2xl">
-            {/* Modal Header */}
-            <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-white/10 bg-white dark:bg-slate-900">
-                <Text className="text-xl font-bold text-gray-900 dark:text-white">
-                    {mode === 'real' ? 'My Manifest' : 'Simulation Manifest'}
-                </Text>
-                <Pressable
-                    onPress={() => router.back()}
-                    className="p-2 rounded-full active:bg-gray-100 dark:active:bg-white/10"
-                >
-                    <X size={24} color={isDark ? 'white' : 'black'} />
-                </Pressable>
-            </View>
+        <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+            {/* Feedback Component */}
+            <FeedbackComponent />
 
-            {/* Content List */}
-            <FlashList
-                data={manifestItems}
-                renderItem={renderItem}
-                estimatedItemSize={200}
-                getItemType={(item) => item.type}
-                ListEmptyComponent={
-                    <View className="flex-1 justify-center items-center h-96 px-8">
-                        <Text className="text-gray-400 text-center text-lg mb-2">
-                            Your manifest is empty.
-                        </Text>
-                        <Text className="text-gray-500 text-center">
-                            Swipe RIGHT on billets in Discovery to add them to your manifest.
-                        </Text>
+            <SafeAreaView className="flex-1" edges={['top']}>
+                {/* Header */}
+                <View className="px-4 py-4 flex-row items-center gap-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                    <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+                        <ArrowLeft size={24} color={isDark ? 'white' : 'black'} />
+                    </Pressable>
+                    <Text className="text-xl font-bold text-slate-900 dark:text-white">Manifest</Text>
+                </View>
+
+                {/* Segmented Control */}
+                <View className="px-4 py-4">
+                    <View className="flex-row bg-slate-200 dark:bg-slate-800 rounded-lg p-1">
+                        {(['candidates', 'favorites', 'archived'] as Tab[]).map((tab) => {
+                            const isActive = activeTab === tab;
+                            return (
+                                <Pressable
+                                    key={tab}
+                                    onPress={() => setActiveTab(tab)}
+                                    className={`flex-1 py-2 items-center rounded-md ${isActive ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}`}
+                                >
+                                    <Text className={`capitalize font-bold text-xs ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                                        {tab}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
                     </View>
-                }
-                contentContainerStyle={{ paddingBottom: 40 }}
-            />
+                </View>
+
+                {/* Content */}
+                <FlashList
+                    data={items}
+                    renderItem={renderItem}
+                    estimatedItemSize={280}
+                    contentContainerStyle={{ paddingBottom: 40 }}
+                    ListEmptyComponent={
+                        <View className="flex-1 items-center justify-center py-20 px-8">
+                            <Text className="text-slate-400 text-lg font-bold mb-2">
+                                {activeTab === 'archived' ? 'No archived items.' : 'No candidates yet.'}
+                            </Text>
+                            <Text className="text-slate-500 text-center text-sm mb-6">
+                                {activeTab === 'archived'
+                                    ? "Items you swipe left on will appear here."
+                                    : "Go to Discovery and swipe right on billets to build your manifest."}
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => router.push('/(career)/discovery')}
+                                className="bg-blue-600 px-6 py-3 rounded-full shadow-lg active:bg-blue-700"
+                            >
+                                <Text className="text-white font-bold text-sm uppercase tracking-wide">Find More</Text>
+                            </TouchableOpacity>
+                        </View>
+                    }
+                />
+            </SafeAreaView>
         </View>
     );
 }

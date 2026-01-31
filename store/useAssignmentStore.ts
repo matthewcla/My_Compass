@@ -1,5 +1,3 @@
-import * as api from '@/services/api/mockTransactionService';
-import { storage } from '@/services/storage';
 import {
     Application,
     Billet,
@@ -45,11 +43,6 @@ interface AssignmentActions {
     fetchBillets: () => Promise<void>;
 
     /**
-     * Execute Buy-It-Now transaction with optimistic UI updates.
-     */
-    buyItNow: (billetId: string, userId: string) => Promise<void>;
-
-    /**
      * Handle user swipe action on a billet
      */
     swipe: (billetId: string, direction: SwipeDirection, userId: string) => Promise<void>;
@@ -65,17 +58,31 @@ interface AssignmentActions {
     updateSandboxFilters: (filters: Partial<FilterState>) => void;
 
     /**
+     * Toggle visibility of Projected Billets in Discovery.
+     */
+    toggleShowProjected: () => void;
+
+    /**
      * Undo the last swipe action.
      */
     undo: () => void;
 
-    // --- CYCLE MANAGEMENT (TACTICAL SLATE) ---
+    /**
+     * Promote a billet from Bench/Discovery to the Slate (Draft Application).
+     * Returns true if successful, false if slate is full.
+     */
+    promoteToSlate: (billetId: string, userId: string) => boolean;
 
     /**
-     * Create a DRAFT application for a billet.
-     * Throws error if user already has 7 active applications.
+     * Demote an application back to the Manifest (removes Draft).
+     * Keeps the 'interest' in realDecisions so it returns to the Manifest list.
      */
-    draftApplication: (billetId: string, userId: string) => void;
+    demoteToManifest: (appId: string) => void;
+
+    /**
+     * Recover a 'nope' (archived) billet back to the Manifest ('like').
+     */
+    recoverBillet: (billetId: string) => void;
 
     /**
      * Remove (if draft) or Withdraw (if submitted) an application.
@@ -94,16 +101,25 @@ interface AssignmentActions {
     submitSlate: () => Promise<void>;
 
     /**
-     * Get the "Smart Bench" of recommended billets (Manifest + Suggestions).
-     * @returns Array of billets with source type, sorted by matchScore.
+     * Get the "Smart Bench" items based on filter.
+     * 'candidates': like + super (excluding active apps)
+     * 'favorites': super only (excluding active apps)
+     * 'archived': nope only
      */
-    getSmartBench: (userId: string) => SmartBenchItem[]; // Selector
+    getManifestItems: (filter: 'candidates' | 'favorites' | 'archived') => SmartBenchItem[];
+
+
+    /**
+     * Get billets that are projected (future vacancies).
+     */
+    getProjectedBillets: () => Billet[];
 
     /**
      * Reset store to initial state (useful for logout/testing).
      */
     resetStore: () => void;
 }
+
 
 export type AssignmentStore = MyAssignmentState & {
     // New State for Swipe Deck
@@ -113,6 +129,7 @@ export type AssignmentStore = MyAssignmentState & {
     // Discovery Mode State
     mode: DiscoveryMode;
     sandboxFilters: FilterState;
+    showProjected: boolean; // New State
 
     // Cycle State
     slateDeadline: string; // ISO Timestamp
@@ -127,6 +144,7 @@ const INITIAL_STATE: MyAssignmentState & {
     cursor: number;
     mode: DiscoveryMode;
     sandboxFilters: FilterState;
+    showProjected: boolean;
     slateDeadline: string;
     realDecisions: Record<string, SwipeDecision>;
     sandboxDecisions: Record<string, SwipeDecision>;
@@ -149,6 +167,7 @@ const INITIAL_STATE: MyAssignmentState & {
         designator: [],
         location: []
     },
+    showProjected: false,
     // Mock Deadline: 72 hours from now
     slateDeadline: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
     realDecisions: {},
@@ -173,9 +192,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 98,
             contextualNarrative: 'This billet is an exceptional match for your profile. Your recent shore tour combined with your NEC H08A certification positions you perfectly to lead the CANES migration team. Completing this sea duty tour will be a strong discriminator for Chief selection next cycle.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'confirmed_open',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -192,9 +210,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 89,
             contextualNarrative: 'A solid leadership opportunity in a high-vis shore command. While slightly outside your core sys-admin track, the Watch Supervisor qualification offered here is highly valued. This tour offers stability for your family while broadening your operational comms experience.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'confirmed_open',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -211,9 +228,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 94,
             contextualNarrative: 'An elite, high-tempo assignment reserved for top performers. Your consistent "Early Promote" evaluations make you a prime candidate. This role requires rigorous screening but offers unparalleled training in tactical comms and direct support to special operations forces.',
-            isBuyItNowEligible: false, // Not BIN eligible (needs screening)
-            lockStatus: 'open',
         },
+        advertisementStatus: 'confirmed_open',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -226,14 +242,13 @@ const MOCK_BILLETS: Billet[] = [
         payGrade: 'E-6',
         nec: '741A', // Information Systems Technician
         dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 150 * 24 * 60 * 60 * 1000).toISOString(),
+        reportNotLaterThan: new Date(Date.now() + 200 * 24 * 60 * 60 * 1000).toISOString(),
         billetDescription: 'Manage security protocols and clearances for crew.',
         compass: {
             matchScore: 85,
             contextualNarrative: 'Leverage your attention to detail in this critical program management role. As the Security Manager for a CVN, you will oversee thousands of clearances, giving you direct access to the Command Triad. Ideally suited for someone looking to demonstrate administrative excellence at scale.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'projected',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -250,9 +265,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 92,
             contextualNarrative: 'Your background in network defense makes you an immediate asset here. This role focuses on active threat hunting and incident response. It is a technical heavy-hitter tour that will qualify you for high-level civilian sector certifications like CISSP and CEH.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'confirmed_open',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -264,14 +278,13 @@ const MOCK_BILLETS: Billet[] = [
         payGrade: 'E-6',
         nec: 'H08A',
         dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
+        reportNotLaterThan: new Date(Date.now() + 210 * 24 * 60 * 60 * 1000).toISOString(),
         billetDescription: 'Maintain shipboard networks during deployment.',
         compass: {
             matchScore: 88,
             contextualNarrative: 'Forward Deployed Naval Forces (FDNF) experience is a career accelerator. This sea tour in Japan offers high operational tempo and the chance to lead a large division. While demanding, the promotion rates for sailors completing this tour are significantly above average.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'projected',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -288,9 +301,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 75,
             contextualNarrative: 'A functional shore duty that keeps you in San Diego. While the technical scope is slightly below your extensive experience, it offers a predictable schedule allowing for college education or off-duty certification work. Good for work-life balance.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'confirmed_open',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -307,9 +319,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 60,
             contextualNarrative: 'A rare "Special Duty" assignment aboard "Old Ironsides." This is a pivot away from your technical track but offers a unique, once-in-a-lifetime experience. Excellent for public speaking and heritage engagement, though it may pause your technical NEC progression.',
-            isBuyItNowEligible: false,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'closed',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -326,9 +337,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 80,
             contextualNarrative: 'Gain "inside baseball" knowledge of the detailing process. Working directly at NPC gives you insight into how slates are built and careers are managed. Networking opportunities here are immense, though the location is less desirable than fleet concentration areas.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'confirmed_open',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -340,14 +350,13 @@ const MOCK_BILLETS: Billet[] = [
         payGrade: 'E-6',
         nec: 'V02A',
         dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+        reportNotLaterThan: new Date(Date.now() + 240 * 24 * 60 * 60 * 1000).toISOString(),
         billetDescription: 'Advanced weapons system maintenance.',
         compass: {
             matchScore: 82,
             contextualNarrative: 'Work on the cutting edge of naval technology aboard the DDG-1000 class. This platform requires technicians who can adapt to new, often experimental systems. Your troubleshooting history suggests you would thrive in this dynamic engineering environment.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'projected',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -364,9 +373,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 70,
             contextualNarrative: 'This is a stretch assignment typically slated for an E-7, but your package is competitive for a waiver. It involves high-level acquisition program management. Success here would be a definitive "sustained superior performance" indicator for your Chief package.',
-            isBuyItNowEligible: false,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'confirmed_open',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -378,14 +386,13 @@ const MOCK_BILLETS: Billet[] = [
         payGrade: 'E-6',
         nec: 'H04A',
         dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        reportNotLaterThan: new Date(Date.now() + 260 * 24 * 60 * 60 * 1000).toISOString(),
         billetDescription: 'Leading Radio division on LHA-6.',
         compass: {
             matchScore: 90,
             contextualNarrative: 'An urgent fill for a critical leadership gap. You would be stepping immediately into a Division Leading Petty Officer (DLPO) role on a forward-deployed big deck amphib. The responsibility is massive, but the rewards and visibility are equally significant.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'projected',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -402,9 +409,8 @@ const MOCK_BILLETS: Billet[] = [
         compass: {
             matchScore: 95,
             contextualNarrative: 'The ultimate prestige shore duty. You will be supporting flag officers and senior civilians in the Joint Staff environment. Requires impeccable bearing, top-tier technical skills, and a TS/SCI clearance. This is a "purple" assignment that looks fantastic on a resume.',
-            isBuyItNowEligible: true,
-            lockStatus: 'open',
         },
+        advertisementStatus: 'confirmed_open',
         lastSyncTimestamp: new Date().toISOString(),
         syncStatus: 'synced',
     },
@@ -453,6 +459,10 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         }));
     },
 
+    toggleShowProjected: () => {
+        set((state) => ({ showProjected: !state.showProjected }));
+    },
+
     undo: () => {
         const { cursor, mode, billetStack, realDecisions, sandboxDecisions } = get();
         if (cursor <= 0) return;
@@ -479,36 +489,54 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
-        const { cursor, realDecisions, sandboxDecisions, buyItNow, mode } = get();
+        const { cursor, realDecisions, sandboxDecisions, promoteToSlate, mode } = get();
 
         // 1. Determine Decision based on Direction
         let decision: SwipeDecision = 'nope';
         if (direction === 'right') decision = 'like';
         else if (direction === 'up') decision = 'super';
+        else if (direction === 'left') decision = 'nope';
 
         // 2. Select Target Bin based on Mode
         if (mode === 'real') {
-            set({
-                cursor: cursor + 1,
-                realDecisions: {
-                    ...realDecisions,
-                    [billetId]: decision
+
+            // 3. Handle Side Effects
+            // Direction 'right' (Interested) -> Adds to realDecisions (Manifest).
+            // Direction 'up' (Target) -> Try promoteToSlate. If full, fallback to Manifest (super).
+            // Direction 'left' -> Archive (nope).
+
+            if (direction === 'up') {
+                const wasPromoted = promoteToSlate(billetId, userId);
+                if (!wasPromoted) {
+                    // Fallback to Manifest as 'super' (Favorite)
+                    set({
+                        cursor: cursor + 1,
+                        realDecisions: {
+                            ...realDecisions,
+                            [billetId]: 'super'
+                        }
+                    });
+                } else {
+                    // Promoted successfully, so we mark it as decided (super) BUT it's also an app.
+                    // Ideally we still record the decision for history.
+                    set({
+                        cursor: cursor + 1,
+                        realDecisions: {
+                            ...realDecisions,
+                            [billetId]: 'super'
+                        }
+                    });
                 }
-            });
-
-            // 3. Handle Side Effects (Transactions) - ONLY IN REAL MODE
-            // If Right or Up, we want to attempt a lock (Apply).
-            // NOTE: Changing this for "Cycle" feature. 
-            // Swiping Right/Up now just adds to "Manifest" (Decision History).
-            // User must explicitly "Add to Slate" (draftApplication) from the Manifest or Card.
-            // keeping buyItNow only for explicit "Buy It Now" button interactions if needed, 
-            // but standard flow is now Draft -> Submit.
-
-            // However, per previous logic, 'like'/'super' might have triggered buyItNow.
-            // If the prompt implies we are building "Cycle" *instead* of single-transaction BuyItNow for swipes:
-            // "Source A (Manifest): Get all billets from realDecisions where outcome is 'like' or 'super'..."
-            // This implies the swipe ADDS to the Manifest, it does NOT auto-create an application.
-            // So I will REMOVE the auto-buyItNow call here.
+            } else {
+                // Left or Right
+                set({
+                    cursor: cursor + 1,
+                    realDecisions: {
+                        ...realDecisions,
+                        [billetId]: decision
+                    }
+                });
+            }
 
         } else {
             // SANDBOX MODE: No network transactions, just local state
@@ -524,8 +552,8 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
     // --- CYCLE ACTIONS ---
 
-    draftApplication: (billetId: string, userId: string) => {
-        const { applications, userApplicationIds, billets } = get();
+    promoteToSlate: (billetId: string, userId: string): boolean => {
+        const { applications, userApplicationIds } = get();
 
         // 1. Check Constraint: Max 7 Active Applications
         const activeStatuses = ['draft', 'optimistically_locked', 'submitted', 'confirmed'];
@@ -534,11 +562,11 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         );
 
         if (activeApps.length >= 7) {
-            throw new Error("Slate is full. You can only have 7 active applications.");
+            console.warn("Slate is full. You can only have 7 active applications.");
+            return false;
         }
 
         // 2. Determine Preference Rank (Next Available Slot)
-        // We assume 1-based ranking. 
         const nextRank = activeApps.length + 1;
 
         // 3. Create Application Record
@@ -553,7 +581,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             statusHistory: [{
                 status: 'draft',
                 timestamp: now,
-                reason: 'User added to slate'
+                reason: 'User promoted to slate'
             }],
             preferenceRank: nextRank,
             createdAt: now,
@@ -571,6 +599,48 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             },
             userApplicationIds: [...state.userApplicationIds, appId]
         }));
+
+        return true;
+    },
+
+    demoteToManifest: (appId: string) => {
+        const { applications, userApplicationIds } = get();
+        const targetApp = applications[appId];
+
+        if (!targetApp) return;
+
+        // Only allowed for drafts basically, but if we assume demote = remove application
+        // We just remove it. The 'decision' in realDecisions remains, so it "falls back" to bench/manifest.
+
+        const updatedApplications = { ...applications };
+        delete updatedApplications[appId];
+        const updatedUserIds = userApplicationIds.filter(id => id !== appId);
+
+        // Re-Ranking Logic (Close the Gap)
+        const activeStatuses = ['draft', 'submitted', 'confirmed'];
+        const remainingApps = Object.values(updatedApplications)
+            .filter(app => activeStatuses.includes(app.status))
+            .sort((a, b) => (a.preferenceRank || 99) - (b.preferenceRank || 99));
+
+        remainingApps.forEach((app, index) => {
+            updatedApplications[app.id] = {
+                ...app,
+                preferenceRank: index + 1,
+                updatedAt: new Date().toISOString()
+            };
+        });
+
+        set({
+            applications: updatedApplications,
+            userApplicationIds: updatedUserIds
+        });
+    },
+
+    recoverBillet: (billetId: string) => {
+        const { realDecisions } = get();
+        const newDecisions = { ...realDecisions };
+        newDecisions[billetId] = 'like';
+        set({ realDecisions: newDecisions });
     },
 
     withdrawApplication: (appId: string) => {
@@ -607,7 +677,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         // 2. Re-Ranking Logic (Close the Gap)
         // Get remaining active apps to re-rank
-        const activeStatuses = ['draft', 'optimistically_locked', 'submitted', 'confirmed'];
+        const activeStatuses = ['draft', 'submitted', 'confirmed'];
         const remainingApps = Object.values(updatedApplications)
             .filter(app => activeStatuses.includes(app.status) && app.id !== appId) // Exclude the withdrawn one if we just soft-deleted it
             .sort((a, b) => (a.preferenceRank || 99) - (b.preferenceRank || 99));
@@ -691,8 +761,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         const results: SmartBenchItem[] = [];
 
-        // Source A: Manifest (Liked/Super from Real Mode)
-        // "Real Decisions" keys are billetIds
+        // Logic: Return all billets in realDecisions that are NOT currently in the applications map (i.e., Liked but not Drafted).
         Object.entries(realDecisions).forEach(([billetId, decision]) => {
             if ((decision === 'like' || decision === 'super') && !activeAppBilletIds.has(billetId)) {
                 const billet = billets[billetId];
@@ -702,221 +771,34 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             }
         });
 
-        // Source B: Suggestions (If Manifest < 10)
-        // Query billets for matchScore > 85, NOT in decisions, NOT in active apps
-        if (results.length < 10) {
-            const potentialSuggestions = Object.values(billets).filter(billet => {
-                const isDecided = realDecisions[billet.id] !== undefined;
-                const isActive = activeAppBilletIds.has(billet.id);
-                const isHighMatch = billet.compass.matchScore > 85;
-                return !isDecided && !isActive && isHighMatch;
-            });
-
-            // Sort by match score desc to get best suggestions
-            potentialSuggestions.sort((a, b) => b.compass.matchScore - a.compass.matchScore);
-
-            // Add until we hit 10 or run out
-            // Actually prompt says: "If Source A has fewer than 10 items, query billets..."
-            // It doesn't explicitly say "fill up to 10", but simply "Return: Combined array".
-            // However common sense implies we want to show suggestions. 
-            // I'll add all valid suggestions that meet criteria, not just capping total at 10.
-            // But usually "Smart Bench" implies a curated list.
-            // Let's just add all valid suggestions > 85.
-            potentialSuggestions.forEach(billet => {
-                results.push({ billet, type: 'suggestion' });
-            });
-        }
-
-        // Return: Combined array, sorted by matchScore descending (Manifest items first?)
-        // "Return: Combined array, sorted by matchScore descending (Manifest items first)."
-        // This sorting instruction is slightly conflicting. "MatchScore descending" vs "Manifest items first".
-        // I will interpret as: Sort by Type (Manifest=0, Suggestion=1) THEN by MatchScore.
-        return results.sort((a, b) => {
-            if (a.type !== b.type) {
-                return a.type === 'manifest' ? -1 : 1;
-            }
-            return b.billet.compass.matchScore - a.billet.compass.matchScore;
-        });
+        // Return sorted by match score
+        return results.sort((a, b) => b.billet.compass.matchScore - a.billet.compass.matchScore);
     },
 
-    buyItNow: async (billetId: string, userId: string) => {
+    getProjectedBillets: () => {
         const { billets } = get();
-        const targetBillet = billets[billetId];
+        return Object.values(billets).filter(b => b.advertisementStatus === 'projected');
+    },
 
-        if (!targetBillet) {
-            console.error('Billet not found for BIN transaction');
-            return;
-        }
+    getManifestItems: (filter: 'candidates' | 'favorites' | 'archived') => {
+        const { realDecisions, billets } = get();
+        const results: SmartBenchItem[] = [];
 
-        if (!targetBillet.compass.isBuyItNowEligible) {
-            console.error('Billet is not eligible for Buy-It-Now');
-            return;
-        }
+        Object.entries(realDecisions).forEach(([id, decision]) => {
+            const billet = billets[id];
+            if (!billet) return;
 
-        // -------------------------------------------------------------------------
-        // STEP 1: OPTIMISTIC UPDATE
-        // -------------------------------------------------------------------------
-        const optimisticAppId = generateUUID();
-        const now = new Date().toISOString();
+            let matchesFilter = false;
+            if (filter === 'candidates' && (decision === 'like' || decision === 'super')) matchesFilter = true;
+            else if (filter === 'favorites' && decision === 'super') matchesFilter = true;
+            else if (filter === 'archived' && decision === 'nope') matchesFilter = true;
 
-        const newApplication: Application = {
-            id: optimisticAppId,
-            billetId,
-            userId,
-            status: 'optimistically_locked',
-            statusHistory: [
-                {
-                    status: 'optimistically_locked',
-                    timestamp: now,
-                    reason: 'User initiated Buy-It-Now',
-                },
-            ],
-            lockRequestedAt: now,
-            createdAt: now,
-            updatedAt: now,
-            lastSyncTimestamp: now,
-            syncStatus: 'pending_upload',
-        };
-
-        // Update Store: Add Application AND Update Billet Lock Status
-        set((state) => ({
-            applications: {
-                ...state.applications,
-                [optimisticAppId]: newApplication,
-            },
-            userApplicationIds: [...state.userApplicationIds, optimisticAppId],
-            billets: {
-                ...state.billets,
-                [billetId]: {
-                    ...state.billets[billetId],
-                    compass: {
-                        ...state.billets[billetId].compass,
-                        lockStatus: 'locked_by_user',
-                        lockedByUserId: userId,
-                        lockExpiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 min optimistic lock
-                    },
-                },
-            },
-            isSyncingApplications: true,
-        }));
-
-        try {
-            // -----------------------------------------------------------------------
-            // STEP 2: PERSISTENCE (Offline Safety)
-            // -----------------------------------------------------------------------
-            await storage.saveApplication(newApplication);
-
-            // -----------------------------------------------------------------------
-            // STEP 3: NETWORK TRANSACTION
-            // -----------------------------------------------------------------------
-            const result = await api.attemptBinLock(billetId, userId);
-
-            // -----------------------------------------------------------------------
-            // STEP 4: RECONCILIATION
-            // -----------------------------------------------------------------------
-            const completionTime = new Date().toISOString();
-
-            if (result.success) {
-                // --- SUCCESS ---
-                // 1. Update Application status to confirmed
-                // 2. Set server confirmed timestamps and token
-
-                const confirmedApp: Application = {
-                    ...newApplication,
-                    status: 'confirmed',
-                    statusHistory: [
-                        ...newApplication.statusHistory,
-                        {
-                            status: 'confirmed',
-                            timestamp: completionTime,
-                            reason: 'Server confirmed lock acquisition',
-                        },
-                    ],
-                    optimisticLockToken: result.data.lockToken,
-                    lockExpiresAt: result.data.expiresAt,
-                    serverConfirmedAt: completionTime,
-                    updatedAt: completionTime,
-                    lastSyncTimestamp: completionTime,
-                    syncStatus: 'synced',
-                };
-
-                // Update Store
-                set((state) => ({
-                    applications: {
-                        ...state.applications,
-                        [optimisticAppId]: confirmedApp,
-                    },
-                    billets: {
-                        ...state.billets,
-                        [billetId]: {
-                            ...state.billets[billetId],
-                            compass: {
-                                ...state.billets[billetId].compass,
-                                lockStatus: 'locked_by_user', // Remains locked by user
-                                lockExpiresAt: result.data.expiresAt, // Update with server expiry
-                            },
-                        },
-                    },
-                    isSyncingApplications: false,
-                }));
-
-                // Update Persistence
-                await storage.saveApplication(confirmedApp);
-
-            } else {
-                // --- FAILURE (RACE CONDITION) ---
-                // 1. Update Application status to rejected_race_condition
-                // 2. Revert Billet lock status locally
-
-                const rejectedApp: Application = {
-                    ...newApplication,
-                    status: 'rejected_race_condition',
-                    statusHistory: [
-                        ...newApplication.statusHistory,
-                        {
-                            status: 'rejected_race_condition',
-                            timestamp: completionTime,
-                            reason: result.error.message,
-                        },
-                    ],
-                    serverRejectionReason: result.error.message,
-                    updatedAt: completionTime,
-                    lastSyncTimestamp: completionTime,
-                    syncStatus: 'synced', // It is "synced" in the sense that the server rejected it
-                };
-
-                // Update Store
-                set((state) => ({
-                    applications: {
-                        ...state.applications,
-                        [optimisticAppId]: rejectedApp,
-                    },
-                    billets: {
-                        ...state.billets,
-                        [billetId]: {
-                            ...state.billets[billetId],
-                            compass: {
-                                ...state.billets[billetId].compass,
-                                lockStatus: 'locked_by_other', // Someone else got it!
-                                // detailed info about who locked it could come from result.error.details if we wanted
-                                // for now, just marking it as locked by other
-                            },
-                        },
-                    },
-                    isSyncingApplications: false,
-                }));
-
-                // Update Persistence
-                await storage.saveApplication(rejectedApp);
+            if (matchesFilter) {
+                results.push({ billet, type: 'manifest' });
             }
+        });
 
-        } catch (error) {
-            console.error('buyItNow transaction error:', error);
-            // In a real app, we'd handle network errors here (set syncStatus=error, retry later)
-            // For this sprint/context, leaving as optimistic state or could set to error state.
-            // Keeping it simple as per prompt instructions, but resetting loading flag.
-            set({ isSyncingApplications: false });
-        }
+        return results.sort((a, b) => b.billet.compass.matchScore - a.billet.compass.matchScore);
     },
 
     resetStore: () => set(INITIAL_STATE),

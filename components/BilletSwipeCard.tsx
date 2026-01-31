@@ -334,10 +334,16 @@ export function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = fa
                             </View>
 
                             <View className="absolute top-6 right-6">
-                                <View className="w-14 h-14 bg-white/20 rounded-2xl border border-white/30 items-center justify-center">
-                                    <Text className="text-white text-[10px] font-bold uppercase leading-none opacity-80">Match</Text>
-                                    <Text className="text-white text-xl font-black leading-none">{data.compatibility}%</Text>
-                                </View>
+                                {billet.advertisementStatus === 'projected' ? (
+                                    <View className="px-3 py-1.5 bg-purple-600 rounded-xl shadow-lg border border-purple-400 mb-2 items-center justify-center">
+                                        <Text className="text-white text-[10px] font-black uppercase tracking-widest">Projected</Text>
+                                    </View>
+                                ) : ( // Match score normally
+                                    <View className="w-14 h-14 bg-white/20 rounded-2xl border border-white/30 items-center justify-center">
+                                        <Text className="text-white text-[10px] font-bold uppercase leading-none opacity-80">Match</Text>
+                                        <Text className="text-white text-xl font-black leading-none">{data.compatibility}%</Text>
+                                    </View>
+                                )}
                             </View>
 
                             <View className="absolute bottom-6 left-6 right-6">

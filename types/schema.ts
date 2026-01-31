@@ -80,32 +80,14 @@ export function computeBilletLockContext(
     billet: Billet,
     currentUserId: string
 ): BilletLockContext {
-    const { lockStatus, lockedByUserId, lockExpiresAt } = billet.compass;
-    const isLocked = lockStatus !== 'open';
-    const isLockedByMe = lockStatus === 'locked_by_user' && lockedByUserId === currentUserId;
-    const isLockedByOther = lockStatus === 'locked_by_other' ||
-        (isLocked && lockedByUserId !== currentUserId);
-
-    let lockMessage: string | null = null;
-    let lockExpiresIn: number | null = null;
-
-    if (isLockedByMe && lockExpiresAt) {
-        lockExpiresIn = new Date(lockExpiresAt).getTime() - Date.now();
-        lockMessage = lockExpiresIn > 0
-            ? `Your lock expires in ${Math.ceil(lockExpiresIn / 60000)} minutes`
-            : 'Your lock has expired';
-    } else if (isLockedByOther) {
-        lockMessage = 'This billet is currently locked by another applicant';
-    }
-
     return {
-        rawStatus: lockStatus,
-        isLocked,
-        isLockedByMe,
-        isLockedByOther,
-        canApply: !isLocked || isLockedByMe,
-        lockMessage,
-        lockExpiresIn,
+        rawStatus: 'open',
+        isLocked: false,
+        isLockedByMe: false,
+        isLockedByOther: false,
+        canApply: true,
+        lockMessage: null,
+        lockExpiresIn: null,
     };
 }
 
@@ -338,10 +320,6 @@ export type BilletLockStatus = z.infer<typeof BilletLockStatusSchema>;
 export const CompassBilletMetadataSchema = z.object({
     matchScore: z.number().min(0).max(100), // AI-computed fit score (0-100)
     contextualNarrative: z.string(), // AI-generated "Why this fits you" explanation
-    isBuyItNowEligible: z.boolean(), // Indicates if immediate lock is available
-    lockStatus: BilletLockStatusSchema,
-    lockExpiresAt: z.string().datetime().optional(), // Expiration for locked_by_user state
-    lockedByUserId: z.string().uuid().optional(), // Who holds the lock (for locked_by_other)
 });
 export type CompassBilletMetadata = z.infer<typeof CompassBilletMetadataSchema>;
 
@@ -363,6 +341,9 @@ export const BilletSchema = z.object({
     // Compass AI Enhancements
     compass: CompassBilletMetadataSchema,
 
+    // Status for MyNavy Assignment Projection
+    advertisementStatus: z.enum(['projected', 'confirmed_open', 'closed']).default('confirmed_open'),
+
     // Sync metadata (billets are reference data, but we cache locally)
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
@@ -374,23 +355,19 @@ export type Billet = z.infer<typeof BilletSchema>;
 // -----------------------------------------------------------------------------
 
 /**
- * Application state machine for Buy-It-Now race condition handling.
+ * Application state machine for Slate/Cycle handling.
  * 
  * Workflow:
- * 1. draft → User is composing application locally
- * 2. optimistically_locked → User clicked "Apply/Buy-It-Now", lock requested
- * 3. submitted → Server confirmed lock acquisition, application in review
- * 4. confirmed → Application accepted by detailer
- * 5. rejected_race_condition → Lock failed (another user won the race)
- * 6. withdrawn → User cancelled application
- * 7. declined → Detailer rejected application
+ * 1. draft → User is composing application locally on the Slate
+ * 2. submitted → User submitted the Slate
+ * 3. confirmed → Application accepted by detailer
+ * 4. withdrawn → User withdrew application
+ * 5. declined → Detailer rejected application
  */
 export const ApplicationStatusSchema = z.enum([
     'draft',
-    'optimistically_locked',
     'submitted',
     'confirmed',
-    'rejected_race_condition',
     'withdrawn',
     'declined',
 ]);
@@ -409,13 +386,8 @@ export const ApplicationSchema = z.object({
     statusHistory: z.array(z.object({
         status: ApplicationStatusSchema,
         timestamp: z.string().datetime(),
-        reason: z.string().optional(), // e.g., "Lock acquired by user X" for race condition
+        reason: z.string().optional(),
     })),
-
-    // Optimistic locking fields
-    optimisticLockToken: z.string().optional(), // Server-issued token for lock validation
-    lockRequestedAt: z.string().datetime().optional(),
-    lockExpiresAt: z.string().datetime().optional(),
 
     // Application content
     personalStatement: z.string().optional(),

@@ -27,10 +27,27 @@ export const unstable_settings = {
   initialRouteName: '(hub)',
 };
 
+// Safe splash screen helpers that suppress benign errors in dev/Expo Go
+const isSplashError = (e: any) => e?.message?.includes('No native splash screen registered');
+
+const safeSplashPreventAutoHide = async () => {
+  try {
+    await SplashScreen.preventAutoHideAsync();
+  } catch (e) {
+    if (!isSplashError(e)) console.warn('SplashScreen.preventAutoHideAsync() failed:', e);
+  }
+};
+
+const safeSplashHide = async () => {
+  try {
+    await SplashScreen.hideAsync();
+  } catch (e) {
+    if (!isSplashError(e)) console.warn('SplashScreen.hideAsync() failed:', e);
+  }
+};
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync().catch(() => {
-  /* shielding */
-});
+safeSplashPreventAutoHide();
 
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({
@@ -63,12 +80,7 @@ export default function RootLayout() {
   const hideSplash = useCallback(async () => {
     if (isSplashHidden.current) return;
     isSplashHidden.current = true;
-
-    try {
-      await SplashScreen.hideAsync();
-    } catch (e) {
-      // "No native splash screen registered" is common if it auto-hid or was forced.
-    }
+    await safeSplashHide();
   }, []);
 
   // Safety Timeout: Force hide splash if app hangs for 2 seconds
@@ -76,7 +88,7 @@ export default function RootLayout() {
     const timeout = setTimeout(() => {
       if (!isSplashHidden.current) {
         console.warn('Splash Screen Force Hide: Safety Timeout Triggered (2000ms)');
-        hideSplash();
+        hideSplash().catch(e => console.warn('hideSplash failed in timeout:', e));
       }
     }, 2000);
 
@@ -86,7 +98,7 @@ export default function RootLayout() {
   // Orchestration: Hide Splash only when EVERYTHING is ready
   useEffect(() => {
     if (fontsLoaded && dbInitialized && isLayoutReady) {
-      hideSplash();
+      hideSplash().catch(e => console.warn('hideSplash failed in orchestration:', e));
       registerForPushNotificationsAsync();
     }
   }, [fontsLoaded, dbInitialized, isLayoutReady, hideSplash]);

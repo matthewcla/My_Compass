@@ -12,6 +12,8 @@ interface DiscoveryHeaderProps {
     onOpenFilters: () => void;
     onOpenShortlist: () => void;
     savedCount: number;
+    showProjected: boolean;
+    onToggleProjected: () => void;
 }
 
 export function DiscoveryHeader({
@@ -20,6 +22,8 @@ export function DiscoveryHeader({
     onOpenFilters,
     onOpenShortlist,
     savedCount,
+    showProjected,
+    onToggleProjected,
 }: DiscoveryHeaderProps) {
     const isSandbox = mode === 'sandbox';
     const colorScheme = useColorScheme();
@@ -110,6 +114,16 @@ export function DiscoveryHeader({
 
             {/* Right Action: Group (Filters + Shortlist) */}
             <View className="flex-row items-center gap-2">
+                {/* Projected Toggle (Text Button) */}
+                <TouchableOpacity
+                    onPress={onToggleProjected}
+                    className={`h-10 px-3 items-center justify-center rounded-full border active:opacity-80 ${showProjected ? 'bg-blue-100 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800' : iconBtnBg}`}
+                >
+                    <Text className={`text-[10px] font-bold uppercase tracking-wider ${showProjected ? 'text-blue-700 dark:text-blue-300' : 'text-slate-500'}`}>
+                        {showProjected ? 'Projected' : 'Open Only'}
+                    </Text>
+                </TouchableOpacity>
+
                 {/* Filters (Mini) */}
                 <TouchableOpacity
                     onPress={handlePressFilter}

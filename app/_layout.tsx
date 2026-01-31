@@ -15,7 +15,13 @@ import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
 import { useUIStore } from '@/store/useUIStore';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
+
+// Suppress known warnings from dependencies and Expo Go
+LogBox.ignoreLogs([
+  'SafeAreaView has been deprecated',
+  'expo-notifications',
+]);
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -33,13 +39,7 @@ const isSplashError = (e: any) => {
   return msg.includes('No native splash screen registered') || msg.includes("Call 'SplashScreen.show'");
 };
 
-const safeSplashPreventAutoHide = async () => {
-  try {
-    await SplashScreen.preventAutoHideAsync();
-  } catch (e) {
-    if (!isSplashError(e)) console.warn('SplashScreen.preventAutoHideAsync() failed:', e);
-  }
-};
+
 
 const safeSplashHide = async () => {
   try {
@@ -50,7 +50,9 @@ const safeSplashHide = async () => {
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-safeSplashPreventAutoHide();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* Ignore error - splash screen is already hidden */
+});
 
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({

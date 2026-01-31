@@ -121,9 +121,9 @@ export default function CycleScreen() {
                                 <SlateSlot
                                     key={slot.rank}
                                     rank={slot.rank}
-                                    app={slot.app}
+                                    application={slot.app}
                                     billet={slot.billet}
-                                    onPress={() => handleSlotPress(slot.rank, slot.app)}
+                                    onRemove={() => handleSlotPress(slot.rank, slot.app)}
                                 // isLocked={false} // logic for frozen slots
                                 />
                             ))}

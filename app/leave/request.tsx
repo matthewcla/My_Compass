@@ -483,7 +483,7 @@ export default function LeaveRequestScreen() {
                                         <SignatureButton
                                             onSign={handleSubmit}
                                             isSubmitting={isSyncing}
-                                            disabled={false}
+                                            disabled={!(validateStep(0) && validateStep(1) && validateStep(3))}
                                         />
                                     </View>
                                 </View>

@@ -16,7 +16,7 @@ export function ReviewSign({ formData, embedded = false }: ReviewSignProps) {
 
     return (
         <WizardCard title="Review Request" scrollable={!embedded}>
-            <View className="gap-6 pb-24">
+            <View className="gap-6 pb-6">
                 <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50">
                     <Text className="text-blue-900 dark:text-blue-100 font-bold text-lg mb-4">Summary</Text>
 

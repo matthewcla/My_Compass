@@ -131,7 +131,26 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
     fetchUserDefaults: async (userId: string) => {
         try {
-            const defaults = await storage.getLeaveDefaults(userId);
+            let defaults = await storage.getLeaveDefaults(userId);
+
+            // Dummy Data Persistence Logic
+            if (!defaults) {
+                defaults = {
+                    leaveAddress: '',
+                    leavePhoneNumber: '',
+                    emergencyContact: {
+                        name: 'Sarah Connor',
+                        relationship: 'Mother',
+                        phoneNumber: '555-867-5309',
+                    },
+                    dutySection: 'Deck Department',
+                    deptDiv: 'First Division',
+                    dutyPhone: '555-000-1111',
+                    rationStatus: 'not_applicable',
+                };
+                await storage.saveLeaveDefaults(userId, defaults);
+            }
+
             set({ userDefaults: defaults });
         } catch (error) {
             console.error('Failed to fetch user defaults', error);

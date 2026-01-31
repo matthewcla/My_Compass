@@ -33,19 +33,11 @@ export const unstable_settings = {
   initialRouteName: '(hub)',
 };
 
-// Safe splash screen helpers that suppress benign errors in dev/Expo Go
-const isSplashError = (e: any) => {
-  const msg = e?.message || '';
-  return msg.includes('No native splash screen registered') || msg.includes("Call 'SplashScreen.show'");
-};
-
-
-
 const safeSplashHide = async () => {
   try {
     await SplashScreen.hideAsync();
   } catch (e) {
-    if (!isSplashError(e)) console.warn('SplashScreen.hideAsync() failed:', e);
+    // Explicitly swallow all errors
   }
 };
 

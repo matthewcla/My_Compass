@@ -139,32 +139,33 @@ export default function ManifestScreen() {
                 </View>
 
                 {/* Content */}
-                <FlashList
-                    data={items}
-                    renderItem={renderItem}
-                    estimatedItemSize={280}
-                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
-                    ListEmptyComponent={
-                        <View style={{ minHeight: 300, flex: 1 }}>
-                            <View className="flex-1 items-center justify-center py-20 px-8">
-                                <Text className="text-slate-400 text-lg font-bold mb-2">
-                                    {activeTab === 'archived' ? 'No archived items.' : 'No candidates yet.'}
-                                </Text>
-                                <Text className="text-slate-500 text-center text-sm mb-6">
-                                    {activeTab === 'archived'
-                                        ? "Items you swipe left on will appear here."
-                                        : "Go to Discovery and swipe right on billets to build your manifest."}
-                                </Text>
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(career)/discovery')}
-                                    className="bg-blue-600 px-6 py-3 rounded-full shadow-lg active:bg-blue-700"
-                                >
-                                    <Text className="text-white font-bold text-sm uppercase tracking-wide">Find More</Text>
-                                </TouchableOpacity>
-                            </View>
+                {items.length === 0 ? (
+                    <View style={{ minHeight: 300, flex: 1 }}>
+                        <View className="flex-1 items-center justify-center py-20 px-8">
+                            <Text className="text-slate-400 text-lg font-bold mb-2">
+                                {activeTab === 'archived' ? 'No archived items.' : 'No candidates yet.'}
+                            </Text>
+                            <Text className="text-slate-500 text-center text-sm mb-6">
+                                {activeTab === 'archived'
+                                    ? "Items you swipe left on will appear here."
+                                    : "Go to Discovery and swipe right on billets to build your manifest."}
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => router.push('/(career)/discovery')}
+                                className="bg-blue-600 px-6 py-3 rounded-full shadow-lg active:bg-blue-700"
+                            >
+                                <Text className="text-white font-bold text-sm uppercase tracking-wide">Find More</Text>
+                            </TouchableOpacity>
                         </View>
-                    }
-                />
+                    </View>
+                ) : (
+                    <FlashList
+                        data={items}
+                        renderItem={renderItem}
+                        estimatedItemSize={280}
+                        contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
+                    />
+                )}
             </SafeAreaView>
         </View>
     );

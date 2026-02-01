@@ -109,7 +109,7 @@ export default function ManifestScreen() {
             {/* Feedback Component */}
             <FeedbackComponent />
 
-            <SafeAreaView className="flex-1" edges={['top']}>
+            <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
                 {/* Header */}
                 <View className="px-4 py-4 flex-row items-center gap-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                     <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
@@ -171,13 +171,25 @@ export default function ManifestScreen() {
                         </View>
                     </View>
                 ) : (
-                    <FlashList
+                    <FlashList<SmartBenchItem>
                         data={items}
                         renderItem={renderItem}
+                        // @ts-expect-error: estimatedItemSize is missing in the type definition despite being mandatory
                         estimatedItemSize={280}
                         contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
                     />
                 )}
+                <View className="px-4 py-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                    <TouchableOpacity
+                        onPress={() => {
+                            router.dismiss();
+                            router.push('/(assignment)/cycle');
+                        }}
+                        className="w-full bg-blue-600 py-3.5 rounded-xl items-center justify-center active:bg-blue-700 shadow-sm"
+                    >
+                        <Text className="text-white font-bold text-base">Go To Checkout</Text>
+                    </TouchableOpacity>
+                </View>
             </SafeAreaView>
         </View>
     );

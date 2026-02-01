@@ -8,6 +8,7 @@ export default function ProfileLayout() {
     <>
       <GlobalHeader />
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="profile" />
         <Stack.Screen name="preferences" />
         <Stack.Screen name="surveys" />
       </Stack>

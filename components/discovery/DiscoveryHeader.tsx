@@ -36,7 +36,7 @@ export function DiscoveryHeader({
         // Ensure we can navigate back. If explicit /hub exists, go there.
         // Or just router.back() if pushed.
         // User requested "Exit Control", typically implies closing the flow.
-        router.push('/(hub)');
+        router.back();
     };
 
     const handlePressFilter = () => {

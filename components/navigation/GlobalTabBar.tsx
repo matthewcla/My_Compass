@@ -10,10 +10,10 @@ import {
     Home,
     Inbox,
     Map as MapIcon,
+    Menu,
     Settings,
     Shield,
-    Target,
-    UserCircle
+    Target
 } from 'lucide-react-native';
 import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
@@ -172,13 +172,20 @@ export default function GlobalTabBar() {
             {/* 4. SPOKE SECONDARY (Dynamic) */}
             {config && renderTab(config.secondary.label, config.secondary.route, config.secondary.icon)}
 
-            {/* 5. PROFILE (Fixed - User Menu) */}
+            {/* 5. MENU (Fixed - User Menu) */}
             <Pressable
                 onPress={() => useUIStore.getState().openAccountDrawer()}
                 className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full`}
+                accessibilityRole="button"
+                accessibilityLabel="Open Menu"
             >
-                <UserCircle size={24} color={inactiveColor} />
-                <Text style={{ color: inactiveColor, fontSize: 11 }}>Profile</Text>
+                <Menu
+                    size={24}
+                    color={inactiveColor}
+                />
+                <Text style={{ color: inactiveColor, fontSize: 11 }}>
+                    Menu
+                </Text>
             </Pressable>
         </View>
     );

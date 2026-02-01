@@ -140,7 +140,7 @@ export default function CycleScreen() {
                         </Text>
                         <TouchableOpacity onPress={() => router.push('/(career)/manifest')}>
                             <Text className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                                Manage Bench
+                                View Archive
                             </Text>
                         </TouchableOpacity>
                     </View>

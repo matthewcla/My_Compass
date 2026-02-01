@@ -253,13 +253,25 @@ class SQLiteStorage implements IStorageService {
   }
 
   async getUserApplications(userId: string): Promise<Application[]> {
-    const db = await this.getDB();
+    const db = await this.getDB(); // Ensure DB is initialized
     try {
       const results = await db.getAllAsync<any>('SELECT * FROM applications WHERE user_id = ?', userId);
-      return results.map(row => this.mapRowToApplication(row));
+      const validApps: Application[] = [];
+
+      for (const row of results) {
+        try {
+          validApps.push(this.mapRowToApplication(row));
+        } catch (e) {
+          console.warn(`[Storage] Corrupted Application detected (ID: ${row.id}). Self-healing by deleting record.`, e);
+          // Self-healing: Delete the corrupted record
+          await db.runAsync('DELETE FROM applications WHERE id = ?', row.id);
+        }
+      }
+
+      return validApps;
     } catch (error) {
       if (error instanceof DataIntegrityError) throw error;
-      throw new DataIntegrityError('Failed to parse Application records', error);
+      throw new DataIntegrityError('Failed to fetch/parse Application records', error);
     }
   }
 

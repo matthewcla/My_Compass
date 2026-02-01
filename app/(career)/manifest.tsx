@@ -36,8 +36,8 @@ export default function ManifestScreen() {
         return getManifestItems(activeTab);
     }, [activeTab, getManifestItems, mode]); // Re-fetch when tab changes
 
-    const handlePromote = useCallback((billetId: string) => {
-        const success = promoteToSlate(billetId, 'user-123');
+    const handlePromote = useCallback(async (billetId: string) => {
+        const success = await promoteToSlate(billetId, 'user-123');
         if (success) {
             showFeedback('Drafted! Added to Slate.', 'success');
         } else {
@@ -53,7 +53,7 @@ export default function ManifestScreen() {
     }, [swipe, showFeedback]);
 
     const handleRecover = useCallback((billetId: string) => {
-        recoverBillet(billetId);
+        recoverBillet(billetId, 'user-123');
         showFeedback('Recovered to Candidates.', 'success');
     }, [recoverBillet, showFeedback]);
 
@@ -187,7 +187,7 @@ export default function ManifestScreen() {
                         }}
                         className="w-full bg-blue-600 py-3.5 rounded-xl items-center justify-center active:bg-blue-700 shadow-sm"
                     >
-                        <Text className="text-white font-bold text-base">Go To Checkout</Text>
+                        <Text className="text-white font-bold text-base">Review Slate</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>

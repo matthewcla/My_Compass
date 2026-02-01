@@ -145,7 +145,7 @@ export default function DiscoveryScreen() {
                         mode={mode}
                         onToggleMode={() => setMode(mode === 'real' ? 'sandbox' : 'real')}
                         onOpenFilters={() => setIsFiltersOpen(true)}
-                        onOpenShortlist={() => router.push('/(career)/manifest')}
+                        onOpenShortlist={() => router.push('/(assignment)/cycle')}
                         savedCount={savedCount}
                     />
 

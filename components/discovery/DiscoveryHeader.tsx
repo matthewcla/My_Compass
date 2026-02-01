@@ -1,7 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { FolderHeart, SlidersHorizontal, X } from 'lucide-react-native';
+import { ListOrdered, SlidersHorizontal, X } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React from 'react';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
@@ -118,12 +118,12 @@ export function DiscoveryHeader({
                     <SlidersHorizontal size={18} color={iconColor} strokeWidth={2.5} />
                 </TouchableOpacity>
 
-                {/* Shortlist */}
+                {/* Slate (Cycle) */}
                 <TouchableOpacity
                     onPress={handlePressShortlist}
                     className={`w-10 h-10 items-center justify-center rounded-full border active:opacity-80 relative ${iconBtnBg}`}
                 >
-                    <FolderHeart size={18} color={iconColor} strokeWidth={2.5} />
+                    <ListOrdered size={18} color={iconColor} strokeWidth={2.5} />
                     {savedCount > 0 && (
                         <View className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900" />
                     )}

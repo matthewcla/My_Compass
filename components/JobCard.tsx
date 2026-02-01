@@ -36,7 +36,7 @@ export function JobCard({
 
     // 2. Determine Button State Logic
     // 2. Determine Button State Logic
-    let buttonText = 'Buy It Now';
+    let buttonText = 'Promote';
     let buttonBgClass = 'bg-navyBlue';
     let isDisabled = false;
 

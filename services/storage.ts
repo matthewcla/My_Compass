@@ -129,10 +129,10 @@ class SQLiteStorage implements IStorageService {
       billet.billetDescription || null,
       billet.compass.matchScore,
       billet.compass.contextualNarrative,
-      billet.compass.isBuyItNowEligible ? 1 : 0,
-      billet.compass.lockStatus,
-      billet.compass.lockExpiresAt || null,
-      billet.compass.lockedByUserId || null,
+      0, // isBuyItNowEligible (Removed from schema)
+      'open', // lockStatus (Removed from schema)
+      null, // lockExpiresAt (Removed from schema)
+      null, // lockedByUserId (Removed from schema)
       billet.lastSyncTimestamp,
       billet.syncStatus
     );
@@ -177,10 +177,8 @@ class SQLiteStorage implements IStorageService {
         compass: {
           matchScore: row.compass_match_score,
           contextualNarrative: row.compass_contextual_narrative,
-          isBuyItNowEligible: Boolean(row.compass_is_buy_it_now_eligible),
-          lockStatus: row.compass_lock_status,
-          lockExpiresAt: row.compass_lock_expires_at,
-          lockedByUserId: row.compass_locked_by_user_id,
+          // Legacy fields removed from schema:
+          // isBuyItNowEligible, lockStatus, lockExpiresAt, lockedByUserId
         },
         lastSyncTimestamp: row.last_sync_timestamp,
         syncStatus: row.sync_status,
@@ -213,9 +211,9 @@ class SQLiteStorage implements IStorageService {
       app.userId,
       app.status,
       JSON.stringify(app.statusHistory),
-      app.optimisticLockToken || null,
-      app.lockRequestedAt || null,
-      app.lockExpiresAt || null,
+      null, // optimisticLockToken (Removed from schema)
+      null, // lockRequestedAt (Removed from schema)
+      null, // lockExpiresAt (Removed from schema)
       app.personalStatement || null,
       app.preferenceRank || null,
       app.submittedAt || null,
@@ -260,9 +258,7 @@ class SQLiteStorage implements IStorageService {
         userId: row.user_id,
         status: row.status,
         statusHistory: JSON.parse(row.status_history),
-        optimisticLockToken: row.optimistic_lock_token,
-        lockRequestedAt: row.lock_requested_at,
-        lockExpiresAt: row.lock_expires_at,
+        // Legacy fields removed from schema: optimisticLockToken, lockRequestedAt, lockExpiresAt
         personalStatement: row.personal_statement,
         preferenceRank: row.preference_rank,
         submittedAt: row.submitted_at,

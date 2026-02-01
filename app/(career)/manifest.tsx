@@ -152,7 +152,8 @@ export default function ManifestScreen() {
                             </Text>
                             <TouchableOpacity
                                 onPress={() => router.push('/(career)/discovery')}
-                                className="bg-blue-600 px-6 py-3 rounded-full shadow-lg active:bg-blue-700"
+                                className="bg-blue-600 px-6 py-3 rounded-full active:bg-blue-700"
+                                style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5 }}
                             >
                                 <Text className="text-white font-bold text-sm uppercase tracking-wide">Find More</Text>
                             </TouchableOpacity>

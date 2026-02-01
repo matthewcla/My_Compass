@@ -28,7 +28,7 @@ const SPOKE_CONFIG: Record<string, SpokeConfig> = {
 
     '(career)': {
         primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
-        secondary: { label: 'Cycle', route: '/(assignment)/cycle', icon: Target },
+        secondary: { label: 'Assignment', route: '/(assignment)', icon: Target },
     },
     '(pcs)': {
         primary: { label: 'Orders', route: '/(pcs)/orders', icon: FileText },

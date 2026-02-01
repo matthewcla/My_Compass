@@ -37,7 +37,7 @@ export default function DiscoveryScreen() {
     // Initial Fetch
     useEffect(() => {
         if (billetStack.length === 0) {
-            fetchBillets();
+            fetchBillets('USER_0001');
         }
     }, []);
 
@@ -88,7 +88,7 @@ export default function DiscoveryScreen() {
         // Right -> Manifest (Like)
         // Up -> Slate (Promote)
         // Left -> Archive (Nope)
-        await swipe(currentBillet.id, direction, 'user-123');
+        await swipe(currentBillet.id, direction, 'USER_0001');
 
         // 3. Feedback Logic
         if (mode === 'real') {
@@ -124,7 +124,7 @@ export default function DiscoveryScreen() {
 
     const handleUndo = () => {
         deck.back();
-        undo();
+        undo('USER_0001');
     };
 
     // Calculate Saved Count (Shortlist) for Header

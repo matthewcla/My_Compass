@@ -15,6 +15,7 @@ import {
   LeaveRequestSchema
 } from '@/types/schema';
 import { User, UserSchema } from '@/types/user';
+import { safeJsonParse } from '@/utils/jsonUtils';
 import * as SQLite from 'expo-sqlite';
 import { Platform } from 'react-native';
 import { DataIntegrityError, IStorageService } from './storage.interface';
@@ -26,6 +27,18 @@ const DB_NAME = 'my_compass.db';
 // =============================================================================
 
 class SQLiteStorage implements IStorageService {
+  saveLeaveRequest(request: LeaveRequest): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+  getLeaveRequest(id: string): Promise<LeaveRequest | null> {
+    throw new Error('Method not implemented.');
+  }
+  getUserLeaveRequests(userId: string): Promise<LeaveRequest[]> {
+    throw new Error('Method not implemented.');
+  }
+  deleteLeaveRequest(requestId: string): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
   private dbInstance: SQLite.SQLiteDatabase | null = null;
 
   private async getDB(): Promise<SQLite.SQLiteDatabase> {
@@ -90,7 +103,7 @@ class SQLiteStorage implements IStorageService {
         rank: row.rank,
         title: row.title,
         uic: row.uic,
-        preferences: row.preferences ? JSON.parse(row.preferences) : undefined,
+        preferences: safeJsonParse(row.preferences),
         lastSyncTimestamp: row.last_sync_timestamp,
         syncStatus: row.sync_status,
       });
@@ -257,7 +270,7 @@ class SQLiteStorage implements IStorageService {
         billetId: row.billet_id,
         userId: row.user_id,
         status: row.status,
-        statusHistory: JSON.parse(row.status_history),
+        statusHistory: safeJsonParse(row.status_history) || [],
         // Legacy fields removed from schema: optimisticLockToken, lockRequestedAt, lockExpiresAt
         personalStatement: row.personal_statement,
         preferenceRank: row.preference_rank,
@@ -275,109 +288,7 @@ class SQLiteStorage implements IStorageService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Leave Requests
-  // ---------------------------------------------------------------------------
-
-  async saveLeaveRequest(request: LeaveRequest): Promise<void> {
-    const db = await this.getDB();
-    const sql = `
-      INSERT OR REPLACE INTO leave_requests (
-        id, user_id, start_date, end_date, charge_days, leave_type,
-        leave_address, leave_phone_number, emergency_contact,
-        duty_section, ration_status, pre_review_checks,
-        mode_of_travel, destination_country, normal_working_hours, leave_in_conus, member_remarks,
-        status, status_history, approval_chain, current_approver_id,
-        return_reason, denial_reason, created_at, updated_at, submitted_at,
-        last_sync_timestamp, sync_status, local_modified_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    `;
-
-    // Encrypt sensitive data
-    const encryptedContact = request.emergencyContact
-      ? encryptData(JSON.stringify(request.emergencyContact))
-      : null;
-
-    await db.runAsync(
-      sql,
-      request.id,
-      request.userId,
-      request.startDate,
-      request.endDate,
-      request.chargeDays,
-      request.leaveType,
-      request.leaveAddress,
-      request.leavePhoneNumber,
-      encryptedContact,
-      request.dutySection || null,
-      request.rationStatus || null,
-      request.preReviewChecks ? JSON.stringify(request.preReviewChecks) : null,
-      request.modeOfTravel || null,
-      request.destinationCountry,
-      request.normalWorkingHours,
-      request.leaveInConus ? 1 : 0,
-      request.memberRemarks || null,
-      request.status,
-      JSON.stringify(request.statusHistory),
-      JSON.stringify(request.approvalChain),
-      request.currentApproverId || null,
-      request.returnReason || null,
-      request.denialReason || null,
-      request.createdAt,
-      request.updatedAt,
-      request.submittedAt || null,
-      request.lastSyncTimestamp,
-      request.syncStatus,
-      request.localModifiedAt || null
-    );
-  }
-
-  async getLeaveRequest(id: string): Promise<LeaveRequest | null> {
-    const db = await this.getDB();
-    try {
-      const result = await db.getFirstAsync<any>('SELECT * FROM leave_requests WHERE id = ?', id);
-      if (!result) return null;
-      return this.mapRowToLeaveRequest(result);
-    } catch (error) {
-      if (error instanceof DataIntegrityError) throw error;
-      throw new DataIntegrityError(`Failed to parse LeaveRequest record for ID ${id}`, error);
-    }
-  }
-
-  async getUserLeaveRequests(userId: string): Promise<LeaveRequest[]> {
-    const db = await this.getDB();
-    try {
-      const results = await db.getAllAsync<any>('SELECT * FROM leave_requests WHERE user_id = ?', userId);
-
-      const validRequests: LeaveRequest[] = [];
-
-      for (const row of results) {
-        try {
-          // Attempt to parse each row individually
-          const request = this.mapRowToLeaveRequest(row);
-          validRequests.push(request);
-        } catch (error) {
-          // If a specific record fails (DataIntegrityError), log it but don't fail the whole fetch
-          console.warn(`[Storage] Skipping corrupted LeaveRequest (ID: ${row.id}).`, error);
-          if (error instanceof DataIntegrityError && (error as any).cause?.issues) {
-            // Log Zod validation issues if available to help debugging
-            console.warn('[Storage] Validation details:', JSON.stringify((error as any).cause.issues, null, 2));
-          }
-        }
-      }
-
-      return validRequests;
-    } catch (error) {
-      if (error instanceof DataIntegrityError) throw error;
-      throw new DataIntegrityError('Failed to parse LeaveRequest records', error);
-    }
-  }
-
-  async deleteLeaveRequest(requestId: string): Promise<void> {
-    const db = await this.getDB();
-    await db.runAsync('DELETE FROM leave_requests WHERE id = ?', requestId);
-  }
-
+  // ... (inside mapRowToLeaveRequest)
   private mapRowToLeaveRequest(row: any): LeaveRequest {
     try {
       // Decrypt sensitive data
@@ -409,15 +320,15 @@ class SQLiteStorage implements IStorageService {
         emergencyContact: emergencyContact,
         dutySection: row.duty_section || undefined,
         rationStatus: ['commuted', 'in_kind', 'not_applicable'].includes(row.ration_status) ? row.ration_status : undefined,
-        preReviewChecks: row.pre_review_checks ? JSON.parse(row.pre_review_checks) : undefined,
+        preReviewChecks: safeJsonParse(row.pre_review_checks),
         modeOfTravel: row.mode_of_travel,
         destinationCountry: row.destination_country,
         normalWorkingHours: row.normal_working_hours,
         leaveInConus: Boolean(row.leave_in_conus),
         memberRemarks: row.member_remarks,
         status: row.status,
-        statusHistory: JSON.parse(row.status_history),
-        approvalChain: JSON.parse(row.approval_chain),
+        statusHistory: safeJsonParse(row.status_history) || [],
+        approvalChain: safeJsonParse(row.approval_chain) || [],
         currentApproverId: row.current_approver_id,
         returnReason: row.return_reason,
         denialReason: row.denial_reason,
@@ -582,6 +493,31 @@ class SQLiteStorage implements IStorageService {
       throw new DataIntegrityError(`Failed to parse DashboardCache for user ${userId}`, error);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Assignment Decisions
+  // ---------------------------------------------------------------------------
+
+  async saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void> {
+    const db = await this.getDB();
+    const now = new Date().toISOString();
+    const data = JSON.stringify(decisions);
+    await db.runAsync(
+      `INSERT OR REPLACE INTO assignment_decisions (user_id, data, last_sync_timestamp, sync_status)
+       VALUES (?, ?, ?, ?);`,
+      userId, data, now, 'pending_upload'
+    );
+  }
+
+  async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
+    const db = await this.getDB();
+    const row = await db.getFirstAsync<{ data: string }>(
+      `SELECT data FROM assignment_decisions WHERE user_id = ?;`,
+      userId
+    );
+    if (!row) return null;
+    return safeJsonParse(row.data) || null;
+  }
 }
 
 // =============================================================================
@@ -667,6 +603,15 @@ class MockStorage implements IStorageService {
   }
   async getDashboardCache(userId: string): Promise<DashboardData | null> {
     return this.dashboardCache.get(userId) || null;
+  }
+
+  // Assignment Decisions
+  async saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void> {
+    localStorage.setItem(`decisions_${userId}`, JSON.stringify(decisions));
+  }
+  async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
+    const data = localStorage.getItem(`decisions_${userId}`);
+    return data ? JSON.parse(data) : null;
   }
 }
 
@@ -767,6 +712,14 @@ class WebStorage implements IStorageService {
   }
   async getDashboardCache(userId: string): Promise<DashboardData | null> {
     return this.getItem<DashboardData>(`dash_${userId}`);
+  }
+
+  // --- Assignment Decisions ---
+  async saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void> {
+    this.setItem(`decisions_${userId}`, decisions);
+  }
+  async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
+    return this.getItem<Record<string, string>>(`decisions_${userId}`);
   }
 }
 

@@ -1,7 +1,9 @@
+import { storage } from '@/services/storage';
 import {
     Application,
     Billet,
-    MyAssignmentState
+    MyAssignmentState,
+    SwipeDecision
 } from '@/types/schema';
 import { create } from 'zustand';
 
@@ -25,7 +27,6 @@ const generateUUID = () => {
 // =============================================================================
 
 export type SwipeDirection = 'left' | 'right' | 'up';
-export type SwipeDecision = 'nope' | 'like' | 'super';
 export type SmartBenchItem = { billet: Billet; type: 'manifest' | 'suggestion' };
 
 export type FilterState = {
@@ -39,8 +40,14 @@ export type DiscoveryMode = 'real' | 'sandbox';
 interface AssignmentActions {
     /**
      * Fetch billets from "API" (Mock) and populate store.
+     * Also hydrates local decisions/applications if not already loaded.
      */
-    fetchBillets: () => Promise<void>;
+    fetchBillets: (userId?: string) => Promise<void>;
+
+    /**
+     * Hydrate user data (decisions, applications) from storage.
+     */
+    hydrateUserData: (userId: string) => Promise<void>;
 
     /**
      * Handle user swipe action on a billet
@@ -65,35 +72,35 @@ interface AssignmentActions {
     /**
      * Undo the last swipe action.
      */
-    undo: () => void;
+    undo: (userId: string) => void;
 
     /**
      * Promote a billet from Bench/Discovery to the Slate (Draft Application).
      * Returns true if successful, false if slate is full.
      */
-    promoteToSlate: (billetId: string, userId: string) => boolean;
+    promoteToSlate: (billetId: string, userId: string) => Promise<boolean>;
 
     /**
      * Demote an application back to the Manifest (removes Draft).
      * Keeps the 'interest' in realDecisions so it returns to the Manifest list.
      */
-    demoteToManifest: (appId: string) => void;
+    demoteToManifest: (appId: string) => Promise<void>;
 
     /**
      * Recover a 'nope' (archived) billet back to the Manifest ('like').
      */
-    recoverBillet: (billetId: string) => void;
+    recoverBillet: (billetId: string, userId: string) => void;
 
     /**
      * Remove (if draft) or Withdraw (if submitted) an application.
      * Triggers re-ranking of remaining applications.
      */
-    withdrawApplication: (appId: string) => void;
+    withdrawApplication: (appId: string, userId: string) => Promise<void>;
 
     /**
      * Reorder application preference ranks based on the provided ID order.
      */
-    reorderApplications: (orderedAppIds: string[]) => void;
+    reorderApplications: (orderedAppIds: string[], userId: string) => void;
 
     /**
      * Submit all DRAFT applications to the server.
@@ -423,7 +430,31 @@ const MOCK_BILLETS: Billet[] = [
 export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     ...INITIAL_STATE,
 
-    fetchBillets: async () => {
+    hydrateUserData: async (userId: string) => {
+        try {
+            // Parallel hydrate to avoid waterfall
+            const [decisions, apps] = await Promise.all([
+                storage.getAssignmentDecisions(userId),
+                storage.getUserApplications(userId)
+            ]);
+
+            const appRecord: Record<string, Application> = {};
+            if (apps) {
+                apps.forEach(a => { appRecord[a.id] = a; });
+            }
+
+            set({
+                realDecisions: (decisions as Record<string, SwipeDecision>) || {},
+                applications: appRecord,
+                userApplicationIds: apps ? apps.map(a => a.id) : [],
+            });
+        } catch (e) {
+            console.error('[Store] Failed to hydrate user data:', e);
+        }
+    },
+
+    fetchBillets: async (userId?: string) => {
+        // If userId provided, hydrate. otherwise just fetch billets.
         set({ isSyncingBillets: true });
 
         // Convert array to record for store
@@ -435,27 +466,83 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             newStack.push(billet.id);
         });
 
-        set({
+        // DO NOT reset decisions or applications here if they exist.
+        // We only reset billets.
+        set((state) => ({
             billets: billetRecord,
-            billetStack: newStack, // Initialize stack
-            cursor: 0,             // Reset cursor on full refresh
-            realDecisions: {},       // Clear decisions on full refresh
-            sandboxDecisions: {},
+            billetStack: newStack,
+            cursor: 0,
+            // PRESERVE DECISIONS / APPS
+            // realDecisions: {}, 
             lastBilletSyncAt: new Date().toISOString(),
             isSyncingBillets: false,
-        });
+        }));
+
+        if (userId) {
+            await get().hydrateUserData(userId);
+        }
     },
 
-    setMode: (mode: DiscoveryMode) => {
-        set({ mode });
+    swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
+        const { cursor, realDecisions, sandboxDecisions, promoteToSlate, mode } = get();
+
+        // 1. Determine Decision based on Direction
+        let decision: SwipeDecision = 'nope';
+        if (direction === 'right') decision = 'like';
+        else if (direction === 'up') decision = 'super';
+        else if (direction === 'left') decision = 'nope';
+
+        // 2. Select Target Bin based on Mode
+        if (mode === 'real') {
+            let newDecisions = { ...realDecisions };
+
+            // 3. Handle Side Effects
+            if (direction === 'up') {
+                const wasPromoted = await promoteToSlate(billetId, userId);
+                if (!wasPromoted) {
+                    // Fallback to Manifest as 'super' (Favorite)
+                    newDecisions[billetId] = 'super';
+                    set({
+                        cursor: cursor + 1,
+                        realDecisions: newDecisions
+                    });
+                } else {
+                    // Promoted successfully
+                    newDecisions[billetId] = 'super';
+                    set({
+                        cursor: cursor + 1,
+                        realDecisions: newDecisions
+                    });
+                }
+            } else {
+                // Left or Right
+                newDecisions[billetId] = decision;
+                set({
+                    cursor: cursor + 1,
+                    realDecisions: newDecisions
+                });
+            }
+
+            // Persist
+            await storage.saveAssignmentDecisions(userId, newDecisions);
+
+        } else {
+            // SANDBOX MODE: No network transactions, just local state
+            set({
+                cursor: cursor + 1,
+                sandboxDecisions: {
+                    ...sandboxDecisions,
+                    [billetId]: decision
+                }
+            });
+        }
     },
+
+    setMode: (mode: DiscoveryMode) => set({ mode }),
 
     updateSandboxFilters: (filters: Partial<FilterState>) => {
         set((state) => ({
-            sandboxFilters: {
-                ...state.sandboxFilters,
-                ...filters
-            }
+            sandboxFilters: { ...state.sandboxFilters, ...filters }
         }));
     },
 
@@ -463,7 +550,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         set((state) => ({ showProjected: !state.showProjected }));
     },
 
-    undo: () => {
+    undo: (userId: string) => {
         const { cursor, mode, billetStack, realDecisions, sandboxDecisions, applications, userApplicationIds } = get();
         if (cursor <= 0) return;
 
@@ -493,6 +580,11 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 applications: updatedApplications,
                 userApplicationIds: updatedUserIds
             });
+
+            // Persist
+            storage.saveAssignmentDecisions(userId, newDecisions);
+            // Note: Orphaned application deletion from storage not fully implemented yet 
+            // as per storage interface limitations.
         } else {
             const newDecisions = { ...sandboxDecisions };
             delete newDecisions[billetIdToRemove];
@@ -503,167 +595,67 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         }
     },
 
-    swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
-        const { cursor, realDecisions, sandboxDecisions, promoteToSlate, mode } = get();
+    promoteToSlate: async (billetId: string, userId: string): Promise<boolean> => {
+        const { applications, userApplicationIds, billets } = get();
 
-        // 1. Determine Decision based on Direction
-        let decision: SwipeDecision = 'nope';
-        if (direction === 'right') decision = 'like';
-        else if (direction === 'up') decision = 'super';
-        else if (direction === 'left') decision = 'nope';
-
-        // 2. Select Target Bin based on Mode
-        if (mode === 'real') {
-
-            // 3. Handle Side Effects
-            // Direction 'right' (Interested) -> Adds to realDecisions (Manifest).
-            // Direction 'up' (Target) -> Try promoteToSlate. If full, fallback to Manifest (super).
-            // Direction 'left' -> Archive (nope).
-
-            if (direction === 'up') {
-                const wasPromoted = promoteToSlate(billetId, userId);
-                if (!wasPromoted) {
-                    // Fallback to Manifest as 'super' (Favorite)
-                    set({
-                        cursor: cursor + 1,
-                        realDecisions: {
-                            ...realDecisions,
-                            [billetId]: 'super'
-                        }
-                    });
-                } else {
-                    // Promoted successfully, so we mark it as decided (super) BUT it's also an app.
-                    // Ideally we still record the decision for history.
-                    set({
-                        cursor: cursor + 1,
-                        realDecisions: {
-                            ...realDecisions,
-                            [billetId]: 'super'
-                        }
-                    });
-                }
-            } else {
-                // Left or Right
-                set({
-                    cursor: cursor + 1,
-                    realDecisions: {
-                        ...realDecisions,
-                        [billetId]: decision
-                    }
-                });
-            }
-
-        } else {
-            // SANDBOX MODE: No network transactions, just local state
-            set({
-                cursor: cursor + 1,
-                sandboxDecisions: {
-                    ...sandboxDecisions,
-                    [billetId]: decision
-                }
-            });
-        }
-    },
-
-    // --- CYCLE ACTIONS ---
-
-    promoteToSlate: (billetId: string, userId: string): boolean => {
-        const { applications, userApplicationIds, mode, billets } = get();
-
-        // FIX: Validate mode is 'real' (defensive guard)
-        if (mode !== 'real') {
-            console.warn("Cannot promote to slate in sandbox mode.");
+        // 1. Check Limits (Max 5)
+        if (userApplicationIds.length >= 5) {
             return false;
         }
 
-        // FIX: Check if billet is projected (cannot apply to future vacancies)
-        const billet = billets[billetId];
-        if (billet?.advertisementStatus === 'projected') {
-            console.warn("Cannot apply to projected billets.");
-            return false;
-        }
+        // 2. Check if already exists
+        const existing = Object.values(applications).find(a => a.billetId === billetId);
+        if (existing) return true;
 
-        // FIX: Check for duplicate application (same billetId)
-        const existingApp = Object.values(applications).find(
-            app => app.billetId === billetId && !['withdrawn', 'declined'].includes(app.status)
-        );
-        if (existingApp) {
-            console.warn("Application for this billet already exists.");
-            return false;
-        }
-
-        // 1. Check Constraint: Max 7 Active Applications
-        const activeStatuses = ['draft', 'optimistically_locked', 'submitted', 'confirmed'];
-        const activeApps = Object.values(applications).filter(app =>
-            activeStatuses.includes(app.status)
-        );
-
-        if (activeApps.length >= 7) {
-            console.warn("Slate is full. You can only have 7 active applications.");
-            return false;
-        }
-
-        // 2. Determine Preference Rank (Next Available Slot)
-        const nextRank = activeApps.length + 1;
-
-        // 3. Create Application Record
-        const appId = generateUUID();
-        const now = new Date().toISOString();
-
+        // 3. Create Application Object
         const newApp: Application = {
-            id: appId,
+            id: generateUUID(),
             billetId,
             userId,
             status: 'draft',
-            statusHistory: [{
-                status: 'draft',
-                timestamp: now,
-                reason: 'User promoted to slate'
-            }],
-            preferenceRank: nextRank,
-            createdAt: now,
-            updatedAt: now,
-            lastSyncTimestamp: now,
+            statusHistory: [{ status: 'draft', timestamp: new Date().toISOString() }],
+            preferenceRank: userApplicationIds.length + 1,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            lastSyncTimestamp: new Date().toISOString(),
             syncStatus: 'pending_upload',
-            localModifiedAt: now
+            localModifiedAt: new Date().toISOString(),
         };
 
-        // 4. Update State
-        set(state => ({
-            applications: {
-                ...state.applications,
-                [appId]: newApp
-            },
-            userApplicationIds: [...state.userApplicationIds, appId]
-        }));
+        // 4. Update Store
+        const newApplications = { ...applications, [newApp.id]: newApp };
+        const newUserAppIds = [...userApplicationIds, newApp.id];
+
+        set({
+            applications: newApplications,
+            userApplicationIds: newUserAppIds
+        });
+
+        // 5. Persist
+        await storage.saveApplication(newApp);
 
         return true;
     },
 
-    demoteToManifest: (appId: string) => {
+    demoteToManifest: async (appId: string) => {
+        // Demote = remove from Slate, but keep decision in 'realDecisions'
+        // So we just remove the Application object.
         const { applications, userApplicationIds } = get();
-        const targetApp = applications[appId];
-
-        if (!targetApp) return;
-
-        // Only allowed for drafts basically, but if we assume demote = remove application
-        // We just remove it. The 'decision' in realDecisions remains, so it "falls back" to bench/manifest.
+        const app = applications[appId];
+        if (!app) return;
 
         const updatedApplications = { ...applications };
         delete updatedApplications[appId];
         const updatedUserIds = userApplicationIds.filter(id => id !== appId);
 
-        // Re-Ranking Logic (Close the Gap)
-        const activeStatuses = ['draft', 'submitted', 'confirmed'];
-        const remainingApps = Object.values(updatedApplications)
-            .filter(app => activeStatuses.includes(app.status))
-            .sort((a, b) => (a.preferenceRank || 99) - (b.preferenceRank || 99));
-
-        remainingApps.forEach((app, index) => {
-            updatedApplications[app.id] = {
-                ...app,
-                preferenceRank: index + 1,
-                updatedAt: new Date().toISOString()
+        // Re-calculate ranks for remaining apps
+        const remainingApps = updatedUserIds.map(id => updatedApplications[id]);
+        remainingApps.forEach((a, idx) => {
+            updatedApplications[a.id] = {
+                ...a,
+                preferenceRank: idx + 1,
+                updatedAt: new Date().toISOString(),
+                localModifiedAt: new Date().toISOString()
             };
         });
 
@@ -671,76 +663,70 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             applications: updatedApplications,
             userApplicationIds: updatedUserIds
         });
+
+        // Persist: Save all remaining apps to update ranks
+        for (const app of remainingApps) {
+            await storage.saveApplication(updatedApplications[app.id]);
+        }
+        // Note: We cannot "delete" the demoted app from storage yet via interface. 
+        // Ideally we should have storage.deleteApplication(appId).
     },
 
-    recoverBillet: (billetId: string) => {
+    recoverBillet: (billetId: string, userId: string) => {
         const { realDecisions } = get();
         const newDecisions = { ...realDecisions };
         newDecisions[billetId] = 'like';
         set({ realDecisions: newDecisions });
+        storage.saveAssignmentDecisions(userId, newDecisions);
     },
 
-    withdrawApplication: (appId: string) => {
+    withdrawApplication: async (appId: string, userId: string) => {
+        // Remove from applications, remove from realDecisions (so it goes back to deck??)
+        // Or "Withdraw" might mean move to 'nope'? 
+        // Usually "Withdraw" means you are no longer interested in applying.
+        // Let's set decision to 'nope'.
+
         const { applications, userApplicationIds, realDecisions } = get();
-        const targetApp = applications[appId];
+        const app = applications[appId];
+        if (!app) return;
 
-        if (!targetApp) return;
-
-        let updatedApplications = { ...applications };
-        let updatedUserIds = [...userApplicationIds];
-
-        // FIX: Clear realDecisions entry for this billet (prevents zombie data)
-        const billetIdToClear = targetApp.billetId;
+        // 1. Update Decisions to 'nope'
         const updatedDecisions = { ...realDecisions };
-        delete updatedDecisions[billetIdToClear];
-
-        // 1. Handle Status Change
-        if (targetApp.status === 'draft') {
-            // Hard delete for drafts
-            delete updatedApplications[appId];
-            updatedUserIds = updatedUserIds.filter(id => id !== appId);
-        } else {
-            // Soft delete (withdraw) for submitted/locked
-            updatedApplications[appId] = {
-                ...targetApp,
-                status: 'withdrawn',
-                statusHistory: [
-                    ...targetApp.statusHistory,
-                    {
-                        status: 'withdrawn',
-                        timestamp: new Date().toISOString(),
-                        reason: 'User withdrew application'
-                    }
-                ],
-                updatedAt: new Date().toISOString(),
-                syncStatus: 'pending_upload'
-            };
+        if (app.billetId) {
+            updatedDecisions[app.billetId] = 'nope';
         }
 
-        // 2. Re-Ranking Logic (Close the Gap)
-        // Get remaining active apps to re-rank
-        const activeStatuses = ['draft', 'submitted', 'confirmed'];
-        const remainingApps = Object.values(updatedApplications)
-            .filter(app => activeStatuses.includes(app.status) && app.id !== appId) // Exclude the withdrawn one if we just soft-deleted it
-            .sort((a, b) => (a.preferenceRank || 99) - (b.preferenceRank || 99));
+        // 2. Remove Application
+        const updatedApplications = { ...applications };
+        delete updatedApplications[appId];
+        const updatedUserIds = userApplicationIds.filter(id => id !== appId);
 
-        // Re-assign ranks 1..N
-        remainingApps.forEach((app, index) => {
-            updatedApplications[app.id] = {
-                ...app,
-                preferenceRank: index + 1,
-                updatedAt: new Date().toISOString() // Touch update time
+        // 3. Re-rank
+        const remainingApps = updatedUserIds.map(id => updatedApplications[id]);
+        remainingApps.forEach((a, idx) => {
+            updatedApplications[a.id] = {
+                ...a,
+                preferenceRank: idx + 1,
+                updatedAt: new Date().toISOString(),
+                localModifiedAt: new Date().toISOString()
             };
         });
 
         set({
+            realDecisions: updatedDecisions,
             applications: updatedApplications,
-            userApplicationIds: updatedUserIds,
-            realDecisions: updatedDecisions
+            userApplicationIds: updatedUserIds
         });
+
+        // Persist
+        await storage.saveAssignmentDecisions(userId, updatedDecisions);
+        // Persist updated apps
+        for (const app of remainingApps) {
+            await storage.saveApplication(updatedApplications[app.id]);
+        }
     },
 
-    reorderApplications: (orderedAppIds: string[]) => {
+    reorderApplications: (orderedAppIds: string[], userId: string) => {
         const { applications } = get();
         const updatedApplications = { ...applications };
 
@@ -755,76 +741,74 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             }
         });
 
-        set({ applications: updatedApplications });
+        set({
+            applications: updatedApplications,
+            userApplicationIds: orderedAppIds // Ensure sorting matches
+        });
+
+        // Persist
+        orderedAppIds.forEach(id => {
+            if (updatedApplications[id]) {
+                storage.saveApplication(updatedApplications[id]);
+            }
+        });
     },
 
     submitSlate: async () => {
-        const { applications, billets } = get();
+        set({ isSyncingApplications: true });
+        // Simulating network call
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        // 1. Find Drafts (FIX: filter out projected billets)
-        const draftApps = Object.values(applications).filter(app => {
-            if (app.status !== 'draft') return false;
-            const billet = billets[app.billetId];
-            // Skip projected billets - they cannot be submitted
-            if (billet?.advertisementStatus === 'projected') {
-                console.warn(`Skipping submission for projected billet: ${app.billetId}`);
-                return false;
+        const { applications } = get();
+        const updatedApps = { ...applications };
+
+        // Mark all draft as submitted
+        Object.keys(updatedApps).forEach(key => {
+            const app = updatedApps[key];
+            if (app.status === 'draft') {
+                updatedApps[key] = {
+                    ...app,
+                    status: 'submitted',
+                    submittedAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    lastSyncTimestamp: new Date().toISOString(),
+                    syncStatus: 'synced',
+                };
+                // In real app, persist these changes
+                storage.saveApplication(updatedApps[key]);
             }
-            return true;
-        });
-        if (draftApps.length === 0) return;
-
-        const now = new Date().toISOString();
-        const updatedApplications = { ...applications };
-
-        // 2. Update Statuses
-        draftApps.forEach(app => {
-            updatedApplications[app.id] = {
-                ...app,
-                status: 'submitted',
-                submittedAt: now,
-                statusHistory: [
-                    ...app.statusHistory,
-                    {
-                        status: 'submitted',
-                        timestamp: now,
-                        reason: 'Slate submission'
-                    }
-                ],
-                updatedAt: now,
-                syncStatus: 'pending_upload'
-            };
         });
 
-        // 3. Mock API Call
-        console.log(`[Mock API] Submitting Slate: ${draftApps.length} applications`);
-
-        // 4. Update Store
-        set({ applications: updatedApplications });
+        set({
+            applications: updatedApps,
+            isSyncingApplications: false
+        });
     },
 
-    getSmartBench: (userId: string) => {
+    getManifestItems: (filter: 'candidates' | 'favorites' | 'archived') => {
         const { billets, realDecisions, applications } = get();
-        const activeAppBilletIds = new Set(
-            Object.values(applications)
-                .filter(app => !['withdrawn', 'declined'].includes(app.status))
-                .map(app => app.billetId)
-        );
 
-        const results: SmartBenchItem[] = [];
+        // Exclude things that are already applications
+        const activeBilletIds = new Set(Object.values(applications).map(a => a.billetId));
 
-        // Logic: Return all billets in realDecisions that are NOT currently in the applications map (i.e., Liked but not Drafted).
+        const items: SmartBenchItem[] = [];
+
         Object.entries(realDecisions).forEach(([billetId, decision]) => {
-            if ((decision === 'like' || decision === 'super') && !activeAppBilletIds.has(billetId)) {
-                const billet = billets[billetId];
-                if (billet) {
-                    results.push({ billet, type: 'manifest' });
-                }
+            const billet = billets[billetId];
+            if (!billet) return;
+            if (activeBilletIds.has(billetId)) return; // Already in slate
+
+            if (filter === 'archived') {
+                if (decision === 'nope') items.push({ billet, type: 'manifest' });
+            } else if (filter === 'favorites') {
+                if (decision === 'super') items.push({ billet, type: 'manifest' });
+            } else { // candidates (DEFAULT View)
+                // Show likes and supers that aren't yet applications
+                if (decision === 'like' || decision === 'super') items.push({ billet, type: 'manifest' });
             }
         });
 
-        // Return sorted by match score
-        return results.sort((a, b) => b.billet.compass.matchScore - a.billet.compass.matchScore);
+        return items;
     },
 
     getProjectedBillets: () => {
@@ -832,26 +816,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         return Object.values(billets).filter(b => b.advertisementStatus === 'projected');
     },
 
-    getManifestItems: (filter: 'candidates' | 'favorites' | 'archived') => {
-        const { realDecisions, billets } = get();
-        const results: SmartBenchItem[] = [];
-
-        Object.entries(realDecisions).forEach(([id, decision]) => {
-            const billet = billets[id];
-            if (!billet) return;
-
-            let matchesFilter = false;
-            if (filter === 'candidates' && (decision === 'like' || decision === 'super')) matchesFilter = true;
-            else if (filter === 'favorites' && decision === 'super') matchesFilter = true;
-            else if (filter === 'archived' && decision === 'nope') matchesFilter = true;
-
-            if (matchesFilter) {
-                results.push({ billet, type: 'manifest' });
-            }
-        });
-
-        return results.sort((a, b) => b.billet.compass.matchScore - a.billet.compass.matchScore);
-    },
-
     resetStore: () => set(INITIAL_STATE),
 }));
+
+

@@ -32,6 +32,10 @@ export interface IStorageService {
   getApplication(id: string): Promise<Application | null>;
   getUserApplications(userId: string): Promise<Application[]>;
 
+  // Assignment Decisions
+  saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void>;
+  getAssignmentDecisions(userId: string): Promise<Record<string, string> | null>;
+
   // Leave Requests
   saveLeaveRequest(request: LeaveRequest): Promise<void>;
   getLeaveRequest(id: string): Promise<LeaveRequest | null>;

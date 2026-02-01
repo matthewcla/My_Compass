@@ -68,15 +68,18 @@ export default function LeaveRequestScreen() {
     // Check for draft on mount
     const { draftId } = useLocalSearchParams();
     const fetchUserRequests = useLeaveStore((state) => state.fetchUserRequests);
-    const userId = "user-123"; // TODO: Auth
+    const fetchLeaveData = useLeaveStore((state) => state.fetchLeaveData);
+    const userId = "USER_0001"; // TODO: Auth
     const [isHydrated, setIsHydrated] = useState(false);
 
     React.useEffect(() => {
         // Hydrate and then set ready
         const init = async () => {
-            if (Object.keys(leaveRequests).length === 0) {
-                await fetchUserRequests(userId);
-            }
+            // Always fetch latest data to ensure balance is accurate
+            await Promise.all([
+                fetchUserRequests(userId),
+                fetchLeaveData(userId)
+            ]);
             setIsHydrated(true);
         };
         init();
@@ -250,6 +253,10 @@ export default function LeaveRequestScreen() {
     }, [formData.startDate, formData.endDate, formData.startTime, formData.endTime, formData.departureWorkingHours, formData.returnWorkingHours, availableDays]);
 
     const { chargeableDays, projectedBalance, isOverdraft } = calculation;
+
+    console.log('[LeaveRequest] Render Balance:', leaveBalance);
+    console.log('[LeaveRequest] Available Days:', availableDays);
+    console.log('[LeaveRequest] Is Hydrated:', isHydrated);
 
     // --- Helpers ---
 

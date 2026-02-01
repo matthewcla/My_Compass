@@ -1,12 +1,13 @@
 import { BilletSwipeCard } from '@/components/BilletSwipeCard';
 import { BilletControlBar } from '@/components/discovery/BilletControlBar';
+import { DiscoveryFilters } from '@/components/discovery/DiscoveryFilters';
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useFeedback } from '@/hooks/useFeedback';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,6 +31,7 @@ export default function DiscoveryScreen() {
     } = useAssignmentStore();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const { showFeedback, FeedbackComponent } = useFeedback();
 
     // Initial Fetch
@@ -142,11 +144,9 @@ export default function DiscoveryScreen() {
                     <DiscoveryHeader
                         mode={mode}
                         onToggleMode={() => setMode(mode === 'real' ? 'sandbox' : 'real')}
-                        onOpenFilters={() => console.log('Open Filters')}
+                        onOpenFilters={() => setIsFiltersOpen(true)}
                         onOpenShortlist={() => router.push('/(career)/manifest')}
                         savedCount={savedCount}
-                        showProjected={showProjected}
-                        onToggleProjected={toggleShowProjected}
                     />
 
                     {/* Main Content Area - Centered Vertically */}
@@ -232,6 +232,13 @@ export default function DiscoveryScreen() {
                         </View>
                     </View>
                 </SafeAreaView>
+
+                <DiscoveryFilters
+                    visible={isFiltersOpen}
+                    onClose={() => setIsFiltersOpen(false)}
+                    showProjected={showProjected}
+                    onToggleProjected={toggleShowProjected}
+                />
             </View>
         </GestureHandlerRootView>
     );

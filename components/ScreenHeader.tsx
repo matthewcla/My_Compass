@@ -16,7 +16,7 @@ interface ScreenHeaderProps {
 }
 
 const MENU_ITEMS = [
-    { label: 'My Assignment', route: '/(assignment)/assignments', icon: CheckCircle2, activePath: 'assignments' },
+    { label: 'My Assignment', route: '/(assignment)', icon: CheckCircle2, activePath: '(assignment)' },
     { label: 'My PCS', route: '/(pcs)/orders', icon: FileText, activePath: 'orders' },
     { label: 'My Admin', route: '/(admin)/requests', icon: FileText, activePath: 'requests' },
     { label: 'My Profile', route: '/(profile)/preferences', icon: User, activePath: 'preferences' },

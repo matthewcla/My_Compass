@@ -1,15 +1,13 @@
-
-import { GlassView } from '@/components/ui/GlassView';
+import { GlassCalendarModal } from '@/components/ui/GlassCalendarModal';
 import { SignatureButton } from '@/components/ui/SignatureButton';
 import Colors from '@/constants/Colors';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { LeaveRequest } from '@/types/schema';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
-import { Calendar, Edit2, MapPin, Phone } from 'lucide-react-native';
+import { MapPin, Phone, Shield, Triangle, Zap } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Alert, Pressable, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 interface QuickLeaveTicketProps {
     draft: LeaveRequest;
@@ -19,28 +17,41 @@ interface QuickLeaveTicketProps {
 
 export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketProps) {
     const colorScheme = useColorScheme() ?? 'light';
-    const themeColors = Colors[colorScheme];
     const isDark = colorScheme === 'dark';
+    const themeColors = Colors[colorScheme];
 
     const submitRequest = useLeaveStore((state) => state.submitRequest);
+    const leaveBalance = useLeaveStore((state) => state.leaveBalance);
 
     const [startDate, setStartDate] = useState(new Date(draft.startDate));
     const [endDate, setEndDate] = useState(new Date(draft.endDate));
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Dummy Default Address if missing
+    const displayAddress = draft.leaveAddress || "123 Sailor Blvd, Norfolk, VA";
+
     // Date Picker State
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
 
+    const onStartDateChange = (selectedDate: Date) => {
+        setStartDate(selectedDate);
+        if (endDate < selectedDate) {
+            setEndDate(selectedDate);
+        }
+    };
+
+    const onEndDateChange = (selectedDate: Date) => {
+        setEndDate(selectedDate);
+    };
+
     const handleSign = async () => {
         setIsSubmitting(true);
         try {
-            // Construct payload from draft + current dates
-            // Note: We assume draft has the required defaults.
-            // If strictly enforcing schema, we might need validation here.
-            // For "Smart Defaults", we trust they are present.
+            // Use displayAddress for validation if draft address is empty
+            const finalAddress = draft.leaveAddress || displayAddress;
 
-            if (!draft.leaveAddress || !draft.leavePhoneNumber || !draft.emergencyContact) {
+            if (!finalAddress || !draft.leavePhoneNumber || !draft.emergencyContact) {
                 Alert.alert('Missing Info', 'Some required information is missing. Please edit the full request.');
                 setIsSubmitting(false);
                 return;
@@ -50,7 +61,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                 startDate: startDate.toISOString(),
                 endDate: endDate.toISOString(),
                 leaveType: draft.leaveType,
-                leaveAddress: draft.leaveAddress,
+                leaveAddress: finalAddress,
                 leavePhoneNumber: draft.leavePhoneNumber,
                 emergencyContact: draft.emergencyContact,
                 dutySection: draft.dutySection,
@@ -60,11 +71,9 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                 modeOfTravel: draft.modeOfTravel,
                 destinationCountry: draft.destinationCountry,
                 memberRemarks: draft.memberRemarks,
-                // Add default times if not present in draft dates
                 startTime: format(startDate, 'HH:mm'),
                 endTime: format(endDate, 'HH:mm'),
                 leaveInConus: draft.leaveInConus,
-                normalWorkingHours: draft.normalWorkingHours,
             };
 
             await submitRequest(payload, draft.userId);
@@ -77,142 +86,153 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
         }
     };
 
-    const onStartDateChange = (event: any, selectedDate?: Date) => {
-        setShowStartPicker(Platform.OS === 'ios'); // Keep open on iOS if needed or close? usually standard behavior
-        if (selectedDate) {
-            setStartDate(selectedDate);
-            // Auto-adjust end date if start is after end
-            if (selectedDate > endDate) {
-                const newEnd = new Date(selectedDate);
-                newEnd.setDate(newEnd.getDate() + 1);
-                setEndDate(newEnd);
-            }
-        }
-        if (Platform.OS === 'android') setShowStartPicker(false);
-    };
-
-    const onEndDateChange = (event: any, selectedDate?: Date) => {
-        setShowEndPicker(Platform.OS === 'ios');
-        if (selectedDate) {
-            setEndDate(selectedDate);
-        }
-        if (Platform.OS === 'android') setShowEndPicker(false);
-    };
+    const daysCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
     return (
-        <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="p-0 rounded-3xl overflow-hidden mx-4 my-auto shadow-xl border border-white/20">
-            {/* Header / Top Strip */}
-            <View className="bg-blue-600 p-4 pt-6 items-center">
-                <Text className="text-white font-bold text-sm uppercase tracking-widest opacity-80 mb-1">
-                    Quick Leave Ticket
-                </Text>
-                <View className="flex-row items-center gap-2 mb-2">
-                    <Calendar size={20} color="white" />
-                    <Text className="text-white font-bold text-3xl">
-                        {format(startDate, 'MMM dd')} - {format(endDate, 'MMM dd')}
-                    </Text>
-                    <Pressable
-                        onPress={() => setShowStartPicker(true)}
-                        className="bg-white/20 p-2 rounded-full ml-2 active:bg-white/30"
-                        hitSlop={8}
-                    >
-                        <Edit2 size={16} color="white" />
-                    </Pressable>
-                </View>
-                <Text className="text-blue-100 text-xs font-medium">
-                    {draft.leaveType.toUpperCase()} • {Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} DAYS
-                </Text>
-            </View>
+        <View className="mx-4 my-auto">
+            {/* Glass Cockpit Card */}
+            <View
+                className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-2xl bg-white/95 dark:bg-black/85"
+                style={{ shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 30 }}
+            >
+                {/* Status Indicator Strip (Left) */}
+                <View className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
 
-            {/* Date Pickers (Hidden/Modal Logic) */}
-            {(showStartPicker || showEndPicker) && (
-                <View className="bg-slate-100 dark:bg-slate-800 p-4 border-b border-slate-200 dark:border-slate-700">
-                    <Text className="text-xs font-bold text-slate-500 mb-2">ADJUST DATES</Text>
-                    <View className="flex-row gap-4 justify-between">
+                {/* Header Section */}
+                <View className="flex-row items-center justify-between p-4 border-b border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+                    <View className="flex-row items-center gap-2">
+                        <Shield size={16} color={isDark ? "#60a5fa" : "#3b82f6"} />
+                        <Text className="text-blue-600 dark:text-blue-400 font-bold text-xs tracking-[0.2em] uppercase">
+                            QUICK LEAVE REQUEST
+                        </Text>
+                    </View>
+
+                    {/* Balance HUD */}
+                    <View className="flex-row items-center gap-2 bg-slate-200/50 dark:bg-white/10 px-2 py-1 rounded border border-slate-300/50 dark:border-white/10">
+                        <Zap size={10} color={isDark ? "#fbbf24" : "#d97706"} fill={isDark ? "#fbbf24" : "#d97706"} />
+                        <Text className="text-slate-600 dark:text-amber-400 text-[10px] font-bold tracking-wider">
+                            {leaveBalance?.currentBalance ?? 30.0} DAYS
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Main Data Grid */}
+                <View className="p-5 gap-6">
+                    {/* Primary: Dates */}
+                    <View className="flex-row items-baseline justify-between z-10">
                         <View>
-                            <Text className="text-xs text-slate-400 mb-1">Start</Text>
-                            <DateTimePicker
-                                testID="dateTimePickerStart"
-                                value={startDate}
-                                mode="date"
-                                is24Hour={true}
-                                display="default"
-                                onChange={onStartDateChange}
-                                style={{ width: 120 }}
-                            />
+                            <Text className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">
+                                Duration
+                            </Text>
+                            <View className="flex-row items-baseline gap-2">
+                                <Text className="text-slate-900 dark:text-white text-3xl font-mono font-medium tracking-tight">
+                                    {daysCount}
+                                </Text>
+                                <Text className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase">
+                                    DAYS
+                                </Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text className="text-xs text-slate-400 mb-1">End</Text>
-                            <DateTimePicker
-                                testID="dateTimePickerEnd"
-                                value={endDate}
-                                mode="date"
-                                is24Hour={true}
-                                display="default"
-                                onChange={onEndDateChange}
-                                minimumDate={startDate}
-                                style={{ width: 120 }}
-                            />
+
+                        <View className="items-end">
+                            <Text className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">
+                                Period
+                            </Text>
+                            <View className="flex-row items-center gap-2">
+                                <TouchableOpacity
+                                    onPress={() => setShowStartPicker(true)}
+                                    style={{
+                                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9',
+                                        paddingHorizontal: 8,
+                                        paddingVertical: 2,
+                                        borderRadius: 4,
+                                        borderColor: showStartPicker ? '#3b82f6' : (isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'),
+                                        borderWidth: 1,
+                                    }}
+                                >
+                                    <Text className="text-slate-900 dark:text-white text-xl font-mono font-medium">
+                                        {format(startDate, 'dd MMM')}
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <Triangle size={10} color={isDark ? "#94a3b8" : "#64748b"} rotation={90} fill={isDark ? "#94a3b8" : "#64748b"} />
+
+                                <TouchableOpacity
+                                    onPress={() => setShowEndPicker(true)}
+                                    style={{
+                                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9',
+                                        paddingHorizontal: 8,
+                                        paddingVertical: 2,
+                                        borderRadius: 4,
+                                        borderColor: showEndPicker ? '#3b82f6' : (isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'),
+                                        borderWidth: 1,
+                                    }}
+                                >
+                                    <Text className="text-slate-900 dark:text-white text-xl font-mono font-medium">
+                                        {format(endDate, 'dd MMM')}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
-                    <Pressable
-                        className="mt-4 self-end bg-blue-100 dark:bg-blue-900 px-4 py-2 rounded-lg"
-                        onPress={() => { setShowStartPicker(false); setShowEndPicker(false); }}
-                    >
-                        <Text className="text-blue-700 dark:text-blue-300 font-bold text-xs">DONE</Text>
-                    </Pressable>
-                </View>
-            )}
 
-            {/* Middle: Defaults */}
-            <View className="p-6 gap-6 bg-white/50 dark:bg-black/20">
-                {/* Location */}
-                <View className="flex-row gap-4">
-                    <View className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 items-center justify-center">
-                        <MapPin size={20} color={themeColors.primary} />
-                    </View>
-                    <View className="flex-1">
-                        <Text className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-0.5">Location</Text>
-                        <Text className="text-slate-900 dark:text-slate-100 font-semibold text-base" numberOfLines={1}>
-                            {draft.leaveAddress}
-                        </Text>
-                        <Text className="text-slate-500 dark:text-slate-400 text-sm">
-                            {draft.leavePhoneNumber}
+                    {/* Secondary: Location (Full Width now) */}
+                    <View className="p-3 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5 gap-2 -z-10">
+                        <View className="flex-row justify-between items-center">
+                            <Text className="text-slate-500 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">Location</Text>
+                            <Pressable onPress={onEdit} hitSlop={10}>
+                                <MapPin size={12} color={!draft.leaveAddress ? '#ef4444' : (isDark ? '#60a5fa' : '#3b82f6')} />
+                            </Pressable>
+                        </View>
+                        <Text className={`font-semibold ${!draft.leaveAddress ? 'text-red-500 italic' : 'text-slate-900 dark:text-white'}`} numberOfLines={1}>
+                            {displayAddress}
                         </Text>
                     </View>
-                </View>
 
-                {/* Emergency Contact */}
-                <View className="flex-row gap-4">
-                    <View className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 items-center justify-center">
-                        <Phone size={20} color={Colors.light.danger} />
-                    </View>
-                    <View className="flex-1">
-                        <Text className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-0.5">Emergency</Text>
-                        <Text className="text-slate-900 dark:text-slate-100 font-semibold text-base" numberOfLines={1}>
-                            {draft.emergencyContact?.name}
-                        </Text>
-                        <Text className="text-slate-500 dark:text-slate-400 text-sm">
-                            {draft.emergencyContact?.relationship} • {draft.emergencyContact?.phoneNumber}
-                        </Text>
+                    {/* Emergency Contact Line */}
+                    <View className="flex-row items-center gap-3 p-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-black/20 -z-10">
+                        <Phone size={14} color={isDark ? "#94a3b8" : "#64748b"} />
+                        <View className="flex-1 flex-row items-center justify-between">
+                            <View>
+                                <Text className="text-slate-500 text-[10px] uppercase font-bold">Emergency</Text>
+                                <Text className="text-slate-700 dark:text-slate-300 text-xs font-semibold">{draft.emergencyContact?.name || "None Set"}</Text>
+                            </View>
+                            <Pressable onPress={onEdit}>
+                                <Text className="text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">EDIT</Text>
+                            </Pressable>
+                        </View>
                     </View>
                 </View>
 
-                {/* Edit Action */}
-                <Pressable onPress={onEdit} className="self-center py-2 px-4 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
-                    <Text className="text-blue-600 dark:text-blue-400 font-semibold text-sm">
-                        Not correct? Edit Details
-                    </Text>
-                </Pressable>
+                {/* Footer Action */}
+                <View className="p-4 bg-slate-100/50 dark:bg-black/40 border-t border-slate-200 dark:border-white/5 -z-10">
+                    <SignatureButton
+                        onSign={handleSign}
+                        isSubmitting={isSubmitting}
+                    />
+                </View>
+
             </View>
 
-            {/* Bottom: Sign */}
-            <View className="p-6 pt-2 bg-white/50 dark:bg-black/20 pb-8">
-                <SignatureButton
-                    onSign={handleSign}
-                    isSubmitting={isSubmitting}
-                />
-            </View>
-        </GlassView>
+            {/* Glass Calendar Modals */}
+            {/* Glass Calendar Modals */}
+            <GlassCalendarModal
+                visible={showStartPicker}
+                onClose={() => setShowStartPicker(false)}
+                onSelect={onStartDateChange}
+                selectedDate={startDate}
+                minDate={new Date()}
+                title="Select Start Date"
+            />
+
+            <GlassCalendarModal
+                visible={showEndPicker}
+                onClose={() => setShowEndPicker(false)}
+                onSelect={onEndDateChange}
+                selectedDate={endDate}
+                minDate={startDate}
+                title="Select End Date"
+            />
+        </View >
     );
 }

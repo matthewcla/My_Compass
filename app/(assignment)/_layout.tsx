@@ -11,7 +11,7 @@ export default function AssignmentLayout() {
 
   return (
     <>
-      <GlobalHeader />
+      {!isCycle && <GlobalHeader />}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="cycle" />

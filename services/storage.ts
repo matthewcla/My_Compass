@@ -352,7 +352,25 @@ class SQLiteStorage implements IStorageService {
     const db = await this.getDB();
     try {
       const results = await db.getAllAsync<any>('SELECT * FROM leave_requests WHERE user_id = ?', userId);
-      return results.map(row => this.mapRowToLeaveRequest(row));
+
+      const validRequests: LeaveRequest[] = [];
+
+      for (const row of results) {
+        try {
+          // Attempt to parse each row individually
+          const request = this.mapRowToLeaveRequest(row);
+          validRequests.push(request);
+        } catch (error) {
+          // If a specific record fails (DataIntegrityError), log it but don't fail the whole fetch
+          console.warn(`[Storage] Skipping corrupted LeaveRequest (ID: ${row.id}).`, error);
+          if (error instanceof DataIntegrityError && (error as any).cause?.issues) {
+            // Log Zod validation issues if available to help debugging
+            console.warn('[Storage] Validation details:', JSON.stringify((error as any).cause.issues, null, 2));
+          }
+        }
+      }
+
+      return validRequests;
     } catch (error) {
       if (error instanceof DataIntegrityError) throw error;
       throw new DataIntegrityError('Failed to parse LeaveRequest records', error);
@@ -394,7 +412,7 @@ class SQLiteStorage implements IStorageService {
         leavePhoneNumber: row.leave_phone_number,
         emergencyContact: emergencyContact,
         dutySection: row.duty_section || undefined,
-        rationStatus: row.ration_status || undefined,
+        rationStatus: ['commuted', 'in_kind', 'not_applicable'].includes(row.ration_status) ? row.ration_status : undefined,
         preReviewChecks: row.pre_review_checks ? JSON.parse(row.pre_review_checks) : undefined,
         modeOfTravel: row.mode_of_travel,
         destinationCountry: row.destination_country,

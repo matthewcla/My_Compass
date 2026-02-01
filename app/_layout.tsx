@@ -9,7 +9,6 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
-import { AccountDrawer } from '@/components/AccountDrawer';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
@@ -126,10 +125,10 @@ export default function RootLayout() {
               <Stack.Screen name="(career)" />
             </Stack>
             {/* AccountDrawer is rendered AFTER Stack to ensure navigation context is available */}
-            <AccountDrawer
+            {/* <AccountDrawer
               visible={isAccountDrawerOpen}
               onClose={() => useUIStore.getState().closeAccountDrawer()}
-            />
+            /> */}
           </View>
         </SessionProvider>
       </SafeAreaProvider>

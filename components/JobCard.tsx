@@ -1,7 +1,7 @@
 import { ApplicationStatus, Billet } from '@/types/schema';
 import { MapPin } from 'lucide-react-native';
 import React from 'react';
-import { Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Platform, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { ScalePressable } from './ScalePressable';
 
@@ -97,13 +97,13 @@ export function JobCard({
             </View>
 
             {/* Footer: Buy-It-Now Button */}
-            <Pressable
+            <TouchableOpacity
                 onPress={() => onBuyPress(billet.id)}
                 disabled={isDisabled}
                 className={`py-3 rounded-lg flex-row justify-center items-center active:opacity-90 ${buttonBgClass}`}
             >
                 <Text className="text-white font-bold text-base">{buttonText}</Text>
-            </Pressable>
+            </TouchableOpacity>
         </ScalePressable>
     );
 }

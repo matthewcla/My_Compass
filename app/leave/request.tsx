@@ -380,7 +380,7 @@ export default function LeaveRequestScreen() {
                     {/* Header: StatusBar */}
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
-                        className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10 px-4 py-2"
+                        className="bg-white/95 dark:bg-slate-900/95 sticky top-0 z-10 px-4 py-2"
                     >
                         <WizardStatusBar
                             currentStep={activeStep}
@@ -508,7 +508,7 @@ export default function LeaveRequestScreen() {
                 animationType="fade"
                 onRequestClose={() => setShowExitModal(false)}
             >
-                <View className="flex-1 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
+                <View className="flex-1 bg-black/60 items-center justify-center p-4">
                     <View className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
                         <View className="p-6 items-center">
                             <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
@@ -552,7 +552,7 @@ export default function LeaveRequestScreen() {
             {showSuccess && (
                 <Animated.View
                     entering={FadeIn}
-                    className="absolute inset-0 z-50 bg-blue-600/95 dark:bg-blue-950/95 items-center justify-center backdrop-blur-lg"
+                    className="absolute inset-0 z-50 bg-blue-600/98 dark:bg-blue-950/98 items-center justify-center"
                 >
                     <Animated.View entering={ZoomIn.delay(200).springify()}>
                         <CheckCircle size={100} color="white" strokeWidth={2.5} />

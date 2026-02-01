@@ -4,7 +4,7 @@ import { CreateLeaveRequestPayload } from '@/types/api';
 import * as Haptics from 'expo-haptics';
 import { Briefcase, Building2, Phone } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, TextInput, View, useColorScheme } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 interface Step3RoutingProps {
     formData: Partial<CreateLeaveRequestPayload>;
@@ -86,7 +86,7 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                         {RATION_OPTIONS.map((option) => {
                             const isSelected = formData.rationStatus === option.id;
                             return (
-                                <Pressable
+                                <TouchableOpacity
                                     key={option.id}
                                     onPress={() => {
                                         Haptics.selectionAsync().catch(() => {
@@ -94,10 +94,19 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                                         });
                                         onUpdate('rationStatus', option.id);
                                     }}
-                                    className={`flex-1 py-3 px-2 rounded-xl items-center justify-center ${isSelected
-                                        ? 'bg-white dark:bg-slate-700 shadow-sm'
-                                        : 'bg-transparent'
-                                        }`}
+                                    style={{
+                                        flex: 1,
+                                        paddingVertical: 12, // py-3
+                                        paddingHorizontal: 8, // px-2
+                                        borderRadius: 12, // rounded-xl
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: isSelected ? (isDark ? '#334155' : 'white') : 'transparent',
+                                        shadowColor: isSelected ? '#000' : undefined,
+                                        shadowOffset: isSelected ? { width: 0, height: 1 } : undefined,
+                                        shadowOpacity: isSelected ? 0.05 : undefined,
+                                        elevation: isSelected ? 1 : undefined,
+                                    }}
                                 >
                                     <Text className={`font-medium ${isSelected
                                         ? 'text-blue-600 dark:text-blue-400'
@@ -105,7 +114,7 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                                         }`}>
                                         {option.label}
                                     </Text>
-                                </Pressable>
+                                </TouchableOpacity>
                             );
                         })}
                     </View>

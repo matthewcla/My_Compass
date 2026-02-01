@@ -16,7 +16,7 @@ import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -200,28 +200,20 @@ export default function HubDashboard() {
                 }}
             />
 
-            {/* Quick Leave Modal Overlay */}
-            <Modal
-                visible={!!quickDraft}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setQuickDraft(null)}
-            >
-                <View className="flex-1 justify-center items-center bg-black/60 relative">
+            {/* Quick Leave Overlay (Replaces Native Modal to fix Navigation Context loss) */}
+            {quickDraft && (
+                <View className="absolute inset-0 z-50 flex-1 justify-center items-center bg-black/60">
                     <Pressable
                         className="absolute inset-0"
                         onPress={() => setQuickDraft(null)}
                     />
-
-                    {quickDraft && (
-                        <QuickLeaveTicket
-                            draft={quickDraft}
-                            onSubmit={handleQuickLeaveSubmit}
-                            onEdit={handleQuickLeaveEdit}
-                        />
-                    )}
+                    <QuickLeaveTicket
+                        draft={quickDraft}
+                        onSubmit={handleQuickLeaveSubmit}
+                        onEdit={handleQuickLeaveEdit}
+                    />
                 </View>
-            </Modal>
+            )}
         </LinearGradient>
     );
 }

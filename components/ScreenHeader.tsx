@@ -124,7 +124,7 @@ export function ScreenHeader({
                 onRequestClose={() => setMenuVisible(false)}
             >
                 <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
-                    <View className="flex-1 bg-black/50 backdrop-blur-sm">
+                    <View className="flex-1 bg-black/60">
                         <View
                             style={{
                                 marginTop: (withSafeArea ? insets.top : 0) + (isInline ? 50 : 70),

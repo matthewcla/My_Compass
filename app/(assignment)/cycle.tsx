@@ -5,7 +5,7 @@ import { Application } from '@/types/schema';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Send } from 'lucide-react-native';
 import React, { useMemo } from 'react';
-import { Alert, Pressable, ScrollView, Text, View, useColorScheme } from 'react-native';
+import { Alert, ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CycleScreen() {
@@ -93,20 +93,20 @@ export default function CycleScreen() {
                 {/* Header */}
                 <View className="px-4 py-4 flex-row items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-10">
                     <View className="flex-row items-center gap-4">
-                        <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+                        <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
                             <ArrowLeft size={24} color={isDark ? 'white' : 'black'} />
-                        </Pressable>
+                        </TouchableOpacity>
                         <View>
                             <Text className="text-xl font-bold text-slate-900 dark:text-white">Rank & Stack</Text>
                             <Text className="text-xs text-slate-500 dark:text-slate-400">Cycle 25-1 • 7 Slots Available</Text>
                         </View>
                     </View>
 
-                    <Pressable onPress={() => { /* Info Modal */ }} className="bg-slate-100 dark:bg-slate-800 py-1.5 px-3 rounded-full">
+                    <TouchableOpacity onPress={() => { /* Info Modal */ }} className="bg-slate-100 dark:bg-slate-800 py-1.5 px-3 rounded-full">
                         <Text className="text-xs font-bold text-slate-600 dark:text-slate-300">
                             {activeApps.length}/7 Filled
                         </Text>
-                    </Pressable>
+                    </TouchableOpacity>
                 </View>
 
                 {/* 1. TOP SECTION: THE SLATE (Flexible grow) */}
@@ -138,11 +138,11 @@ export default function CycleScreen() {
                         <Text className="text-sm font-bold text-slate-500 uppercase tracking-widest">
                             Quick Manifest
                         </Text>
-                        <Pressable onPress={() => router.push('/(career)/manifest')}>
+                        <TouchableOpacity onPress={() => router.push('/(career)/manifest')}>
                             <Text className="text-sm font-bold text-blue-600 dark:text-blue-400">
                                 Manage Bench
                             </Text>
-                        </Pressable>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Horizontal Rail */}
@@ -157,7 +157,7 @@ export default function CycleScreen() {
 
                     {/* Submit Footer Injected Here or Separate? */}
                     <View className="px-4 pt-4">
-                        <Pressable
+                        <TouchableOpacity
                             onPress={handleSubmit}
                             className={`w-full flex-row items-center justify-center gap-2 py-4 rounded-xl shadow-lg ${activeApps.length > 0
                                 ? 'bg-blue-600 active:bg-blue-700'
@@ -169,7 +169,7 @@ export default function CycleScreen() {
                             <Text className="text-white font-bold text-lg">
                                 Submit {activeApps.length} Applications
                             </Text>
-                        </Pressable>
+                        </TouchableOpacity>
                     </View>
                 </View>
 

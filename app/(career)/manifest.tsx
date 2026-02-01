@@ -5,7 +5,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Trash2, Undo2 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Tab = 'candidates' | 'favorites' | 'archived';
@@ -112,9 +112,9 @@ export default function ManifestScreen() {
             <SafeAreaView className="flex-1" edges={['top']}>
                 {/* Header */}
                 <View className="px-4 py-4 flex-row items-center gap-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                    <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+                    <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
                         <ArrowLeft size={24} color={isDark ? 'white' : 'black'} />
-                    </Pressable>
+                    </TouchableOpacity>
                     <Text className="text-xl font-bold text-slate-900 dark:text-white">Manifest</Text>
                 </View>
 
@@ -124,15 +124,26 @@ export default function ManifestScreen() {
                         {(['candidates', 'favorites', 'archived'] as Tab[]).map((tab) => {
                             const isActive = activeTab === tab;
                             return (
-                                <Pressable
+                                <TouchableOpacity
                                     key={tab}
                                     onPress={() => setActiveTab(tab)}
-                                    className={`flex-1 py-2 items-center rounded-md ${isActive ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}`}
+                                    style={{
+                                        flex: 1,
+                                        paddingVertical: 8,
+                                        alignItems: 'center',
+                                        borderRadius: 6,
+                                        backgroundColor: isActive ? (isDark ? '#334155' : 'white') : 'transparent',
+                                        shadowColor: isActive ? '#000' : undefined,
+                                        shadowOffset: isActive ? { width: 0, height: 1 } : undefined,
+                                        shadowOpacity: isActive ? 0.05 : undefined,
+                                        shadowRadius: isActive ? 2 : undefined,
+                                        elevation: isActive ? 1 : undefined,
+                                    }}
                                 >
                                     <Text className={`capitalize font-bold text-xs ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
                                         {tab}
                                     </Text>
-                                </Pressable>
+                                </TouchableOpacity>
                             );
                         })}
                     </View>

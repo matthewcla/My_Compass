@@ -30,6 +30,7 @@ export default function HubDashboard() {
     const { data, loading, error } = useDashboardData();
 
     const [quickDraft, setQuickDraft] = useState<LeaveRequest | null>(null);
+    const listRef = React.useRef<any>(null);
 
     const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
     const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
@@ -174,6 +175,13 @@ export default function HubDashboard() {
                             }
                         }}
                         onQuickRequest={handleQuickLeavePress}
+                        onExpand={(expanded) => {
+                            if (expanded) {
+                                setTimeout(() => {
+                                    listRef.current?.scrollToEnd({ animated: true });
+                                }, 300);
+                            }
+                        }}
                     />
                 );
             default:
@@ -187,6 +195,7 @@ export default function HubDashboard() {
             style={{ flex: 1 }}
         >
             <FlashList
+                ref={listRef}
                 data={sections}
                 renderItem={renderItem}
                 ItemSeparatorComponent={() => <View style={{ height: 24 }} />}

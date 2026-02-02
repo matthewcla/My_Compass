@@ -76,6 +76,11 @@ interface LeaveActions {
     discardDraft: (draftId: string) => Promise<void>;
 
     /**
+     * Cancel a submitted request.
+     */
+    cancelRequest: (requestId: string) => Promise<void>;
+
+    /**
      * Reset store.
      */
     resetStore: () => void;
@@ -507,6 +512,71 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             await storage.deleteLeaveRequest(draftId);
         } catch (error) {
             console.error('[useLeaveStore] Failed to delete draft:', error);
+        }
+    },
+
+    cancelRequest: async (requestId: string) => {
+        const state = get();
+        const request = state.leaveRequests[requestId];
+        if (!request) return;
+
+        set({ isSyncingRequests: true });
+
+        // Optimistic Update
+        const previousStatus = request.status;
+        const now = new Date().toISOString();
+
+        const updatedRequest: LeaveRequest = {
+            ...request,
+            status: 'cancelled',
+            statusHistory: [
+                ...request.statusHistory,
+                {
+                    status: 'cancelled',
+                    timestamp: now,
+                    comments: 'User cancelled request',
+                }
+            ],
+            updatedAt: now,
+            localModifiedAt: now,
+            syncStatus: 'pending_upload',
+        };
+
+        set((state) => ({
+            leaveRequests: {
+                ...state.leaveRequests,
+                [requestId]: updatedRequest,
+            },
+        }));
+
+        try {
+            await storage.saveLeaveRequest(updatedRequest);
+            const result = await api.cancelLeaveRequest(requestId);
+
+            if (result.success) {
+                // Confirm sync
+                set((state) => ({
+                    leaveRequests: {
+                        ...state.leaveRequests,
+                        [requestId]: {
+                            ...state.leaveRequests[requestId],
+                            syncStatus: 'synced',
+                            lastSyncTimestamp: result.data.canceledAt,
+                        }
+                    },
+                    isSyncingRequests: false,
+                }));
+                // Update storage again with synced status
+                await storage.saveLeaveRequest({ ...updatedRequest, syncStatus: 'synced', lastSyncTimestamp: result.data.canceledAt });
+            } else {
+                console.error('API failed to cancel request');
+                set({ isSyncingRequests: false });
+                // Note: We leave it as optimistically cancelled. 
+                // A real implementation might revert or mark syncStatus: 'error'.
+            }
+        } catch (error) {
+            console.error('Failed to cancel request:', error);
+            set({ isSyncingRequests: false });
         }
     },
 

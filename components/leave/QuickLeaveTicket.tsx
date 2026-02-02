@@ -81,7 +81,6 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
         } catch (error) {
             console.error('Quick Submit Error:', error);
             Alert.alert('Error', 'Failed to submit leave request. Please try again.');
-        } finally {
             setIsSubmitting(false);
         }
     };

@@ -155,3 +155,15 @@ export const submitLeaveRequest = async (
         },
     };
 };
+
+/**
+ * Cancel an existing leave request.
+ */
+export const cancelLeaveRequest = async (requestId: string): Promise<ApiResult<{ canceledAt: string }>> => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return {
+        success: true,
+        data: { canceledAt: new Date().toISOString() },
+        meta: { requestId: `req-${Date.now()}`, timestamp: new Date().toISOString() },
+    };
+};

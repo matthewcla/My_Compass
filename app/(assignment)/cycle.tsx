@@ -19,6 +19,7 @@ export default function CycleScreen() {
         demoteToManifest,
         promoteToSlate,
         getManifestItems,
+        reorderApplications,
         swipe // used for moving items to manifest if needed implicitly? No, demoteToManifest handles it
     } = useAssignmentStore();
 
@@ -51,16 +52,28 @@ export default function CycleScreen() {
     // 3. Handlers
     const handleSlotPress = (rank: number, app?: Application) => {
         if (app) {
-            // Tapping a filled slot -> Demote (Remove)
             demoteToManifest(app.id);
-        } else {
-            // Tapping empty slot -> Maybe focus the rail? Or Scroll to it?
-            console.log(`Focused slot ${rank}`);
         }
     };
 
+    const handleReorder = (fromIndex: number, direction: 'up' | 'down') => {
+        if (direction === 'up' && fromIndex === 0) return;
+        if (direction === 'down' && fromIndex === activeApps.length - 1) return;
+
+        const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+        const newOrder = [...activeApps];
+        // Swap
+        [newOrder[fromIndex], newOrder[toIndex]] = [newOrder[toIndex], newOrder[fromIndex]];
+
+        // Extract IDs in new order
+        const orderedIds = newOrder.map(a => a.id);
+
+        // Call store action
+        // We need to define reorderApplications in the destructuring first
+        reorderApplications(orderedIds, 'user-123');
+    };
+
     const handleRailItemPress = (billetId: string) => {
-        // Check if already in slate
         const existingApp = Object.values(applications).find(
             app => app.billetId === billetId && !['withdrawn', 'declined'].includes(app.status)
         );
@@ -69,8 +82,7 @@ export default function CycleScreen() {
             return;
         }
 
-        // Tapping a rail item -> Promote to Slate
-        const success = promoteToSlate(billetId, 'user-123'); // TODO: Auth ID
+        const success = promoteToSlate(billetId, 'user-123');
         if (!success) {
             Alert.alert("Slate Full", "You can only have 7 active applications. Remove one from the Slate first.");
         }
@@ -82,9 +94,7 @@ export default function CycleScreen() {
             return;
         }
 
-        // Mock submission for now, or call submitSlate action if implemented
         Alert.alert("Submitting...", `Processing ${activeApps.length} applications.`);
-        // await submitSlate();
     };
 
     return (
@@ -97,7 +107,7 @@ export default function CycleScreen() {
                             <ArrowLeft size={24} color={isDark ? 'white' : 'black'} />
                         </TouchableOpacity>
                         <View>
-                            <Text className="text-xl font-bold text-slate-900 dark:text-white">Rank & Stack</Text>
+                            <Text className="text-xl font-bold text-slate-900 dark:text-white">My Applications</Text>
                             <Text className="text-xs text-slate-500 dark:text-slate-400">Cycle 25-1 • 7 Slots Available</Text>
                         </View>
                     </View>
@@ -117,26 +127,28 @@ export default function CycleScreen() {
                         showsVerticalScrollIndicator={false}
                     >
                         <View className="gap-3">
-                            {slots.map((slot) => (
+                            {slots.map((slot, index) => (
                                 <SlateSlot
                                     key={slot.rank}
                                     rank={slot.rank}
                                     application={slot.app}
                                     billet={slot.billet}
                                     onRemove={() => handleSlotPress(slot.rank, slot.app)}
-                                // isLocked={false} // logic for frozen slots
+                                    // Pass undefined if no app, effectively hiding arrows via component logic or just check index
+                                    onMoveUp={slot.app && index > 0 ? () => handleReorder(index, 'up') : undefined}
+                                    onMoveDown={slot.app && index < activeApps.length - 1 ? () => handleReorder(index, 'down') : undefined}
                                 />
                             ))}
                         </View>
                     </ScrollView>
                 </View>
 
-                {/* 2. BOTTOM SECTION: QUICK MANIFEST RAIL (Fixed Height) */}
+                {/* 2. BOTTOM SECTION: SAVED JOBS RAIL (Fixed Height) */}
                 <View className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pb-8 shadow-2xl">
                     {/* Rail Header */}
                     <View className="flex-row items-center justify-between px-4 py-3">
                         <Text className="text-sm font-bold text-slate-500 uppercase tracking-widest">
-                            Quick Manifest
+                            Archive
                         </Text>
                         <TouchableOpacity onPress={() => router.push('/(career)/manifest')}>
                             <Text className="text-sm font-bold text-blue-600 dark:text-blue-400">

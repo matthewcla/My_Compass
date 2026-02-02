@@ -91,9 +91,10 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
     return (
         <View className="mx-4 my-auto">
             {/* Glass Cockpit Card */}
+            {/* Glass Cockpit Card */}
             <View
-                className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-2xl bg-white/95 dark:bg-black/85"
-                style={{ shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 30 }}
+                className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-800"
+                style={{ shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 40, elevation: 10 }}
             >
                 {/* Status Indicator Strip (Left) */}
                 <View className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
@@ -117,7 +118,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                 </View>
 
                 {/* Main Data Grid */}
-                <View className="p-5 gap-6">
+                <View className="p-6 gap-8">
                     {/* Primary: Dates */}
                     <View className="flex-row items-baseline justify-between z-10">
                         <View>
@@ -125,7 +126,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                                 Duration
                             </Text>
                             <View className="flex-row items-baseline gap-2">
-                                <Text className="text-slate-900 dark:text-white text-3xl font-mono font-medium tracking-tight">
+                                <Text className="text-slate-900 dark:text-white text-4xl font-mono font-medium tracking-tight">
                                     {daysCount}
                                 </Text>
                                 <Text className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase">
@@ -138,37 +139,23 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                             <Text className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">
                                 Period
                             </Text>
-                            <View className="flex-row items-center gap-2">
+                            <View className="flex-row items-center gap-3">
                                 <TouchableOpacity
                                     onPress={() => setShowStartPicker(true)}
-                                    style={{
-                                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9',
-                                        paddingHorizontal: 8,
-                                        paddingVertical: 2,
-                                        borderRadius: 4,
-                                        borderColor: showStartPicker ? '#3b82f6' : (isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'),
-                                        borderWidth: 1,
-                                    }}
+                                    className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700/50"
                                 >
-                                    <Text className="text-slate-900 dark:text-white text-xl font-mono font-medium">
+                                    <Text className="text-slate-900 dark:text-white text-lg font-mono font-medium">
                                         {format(startDate, 'dd MMM')}
                                     </Text>
                                 </TouchableOpacity>
 
-                                <Triangle size={10} color={isDark ? "#94a3b8" : "#64748b"} rotation={90} fill={isDark ? "#94a3b8" : "#64748b"} />
+                                <Triangle size={8} color={isDark ? "#94a3b8" : "#64748b"} rotation={90} fill={isDark ? "#94a3b8" : "#64748b"} />
 
                                 <TouchableOpacity
                                     onPress={() => setShowEndPicker(true)}
-                                    style={{
-                                        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9',
-                                        paddingHorizontal: 8,
-                                        paddingVertical: 2,
-                                        borderRadius: 4,
-                                        borderColor: showEndPicker ? '#3b82f6' : (isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'),
-                                        borderWidth: 1,
-                                    }}
+                                    className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700/50"
                                 >
-                                    <Text className="text-slate-900 dark:text-white text-xl font-mono font-medium">
+                                    <Text className="text-slate-900 dark:text-white text-lg font-mono font-medium">
                                         {format(endDate, 'dd MMM')}
                                     </Text>
                                 </TouchableOpacity>
@@ -176,36 +163,48 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                         </View>
                     </View>
 
-                    {/* Secondary: Location (Full Width now) */}
-                    <View className="p-3 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5 gap-2 -z-10">
-                        <View className="flex-row justify-between items-center">
-                            <Text className="text-slate-500 dark:text-slate-500 text-[10px] uppercase font-bold tracking-wider">Location</Text>
-                            <Pressable onPress={onEdit} hitSlop={10}>
-                                <MapPin size={12} color={!draft.leaveAddress ? '#ef4444' : (isDark ? '#60a5fa' : '#3b82f6')} />
-                            </Pressable>
-                        </View>
-                        <Text className={`font-semibold ${!draft.leaveAddress ? 'text-red-500 italic' : 'text-slate-900 dark:text-white'}`} numberOfLines={1}>
-                            {displayAddress}
-                        </Text>
-                    </View>
-
-                    {/* Emergency Contact Line */}
-                    <View className="flex-row items-center gap-3 p-3 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-black/20 -z-10">
-                        <Phone size={14} color={isDark ? "#94a3b8" : "#64748b"} />
-                        <View className="flex-1 flex-row items-center justify-between">
-                            <View>
-                                <Text className="text-slate-500 text-[10px] uppercase font-bold">Emergency</Text>
-                                <Text className="text-slate-700 dark:text-slate-300 text-xs font-semibold">{draft.emergencyContact?.name || "None Set"}</Text>
+                    {/* Secondary Information - Clean List */}
+                    <View className="gap-5">
+                        {/* Location */}
+                        <View className="flex-row items-center gap-4">
+                            <View className="w-8 h-8 rounded-full items-center justify-center bg-blue-50 dark:bg-blue-900/20">
+                                <MapPin size={16} color={!draft.leaveAddress ? '#ef4444' : (isDark ? '#60a5fa' : '#3b82f6')} />
                             </View>
-                            <Pressable onPress={onEdit}>
-                                <Text className="text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">EDIT</Text>
-                            </Pressable>
+                            <View className="flex-1">
+                                <View className="flex-row justify-between items-center mb-0.5">
+                                    <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Location</Text>
+                                    <Pressable onPress={onEdit} hitSlop={10}>
+                                        <Text className="text-blue-600 dark:text-blue-400 text-[10px] font-bold">CHANGE</Text>
+                                    </Pressable>
+                                </View>
+                                <Text className={`text-sm font-medium ${!draft.leaveAddress ? 'text-red-500 italic' : 'text-slate-900 dark:text-slate-200'}`} numberOfLines={1}>
+                                    {displayAddress}
+                                </Text>
+                            </View>
+                        </View>
+
+                        {/* Emergency Contact */}
+                        <View className="flex-row items-center gap-4">
+                            <View className="w-8 h-8 rounded-full items-center justify-center bg-slate-100 dark:bg-slate-700/50">
+                                <Phone size={16} color={isDark ? "#94a3b8" : "#64748b"} />
+                            </View>
+                            <View className="flex-1">
+                                <View className="flex-row justify-between items-center mb-0.5">
+                                    <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Emergency</Text>
+                                    <Pressable onPress={onEdit} hitSlop={10}>
+                                        <Text className="text-blue-600 dark:text-blue-400 text-[10px] font-bold">EDIT</Text>
+                                    </Pressable>
+                                </View>
+                                <Text className="text-slate-900 dark:text-slate-200 text-sm font-medium">
+                                    {draft.emergencyContact?.name || "None Set"}
+                                </Text>
+                            </View>
                         </View>
                     </View>
                 </View>
 
                 {/* Footer Action */}
-                <View className="p-4 bg-slate-100/50 dark:bg-black/40 border-t border-slate-200 dark:border-white/5 -z-10">
+                <View className="p-4 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-700 -z-10">
                     <SignatureButton
                         onSign={handleSign}
                         isSubmitting={isSubmitting}

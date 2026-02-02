@@ -596,7 +596,13 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     promoteToSlate: async (billetId: string, userId: string): Promise<boolean> => {
-        const { applications, userApplicationIds, billets } = get();
+        const { applications, userApplicationIds, billets, mode } = get();
+
+        // 0. Safety Guard: Sandbox Mode cannot promote to real slate
+        if (mode === 'sandbox') {
+            console.warn('[Store] Blocked promoteToSlate in Sandbox Mode');
+            return false;
+        }
 
         // 1. Check Limits (Max 5)
         if (userApplicationIds.length >= 5) {
@@ -804,9 +810,22 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 if (decision === 'super') items.push({ billet, type: 'manifest' });
             } else { // candidates (DEFAULT View)
                 // Show likes and supers that aren't yet applications
-                if (decision === 'like' || decision === 'super') items.push({ billet, type: 'manifest' });
+                if (decision === 'like' || decision === 'super') {
+                    items.push({ billet, type: 'manifest' });
+                }
             }
         });
+
+        // Sort candidates: Super Liikes first
+        if (filter === 'candidates') {
+            items.sort((a, b) => {
+                const decisionA = realDecisions[a.billet.id];
+                const decisionB = realDecisions[b.billet.id];
+                if (decisionA === 'super' && decisionB !== 'super') return -1;
+                if (decisionA !== 'super' && decisionB === 'super') return 1;
+                return 0;
+            });
+        }
 
         return items;
     },

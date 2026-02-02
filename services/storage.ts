@@ -27,17 +27,87 @@ const DB_NAME = 'my_compass.db';
 // =============================================================================
 
 class SQLiteStorage implements IStorageService {
-  saveLeaveRequest(request: LeaveRequest): Promise<void> {
-    throw new Error('Method not implemented.');
+  async saveLeaveRequest(request: LeaveRequest): Promise<void> {
+    const db = await this.getDB();
+    const sql = `
+      INSERT OR REPLACE INTO leave_requests (
+        id, user_id, start_date, end_date, charge_days,
+        leave_type, leave_address, leave_phone_number, emergency_contact,
+        duty_section, ration_status, pre_review_checks, mode_of_travel,
+        destination_country, normal_working_hours, leave_in_conus,
+        member_remarks, status, status_history, approval_chain,
+        current_approver_id, return_reason, denial_reason,
+        created_at, updated_at, submitted_at,
+        last_sync_timestamp, sync_status, local_modified_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    `;
+
+    // Encrypt sensitive data
+    let emergencyContactEncrypted = null;
+    if (request.emergencyContact) {
+      emergencyContactEncrypted = encryptData(JSON.stringify(request.emergencyContact));
+    }
+
+    await db.runAsync(
+      sql,
+      request.id,
+      request.userId,
+      request.startDate,
+      request.endDate,
+      request.chargeDays,
+      request.leaveType,
+      request.leaveAddress,
+      request.leavePhoneNumber,
+      emergencyContactEncrypted,
+      request.dutySection || null,
+      request.rationStatus || null,
+      JSON.stringify(request.preReviewChecks || {}),
+      request.modeOfTravel || null,
+      request.destinationCountry || null,
+      request.normalWorkingHours || null,
+      request.leaveInConus ? 1 : 0,
+      request.memberRemarks || null,
+      request.status,
+      JSON.stringify(request.statusHistory),
+      JSON.stringify(request.approvalChain),
+      request.currentApproverId || null,
+      request.returnReason || null,
+      request.denialReason || null,
+      request.createdAt,
+      request.updatedAt,
+      request.submittedAt || null,
+      request.lastSyncTimestamp,
+      request.syncStatus,
+      request.localModifiedAt || null
+    );
   }
-  getLeaveRequest(id: string): Promise<LeaveRequest | null> {
-    throw new Error('Method not implemented.');
+
+  async getLeaveRequest(id: string): Promise<LeaveRequest | null> {
+    const db = await this.getDB();
+    try {
+      const result = await db.getFirstAsync<any>('SELECT * FROM leave_requests WHERE id = ?', id);
+      if (!result) return null;
+      return this.mapRowToLeaveRequest(result);
+    } catch (error) {
+      if (error instanceof DataIntegrityError) throw error;
+      throw new DataIntegrityError(`Failed to parse LeaveRequest record for ID ${id}`, error);
+    }
   }
-  getUserLeaveRequests(userId: string): Promise<LeaveRequest[]> {
-    throw new Error('Method not implemented.');
+
+  async getUserLeaveRequests(userId: string): Promise<LeaveRequest[]> {
+    const db = await this.getDB();
+    try {
+      const results = await db.getAllAsync<any>('SELECT * FROM leave_requests WHERE user_id = ?', userId);
+      return results.map(row => this.mapRowToLeaveRequest(row));
+    } catch (error) {
+      if (error instanceof DataIntegrityError) throw error;
+      throw new DataIntegrityError('Failed to parse LeaveRequest records', error);
+    }
   }
-  deleteLeaveRequest(requestId: string): Promise<void> {
-    throw new Error('Method not implemented.');
+
+  async deleteLeaveRequest(requestId: string): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync('DELETE FROM leave_requests WHERE id = ?', requestId);
   }
   private dbInstance: SQLite.SQLiteDatabase | null = null;
 

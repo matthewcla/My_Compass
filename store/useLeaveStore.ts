@@ -183,19 +183,30 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
     generateQuickDraft: (type: 'weekend' | 'standard', userId: string) => {
         const state = get();
-        const defaults = state.userDefaults;
+        const { userDefaults } = state;
         const now = new Date();
         const draftId = generateUUID();
 
+        // Robust Defaults (Fallback if userDefaults is null)
+        const defaults = userDefaults || {
+            leaveAddress: '123 Sailor Blvd, Norfolk, VA',
+            leavePhoneNumber: '555-000-1234',
+            emergencyContact: {
+                name: 'Sarah Connor',
+                relationship: 'Mother',
+                phoneNumber: '555-867-5309',
+            },
+            dutySection: 'Deck Dept',
+            deptDiv: '1st Div',
+            dutyPhone: '555-111-2222',
+            rationStatus: 'not_applicable'
+        };
+
         let startDate = '';
         let endDate = '';
-        // Mock calculation for charge days, real logic would use a utility
         const chargeDays = 0;
 
         if (type === 'weekend') {
-            // Next Friday logic
-            // (5 - day + 7) % 7. If 0 (Friday), use next week? Or today?
-            // "Next Friday" usually means upcoming Friday.
             const daysUntilFriday = (5 - now.getDay() + 7) % 7;
             const nextFriday = new Date(now);
             nextFriday.setDate(now.getDate() + daysUntilFriday);
@@ -216,13 +227,13 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             endDate,
             chargeDays,
             leaveType: 'annual',
-            leaveAddress: defaults?.leaveAddress || '',
-            leavePhoneNumber: defaults?.leavePhoneNumber || '',
-            emergencyContact: defaults?.emergencyContact,
-            dutySection: defaults?.dutySection,
-            deptDiv: defaults?.deptDiv,
-            dutyPhone: defaults?.dutyPhone,
-            rationStatus: defaults?.rationStatus,
+            leaveAddress: defaults.leaveAddress || '',
+            leavePhoneNumber: defaults.leavePhoneNumber || '555-000-0000',
+            emergencyContact: defaults.emergencyContact || { name: 'Emergency Contact', relationship: 'None', phoneNumber: '555-000-0000' },
+            dutySection: defaults.dutySection || 'N/A',
+            deptDiv: defaults.deptDiv || 'N/A',
+            dutyPhone: defaults.dutyPhone || 'N/A',
+            rationStatus: defaults.rationStatus || 'not_applicable',
             modeOfTravel: 'POV',
             destinationCountry: 'USA',
             normalWorkingHours: '0700-1600',

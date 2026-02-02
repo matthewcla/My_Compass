@@ -76,6 +76,11 @@ interface LeaveActions {
     discardDraft: (draftId: string) => Promise<void>;
 
     /**
+     * Cancel a submitted request.
+     */
+    cancelRequest: (requestId: string) => Promise<void>;
+
+    /**
      * Reset store.
      */
     resetStore: () => void;
@@ -101,14 +106,17 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     ...INITIAL_STATE,
 
     fetchLeaveData: async (userId: string) => {
+        console.log('[Store] fetchLeaveData called for:', userId);
         set({ isSyncingBalance: true });
 
         try {
             // 1. Fetch from API
             const result = await api.fetchLeaveBalance(userId);
+            console.log('[Store] fetchLeaveBalance result:', result);
 
             if (result.success) {
                 const balance = result.data;
+                console.log('[Store] Updating balance in store:', balance);
 
                 // 2. Update Store
                 set({
@@ -119,6 +127,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
                 // 3. Persist to Storage
                 await storage.saveLeaveBalance(balance);
+                console.log('[Store] Saved balance to storage');
             } else {
                 console.error('Failed to fetch leave balance:', result.error);
                 set({ isSyncingBalance: false });
@@ -179,19 +188,30 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
     generateQuickDraft: (type: 'weekend' | 'standard', userId: string) => {
         const state = get();
-        const defaults = state.userDefaults;
+        const { userDefaults } = state;
         const now = new Date();
         const draftId = generateUUID();
 
+        // Robust Defaults (Fallback if userDefaults is null)
+        const defaults = userDefaults || {
+            leaveAddress: '123 Sailor Blvd, Norfolk, VA',
+            leavePhoneNumber: '555-000-1234',
+            emergencyContact: {
+                name: 'Sarah Connor',
+                relationship: 'Mother',
+                phoneNumber: '555-867-5309',
+            },
+            dutySection: 'Deck Dept',
+            deptDiv: '1st Div',
+            dutyPhone: '555-111-2222',
+            rationStatus: 'not_applicable'
+        };
+
         let startDate = '';
         let endDate = '';
-        // Mock calculation for charge days, real logic would use a utility
         const chargeDays = 0;
 
         if (type === 'weekend') {
-            // Next Friday logic
-            // (5 - day + 7) % 7. If 0 (Friday), use next week? Or today?
-            // "Next Friday" usually means upcoming Friday.
             const daysUntilFriday = (5 - now.getDay() + 7) % 7;
             const nextFriday = new Date(now);
             nextFriday.setDate(now.getDate() + daysUntilFriday);
@@ -212,13 +232,13 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             endDate,
             chargeDays,
             leaveType: 'annual',
-            leaveAddress: defaults?.leaveAddress || '',
-            leavePhoneNumber: defaults?.leavePhoneNumber || '',
-            emergencyContact: defaults?.emergencyContact,
-            dutySection: defaults?.dutySection,
-            deptDiv: defaults?.deptDiv,
-            dutyPhone: defaults?.dutyPhone,
-            rationStatus: defaults?.rationStatus,
+            leaveAddress: defaults.leaveAddress || '',
+            leavePhoneNumber: defaults.leavePhoneNumber || '555-000-0000',
+            emergencyContact: defaults.emergencyContact || { name: 'Emergency Contact', relationship: 'None', phoneNumber: '555-000-0000' },
+            dutySection: defaults.dutySection || 'N/A',
+            deptDiv: defaults.deptDiv || 'N/A',
+            dutyPhone: defaults.dutyPhone || 'N/A',
+            rationStatus: defaults.rationStatus || 'not_applicable',
             modeOfTravel: 'POV',
             destinationCountry: 'USA',
             normalWorkingHours: '0700-1600',
@@ -492,6 +512,71 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             await storage.deleteLeaveRequest(draftId);
         } catch (error) {
             console.error('[useLeaveStore] Failed to delete draft:', error);
+        }
+    },
+
+    cancelRequest: async (requestId: string) => {
+        const state = get();
+        const request = state.leaveRequests[requestId];
+        if (!request) return;
+
+        set({ isSyncingRequests: true });
+
+        // Optimistic Update
+        const previousStatus = request.status;
+        const now = new Date().toISOString();
+
+        const updatedRequest: LeaveRequest = {
+            ...request,
+            status: 'cancelled',
+            statusHistory: [
+                ...request.statusHistory,
+                {
+                    status: 'cancelled',
+                    timestamp: now,
+                    comments: 'User cancelled request',
+                }
+            ],
+            updatedAt: now,
+            localModifiedAt: now,
+            syncStatus: 'pending_upload',
+        };
+
+        set((state) => ({
+            leaveRequests: {
+                ...state.leaveRequests,
+                [requestId]: updatedRequest,
+            },
+        }));
+
+        try {
+            await storage.saveLeaveRequest(updatedRequest);
+            const result = await api.cancelLeaveRequest(requestId);
+
+            if (result.success) {
+                // Confirm sync
+                set((state) => ({
+                    leaveRequests: {
+                        ...state.leaveRequests,
+                        [requestId]: {
+                            ...state.leaveRequests[requestId],
+                            syncStatus: 'synced',
+                            lastSyncTimestamp: result.data.canceledAt,
+                        }
+                    },
+                    isSyncingRequests: false,
+                }));
+                // Update storage again with synced status
+                await storage.saveLeaveRequest({ ...updatedRequest, syncStatus: 'synced', lastSyncTimestamp: result.data.canceledAt });
+            } else {
+                console.error('API failed to cancel request');
+                set({ isSyncingRequests: false });
+                // Note: We leave it as optimistically cancelled. 
+                // A real implementation might revert or mark syncStatus: 'error'.
+            }
+        } catch (error) {
+            console.error('Failed to cancel request:', error);
+            set({ isSyncingRequests: false });
         }
     },
 

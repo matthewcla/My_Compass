@@ -15,7 +15,16 @@ import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
 import { useUIStore } from '@/store/useUIStore';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
+
+// Suppress known warnings from dependencies and Expo Go
+LogBox.ignoreLogs([
+  'SafeAreaView has been deprecated',
+  'WARN SafeAreaView has been deprecated',
+  'SafeAreaView has been deprecated and will be removed in a future release',
+  'SafeAreaView has been deprecated and will be removed in a future release. Please use \'react-native-safe-area-context\' instead.',
+  'expo-notifications',
+]);
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -27,30 +36,18 @@ export const unstable_settings = {
   initialRouteName: '(hub)',
 };
 
-// Safe splash screen helpers that suppress benign errors in dev/Expo Go
-const isSplashError = (e: any) => {
-  const msg = e?.message || '';
-  return msg.includes('No native splash screen registered') || msg.includes("Call 'SplashScreen.show'");
-};
-
-const safeSplashPreventAutoHide = async () => {
-  try {
-    await SplashScreen.preventAutoHideAsync();
-  } catch (e) {
-    if (!isSplashError(e)) console.warn('SplashScreen.preventAutoHideAsync() failed:', e);
-  }
-};
-
 const safeSplashHide = async () => {
   try {
     await SplashScreen.hideAsync();
   } catch (e) {
-    if (!isSplashError(e)) console.warn('SplashScreen.hideAsync() failed:', e);
+    // Explicitly swallow all errors
   }
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-safeSplashPreventAutoHide();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* Ignore error - splash screen is already hidden */
+});
 
 export default function RootLayout() {
   const [fontsLoaded, error] = useFonts({

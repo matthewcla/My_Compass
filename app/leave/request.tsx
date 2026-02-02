@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { CheckCircle, X } from 'lucide-react-native';
 import React, { useMemo, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, LayoutChangeEvent, Modal, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Alert, KeyboardAvoidingView, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -68,15 +68,18 @@ export default function LeaveRequestScreen() {
     // Check for draft on mount
     const { draftId } = useLocalSearchParams();
     const fetchUserRequests = useLeaveStore((state) => state.fetchUserRequests);
-    const userId = "user-123"; // TODO: Auth
+    const fetchLeaveData = useLeaveStore((state) => state.fetchLeaveData);
+    const userId = "USER_0001"; // TODO: Auth
     const [isHydrated, setIsHydrated] = useState(false);
 
     React.useEffect(() => {
         // Hydrate and then set ready
         const init = async () => {
-            if (Object.keys(leaveRequests).length === 0) {
-                await fetchUserRequests(userId);
-            }
+            // Always fetch latest data to ensure balance is accurate
+            await Promise.all([
+                fetchUserRequests(userId),
+                fetchLeaveData(userId)
+            ]);
             setIsHydrated(true);
         };
         init();
@@ -251,6 +254,10 @@ export default function LeaveRequestScreen() {
 
     const { chargeableDays, projectedBalance, isOverdraft } = calculation;
 
+    console.log('[LeaveRequest] Render Balance:', leaveBalance);
+    console.log('[LeaveRequest] Available Days:', availableDays);
+    console.log('[LeaveRequest] Is Hydrated:', isHydrated);
+
     // --- Helpers ---
 
     const updateField = (field: keyof CreateLeaveRequestPayload, value: any) => {
@@ -380,7 +387,7 @@ export default function LeaveRequestScreen() {
                     {/* Header: StatusBar */}
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
-                        className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-md sticky top-0 z-10 px-4 py-2"
+                        className="bg-white/95 dark:bg-slate-900/95 sticky top-0 z-10 px-4 py-2"
                     >
                         <WizardStatusBar
                             currentStep={activeStep}
@@ -456,60 +463,50 @@ export default function LeaveRequestScreen() {
                         </Animated.ScrollView>
                     </KeyboardAvoidingView>
 
-                    {/* Floating Footer: HUD + Signature */}
-                    <Animated.View
-                        entering={FadeInDown.delay(400).springify()}
-                        className="absolute bottom-0 left-0 right-0"
+                    {/* Floating Footer: HUD + Signature (Simplified for Debugging) */}
+                    <View
+                        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
+                        style={{ paddingBottom: Math.max(insets.bottom, 20) }}
                     >
-                        <LinearGradient
-                            colors={[
-                                'transparent',
-                                isDark ? 'rgba(2,6,23,0.95)' : 'rgba(248,250,252,0.95)',
-                                isDark ? '#020617' : '#f8fafc'
-                            ]}
-                            locations={[0, 0.3, 1]}
-                            style={{ paddingBottom: Math.max(insets.bottom, 20) }}
-                            className="pt-12"
-                        >
-                            <View className="px-4">
-                                <LeaveImpactHUD
-                                    chargeableDays={chargeableDays}
-                                    projectedBalance={projectedBalance}
-                                    isOverdraft={isOverdraft}
-                                />
-                                <View className="mt-4 flex-row items-center gap-3">
-                                    {/* Exit Button */}
-                                    <Pressable
-                                        onPress={handleExit}
-                                        className="h-14 w-14 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
-                                        accessibilityLabel="Exit Wizard"
-                                    >
-                                        <X size={24} color={themeColors.labelSecondary} strokeWidth={2} />
-                                    </Pressable>
+                        <View className="pt-4 px-4">
+                            <LeaveImpactHUD
+                                chargeableDays={chargeableDays}
+                                projectedBalance={projectedBalance}
+                                isOverdraft={isOverdraft}
+                            />
+                            <View className="mt-4 flex-row items-center gap-3">
+                                {/* Exit Button */}
+                                <Pressable
+                                    onPress={handleExit}
+                                    className="h-14 w-14 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
+                                    accessibilityLabel="Exit Wizard"
+                                >
+                                    <X size={24} color={themeColors.labelSecondary} strokeWidth={2} />
+                                </Pressable>
 
-                                    <View className="flex-1">
-                                        <SignatureButton
-                                            onSign={handleSubmit}
-                                            isSubmitting={isSyncing}
-                                            disabled={!(validateStep(0) && validateStep(1) && validateStep(2) && validateStep(3))}
-                                        />
-                                    </View>
+                                <View className="flex-1">
+                                    <SignatureButton
+                                        onSign={handleSubmit}
+                                        isSubmitting={isSyncing}
+                                        disabled={!(validateStep(0) && validateStep(1) && validateStep(2) && validateStep(3))}
+                                    />
                                 </View>
                             </View>
-                        </LinearGradient>
-                    </Animated.View>
+                        </View>
+                    </View>
                 </View>
             </SafeAreaView>
 
-            {/* Exit Confirmation Modal */}
-            <Modal
-                transparent
-                visible={showExitModal}
-                animationType="fade"
-                onRequestClose={() => setShowExitModal(false)}
-            >
-                <View className="flex-1 bg-black/50 backdrop-blur-sm items-center justify-center p-4">
-                    <View className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+            {/* Exit Confirmation Overlay */}
+            {showExitModal && (
+                <View className="absolute inset-0 z-50 items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <Animated.View entering={FadeIn} className="absolute inset-0 bg-black/60">
+                        <Pressable className="flex-1" onPress={() => setShowExitModal(false)} />
+                    </Animated.View>
+
+                    {/* Content */}
+                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
                         <View className="p-6 items-center">
                             <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
                                 Save Draft?
@@ -544,15 +541,15 @@ export default function LeaveRequestScreen() {
                                 </Pressable>
                             </View>
                         </View>
-                    </View>
+                    </Animated.View>
                 </View>
-            </Modal>
+            )}
 
             {/* Success Celebration Overlay */}
             {showSuccess && (
                 <Animated.View
                     entering={FadeIn}
-                    className="absolute inset-0 z-50 bg-blue-600/95 dark:bg-blue-950/95 items-center justify-center backdrop-blur-lg"
+                    className="absolute inset-0 z-50 bg-blue-600/98 dark:bg-blue-950/98 items-center justify-center"
                 >
                     <Animated.View entering={ZoomIn.delay(200).springify()}>
                         <CheckCircle size={100} color="white" strokeWidth={2.5} />

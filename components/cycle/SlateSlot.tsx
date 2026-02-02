@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/Colors';
 import { Application, Billet } from '@/types/schema';
-import { Lock, Unlock, X } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Lock, Unlock, X } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -10,6 +10,8 @@ interface SlateSlotProps {
     billet?: Billet | null;
     onRemove?: () => void;
     onLock?: () => void;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
 }
 
 export const SlateSlot: React.FC<SlateSlotProps> = ({
@@ -17,10 +19,12 @@ export const SlateSlot: React.FC<SlateSlotProps> = ({
     application,
     billet,
     onRemove,
-    onLock
+    onLock,
+    onMoveUp,
+    onMoveDown
 }) => {
     const isFilled = !!billet;
-    const isLocked = application?.status === 'optimistically_locked' || application?.status === 'submitted';
+    const isLocked = application?.status === 'submitted';
 
     return (
         <View className="mb-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex-row items-center h-20">
@@ -42,9 +46,6 @@ export const SlateSlot: React.FC<SlateSlotProps> = ({
                         {application?.status === 'submitted' && (
                             <Text className="text-[10px] text-green-600 font-bold mt-1">SUBMITTED</Text>
                         )}
-                        {application?.status === 'optimistically_locked' && (
-                            <Text className="text-[10px] text-amber-600 font-bold mt-1">LOCKED</Text>
-                        )}
                     </View>
                 ) : (
                     <Text className="text-slate-400 dark:text-slate-600 italic">Empty Slot</Text>
@@ -54,6 +55,28 @@ export const SlateSlot: React.FC<SlateSlotProps> = ({
             {/* ACTIONS */}
             {isFilled && (
                 <View className="flex-row items-center pr-3 gap-1">
+                    {/* Reorder Controls */}
+                    {!isLocked && (
+                        <View className="flex-col mr-2">
+                            {onMoveUp && (
+                                <TouchableOpacity
+                                    onPress={onMoveUp}
+                                    className="p-1 active:bg-slate-100 dark:active:bg-slate-700 rounded"
+                                >
+                                    <ChevronUp size={16} color={Colors.light.systemGray} />
+                                </TouchableOpacity>
+                            )}
+                            {onMoveDown && (
+                                <TouchableOpacity
+                                    onPress={onMoveDown}
+                                    className="p-1 active:bg-slate-100 dark:active:bg-slate-700 rounded"
+                                >
+                                    <ChevronDown size={16} color={Colors.light.systemGray} />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
+
                     {onLock && (
                         <TouchableOpacity
                             onPress={onLock}

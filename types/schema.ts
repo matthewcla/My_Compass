@@ -180,6 +180,16 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
   `,
 
+    assignment_decisions: `
+    CREATE TABLE IF NOT EXISTS assignment_decisions (
+      user_id TEXT PRIMARY KEY,
+      data TEXT NOT NULL, -- JSON record of billetId -> decision
+      last_sync_timestamp TEXT NOT NULL,
+      sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+  `,
+
     leave_balances: `
     CREATE TABLE IF NOT EXISTS leave_balances (
       id TEXT PRIMARY KEY,
@@ -670,3 +680,10 @@ export interface MyCompassStore {
     assignment: MyAssignmentState;
     admin: MyAdminState;
 }
+
+// =============================================================================
+// SWIPE DECISIONS
+// =============================================================================
+
+export const SwipeDecisionSchema = z.enum(['like', 'nope', 'super']);
+export type SwipeDecision = z.infer<typeof SwipeDecisionSchema>;

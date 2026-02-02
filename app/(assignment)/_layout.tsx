@@ -1,3 +1,4 @@
+import GlobalHeader from '@/components/navigation/GlobalHeader';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { Stack, useSegments } from 'expo-router';
 import React from 'react';
@@ -10,6 +11,7 @@ export default function AssignmentLayout() {
 
   return (
     <>
+      {!isCycle && <GlobalHeader />}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="cycle" />

@@ -1,7 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { FolderHeart, SlidersHorizontal, X } from 'lucide-react-native';
+import { ListOrdered, SlidersHorizontal, X } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React from 'react';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
@@ -12,8 +12,6 @@ interface DiscoveryHeaderProps {
     onOpenFilters: () => void;
     onOpenShortlist: () => void;
     savedCount: number;
-    showProjected: boolean;
-    onToggleProjected: () => void;
 }
 
 export function DiscoveryHeader({
@@ -22,8 +20,6 @@ export function DiscoveryHeader({
     onOpenFilters,
     onOpenShortlist,
     savedCount,
-    showProjected,
-    onToggleProjected,
 }: DiscoveryHeaderProps) {
     const isSandbox = mode === 'sandbox';
     const colorScheme = useColorScheme();
@@ -40,7 +36,7 @@ export function DiscoveryHeader({
         // Ensure we can navigate back. If explicit /hub exists, go there.
         // Or just router.back() if pushed.
         // User requested "Exit Control", typically implies closing the flow.
-        router.push('/(hub)');
+        router.back();
     };
 
     const handlePressFilter = () => {
@@ -114,16 +110,6 @@ export function DiscoveryHeader({
 
             {/* Right Action: Group (Filters + Shortlist) */}
             <View className="flex-row items-center gap-2">
-                {/* Projected Toggle (Text Button) */}
-                <TouchableOpacity
-                    onPress={onToggleProjected}
-                    className={`h-10 px-3 items-center justify-center rounded-full border active:opacity-80 ${showProjected ? 'bg-blue-100 border-blue-200 dark:bg-blue-900/30 dark:border-blue-800' : iconBtnBg}`}
-                >
-                    <Text className={`text-[10px] font-bold uppercase tracking-wider ${showProjected ? 'text-blue-700 dark:text-blue-300' : 'text-slate-500'}`}>
-                        {showProjected ? 'Projected' : 'Open Only'}
-                    </Text>
-                </TouchableOpacity>
-
                 {/* Filters (Mini) */}
                 <TouchableOpacity
                     onPress={handlePressFilter}
@@ -132,12 +118,12 @@ export function DiscoveryHeader({
                     <SlidersHorizontal size={18} color={iconColor} strokeWidth={2.5} />
                 </TouchableOpacity>
 
-                {/* Shortlist */}
+                {/* Slate (Cycle) */}
                 <TouchableOpacity
                     onPress={handlePressShortlist}
                     className={`w-10 h-10 items-center justify-center rounded-full border active:opacity-80 relative ${iconBtnBg}`}
                 >
-                    <FolderHeart size={18} color={iconColor} strokeWidth={2.5} />
+                    <ListOrdered size={18} color={iconColor} strokeWidth={2.5} />
                     {savedCount > 0 && (
                         <View className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900" />
                     )}

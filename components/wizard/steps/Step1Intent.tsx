@@ -8,7 +8,7 @@ import { addDays, eachDayOfInterval, format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { AlertCircle, Clock, Lock } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Modal, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Platform, Pressable, Text, View, useColorScheme } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import Animated, { FadeIn, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
 
@@ -130,39 +130,29 @@ export function Step1Intent({
     const handleDayPress = (day: DateData) => {
         Haptics.selectionAsync();
 
-        // Scenario 1: No Start Date (Initial) -> Set Start
+        // Scenario 1: New Selection Flow (Reset if both set)
+        if (startDate && endDate) {
+            // User is starting a fresh selection
+            onUpdate('startDate', day.dateString);
+            onUpdate('endDate', ''); // Clear end date
+            return;
+        }
+
+        // Scenario 2: No Start Date (Initial) -> Set Start
         if (!startDate) {
             onUpdate('startDate', day.dateString);
             return;
         }
 
-        // Scenario 2: Start Date exists.
-        // If we are setting the "End Date" logic (i.e., simplifying to 2-tap range)
-        // Check if the tapped day is BEFORE the current start date.
+        // Scenario 3: Start Date exists (Waiting for End Date)
         if (day.dateString < startDate) {
-            // User tapped a day BEFORE the start.
-            // Intuition: They want this to be the NEW Start Date.
-            // We should auto-bump the End Date if the old End Date is now invalid,
-            // OR just reset the End Date?
-            // "Smart Correction": Set new Start. If old End exists and is valid, keep it. 
-            // If old End is now invalid (< new Start), clear it or push it.
-
+            // User tapped before current start -> Update Start
             onUpdate('startDate', day.dateString);
-
-            if (endDate && day.dateString > endDate) {
-                // New start is after old end (Wait, logic check: tapped < start. So if tapped < start, and start < end, then tapped < end. Safe.)
-                // But wait, if they Tap WAY before? All good.
-            }
-
-            // However, there is a case where we might want to just reset the range if they tap backwards.
-            // Let's stick to the prompt requirement: "Smart Date Correction".
-            // If newStart > currentEnd, auto-update End.
-            // Here we are handling "New Start < Old Start".
         } else if (day.dateString === startDate) {
-            // Tapped same day. Deselect? Or ignored? Let's treat as Start/End same day (1 day leave).
+            // User tapped same day -> Single Day Leave (Start = End)
             onUpdate('endDate', day.dateString);
         } else {
-            // User tapped AFTER Start Date. This is the End Date.
+            // User tapped after Start -> Set End
             onUpdate('endDate', day.dateString);
         }
     };
@@ -291,12 +281,16 @@ export function Step1Intent({
                         </View>
                         {/* Range Display */}
                         <View className="flex-row justify-between mt-3 px-1">
-                            <View>
+                            <Pressable onPress={() => {
+                                onUpdate('startDate', '');
+                                onUpdate('endDate', '');
+                                Haptics.selectionAsync();
+                            }}>
                                 <Text className="text-xs text-slate-500 mb-1">Start Date</Text>
                                 <Text className={`font-bold ${startDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
                                     {startDate || 'Select'}
                                 </Text>
-                            </View>
+                            </Pressable>
                             <View className="items-end">
                                 <Text className="text-xs text-slate-500 mb-1">End Date</Text>
                                 <Text className={`font-bold ${endDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
@@ -397,49 +391,39 @@ export function Step1Intent({
 
             </View>
 
-            {/* iOS Time Picker Modal */}
-            {Platform.OS === 'ios' && (
-                <Modal
-                    visible={showTimePicker}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setShowTimePicker(false)}
+            {/* iOS Time Picker Overlay */}
+            {Platform.OS === 'ios' && showTimePicker && (
+                <View
+                    className="absolute inset-0 z-50 justify-end bg-black/80"
                 >
-                    <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }} onPress={() => setShowTimePicker(false)}>
-                        <View className="bg-white dark:bg-slate-800 pb-8 pt-4 rounded-t-3xl">
-                            <View className="flex-row justify-between px-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
-                                <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                                    Select Time
-                                </Text>
-                                <Pressable onPress={() => setShowTimePicker(false)}>
-                                    <Text className="text-blue-600 font-bold text-lg">Done</Text>
-                                </Pressable>
-                            </View>
-                            {/* Note: In a real implementation we need to pass a valid Date object derived from existing string */}
-                            <DateTimePicker
-                                value={new Date()}
-                                mode="time"
-                                display="spinner"
-                                onChange={handleTimeChange}
-                                themeVariant={colorScheme}
-                            />
+                    <Pressable className="absolute inset-0" onPress={() => setShowTimePicker(false)} />
+                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 pb-8 pt-4 rounded-t-3xl">
+                        <View className="flex-row justify-between px-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
+                            <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                                Select Time
+                            </Text>
+                            <Pressable onPress={() => setShowTimePicker(false)}>
+                                <Text className="text-blue-600 font-bold text-lg">Done</Text>
+                            </Pressable>
                         </View>
-                    </Pressable>
-                </Modal>
+                        <DateTimePicker
+                            value={new Date()}
+                            mode="time"
+                            display="spinner"
+                            onChange={handleTimeChange}
+                            themeVariant={colorScheme}
+                        />
+                    </Animated.View>
+                </View>
             )}
 
-            {/* Working Hours Picker Modal (Universal) */}
-            <Modal
-                visible={!!hoursField}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setHoursField(null)}
-            >
-                <Pressable
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}
-                    onPress={() => setHoursField(null)}
+            {/* Working Hours Picker Overlay */}
+            {!!hoursField && (
+                <View
+                    className="absolute inset-0 z-50 justify-end bg-black/80"
                 >
-                    <View className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
+                    <Pressable className="absolute inset-0" onPress={() => setHoursField(null)} />
+                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
                         <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
                             <Text className="text-lg font-bold text-slate-900 dark:text-white">
                                 Select Schedule
@@ -483,22 +467,17 @@ export function Step1Intent({
                                 );
                             })}
                         </View>
-                    </View>
-                </Pressable>
-            </Modal>
+                    </Animated.View>
+                </View>
+            )}
 
-            {/* Leave Type Picker Modal */}
-            <Modal
-                visible={showLeaveTypePicker}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setShowLeaveTypePicker(false)}
-            >
-                <Pressable
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}
-                    onPress={() => setShowLeaveTypePicker(false)}
+            {/* Leave Type Picker Overlay */}
+            {showLeaveTypePicker && (
+                <View
+                    className="absolute inset-0 z-50 justify-end bg-black/80"
                 >
-                    <View className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
+                    <Pressable className="absolute inset-0" onPress={() => setShowLeaveTypePicker(false)} />
+                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
                         <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
                             <Text className="text-lg font-bold text-slate-900 dark:text-white">
                                 Select Leave Category
@@ -539,9 +518,9 @@ export function Step1Intent({
                                 );
                             })}
                         </View>
-                    </View>
-                </Pressable>
-            </Modal>
+                    </Animated.View>
+                </View>
+            )}
         </WizardCard>
     );
 }

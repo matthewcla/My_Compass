@@ -39,7 +39,13 @@ class WebStorage implements IStorageService {
 
   async getUser(id: string): Promise<User | null> {
     const data = localStorage.getItem(this.USER_KEY + id);
-    return data ? JSON.parse(decryptData(data)) : null;
+    if (!data) return null;
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse User data (healing)', e);
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -64,7 +70,13 @@ class WebStorage implements IStorageService {
 
   async getAllBillets(): Promise<Billet[]> {
     const data = localStorage.getItem(this.BILLETS_KEY);
-    return data ? JSON.parse(decryptData(data)) : [];
+    if (!data) return [];
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse Billets data (healing)', e);
+      return [];
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -97,7 +109,32 @@ class WebStorage implements IStorageService {
 
   private async _getAllApplications(): Promise<Application[]> {
     const data = localStorage.getItem(this.APPLICATIONS_KEY);
-    return data ? JSON.parse(decryptData(data)) : [];
+    if (!data) return [];
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse Applications data (healing)', e);
+      return [];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Assignment Decisions
+  // ---------------------------------------------------------------------------
+
+  async saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void> {
+    localStorage.setItem('my_compass_decisions_' + userId, encryptData(JSON.stringify(decisions)));
+  }
+
+  async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
+    const data = localStorage.getItem('my_compass_decisions_' + userId);
+    if (!data) return null;
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse AssignmentDecisions data (healing)', e);
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -133,7 +170,13 @@ class WebStorage implements IStorageService {
 
   private async _getAllLeaveRequests(): Promise<LeaveRequest[]> {
     const data = localStorage.getItem(this.LEAVE_REQUESTS_KEY);
-    return data ? JSON.parse(decryptData(data)) : [];
+    if (!data) return [];
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse LeaveRequests data (healing)', e);
+      return [];
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -146,7 +189,13 @@ class WebStorage implements IStorageService {
 
   async getLeaveBalance(userId: string): Promise<LeaveBalance | null> {
     const data = localStorage.getItem(this.LEAVE_BALANCE_KEY + userId);
-    return data ? JSON.parse(decryptData(data)) : null;
+    if (!data) return null;
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse LeaveBalance data (healing)', e);
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -159,7 +208,13 @@ class WebStorage implements IStorageService {
 
   async getLeaveDefaults(userId: string): Promise<LeaveRequestDefaults | null> {
     const data = localStorage.getItem('my_compass_leave_defaults_' + userId);
-    return data ? JSON.parse(decryptData(data)) : null;
+    if (!data) return null;
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse LeaveDefaults data (healing)', e);
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -172,7 +227,13 @@ class WebStorage implements IStorageService {
 
   async getDashboardCache(userId: string): Promise<DashboardData | null> {
     const data = localStorage.getItem(this.DASHBOARD_CACHE_KEY + userId);
-    return data ? JSON.parse(decryptData(data)) : null;
+    if (!data) return null;
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse DashboardCache data (healing)', e);
+      return null;
+    }
   }
 }
 

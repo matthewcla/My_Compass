@@ -5,7 +5,8 @@ import { useCallback } from 'react';
 export function useScreenHeader(
     title: string,
     subtitle: string | React.ReactNode,
-    rightAction?: { icon: any; onPress: () => void }
+    rightAction?: { icon: any; onPress: () => void },
+    variant: 'large' | 'inline' = 'large'
 ) {
     const setHeader = useHeaderStore((state) => state.setHeader);
 
@@ -15,8 +16,8 @@ export function useScreenHeader(
             // Use requestAnimationFrame to avoid "update on unmounted component" or race conditions
             // during initial mount if the screen is immediately focused.
             requestAnimationFrame(() => {
-                setHeader(title, subtitle, rightAction);
+                setHeader(title, subtitle, rightAction, variant);
             });
-        }, [title, subtitle, rightAction, setHeader])
+        }, [title, subtitle, rightAction, variant, setHeader])
     );
 }

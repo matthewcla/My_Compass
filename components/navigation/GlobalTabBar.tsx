@@ -4,6 +4,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { getShadow } from '@/utils/getShadow';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
+    Calendar as CalendarIcon,
     ClipboardList,
     Compass,
     FileText,
@@ -11,6 +12,7 @@ import {
     Inbox,
     Map as MapIcon,
     Menu,
+    QrCode,
     Settings,
     Shield,
     Target
@@ -29,6 +31,10 @@ const SPOKE_CONFIG: Record<string, SpokeConfig> = {
     '(career)': {
         primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
         secondary: { label: 'Assignment', route: '/(assignment)', icon: Target },
+    },
+    '(calendar)': {
+        primary: { label: 'Calendar', route: '/(calendar)/calendar', icon: CalendarIcon },
+        secondary: { label: 'Scan', route: '/(calendar)/scan', icon: QrCode },
     },
     '(pcs)': {
         primary: { label: 'Orders', route: '/(pcs)/orders', icon: FileText },
@@ -61,7 +67,7 @@ export default function GlobalTabBar() {
     // Effect to update activeSpoke based on navigation
     React.useEffect(() => {
         // Known spokes list
-        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)', '(career)'];
+        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)', '(career)', '(calendar)'];
 
         if (KNOWN_SPOKES.includes(currentSpoke)) {
             // If we are in a known spoke, update the store
@@ -163,8 +169,8 @@ export default function GlobalTabBar() {
             {/* 1. HOME (Fixed) */}
             {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox'))}
 
-            {/* 2. SPOKE PRIMARY (Dynamic) */}
-            {config && renderTab(config.primary.label, config.primary.route, config.primary.icon)}
+            {/* 2. SPOKE PRIMARY (Dynamic) or Calendar in Hub Mode */}
+            {config ? renderTab(config.primary.label, config.primary.route, config.primary.icon) : renderTab('Calendar', '/(calendar)/calendar', CalendarIcon)}
 
             {/* 3. INBOX (Fixed - Center) */}
             {renderTab('Inbox', '/inbox', Inbox, pathname.includes('/inbox'))}

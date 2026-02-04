@@ -7,11 +7,32 @@ import { SectionList, Text, TouchableOpacity, View } from 'react-native';
 
 type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
 
+const formatDTG = (dateString: string) => {
+    try {
+        const date = new Date(dateString);
+        const dd = date.getUTCDate().toString().padStart(2, '0');
+        const hh = date.getUTCHours().toString().padStart(2, '0');
+        const mm = date.getUTCMinutes().toString().padStart(2, '0');
+        const mon = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
+        const yy = date.getUTCFullYear().toString().slice(-2);
+        return `${dd}${hh}${mm}Z ${mon} ${yy}`;
+    } catch (e) {
+        return '';
+    }
+};
+
 export default function InboxScreen() {
-    useScreenHeader("Inbox", "Notifications");
     const { messages, fetchMessages, isLoading, togglePin } = useInboxStore();
     const router = useRouter();
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useScreenHeader("Inbox", "Notifications", undefined, {
+        visible: true,
+        onChangeText: setSearchQuery,
+        placeholder: 'Search messages (e.g. 041200Z)...',
+        value: searchQuery
+    });
 
     useEffect(() => {
         fetchMessages();
@@ -19,6 +40,18 @@ export default function InboxScreen() {
 
     const filteredMessages = useMemo(() => {
         return messages.filter(msg => {
+            // Text Search
+            if (searchQuery) {
+                const query = searchQuery.toUpperCase();
+                const dtg = formatDTG(msg.timestamp);
+                const matchesText =
+                    msg.subject.toUpperCase().includes(query) ||
+                    msg.body.toUpperCase().includes(query) ||
+                    dtg.includes(query);
+
+                if (!matchesText) return false;
+            }
+
             switch (activeFilter) {
                 case 'Official':
                     return msg.type === 'NAVADMIN' || msg.type === 'ALNAV';
@@ -30,7 +63,7 @@ export default function InboxScreen() {
                     return true;
             }
         });
-    }, [messages, activeFilter]);
+    }, [messages, activeFilter, searchQuery]);
 
     const sections = useMemo(() => {
         // Sort logic: Pinned (Quick Reference) -> Unread -> Read (by date desc)

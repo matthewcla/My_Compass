@@ -45,6 +45,11 @@ interface AssignmentActions {
     fetchBillets: (userId?: string) => Promise<void>;
 
     /**
+     * Load more billets from storage (Pagination).
+     */
+    loadMore: () => Promise<void>;
+
+    /**
      * Hydrate user data (decisions, applications) from storage.
      */
     hydrateUserData: (userId: string) => Promise<void>;
@@ -141,6 +146,9 @@ export type AssignmentStore = MyAssignmentState & {
     // Cycle State
     slateDeadline: string; // ISO Timestamp
 
+    // Pagination State
+    currentOffset: number;
+
     // Dual Decision Bins
     realDecisions: Record<string, SwipeDecision>;
     sandboxDecisions: Record<string, SwipeDecision>;
@@ -153,6 +161,7 @@ const INITIAL_STATE: MyAssignmentState & {
     sandboxFilters: FilterState;
     showProjected: boolean;
     slateDeadline: string;
+    currentOffset: number;
     realDecisions: Record<string, SwipeDecision>;
     sandboxDecisions: Record<string, SwipeDecision>;
 } = {
@@ -177,6 +186,7 @@ const INITIAL_STATE: MyAssignmentState & {
     showProjected: false,
     // Mock Deadline: 72 hours from now
     slateDeadline: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
+    currentOffset: 0,
     realDecisions: {},
     sandboxDecisions: {},
 };
@@ -495,11 +505,26 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         // If userId provided, hydrate. otherwise just fetch billets.
         set({ isSyncingBillets: true });
 
+        // Reset Pagination
+        const limit = 20;
+        const offset = 0;
+
+        // Ensure storage has data (Mock Init)
+        // In a real scenario, this step might be "Sync from API to DB"
+        const existing = await storage.getAllBillets();
+        if (existing.length === 0) {
+             for (const b of MOCK_BILLETS) {
+                 await storage.saveBillet(b);
+             }
+        }
+
+        const pagedBillets = await storage.getPagedBillets(limit, offset);
+
         // Convert array to record for store
         const billetRecord: Record<string, Billet> = {};
-        const newStack: string[] = []; // Create stack from fetched billets
+        const newStack: string[] = [];
 
-        MOCK_BILLETS.forEach((billet) => {
+        pagedBillets.forEach((billet) => {
             billetRecord[billet.id] = billet;
             newStack.push(billet.id);
         });
@@ -510,6 +535,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             billets: billetRecord,
             billetStack: newStack,
             cursor: 0,
+            currentOffset: 0,
             // PRESERVE DECISIONS / APPS
             // realDecisions: {}, 
             lastBilletSyncAt: new Date().toISOString(),
@@ -519,6 +545,41 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         if (userId) {
             await get().hydrateUserData(userId);
         }
+    },
+
+    loadMore: async () => {
+        const { currentOffset, billets, billetStack, isSyncingBillets } = get();
+        if (isSyncingBillets) return;
+
+        set({ isSyncingBillets: true });
+
+        const limit = 20;
+        const newOffset = currentOffset + limit;
+
+        const nextBatch = await storage.getPagedBillets(limit, newOffset);
+
+        if (nextBatch.length === 0) {
+            set({ isSyncingBillets: false });
+            return;
+        }
+
+        const newBilletRecord = { ...billets };
+        const newStackIds: string[] = [];
+
+        nextBatch.forEach((billet) => {
+            // Avoid duplicates
+            if (!newBilletRecord[billet.id]) {
+                newBilletRecord[billet.id] = billet;
+                newStackIds.push(billet.id);
+            }
+        });
+
+        set({
+            billets: newBilletRecord,
+            billetStack: [...billetStack, ...newStackIds],
+            currentOffset: newOffset,
+            isSyncingBillets: false,
+        });
     },
 
     swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
@@ -903,5 +964,3 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
     resetStore: () => set(INITIAL_STATE),
 }));
-
-

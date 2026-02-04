@@ -249,6 +249,21 @@ class SQLiteStorage implements IStorageService {
     }
   }
 
+  async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
+    const db = await this.getDB();
+    try {
+      const results = await db.getAllAsync<any>(
+        'SELECT * FROM billets LIMIT ? OFFSET ?',
+        limit,
+        offset
+      );
+      return results.map(row => this.mapRowToBillet(row));
+    } catch (error) {
+      if (error instanceof DataIntegrityError) throw error;
+      throw new DataIntegrityError('Failed to parse Billet records', error);
+    }
+  }
+
   private mapRowToBillet(row: any): Billet {
     try {
       return BilletSchema.parse({
@@ -660,6 +675,11 @@ class MockStorage implements IStorageService {
     return Array.from(this.billets.values());
   }
 
+  async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
+    const all = Array.from(this.billets.values());
+    return all.slice(offset, offset + limit);
+  }
+
   // Applications
   async saveApplication(app: Application): Promise<void> {
     this.applications.set(app.id, app);
@@ -739,6 +759,11 @@ class MockStorage implements IStorageService {
 class WebStorage implements IStorageService {
   async init(): Promise<void> {
     // No-op for localStorage
+  }
+
+  async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
+    const all = await this.getAllBillets();
+    return all.slice(offset, offset + limit);
   }
 
   // --- Helpers ---

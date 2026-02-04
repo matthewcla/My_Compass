@@ -34,7 +34,7 @@ export function ScannerModal({ visible, onClose, onScan, validator }: ScannerMod
 
     // Auto-clear error after 2 seconds
     useEffect(() => {
-        let timer: NodeJS.Timeout;
+        let timer: ReturnType<typeof setTimeout>;
         if (scanError) {
             timer = setTimeout(() => {
                 setScanError(false);

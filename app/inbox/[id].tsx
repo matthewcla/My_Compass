@@ -66,10 +66,10 @@ export default function MessageDetailsScreen() {
                     {message.body.length < 100 && "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."}
                 </Text>
 
-                {actionRoute && (
+                {!!actionRoute && (
                     <View className="mt-8 mb-8">
                         <TouchableOpacity
-                            onPress={() => router.push(actionRoute)}
+                            onPress={() => router.push(actionRoute as any)}
                             className="bg-blue-600 p-4 rounded-xl flex-row items-center justify-center shadow-sm active:bg-blue-700"
                         >
                             <Text className="text-white font-bold text-lg">View Details</Text>

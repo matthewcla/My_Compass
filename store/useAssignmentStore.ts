@@ -182,6 +182,36 @@ const INITIAL_STATE: MyAssignmentState & {
 };
 
 // =============================================================================
+// WRITE-BEHIND BUFFER
+// =============================================================================
+
+type PendingSwipe = { userId: string; billetId: string; decision: SwipeDecision };
+let pendingSwipes: PendingSwipe[] = [];
+let flushTimeout: NodeJS.Timeout | null = null;
+
+const persistDecisions = async () => {
+    if (pendingSwipes.length === 0) return;
+
+    // 1. Take snapshot and clear queue immediately
+    const batch = [...pendingSwipes];
+    pendingSwipes = [];
+    if (flushTimeout) {
+        clearTimeout(flushTimeout);
+        flushTimeout = null;
+    }
+
+    // 2. Persist batch
+    try {
+        await Promise.all(
+            batch.map(item => storage.saveAssignmentDecision(item.userId, item.billetId, item.decision))
+        );
+    } catch (e) {
+        console.error('[Store] Failed to persist decisions batch', e);
+        // In a real app, we might want to retry or put them back in queue
+    }
+};
+
+// =============================================================================
 // MOCK DATA (Persona: IT1 Samuel P. Wilson)
 // =============================================================================
 
@@ -443,8 +473,16 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 apps.forEach(a => { appRecord[a.id] = a; });
             }
 
+            // Merge pending swipes on top of DB data
+            const mergedDecisions = { ...((decisions as Record<string, SwipeDecision>) || {}) };
+            pendingSwipes.forEach(p => {
+                if (p.userId === userId) {
+                    mergedDecisions[p.billetId] = p.decision;
+                }
+            });
+
             set({
-                realDecisions: (decisions as Record<string, SwipeDecision>) || {},
+                realDecisions: mergedDecisions,
                 applications: appRecord,
                 userApplicationIds: apps ? apps.map(a => a.id) : [],
             });
@@ -523,10 +561,20 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 });
             }
 
-            // Persist
+            // Persist (Write-Behind)
             const finalDecision = newDecisions[billetId];
             if (finalDecision) {
-                await storage.saveAssignmentDecision(userId, billetId, finalDecision);
+                // Add to queue
+                pendingSwipes.push({ userId, billetId, decision: finalDecision });
+
+                // Check threshold
+                if (pendingSwipes.length >= 5) {
+                    await persistDecisions();
+                } else {
+                    // Debounce
+                    if (flushTimeout) clearTimeout(flushTimeout);
+                    flushTimeout = setTimeout(persistDecisions, 2000);
+                }
             }
 
         } else {
@@ -585,7 +633,20 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             });
 
             // Persist
-            storage.removeAssignmentDecision(userId, billetIdToRemove);
+            // Check if it's in the pending queue
+            const pendingIndex = pendingSwipes.findIndex(p => p.billetId === billetIdToRemove && p.userId === userId);
+            if (pendingIndex !== -1) {
+                // It's pending, just remove from queue so it never gets saved
+                pendingSwipes.splice(pendingIndex, 1);
+                // If queue is empty, maybe clear timeout?
+                if (pendingSwipes.length === 0 && flushTimeout) {
+                    clearTimeout(flushTimeout);
+                    flushTimeout = null;
+                }
+            } else {
+                // It's already in DB, remove it
+                storage.removeAssignmentDecision(userId, billetIdToRemove);
+            }
             // Note: Orphaned application deletion from storage not fully implemented yet 
             // as per storage interface limitations.
         } else {

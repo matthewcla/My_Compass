@@ -157,6 +157,8 @@ export default function CalendarScreen() {
                     <TouchableOpacity
                         activeOpacity={0.8}
                         onPress={() => setIsScannerOpen(true)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Open Scanner"
                         className="w-14 h-14 bg-[#0A1628] dark:bg-white rounded-full items-center justify-center shadow-lg transform active:scale-95"
                         style={getShadow({ shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 })}
                     >

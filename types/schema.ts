@@ -192,6 +192,18 @@ export const SQLiteTableDefinitions = {
     );
   `,
 
+    assignment_decisions_entries: `
+    CREATE TABLE IF NOT EXISTS assignment_decisions_entries (
+      user_id TEXT NOT NULL,
+      billet_id TEXT NOT NULL,
+      decision TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      PRIMARY KEY (user_id, billet_id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_assignment_decisions_entries_user_id ON assignment_decisions_entries(user_id);
+  `,
+
     leave_balances: `
     CREATE TABLE IF NOT EXISTS leave_balances (
       id TEXT PRIMARY KEY,
@@ -324,6 +336,17 @@ async function runMigrations(db: { execAsync: (sql: string) => Promise<void> }):
     } catch (e: any) {
         if (!e.message?.includes('duplicate column name')) {
             console.error('[DB Migration] Error adding seaos column:', e);
+        }
+    }
+
+    // Migration 4: Create assignment_decisions_entries table
+    try {
+        await db.execAsync(SQLiteTableDefinitions.assignment_decisions_entries);
+        console.log('[DB Migration] Created assignment_decisions_entries table');
+    } catch (e: any) {
+        // Table might already exist if initialized via main loop, but this ensures migration for existing DBs
+        if (!e.message?.includes('already exists')) {
+            console.error('[DB Migration] Error creating assignment_decisions_entries table:', e);
         }
     }
 }

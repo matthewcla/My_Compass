@@ -122,7 +122,15 @@ class WebStorage implements IStorageService {
   // Assignment Decisions
   // ---------------------------------------------------------------------------
 
-  async saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void> {
+  async saveAssignmentDecision(userId: string, billetId: string, decision: string): Promise<void> {
+    const decisions = (await this.getAssignmentDecisions(userId)) || {};
+    decisions[billetId] = decision;
+    localStorage.setItem('my_compass_decisions_' + userId, encryptData(JSON.stringify(decisions)));
+  }
+
+  async removeAssignmentDecision(userId: string, billetId: string): Promise<void> {
+    const decisions = (await this.getAssignmentDecisions(userId)) || {};
+    delete decisions[billetId];
     localStorage.setItem('my_compass_decisions_' + userId, encryptData(JSON.stringify(decisions)));
   }
 

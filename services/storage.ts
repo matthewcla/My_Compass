@@ -585,25 +585,42 @@ class SQLiteStorage implements IStorageService {
   // Assignment Decisions
   // ---------------------------------------------------------------------------
 
-  async saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void> {
+  async saveAssignmentDecision(userId: string, billetId: string, decision: string): Promise<void> {
     const db = await this.getDB();
     const now = new Date().toISOString();
-    const data = JSON.stringify(decisions);
     await db.runAsync(
-      `INSERT OR REPLACE INTO assignment_decisions (user_id, data, last_sync_timestamp, sync_status)
+      `INSERT OR REPLACE INTO assignment_decisions_entries (user_id, billet_id, decision, timestamp)
        VALUES (?, ?, ?, ?);`,
-      userId, data, now, 'pending_upload'
+      userId, billetId, decision, now
+    );
+  }
+
+  async removeAssignmentDecision(userId: string, billetId: string): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync(
+      `DELETE FROM assignment_decisions_entries WHERE user_id = ? AND billet_id = ?;`,
+      userId, billetId
     );
   }
 
   async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
     const db = await this.getDB();
-    const row = await db.getFirstAsync<{ data: string }>(
-      `SELECT data FROM assignment_decisions WHERE user_id = ?;`,
-      userId
-    );
-    if (!row) return null;
-    return safeJsonParse(row.data) || null;
+    try {
+      const rows = await db.getAllAsync<{ billet_id: string; decision: string }>(
+        `SELECT billet_id, decision FROM assignment_decisions_entries WHERE user_id = ?;`,
+        userId
+      );
+      if (!rows || rows.length === 0) return null;
+
+      const decisions: Record<string, string> = {};
+      rows.forEach(row => {
+        decisions[row.billet_id] = row.decision;
+      });
+      return decisions;
+    } catch (e) {
+      console.warn('Failed to fetch assignment decisions', e);
+      return null;
+    }
   }
 }
 
@@ -693,9 +710,18 @@ class MockStorage implements IStorageService {
   }
 
   // Assignment Decisions
-  async saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void> {
-    localStorage.setItem(`decisions_${userId}`, JSON.stringify(decisions));
+  async saveAssignmentDecision(userId: string, billetId: string, decision: string): Promise<void> {
+    const current = (await this.getAssignmentDecisions(userId)) || {};
+    current[billetId] = decision;
+    localStorage.setItem(`decisions_${userId}`, JSON.stringify(current));
   }
+
+  async removeAssignmentDecision(userId: string, billetId: string): Promise<void> {
+    const current = (await this.getAssignmentDecisions(userId)) || {};
+    delete current[billetId];
+    localStorage.setItem(`decisions_${userId}`, JSON.stringify(current));
+  }
+
   async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
     const data = localStorage.getItem(`decisions_${userId}`);
     return data ? JSON.parse(data) : null;
@@ -802,9 +828,18 @@ class WebStorage implements IStorageService {
   }
 
   // --- Assignment Decisions ---
-  async saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void> {
+  async saveAssignmentDecision(userId: string, billetId: string, decision: string): Promise<void> {
+    const decisions = this.getItem<Record<string, string>>(`decisions_${userId}`) || {};
+    decisions[billetId] = decision;
     this.setItem(`decisions_${userId}`, decisions);
   }
+
+  async removeAssignmentDecision(userId: string, billetId: string): Promise<void> {
+    const decisions = this.getItem<Record<string, string>>(`decisions_${userId}`) || {};
+    delete decisions[billetId];
+    this.setItem(`decisions_${userId}`, decisions);
+  }
+
   async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
     return this.getItem<Record<string, string>>(`decisions_${userId}`);
   }

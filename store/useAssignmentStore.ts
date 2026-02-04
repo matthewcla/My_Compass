@@ -524,7 +524,10 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             }
 
             // Persist
-            await storage.saveAssignmentDecisions(userId, newDecisions);
+            const finalDecision = newDecisions[billetId];
+            if (finalDecision) {
+                await storage.saveAssignmentDecision(userId, billetId, finalDecision);
+            }
 
         } else {
             // SANDBOX MODE: No network transactions, just local state
@@ -582,7 +585,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             });
 
             // Persist
-            storage.saveAssignmentDecisions(userId, newDecisions);
+            storage.removeAssignmentDecision(userId, billetIdToRemove);
             // Note: Orphaned application deletion from storage not fully implemented yet 
             // as per storage interface limitations.
         } else {
@@ -683,7 +686,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         const newDecisions = { ...realDecisions };
         newDecisions[billetId] = 'like';
         set({ realDecisions: newDecisions });
-        storage.saveAssignmentDecisions(userId, newDecisions);
+        storage.saveAssignmentDecision(userId, billetId, 'like');
     },
 
     withdrawApplication: async (appId: string, userId: string) => {
@@ -725,7 +728,9 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
 
         // Persist
-        await storage.saveAssignmentDecisions(userId, updatedDecisions);
+        if (app.billetId) {
+            await storage.saveAssignmentDecision(userId, app.billetId, 'nope');
+        }
         // Persist updated apps
         for (const app of remainingApps) {
             await storage.saveApplication(updatedApplications[app.id]);

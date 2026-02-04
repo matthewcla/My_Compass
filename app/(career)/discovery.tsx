@@ -7,7 +7,7 @@ import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useFeedback } from '@/hooks/useFeedback';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,6 +41,12 @@ export default function DiscoveryScreen() {
         }
     }, []);
 
+    // Optimization: Keep applications in ref to prevent handleSwipe from changing on background syncs
+    const applicationsRef = useRef(applications);
+    useEffect(() => {
+        applicationsRef.current = applications;
+    }, [applications]);
+
     // 1. FILTERING LOGIC
     const filteredBillets = useMemo(() => {
         const allBillets = billetStack.map(id => billets[id]).filter(Boolean);
@@ -68,17 +74,19 @@ export default function DiscoveryScreen() {
     }, [billets, billetStack, mode, sandboxFilters, showProjected]);
 
     // 2. DECK LOGIC
+    const handleDeckComplete = useCallback(() => {
+        console.log('Deck Empty');
+    }, []);
+
     const deck = useCinematicDeck({
         totalSteps: filteredBillets.length,
-        onComplete: () => {
-            console.log('Deck Empty');
-        }
+        onComplete: handleDeckComplete
     });
 
     const currentBillet = filteredBillets[deck.step];
 
     // Actions
-    const handleSwipe = async (direction: 'left' | 'right' | 'up') => {
+    const handleSwipe = useCallback(async (direction: 'left' | 'right' | 'up') => {
         if (!currentBillet) return;
 
         // 1. Visual Transition
@@ -98,7 +106,9 @@ export default function DiscoveryScreen() {
                 // Since state update might be async/batched, we might need a better way or assume store logic.
                 // Store `promoteToSlate` returns boolean, but `swipe` calls it internally and doesn't return the result.
                 // For now, let's check the application count constraint logic which is 7.
-                const activeAppCount = Object.values(applications).filter(a =>
+
+                // USE REF TO PREVENT DEPENDENCY ON APPLICATIONS STATE (Background Sync)
+                const activeAppCount = Object.values(applicationsRef.current).filter(a =>
                     ['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)
                 ).length;
 
@@ -120,7 +130,7 @@ export default function DiscoveryScreen() {
                 showFeedback('Archived. Go to Manifest to recover.', 'info');
             }
         }
-    };
+    }, [deck.next, currentBillet, mode, swipe, showFeedback]);
 
     const handleUndo = () => {
         deck.back();

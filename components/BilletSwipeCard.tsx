@@ -114,7 +114,7 @@ interface BilletSwipeCardProps {
 }
 
 // --- Main Component ---
-export function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = false }: BilletSwipeCardProps) {
+export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = false }: BilletSwipeCardProps) {
     const data = useMemo(() => enrichBillet(billet), [billet]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const colorScheme = useColorScheme();
@@ -511,4 +511,4 @@ export function BilletSwipeCard({ billet, onSwipe, active, index, isSandbox = fa
             </Animated.View>
         </GestureDetector>
     );
-}
+});

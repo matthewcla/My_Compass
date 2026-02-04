@@ -1,4 +1,5 @@
 import { MenuTile } from '@/components/menu/MenuTile';
+import { useSession } from '@/lib/ctx';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import {
@@ -18,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MenuHubScreen() {
   const router = useRouter();
+  const { signOut } = useSession();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -195,7 +197,7 @@ export default function MenuHubScreen() {
               borderColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2'
             }}
             className="flex-row items-center justify-center py-4 rounded-3xl border"
-            onPress={() => console.log('Log Out')}
+            onPress={() => signOut()}
           >
             <LogOut size={20} color="#EF4444" strokeWidth={2.5} />
             <Text className="text-red-600 font-bold text-[17px] ml-3">Log Out</Text>

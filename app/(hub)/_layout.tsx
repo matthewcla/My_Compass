@@ -1,4 +1,3 @@
-import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { useSession } from '@/lib/ctx';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
@@ -26,7 +25,6 @@ export default function HubLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
       </Stack>
-      <GlobalTabBar />
     </>
   );
 }

@@ -9,6 +9,8 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
+import { AuthGuard } from '@/components/navigation/AuthGuard';
+import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
@@ -100,6 +102,8 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, dbInitialized, isLayoutReady, hideSplash]);
 
+
+
   const onLayoutRootView = useCallback(async () => {
     setIsLayoutReady(true);
   }, []);
@@ -110,10 +114,12 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SessionProvider>
+          <AuthGuard />
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
           <View
             className="flex-1 bg-white dark:bg-black"
             onLayout={onLayoutRootView}
+            style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
           >
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(hub)" />
@@ -127,6 +133,7 @@ export default function RootLayout() {
               <Stack.Screen name="(calendar)" />
               <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
             </Stack>
+            <GlobalTabBar />
           </View>
         </SessionProvider>
       </SafeAreaProvider>

@@ -467,40 +467,11 @@ const MOCK_BILLETS: Billet[] = [
 // SELECTORS
 // =============================================================================
 
-// Memoization Utility
-const createMemoizedSelector = <Result, FilterType>(
-    selector: (state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>, filter: FilterType) => Result
-) => {
-    let lastBillets: Record<string, Billet> | null = null;
-    let lastDecisions: Record<string, SwipeDecision> | null = null;
-    let lastApplications: Record<string, Application> | null = null;
-    let lastFilter: FilterType | null = null;
-    let lastResult: Result | null = null;
-
-    return (state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>, filter: FilterType): Result => {
-        if (
-            state.billets === lastBillets &&
-            state.realDecisions === lastDecisions &&
-            state.applications === lastApplications &&
-            filter === lastFilter &&
-            lastResult
-        ) {
-            return lastResult;
-        }
-
-        const result = selector(state, filter);
-
-        lastBillets = state.billets;
-        lastDecisions = state.realDecisions;
-        lastApplications = state.applications;
-        lastFilter = filter;
-        lastResult = result;
-
-        return result;
-    };
-};
-
-const _selectManifestItems = (
+/**
+ * Select Manifest Items based on filter.
+ * NOTE: This is a pure function. Components should use `useMemo` to prevent re-calculations.
+ */
+export const selectManifestItems = (
     state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>,
     filter: 'candidates' | 'favorites' | 'archived'
 ): SmartBenchItem[] => {
@@ -528,7 +499,7 @@ const _selectManifestItems = (
         }
     });
 
-    // Sort candidates: Super Liikes first
+    // Sort candidates: Super Likes first
     if (filter === 'candidates') {
         items.sort((a, b) => {
             const decisionA = realDecisions[a.billet.id];
@@ -541,8 +512,6 @@ const _selectManifestItems = (
 
     return items;
 };
-
-export const selectManifestItems = createMemoizedSelector(_selectManifestItems);
 
 // =============================================================================
 // STORE IMPLEMENTATION

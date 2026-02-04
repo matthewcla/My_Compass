@@ -679,6 +679,7 @@ class MockStorage implements IStorageService {
   private leaveBalances = new Map<string, LeaveBalance>();
   private leaveDefaults = new Map<string, LeaveRequestDefaults>();
   private dashboardCache = new Map<string, DashboardData>();
+  private decisions = new Map<string, Record<string, string>>();
 
   async init(): Promise<void> {
     console.log('[MockStorage] Initialized in-memory storage');
@@ -761,18 +762,17 @@ class MockStorage implements IStorageService {
   async saveAssignmentDecision(userId: string, billetId: string, decision: string): Promise<void> {
     const current = (await this.getAssignmentDecisions(userId)) || {};
     current[billetId] = decision;
-    localStorage.setItem(`decisions_${userId}`, JSON.stringify(current));
+    this.decisions.set(userId, current);
   }
 
   async removeAssignmentDecision(userId: string, billetId: string): Promise<void> {
     const current = (await this.getAssignmentDecisions(userId)) || {};
     delete current[billetId];
-    localStorage.setItem(`decisions_${userId}`, JSON.stringify(current));
+    this.decisions.set(userId, current);
   }
 
   async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
-    const data = localStorage.getItem(`decisions_${userId}`);
-    return data ? JSON.parse(data) : null;
+    return this.decisions.get(userId) || null;
   }
 }
 

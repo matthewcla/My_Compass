@@ -4,6 +4,7 @@ import { useUIStore } from '@/store/useUIStore';
 import { getShadow } from '@/utils/getShadow';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
+    Calendar as CalendarIcon,
     ClipboardList,
     Compass,
     FileText,
@@ -61,7 +62,7 @@ export default function GlobalTabBar() {
     // Effect to update activeSpoke based on navigation
     React.useEffect(() => {
         // Known spokes list
-        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)', '(career)'];
+        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)', '(career)', '(calendar)'];
 
         if (KNOWN_SPOKES.includes(currentSpoke)) {
             // If we are in a known spoke, update the store
@@ -166,13 +167,16 @@ export default function GlobalTabBar() {
             {/* 2. SPOKE PRIMARY (Dynamic) */}
             {config && renderTab(config.primary.label, config.primary.route, config.primary.icon)}
 
-            {/* 3. INBOX (Fixed - Center) */}
+            {/* 3. CALENDAR (Dynamic - Inserted) */}
+            {renderTab('Calendar', '/(calendar)', CalendarIcon, pathname.includes('(calendar)'))}
+
+            {/* 4. INBOX (Fixed - Center) */}
             {renderTab('Inbox', '/inbox', Inbox, pathname.includes('/inbox'))}
 
-            {/* 4. SPOKE SECONDARY (Dynamic) */}
+            {/* 5. SPOKE SECONDARY (Dynamic) */}
             {config && renderTab(config.secondary.label, config.secondary.route, config.secondary.icon)}
 
-            {/* 5. MENU (Fixed - User Menu) */}
+            {/* 6. MENU (Fixed - User Menu) */}
             <Pressable
                 onPress={() => useUIStore.getState().openAccountDrawer()}
                 className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full`}

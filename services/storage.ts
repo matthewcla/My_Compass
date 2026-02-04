@@ -1,5 +1,6 @@
 import { decryptData, encryptData } from '@/lib/encryption';
 import { DashboardData } from '@/types/dashboard';
+import { InboxMessage } from '@/types/inbox';
 import {
   Application,
   ApplicationSchema,
@@ -665,6 +666,54 @@ class SQLiteStorage implements IStorageService {
       return null;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Inbox
+  // ---------------------------------------------------------------------------
+
+  async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
+    const db = await this.getDB();
+    // Using transaction for bulk insert
+    await db.withTransactionAsync(async () => {
+      for (const msg of messages) {
+        await db.runAsync(
+          `INSERT OR REPLACE INTO inbox_messages (
+            id, type, subject, body, timestamp, is_read, is_pinned, metadata, last_sync_timestamp, sync_status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          msg.id,
+          msg.type,
+          msg.subject,
+          msg.body,
+          msg.timestamp,
+          msg.isRead ? 1 : 0,
+          msg.isPinned ? 1 : 0,
+          JSON.stringify(msg.metadata || {}),
+          new Date().toISOString(),
+          'synced'
+        );
+      }
+    });
+  }
+
+  async getInboxMessages(): Promise<InboxMessage[]> {
+    const db = await this.getDB();
+    try {
+      const results = await db.getAllAsync<any>('SELECT * FROM inbox_messages');
+      return results.map(row => ({
+        id: row.id,
+        type: row.type,
+        subject: row.subject,
+        body: row.body,
+        timestamp: row.timestamp,
+        isRead: Boolean(row.is_read),
+        isPinned: Boolean(row.is_pinned),
+        metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
+      }));
+    } catch (error) {
+      console.error('Failed to fetch inbox messages', error);
+      return [];
+    }
+  }
 }
 
 // =============================================================================
@@ -680,6 +729,7 @@ class MockStorage implements IStorageService {
   private leaveDefaults = new Map<string, LeaveRequestDefaults>();
   private dashboardCache = new Map<string, DashboardData>();
   private decisions = new Map<string, Record<string, string>>();
+  private inboxMessages = new Map<string, InboxMessage>();
 
   async init(): Promise<void> {
     console.log('[MockStorage] Initialized in-memory storage');
@@ -773,6 +823,15 @@ class MockStorage implements IStorageService {
 
   async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
     return this.decisions.get(userId) || null;
+  }
+
+  // Inbox
+  async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
+    messages.forEach(msg => this.inboxMessages.set(msg.id, msg));
+  }
+
+  async getInboxMessages(): Promise<InboxMessage[]> {
+    return Array.from(this.inboxMessages.values());
   }
 }
 
@@ -895,6 +954,15 @@ class WebStorage implements IStorageService {
 
   async getAssignmentDecisions(userId: string): Promise<Record<string, string> | null> {
     return this.getItem<Record<string, string>>(`decisions_${userId}`);
+  }
+
+  // --- Inbox ---
+  async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
+    this.setItem('inbox_messages', messages);
+  }
+
+  async getInboxMessages(): Promise<InboxMessage[]> {
+    return this.getItem<InboxMessage[]>('inbox_messages') || [];
   }
 }
 

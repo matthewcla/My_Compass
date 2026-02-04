@@ -2,6 +2,7 @@
 // SQLite is not available on web, so we use a stub/localStorage implementation
 
 import { DashboardData } from '@/types/dashboard';
+import { InboxMessage } from '@/types/inbox';
 import {
   Application,
   Billet,
@@ -246,6 +247,25 @@ class WebStorage implements IStorageService {
     } catch (e) {
       console.warn('Failed to parse DashboardCache data (healing)', e);
       return null;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Inbox
+  // ---------------------------------------------------------------------------
+
+  async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
+    localStorage.setItem('my_compass_inbox_messages', encryptData(JSON.stringify(messages)));
+  }
+
+  async getInboxMessages(): Promise<InboxMessage[]> {
+    const data = localStorage.getItem('my_compass_inbox_messages');
+    if (!data) return [];
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse InboxMessages data (healing)', e);
+      return [];
     }
   }
 }

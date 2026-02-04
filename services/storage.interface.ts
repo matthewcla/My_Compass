@@ -1,4 +1,5 @@
 import { DashboardData } from '@/types/dashboard';
+import { InboxMessage } from '@/types/inbox';
 import {
   Application,
   Billet,
@@ -55,4 +56,8 @@ export interface IStorageService {
   // Dashboard
   saveDashboardCache(userId: string, data: DashboardData): Promise<void>;
   getDashboardCache(userId: string): Promise<DashboardData | null>;
+
+  // Inbox
+  saveInboxMessages(messages: InboxMessage[]): Promise<void>;
+  getInboxMessages(): Promise<InboxMessage[]>;
 }

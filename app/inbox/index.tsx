@@ -114,6 +114,7 @@ export default function InboxScreen() {
 
     return (
         <View className="flex-1 bg-slate-50 dark:bg-black">
+            {renderHeader()}
             <SectionList
                 sections={sections}
                 renderItem={({ item }) => (
@@ -129,7 +130,6 @@ export default function InboxScreen() {
                     </View>
                 )}
                 keyExtractor={item => item.id}
-                ListHeaderComponent={renderHeader}
                 stickySectionHeadersEnabled={false} // Sticky headers with sticky list header can be tricky, verifying without first
                 contentContainerStyle={{ paddingBottom: 24 }}
                 refreshing={isLoading}

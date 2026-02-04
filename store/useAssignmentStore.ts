@@ -197,7 +197,7 @@ const INITIAL_STATE: MyAssignmentState & {
 
 type PendingSwipe = { userId: string; billetId: string; decision: SwipeDecision };
 let pendingSwipes: PendingSwipe[] = [];
-let flushTimeout: NodeJS.Timeout | null = null;
+let flushTimeout: NodeJS.Timeout | number | null = null;
 
 const persistDecisions = async () => {
     if (pendingSwipes.length === 0) return;
@@ -467,7 +467,40 @@ const MOCK_BILLETS: Billet[] = [
 // SELECTORS
 // =============================================================================
 
-export const selectManifestItems = (
+// Memoization Utility
+const createMemoizedSelector = <Result, FilterType>(
+    selector: (state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>, filter: FilterType) => Result
+) => {
+    let lastBillets: Record<string, Billet> | null = null;
+    let lastDecisions: Record<string, SwipeDecision> | null = null;
+    let lastApplications: Record<string, Application> | null = null;
+    let lastFilter: FilterType | null = null;
+    let lastResult: Result | null = null;
+
+    return (state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>, filter: FilterType): Result => {
+        if (
+            state.billets === lastBillets &&
+            state.realDecisions === lastDecisions &&
+            state.applications === lastApplications &&
+            filter === lastFilter &&
+            lastResult
+        ) {
+            return lastResult;
+        }
+
+        const result = selector(state, filter);
+
+        lastBillets = state.billets;
+        lastDecisions = state.realDecisions;
+        lastApplications = state.applications;
+        lastFilter = filter;
+        lastResult = result;
+
+        return result;
+    };
+};
+
+const _selectManifestItems = (
     state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>,
     filter: 'candidates' | 'favorites' | 'archived'
 ): SmartBenchItem[] => {
@@ -508,6 +541,8 @@ export const selectManifestItems = (
 
     return items;
 };
+
+export const selectManifestItems = createMemoizedSelector(_selectManifestItems);
 
 // =============================================================================
 // STORE IMPLEMENTATION
@@ -559,9 +594,9 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         // In a real scenario, this step might be "Sync from API to DB"
         const existing = await storage.getAllBillets();
         if (existing.length === 0) {
-             for (const b of MOCK_BILLETS) {
-                 await storage.saveBillet(b);
-             }
+            for (const b of MOCK_BILLETS) {
+                await storage.saveBillet(b);
+            }
         }
 
         const pagedBillets = await storage.getPagedBillets(limit, offset);

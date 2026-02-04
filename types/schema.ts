@@ -39,7 +39,7 @@ export type SyncMetadata = z.infer<typeof SyncMetadataSchema>;
 // =============================================================================
 
 export const DashboardCacheSchema = z.object({
-    userId: z.string().uuid(),
+    userId: z.string(),
     data: z.string(), // JSON stringified DashboardData
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
@@ -381,16 +381,16 @@ export type CompassBilletMetadata = z.infer<typeof CompassBilletMetadataSchema>;
  * Standard Navy billet/job posting fields.
  */
 export const BilletSchema = z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     title: z.string(), // Job title
     uic: z.string(), // Unit Identification Code
     location: z.string(), // Geographic location
     payGrade: z.string(), // E-1 through O-10, W-1 through W-5
-    nec: z.string().optional(), // Navy Enlisted Classification code
-    designator: z.string().optional(), // Officer designator code
-    dutyType: z.string().optional(), // Sea, Shore, Overseas, etc.
-    reportNotLaterThan: z.string().datetime().optional(), // RNLTD
-    billetDescription: z.string().optional(),
+    nec: z.string().nullable().optional(), // Navy Enlisted Classification code
+    designator: z.string().nullable().optional(), // Officer designator code
+    dutyType: z.string().nullable().optional(), // Sea, Shore, Overseas, etc.
+    reportNotLaterThan: z.string().datetime().nullable().optional(), // RNLTD
+    billetDescription: z.string().nullable().optional(),
 
     // Compass AI Enhancements
     compass: CompassBilletMetadataSchema,
@@ -431,9 +431,9 @@ export type ApplicationStatus = z.infer<typeof ApplicationStatusSchema>;
  * Application record representing a user's intent to fill a billet.
  */
 export const ApplicationSchema = z.object({
-    id: z.string().uuid(),
-    billetId: z.string().uuid(),
-    userId: z.string().uuid(),
+    id: z.string(),
+    billetId: z.string(),
+    userId: z.string(),
 
     // State machine
     status: ApplicationStatusSchema,
@@ -475,8 +475,8 @@ export type Application = z.infer<typeof ApplicationSchema>;
  * Leave balance snapshot for the authenticated user.
  */
 export const LeaveBalanceSchema = z.object({
-    id: z.string().uuid(),
-    userId: z.string().uuid(),
+    id: z.string(),
+    userId: z.string(),
 
     // Core balance fields
     currentBalance: z.number().min(0), // Days currently available
@@ -549,7 +549,7 @@ export type EmergencyContact = z.infer<typeof EmergencyContactSchema>;
  * Approval chain member.
  */
 export const ApproverSchema = z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     name: z.string(),
     title: z.string().optional(), // e.g., "Division Officer", "Department Head"
     action: z.enum(['pending', 'approved', 'denied', 'returned']).optional(),
@@ -575,8 +575,8 @@ export type PreReviewChecks = z.infer<typeof PreReviewChecksSchema>;
  * Leave request record (modeled after USAF LeaveWeb structure).
  */
 export const LeaveRequestSchema = z.object({
-    id: z.string().uuid(),
-    userId: z.string().uuid(),
+    id: z.string(),
+    userId: z.string(),
 
     // Leave period
     startDate: z.string().datetime(), // Leave start date/time
@@ -614,13 +614,13 @@ export const LeaveRequestSchema = z.object({
     statusHistory: z.array(z.object({
         status: LeaveRequestStatusSchema,
         timestamp: z.string().datetime(),
-        actorId: z.string().uuid().optional(),
+        actorId: z.string().optional(),
         comments: z.string().optional(),
     })),
 
     // Approval chain
     approvalChain: z.array(ApproverSchema),
-    currentApproverId: z.string().uuid().optional(), // Who needs to act next
+    currentApproverId: z.string().optional(), // Who needs to act next
 
     // Return reason (if status = returned)
     returnReason: z.string().optional(),

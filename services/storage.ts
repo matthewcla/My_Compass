@@ -242,7 +242,20 @@ class SQLiteStorage implements IStorageService {
     const db = await this.getDB();
     try {
       const results = await db.getAllAsync<any>('SELECT * FROM billets');
-      return results.map(row => this.mapRowToBillet(row));
+      const validBillets: Billet[] = [];
+
+      for (const row of results) {
+        try {
+          validBillets.push(this.mapRowToBillet(row));
+        } catch (e) {
+          console.warn(`[Storage] Corrupted Billet detected (ID: ${row.id}). Self-healing by deleting record. Reason:`, JSON.stringify(e, null, 2));
+          // Self-healing: Delete the corrupted record to prevent future errors
+          await db.runAsync('DELETE FROM billets WHERE id = ?', row.id).catch(err =>
+            console.error(`[Storage] Failed to delete corrupted billet ${row.id}`, err)
+          );
+        }
+      }
+      return validBillets;
     } catch (error) {
       if (error instanceof DataIntegrityError) throw error;
       throw new DataIntegrityError('Failed to parse Billet records', error);
@@ -257,7 +270,22 @@ class SQLiteStorage implements IStorageService {
         limit,
         offset
       );
-      return results.map(row => this.mapRowToBillet(row));
+
+      const validBillets: Billet[] = [];
+
+      for (const row of results) {
+        try {
+          validBillets.push(this.mapRowToBillet(row));
+        } catch (e) {
+          console.warn(`[Storage] Corrupted Billet detected in page (ID: ${row.id}). Self-healing by deleting record. Reason:`, JSON.stringify(e, null, 2));
+          // Self-healing
+          await db.runAsync('DELETE FROM billets WHERE id = ?', row.id).catch(err =>
+            console.error(`[Storage] Failed to delete corrupted billet ${row.id}`, err)
+          );
+        }
+      }
+
+      return validBillets;
     } catch (error) {
       if (error instanceof DataIntegrityError) throw error;
       throw new DataIntegrityError('Failed to parse Billet records', error);

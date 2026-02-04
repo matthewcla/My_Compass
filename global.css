@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Web/PWA Focus Ring Reset */
+*,
+*::before,
+*::after {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*:focus,
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 @layer base {
   :root {
     /* System Colors - Light Mode */

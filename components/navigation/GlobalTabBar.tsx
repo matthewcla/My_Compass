@@ -178,7 +178,7 @@ export default function GlobalTabBar() {
 
             {/* 6. MENU (Fixed - User Menu) */}
             <Pressable
-                onPress={() => router.push('/MenuHubModal' as any)}
+                onPress={() => router.push('/menu' as any)}
                 className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full`}
                 accessibilityRole="button"
                 accessibilityLabel="Open Menu"

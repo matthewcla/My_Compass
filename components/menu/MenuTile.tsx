@@ -1,6 +1,6 @@
 import { Lock } from 'lucide-react-native';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 interface MenuTileProps {
     label: string;
@@ -15,21 +15,38 @@ export const MenuTile: React.FC<MenuTileProps> = ({
     onPress,
     locked = false
 }) => {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
     return (
         <TouchableOpacity
             onPress={onPress}
             activeOpacity={0.7}
             disabled={locked}
-            className={`bg-white rounded-[16px] p-4 m-2 flex-grow basis-[45%] aspect-square justify-between shadow-sm relative ${locked ? 'opacity-60' : ''}`}
+            style={{
+                backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+                borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+            }}
+            className={`rounded-3xl p-3 w-full flex-1 justify-between shadow-sm border ${locked ? 'opacity-50' : ''}`}
         >
             <View className="flex-row justify-between items-start">
-                <Icon size={28} color="#0F172A" strokeWidth={2} />
+                <View
+                    style={{ backgroundColor: isDark ? (locked ? '#334155' : 'rgba(59, 130, 246, 0.2)') : (locked ? '#F1F5F9' : '#EFF6FF') }}
+                    className="p-3 rounded-full"
+                >
+                    <Icon size={24} color={locked ? '#94A3B8' : '#3B82F6'} strokeWidth={2.5} />
+                </View>
                 {locked && (
-                    <Lock size={16} color="#94A3B8" />
+                    <Lock size={16} color="#CBD5E1" />
                 )}
             </View>
 
-            <Text className="text-slate-900 font-bold text-base leading-5">
+            <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={{ color: isDark ? (locked ? '#94A3B8' : '#FFFFFF') : (locked ? '#94A3B8' : '#0F172A') }}
+                className="font-bold text-lg leading-6"
+            >
                 {label}
             </Text>
         </TouchableOpacity>

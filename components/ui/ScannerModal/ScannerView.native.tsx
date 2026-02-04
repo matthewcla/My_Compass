@@ -33,12 +33,16 @@ export function ScannerView({ onScan, torchOn = false }: ScannerViewProps) {
                     Please run `npx expo run:ios` to test the camera.
                 </Text>
                 {/* Mock Trigger for DX */}
-                <Text
+                <TouchableOpacity
                     onPress={() => onScan('MOCK_QR_DATA')}
-                    className="mt-8 text-emerald-400 font-bold uppercase tracking-widest border border-emerald-400/30 px-4 py-2 rounded-lg"
+                    accessibilityRole="button"
+                    accessibilityLabel="Simulate Scan"
+                    className="mt-8 border border-emerald-400/30 px-4 py-2 rounded-lg"
                 >
-                    Simulate Scan
-                </Text>
+                    <Text className="text-emerald-400 font-bold uppercase tracking-widest">
+                        Simulate Scan
+                    </Text>
+                </TouchableOpacity>
             </View>
         );
     }
@@ -69,6 +73,8 @@ export function ScannerView({ onScan, torchOn = false }: ScannerViewProps) {
                 <Text className="text-white text-center mb-4 font-medium">Camera permission is required to scan QR codes.</Text>
                 <TouchableOpacity
                     onPress={() => Linking.openSettings()}
+                    accessibilityRole="button"
+                    accessibilityLabel="Open Settings"
                     className="bg-white/10 border border-white/20 px-4 py-3 rounded-lg"
                 >
                     <Text className="text-white font-bold">Open Settings</Text>

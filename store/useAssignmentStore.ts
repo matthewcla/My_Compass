@@ -45,6 +45,11 @@ interface AssignmentActions {
     fetchBillets: (userId?: string) => Promise<void>;
 
     /**
+     * Load more billets from storage (Pagination).
+     */
+    loadMore: () => Promise<void>;
+
+    /**
      * Hydrate user data (decisions, applications) from storage.
      */
     hydrateUserData: (userId: string) => Promise<void>;
@@ -141,6 +146,9 @@ export type AssignmentStore = MyAssignmentState & {
     // Cycle State
     slateDeadline: string; // ISO Timestamp
 
+    // Pagination State
+    currentOffset: number;
+
     // Dual Decision Bins
     realDecisions: Record<string, SwipeDecision>;
     sandboxDecisions: Record<string, SwipeDecision>;
@@ -153,6 +161,7 @@ const INITIAL_STATE: MyAssignmentState & {
     sandboxFilters: FilterState;
     showProjected: boolean;
     slateDeadline: string;
+    currentOffset: number;
     realDecisions: Record<string, SwipeDecision>;
     sandboxDecisions: Record<string, SwipeDecision>;
 } = {
@@ -177,8 +186,39 @@ const INITIAL_STATE: MyAssignmentState & {
     showProjected: false,
     // Mock Deadline: 72 hours from now
     slateDeadline: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
+    currentOffset: 0,
     realDecisions: {},
     sandboxDecisions: {},
+};
+
+// =============================================================================
+// WRITE-BEHIND BUFFER
+// =============================================================================
+
+type PendingSwipe = { userId: string; billetId: string; decision: SwipeDecision };
+let pendingSwipes: PendingSwipe[] = [];
+let flushTimeout: NodeJS.Timeout | number | null = null;
+
+const persistDecisions = async () => {
+    if (pendingSwipes.length === 0) return;
+
+    // 1. Take snapshot and clear queue immediately
+    const batch = [...pendingSwipes];
+    pendingSwipes = [];
+    if (flushTimeout) {
+        clearTimeout(flushTimeout);
+        flushTimeout = null;
+    }
+
+    // 2. Persist batch
+    try {
+        await Promise.all(
+            batch.map(item => storage.saveAssignmentDecision(item.userId, item.billetId, item.decision))
+        );
+    } catch (e) {
+        console.error('[Store] Failed to persist decisions batch', e);
+        // In a real app, we might want to retry or put them back in queue
+    }
 };
 
 // =============================================================================
@@ -424,6 +464,87 @@ const MOCK_BILLETS: Billet[] = [
 ];
 
 // =============================================================================
+// SELECTORS
+// =============================================================================
+
+// Memoization Utility
+const createMemoizedSelector = <Result, FilterType>(
+    selector: (state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>, filter: FilterType) => Result
+) => {
+    let lastBillets: Record<string, Billet> | null = null;
+    let lastDecisions: Record<string, SwipeDecision> | null = null;
+    let lastApplications: Record<string, Application> | null = null;
+    let lastFilter: FilterType | null = null;
+    let lastResult: Result | null = null;
+
+    return (state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>, filter: FilterType): Result => {
+        if (
+            state.billets === lastBillets &&
+            state.realDecisions === lastDecisions &&
+            state.applications === lastApplications &&
+            filter === lastFilter &&
+            lastResult
+        ) {
+            return lastResult;
+        }
+
+        const result = selector(state, filter);
+
+        lastBillets = state.billets;
+        lastDecisions = state.realDecisions;
+        lastApplications = state.applications;
+        lastFilter = filter;
+        lastResult = result;
+
+        return result;
+    };
+};
+
+const _selectManifestItems = (
+    state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>,
+    filter: 'candidates' | 'favorites' | 'archived'
+): SmartBenchItem[] => {
+    const { billets, realDecisions, applications } = state;
+
+    // Exclude things that are already applications
+    const activeBilletIds = new Set(Object.values(applications).map(a => a.billetId));
+
+    const items: SmartBenchItem[] = [];
+
+    Object.entries(realDecisions).forEach(([billetId, decision]) => {
+        const billet = billets[billetId];
+        if (!billet) return;
+        if (activeBilletIds.has(billetId)) return; // Already in slate
+
+        if (filter === 'archived') {
+            if (decision === 'nope') items.push({ billet, type: 'manifest' });
+        } else if (filter === 'favorites') {
+            if (decision === 'super') items.push({ billet, type: 'manifest' });
+        } else { // candidates (DEFAULT View)
+            // Show likes and supers that aren't yet applications
+            if (decision === 'like' || decision === 'super') {
+                items.push({ billet, type: 'manifest' });
+            }
+        }
+    });
+
+    // Sort candidates: Super Liikes first
+    if (filter === 'candidates') {
+        items.sort((a, b) => {
+            const decisionA = realDecisions[a.billet.id];
+            const decisionB = realDecisions[b.billet.id];
+            if (decisionA === 'super' && decisionB !== 'super') return -1;
+            if (decisionA !== 'super' && decisionB === 'super') return 1;
+            return 0;
+        });
+    }
+
+    return items;
+};
+
+export const selectManifestItems = createMemoizedSelector(_selectManifestItems);
+
+// =============================================================================
 // STORE IMPLEMENTATION
 // =============================================================================
 
@@ -443,8 +564,16 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 apps.forEach(a => { appRecord[a.id] = a; });
             }
 
+            // Merge pending swipes on top of DB data
+            const mergedDecisions = { ...((decisions as Record<string, SwipeDecision>) || {}) };
+            pendingSwipes.forEach(p => {
+                if (p.userId === userId) {
+                    mergedDecisions[p.billetId] = p.decision;
+                }
+            });
+
             set({
-                realDecisions: (decisions as Record<string, SwipeDecision>) || {},
+                realDecisions: mergedDecisions,
                 applications: appRecord,
                 userApplicationIds: apps ? apps.map(a => a.id) : [],
             });
@@ -457,11 +586,26 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         // If userId provided, hydrate. otherwise just fetch billets.
         set({ isSyncingBillets: true });
 
+        // Reset Pagination
+        const limit = 20;
+        const offset = 0;
+
+        // Ensure storage has data (Mock Init)
+        // In a real scenario, this step might be "Sync from API to DB"
+        const existing = await storage.getAllBillets();
+        if (existing.length === 0) {
+            for (const b of MOCK_BILLETS) {
+                await storage.saveBillet(b);
+            }
+        }
+
+        const pagedBillets = await storage.getPagedBillets(limit, offset);
+
         // Convert array to record for store
         const billetRecord: Record<string, Billet> = {};
-        const newStack: string[] = []; // Create stack from fetched billets
+        const newStack: string[] = [];
 
-        MOCK_BILLETS.forEach((billet) => {
+        pagedBillets.forEach((billet) => {
             billetRecord[billet.id] = billet;
             newStack.push(billet.id);
         });
@@ -472,6 +616,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             billets: billetRecord,
             billetStack: newStack,
             cursor: 0,
+            currentOffset: 0,
             // PRESERVE DECISIONS / APPS
             // realDecisions: {}, 
             lastBilletSyncAt: new Date().toISOString(),
@@ -481,6 +626,41 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         if (userId) {
             await get().hydrateUserData(userId);
         }
+    },
+
+    loadMore: async () => {
+        const { currentOffset, billets, billetStack, isSyncingBillets } = get();
+        if (isSyncingBillets) return;
+
+        set({ isSyncingBillets: true });
+
+        const limit = 20;
+        const newOffset = currentOffset + limit;
+
+        const nextBatch = await storage.getPagedBillets(limit, newOffset);
+
+        if (nextBatch.length === 0) {
+            set({ isSyncingBillets: false });
+            return;
+        }
+
+        const newBilletRecord = { ...billets };
+        const newStackIds: string[] = [];
+
+        nextBatch.forEach((billet) => {
+            // Avoid duplicates
+            if (!newBilletRecord[billet.id]) {
+                newBilletRecord[billet.id] = billet;
+                newStackIds.push(billet.id);
+            }
+        });
+
+        set({
+            billets: newBilletRecord,
+            billetStack: [...billetStack, ...newStackIds],
+            currentOffset: newOffset,
+            isSyncingBillets: false,
+        });
     },
 
     swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
@@ -523,8 +703,21 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 });
             }
 
-            // Persist
-            await storage.saveAssignmentDecisions(userId, newDecisions);
+            // Persist (Write-Behind)
+            const finalDecision = newDecisions[billetId];
+            if (finalDecision) {
+                // Add to queue
+                pendingSwipes.push({ userId, billetId, decision: finalDecision });
+
+                // Check threshold
+                if (pendingSwipes.length >= 5) {
+                    await persistDecisions();
+                } else {
+                    // Debounce
+                    if (flushTimeout) clearTimeout(flushTimeout);
+                    flushTimeout = setTimeout(persistDecisions, 2000);
+                }
+            }
 
         } else {
             // SANDBOX MODE: No network transactions, just local state
@@ -582,7 +775,20 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             });
 
             // Persist
-            storage.saveAssignmentDecisions(userId, newDecisions);
+            // Check if it's in the pending queue
+            const pendingIndex = pendingSwipes.findIndex(p => p.billetId === billetIdToRemove && p.userId === userId);
+            if (pendingIndex !== -1) {
+                // It's pending, just remove from queue so it never gets saved
+                pendingSwipes.splice(pendingIndex, 1);
+                // If queue is empty, maybe clear timeout?
+                if (pendingSwipes.length === 0 && flushTimeout) {
+                    clearTimeout(flushTimeout);
+                    flushTimeout = null;
+                }
+            } else {
+                // It's already in DB, remove it
+                storage.removeAssignmentDecision(userId, billetIdToRemove);
+            }
             // Note: Orphaned application deletion from storage not fully implemented yet 
             // as per storage interface limitations.
         } else {
@@ -683,7 +889,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         const newDecisions = { ...realDecisions };
         newDecisions[billetId] = 'like';
         set({ realDecisions: newDecisions });
-        storage.saveAssignmentDecisions(userId, newDecisions);
+        storage.saveAssignmentDecision(userId, billetId, 'like');
     },
 
     withdrawApplication: async (appId: string, userId: string) => {
@@ -725,7 +931,9 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
 
         // Persist
-        await storage.saveAssignmentDecisions(userId, updatedDecisions);
+        if (app.billetId) {
+            await storage.saveAssignmentDecision(userId, app.billetId, 'nope');
+        }
         // Persist updated apps
         for (const app of remainingApps) {
             await storage.saveApplication(updatedApplications[app.id]);
@@ -792,42 +1000,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     getManifestItems: (filter: 'candidates' | 'favorites' | 'archived') => {
-        const { billets, realDecisions, applications } = get();
-
-        // Exclude things that are already applications
-        const activeBilletIds = new Set(Object.values(applications).map(a => a.billetId));
-
-        const items: SmartBenchItem[] = [];
-
-        Object.entries(realDecisions).forEach(([billetId, decision]) => {
-            const billet = billets[billetId];
-            if (!billet) return;
-            if (activeBilletIds.has(billetId)) return; // Already in slate
-
-            if (filter === 'archived') {
-                if (decision === 'nope') items.push({ billet, type: 'manifest' });
-            } else if (filter === 'favorites') {
-                if (decision === 'super') items.push({ billet, type: 'manifest' });
-            } else { // candidates (DEFAULT View)
-                // Show likes and supers that aren't yet applications
-                if (decision === 'like' || decision === 'super') {
-                    items.push({ billet, type: 'manifest' });
-                }
-            }
-        });
-
-        // Sort candidates: Super Liikes first
-        if (filter === 'candidates') {
-            items.sort((a, b) => {
-                const decisionA = realDecisions[a.billet.id];
-                const decisionB = realDecisions[b.billet.id];
-                if (decisionA === 'super' && decisionB !== 'super') return -1;
-                if (decisionA !== 'super' && decisionB === 'super') return 1;
-                return 0;
-            });
-        }
-
-        return items;
+        return selectManifestItems(get(), filter);
     },
 
     getProjectedBillets: () => {
@@ -837,5 +1010,3 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
     resetStore: () => set(INITIAL_STATE),
 }));
-
-

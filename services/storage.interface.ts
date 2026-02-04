@@ -26,6 +26,7 @@ export interface IStorageService {
   saveBillet(billet: Billet): Promise<void>;
   getBillet(id: string): Promise<Billet | null>;
   getAllBillets(): Promise<Billet[]>;
+  getPagedBillets(limit: number, offset: number): Promise<Billet[]>;
 
   // Applications
   saveApplication(app: Application): Promise<void>;
@@ -33,7 +34,8 @@ export interface IStorageService {
   getUserApplications(userId: string): Promise<Application[]>;
 
   // Assignment Decisions
-  saveAssignmentDecisions(userId: string, decisions: Record<string, string>): Promise<void>;
+  saveAssignmentDecision(userId: string, billetId: string, decision: string): Promise<void>;
+  removeAssignmentDecision(userId: string, billetId: string): Promise<void>;
   getAssignmentDecisions(userId: string): Promise<Record<string, string> | null>;
 
   // Leave Requests

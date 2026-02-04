@@ -2,7 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { SmartBenchItem } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
 import { ArrowRight } from 'lucide-react-native';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 import { BenchCard } from './BenchCard';
 
@@ -12,15 +12,15 @@ interface ManifestRailProps {
     onSeeAll?: () => void;
 }
 
-export const ManifestRail: React.FC<ManifestRailProps> = ({ items, onSelect, onSeeAll }) => {
+export const ManifestRail: React.FC<ManifestRailProps> = React.memo(({ items, onSelect, onSeeAll }) => {
 
-    const renderItem = ({ item }: { item: SmartBenchItem }) => (
+    const renderItem = useCallback(({ item }: { item: SmartBenchItem }) => (
         <BenchCard
             billet={item.billet}
             type={item.type}
             onPress={() => onSelect(item.billet)}
         />
-    );
+    ), [onSelect]);
 
     const renderFooter = () => (
         <TouchableOpacity
@@ -56,4 +56,4 @@ export const ManifestRail: React.FC<ManifestRailProps> = ({ items, onSelect, onS
             />
         </View>
     );
-};
+});

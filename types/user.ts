@@ -24,7 +24,7 @@ export const DUTY_TYPES = [
  * Matches the User interface.
  */
 export const UserSchema = z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     /**
      * DoD ID (EDIPI) for CAC authentication.
      * @security PII - STRICTLY FORBIDDEN IN LOGS

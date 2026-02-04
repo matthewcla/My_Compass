@@ -269,6 +269,21 @@ export const SQLiteTableDefinitions = {
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
   `,
+
+    inbox_messages: `
+    CREATE TABLE IF NOT EXISTS inbox_messages (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      is_read INTEGER DEFAULT 0,
+      is_pinned INTEGER DEFAULT 0,
+      metadata TEXT, -- JSON
+      last_sync_timestamp TEXT,
+      sync_status TEXT
+    );
+  `,
 } as const;
 
 /**

@@ -1,14 +1,15 @@
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useInboxStore } from '@/store/useInboxStore';
 import { format } from 'date-fns';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function MessageDetailsScreen() {
     useScreenHeader("Message", "Details");
     const { id } = useLocalSearchParams<{ id: string }>();
     const { messages, markAsRead } = useInboxStore();
+    const router = useRouter();
 
     const message = messages.find(m => m.id === id);
 
@@ -27,6 +28,7 @@ export default function MessageDetailsScreen() {
     }
 
     const formattedDate = format(new Date(message.timestamp), 'dd MMM yyyy - HH:mm');
+    const actionRoute = message.metadata?.route || message.metadata?.link;
 
     return (
         <ScrollView className="flex-1 bg-slate-50 dark:bg-black">
@@ -63,6 +65,17 @@ export default function MessageDetailsScreen() {
                     {/* Mock longer content for demo purposes if body is short */}
                     {message.body.length < 100 && "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."}
                 </Text>
+
+                {actionRoute && (
+                    <View className="mt-8 mb-8">
+                        <TouchableOpacity
+                            onPress={() => router.push(actionRoute)}
+                            className="bg-blue-600 p-4 rounded-xl flex-row items-center justify-center shadow-sm active:bg-blue-700"
+                        >
+                            <Text className="text-white font-bold text-lg">View Details</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
         </ScrollView>
     );

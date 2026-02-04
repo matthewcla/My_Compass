@@ -2,10 +2,11 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { getShadow } from '@/utils/getShadow';
 import { usePathname, useRouter } from 'expo-router';
-import { Bell, CheckCircle2, ChevronRight, FileText, LayoutGrid, User } from 'lucide-react-native';
+import { Bell, CheckCircle2, ChevronRight, FileText, LayoutGrid, Search, User } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { Alert, Modal, Pressable, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SearchConfig } from '@/store/useHeaderStore';
 
 interface ScreenHeaderProps {
     title: string;
@@ -13,6 +14,7 @@ interface ScreenHeaderProps {
     rightAction?: { icon: any; onPress: () => void } | null;
     withSafeArea?: boolean;
     variant?: 'large' | 'inline';
+    searchConfig?: SearchConfig | null;
 }
 
 const MENU_ITEMS = [
@@ -27,7 +29,8 @@ export function ScreenHeader({
     subtitle,
     rightAction,
     withSafeArea = true,
-    variant = 'large'
+    variant = 'large',
+    searchConfig
 }: ScreenHeaderProps) {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
@@ -48,14 +51,14 @@ export function ScreenHeader({
     const isInline = variant === 'inline';
 
     return (
-        <View className="z-50">
+        <View className="z-50 bg-gray-100 dark:bg-black">
             <View
                 style={{
                     paddingTop: (withSafeArea ? Math.max(insets.top, 20) : 0) + (isInline ? 8 : 12),
                     paddingHorizontal: 16,
                     paddingBottom: isInline ? 8 : 12
                 }}
-                className={`flex-row justify-between items-center bg-gray-100 dark:bg-black relative z-50`}
+                className={`flex-row justify-between items-center relative z-50`}
             >
                 <View className="flex-row items-center flex-1 mr-4">
                     <Pressable
@@ -116,6 +119,22 @@ export function ScreenHeader({
                     </Pressable>
                 </View>
             </View>
+
+            {searchConfig && searchConfig.visible && (
+                <View className="px-4 pb-3">
+                    <View className="flex-row items-center bg-white dark:bg-slate-900 rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-800">
+                        <Search size={16} color={colors.text} className="mr-2 opacity-50" />
+                        <TextInput
+                            value={searchConfig.value}
+                            onChangeText={searchConfig.onChangeText}
+                            placeholder={searchConfig.placeholder || 'Search...'}
+                            placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
+                            className="flex-1 text-slate-900 dark:text-white text-sm leading-5 py-0"
+                            style={{ outline: 'none' } as any}
+                        />
+                    </View>
+                </View>
+            )}
 
             <Modal
                 transparent

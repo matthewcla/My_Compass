@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { Stack } from 'expo-router';
 import { Clock, MapPin, QrCode } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, SectionList, Text, TouchableOpacity, View } from 'react-native';
 
 // =============================================================================
@@ -114,7 +114,7 @@ export default function CalendarScreen() {
     };
 
     // Set Global Header
-    React.useEffect(() => {
+    useEffect(() => {
         useHeaderStore.getState().setHeader('Calendar', 'MARCH 2024', null, 'large');
     }, []);
 

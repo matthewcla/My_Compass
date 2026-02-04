@@ -1,7 +1,7 @@
 import { ApplicationStatus, Billet } from '@/types/schema';
 import { MapPin } from 'lucide-react-native';
 import React from 'react';
-import { Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Platform, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { ScalePressable } from './ScalePressable';
 
@@ -12,7 +12,7 @@ interface JobCardProps {
     applicationStatus: ApplicationStatus | undefined;
 }
 
-export function JobCard({
+export const JobCard = React.memo(function JobCard({
     billet,
     onBuyPress,
     isProcessing,
@@ -36,11 +36,11 @@ export function JobCard({
 
     // 2. Determine Button State Logic
     // 2. Determine Button State Logic
-    let buttonText = 'Buy It Now';
+    let buttonText = 'Promote';
     let buttonBgClass = 'bg-navyBlue';
     let isDisabled = false;
 
-    if (isProcessing || applicationStatus === 'optimistically_locked') {
+    if (isProcessing) {
         buttonText = 'Processing...';
         buttonBgClass = 'bg-gray-400';
         isDisabled = true;
@@ -48,10 +48,6 @@ export function JobCard({
         buttonText = 'Locked';
         buttonBgClass = 'bg-green-600';
         isDisabled = true;
-    } else if (applicationStatus === 'rejected_race_condition') {
-        buttonText = 'Unavailable';
-        buttonBgClass = 'bg-red-600';
-        isDisabled = true; // Or allow retry? Usually unavailable means lost race.
     } else if (applicationStatus === 'submitted') {
         buttonText = 'Pending Confirmation...';
         buttonBgClass = 'bg-blue-400';
@@ -97,13 +93,13 @@ export function JobCard({
             </View>
 
             {/* Footer: Buy-It-Now Button */}
-            <Pressable
+            <TouchableOpacity
                 onPress={() => onBuyPress(billet.id)}
                 disabled={isDisabled}
                 className={`py-3 rounded-lg flex-row justify-center items-center active:opacity-90 ${buttonBgClass}`}
             >
                 <Text className="text-white font-bold text-base">{buttonText}</Text>
-            </Pressable>
+            </TouchableOpacity>
         </ScalePressable>
     );
-}
+});

@@ -1,5 +1,3 @@
-// TEMPORARILY DISABLED BlurView to debug navigation context error
-// import { BlurView } from 'expo-blur';
 import React from 'react';
 import { View, ViewProps } from 'react-native';
 
@@ -17,7 +15,7 @@ export function GlassView({
     children,
     ...props
 }: GlassViewProps) {
-    // TEMPORARY: Use View fallback for all platforms to debug navigation error
+    // Pure fallback to basic View to eliminate logic/hook risks
     const opacity = 0.5 + (intensity / 200);
     const backgroundColor = tint === 'dark'
         ? `rgba(0,0,0,${Math.min(opacity, 0.85)})`
@@ -36,4 +34,3 @@ export function GlassView({
         </View>
     );
 }
-

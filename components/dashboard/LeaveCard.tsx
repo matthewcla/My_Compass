@@ -3,19 +3,19 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { LeaveRequest } from '@/types/schema';
 import { getShadow } from '@/utils/getShadow';
 import { format } from 'date-fns';
-import { Clock, Plus, Zap } from 'lucide-react-native';
-import { MotiView } from 'moti';
+import { ChevronRight, Clock, Plus } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface LeaveCardProps {
     balance: number;
     requests?: LeaveRequest[];
     onPressRequest?: (request: LeaveRequest) => void;
     onQuickRequest?: () => void;
+    onExpand?: (expanded: boolean) => void;
 }
 
-export function LeaveCard({ balance, requests = [], onPressRequest, onQuickRequest }: LeaveCardProps) {
+export function LeaveCard({ balance, requests = [], onPressRequest, onQuickRequest, onExpand }: LeaveCardProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const [expanded, setExpanded] = useState(false);
@@ -41,8 +41,18 @@ export function LeaveCard({ balance, requests = [], onPressRequest, onQuickReque
                 tint={isDark ? 'dark' : 'light'}
                 className="rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
             >
-                {/* Decorative Corner */}
-                <View className="absolute top-0 right-0 w-4 h-4 bg-amber-500 rounded-bl-xl z-20 pointer-events-none" />
+                {/* Persistent Quick Request Action */}
+                <View className="absolute top-4 right-4 z-50">
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={onQuickRequest}
+                        className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"
+                        style={getShadow({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 })}
+                    >
+                        <Plus size={16} color={isDark ? '#fff' : '#0f172a'} strokeWidth={2.5} />
+                    </TouchableOpacity>
+                </View>
+
 
                 <View className="p-5 flex-row items-start justify-between min-h-[100px]">
                     {/* Left Column: Balance */}
@@ -55,97 +65,56 @@ export function LeaveCard({ balance, requests = [], onPressRequest, onQuickReque
                     </View>
 
                     {/* Right Column: Smart Stack */}
-                    <View className="flex-1 ml-6 relative items-end z-10">
+                    <View className="flex-1 ml-6 relative items-end z-10 pt-[30px] pb-[3px]">
+                        {/* Persistent Quick Request (Absolute Top Right of Card, visual only in this column context? No, put absolute in container) */}
+
                         {!hasRequests ? (
-                            // Empty State: Quick Request Button
-                            <Pressable
-                                onPress={onQuickRequest}
-                                className="bg-blue-600 dark:bg-blue-500 rounded-lg px-3 py-2.5 flex-row items-center gap-2 self-end mt-1"
-                                style={getShadow({ shadowColor: '#2563eb', shadowOpacity: 0.3, shadowRadius: 8, elevation: 3 })}
-                            >
-                                <Zap size={14} color="white" fill="white" />
-                                <Text className="text-white font-bold text-xs uppercase tracking-wide">Quick Request</Text>
-                            </Pressable>
+                            // Empty State
+                            <View className="h-6" /> // Spacer
                         ) : (
-                            // Stack State
-                            <View className="w-full items-end">
-                                {requests.map((req, index) => {
-                                    // Stack Logic
-                                    const isTop = index === 0;
-                                    const zIndex = requests.length - index;
+                            // Simplified Vertical List (Debug Mode)
+                            <View className="w-full gap-2">
+                                {activeRequests.map((req) => {
+                                    const getStatusColors = (status: string) => {
+                                        switch (status) {
+                                            case 'draft': return { bg: 'bg-orange-50 dark:bg-orange-950', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-900 dark:text-orange-100', label: 'text-orange-800 dark:text-orange-200', icon: isDark ? "#fdba74" : "#c2410c" };
+                                            case 'pending': return { bg: 'bg-sky-50 dark:bg-sky-950', border: 'border-sky-200 dark:border-sky-800', text: 'text-sky-900 dark:text-sky-100', label: 'text-sky-800 dark:text-sky-200', icon: isDark ? "#7dd3fc" : "#0369a1" };
+                                            case 'approved': return { bg: 'bg-emerald-50 dark:bg-emerald-950', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-900 dark:text-emerald-100', label: 'text-emerald-800 dark:text-emerald-200', icon: isDark ? "#6ee7b7" : "#047857" };
+                                            case 'returned':
+                                            case 'denied': return { bg: 'bg-red-50 dark:bg-red-950', border: 'border-red-200 dark:border-red-800', text: 'text-red-900 dark:text-red-100', label: 'text-red-800 dark:text-red-200', icon: isDark ? "#fca5a5" : "#b91c1c" };
+                                            default: return { bg: 'bg-slate-50 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700', text: 'text-slate-700 dark:text-slate-200', label: 'text-slate-500 dark:text-slate-400', icon: isDark ? "#94a3b8" : "#64748b" };
+                                        }
+                                    };
+
+                                    const colors = getStatusColors(req.status);
 
                                     return (
-                                        <MotiView
+                                        <TouchableOpacity
                                             key={req.id}
-                                            animate={{
-                                                translateY: expanded ? index * 8 : (index * 6),
-                                                scale: expanded ? 1 : 1 - (index * 0.05),
-                                                opacity: expanded ? 1 : 1 - (index * 0.2),
-                                                marginTop: expanded ? index === 0 ? 0 : 8 : 0,
-                                            }}
-                                            transition={{ type: 'spring', damping: 15 }}
-                                            style={{
-                                                position: expanded ? 'relative' : 'absolute',
-                                                top: 0,
-                                                right: 0,
-                                                width: '100%',
-                                                maxWidth: 180,
-                                                zIndex,
-                                            }}
+                                            activeOpacity={0.7}
+                                            onPress={() => onPressRequest?.(req)}
+                                            className={`
+                                                w-full rounded-lg px-3 py-2.5 border-[1.5px] items-start justify-center
+                                                ${colors.bg} ${colors.border}
+                                            `}
                                         >
-                                            <Pressable
-                                                onPress={() => {
-                                                    if (!expanded) {
-                                                        setExpanded(true);
-                                                    } else {
-                                                        onPressRequest?.(req);
-                                                    }
-                                                }}
-                                                className={`
-                                                    rounded-lg px-3 py-2.5 border flex-row items-center justify-between
-                                                    ${req.status === 'draft'
-                                                        ? 'bg-orange-50 dark:bg-orange-500/20 border-orange-100 dark:border-orange-500/30'
-                                                        : 'bg-slate-50 dark:bg-slate-800/80 border-slate-100 dark:border-slate-700'}
-                                                `}
-                                            >
+                                            <View className="flex-row items-center w-full justify-between">
                                                 <View className="flex-col">
                                                     <View className="flex-row items-center gap-1.5 mb-0.5">
-                                                        <Text className={`text-[10px] font-bold uppercase ${req.status === 'draft' ? 'text-orange-700 dark:text-orange-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                        <Text className={`text-[10px] font-bold uppercase ${colors.label}`}>
                                                             {req.status}
                                                         </Text>
-                                                        {req.status === 'draft' && <Clock size={10} color={isDark ? "#fdba74" : "#c2410c"} />}
+                                                        {(req.status === 'draft' || req.status === 'pending') && <Clock size={10} color={colors.icon} />}
                                                     </View>
-                                                    <Text className={`text-xs font-bold ${req.status === 'draft' ? 'text-orange-900 dark:text-orange-100' : 'text-slate-700 dark:text-slate-200'}`}>
+                                                    <Text className={`text-xs font-bold ${colors.text}`}>
                                                         {formatDateRange(req.startDate, req.endDate)}
                                                     </Text>
                                                 </View>
-                                            </Pressable>
-                                        </MotiView>
+                                                <ChevronRight size={14} color={isDark ? '#94a3b8' : '#64748b'} />
+                                            </View>
+                                        </TouchableOpacity>
                                     );
                                 })}
-
-                                {/* Collapse / Add Actions */}
-                                {expanded && (
-                                    <MotiView
-                                        from={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className="flex-row gap-2 mt-4 justify-end w-full"
-                                    >
-                                        <Pressable
-                                            onPress={() => setExpanded(false)}
-                                            className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-800"
-                                        >
-                                            <Text className="text-xs font-bold text-slate-600 dark:text-slate-400">Close</Text>
-                                        </Pressable>
-                                        <Pressable
-                                            onPress={onQuickRequest}
-                                            className="px-3 py-2 rounded-lg bg-blue-600 dark:bg-blue-500 flex-row items-center gap-1.5"
-                                        >
-                                            <Plus size={12} color="white" />
-                                            <Text className="text-xs font-bold text-white">New</Text>
-                                        </Pressable>
-                                    </MotiView>
-                                )}
                             </View>
                         )}
                     </View>

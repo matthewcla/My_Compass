@@ -45,37 +45,37 @@ export function BilletControlBar({
             <TouchableOpacity
                 onPress={onUndo}
                 disabled={!canUndo}
-                className={`w-14 h-14 ${btnClass} ${!canUndo ? 'opacity-50' : ''}`}
+                className={`w-12 h-12 ${btnClass} ${!canUndo ? 'opacity-50' : ''}`}
                 style={shadowStyle}
             >
-                <RotateCcw size={24} color={isDark ? '#FACC15' : "#EAB308"} />
+                <RotateCcw size={20} color={isDark ? '#FACC15' : "#EAB308"} />
             </TouchableOpacity>
 
             {/* Pass (Large) */}
             <TouchableOpacity
                 onPress={onPass}
-                className={`w-20 h-20 ${btnClass}`}
+                className={`w-16 h-16 ${btnClass}`}
                 style={shadowStyle}
             >
-                <X size={40} color="#EF4444" />
+                <X size={32} color="#EF4444" />
             </TouchableOpacity>
 
             {/* Top 5 / SuperLike (Small) */}
             <TouchableOpacity
                 onPress={onSuperLike}
-                className={`w-14 h-14 ${btnClass}`}
+                className={`w-12 h-12 ${btnClass}`}
                 style={shadowStyle}
             >
-                <Star size={24} color="#3B82F6" />
+                <Star size={20} color="#3B82F6" />
             </TouchableOpacity>
 
             {/* Save (Large) */}
             <TouchableOpacity
                 onPress={onSave}
-                className={`w-20 h-20 ${btnClass}`}
+                className={`w-16 h-16 ${btnClass}`}
                 style={shadowStyle}
             >
-                <Heart size={40} color="#22C55E" />
+                <Heart size={32} color="#22C55E" />
             </TouchableOpacity>
         </View>
     );

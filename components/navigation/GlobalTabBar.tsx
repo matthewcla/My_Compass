@@ -4,16 +4,17 @@ import { useUIStore } from '@/store/useUIStore';
 import { getShadow } from '@/utils/getShadow';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
+    Calendar as CalendarIcon,
     ClipboardList,
     Compass,
     FileText,
     Home,
     Inbox,
+    LayoutGrid,
     Map as MapIcon,
     Settings,
     Shield,
-    Target,
-    UserCircle
+    Target
 } from 'lucide-react-native';
 import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
@@ -25,13 +26,10 @@ type SpokeConfig = {
 };
 
 const SPOKE_CONFIG: Record<string, SpokeConfig> = {
-    '(assignment)': {
-        primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
-        secondary: { label: 'Cycle', route: '/(assignment)/cycle', icon: Target },
-    },
+
     '(career)': {
         primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
-        secondary: { label: 'Cycle', route: '/(assignment)/cycle', icon: Target },
+        secondary: { label: 'Assignment', route: '/(assignment)', icon: Target },
     },
     '(pcs)': {
         primary: { label: 'Orders', route: '/(pcs)/orders', icon: FileText },
@@ -64,7 +62,7 @@ export default function GlobalTabBar() {
     // Effect to update activeSpoke based on navigation
     React.useEffect(() => {
         // Known spokes list
-        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)', '(career)'];
+        const KNOWN_SPOKES = ['(assignment)', '(pcs)', '(admin)', '(profile)', '(career)', '(calendar)'];
 
         if (KNOWN_SPOKES.includes(currentSpoke)) {
             // If we are in a known spoke, update the store
@@ -79,8 +77,17 @@ export default function GlobalTabBar() {
         // If 'inbox' or other generic routes, do nothing (keep last active spoke)
     }, [currentSpoke, setActiveSpoke]);
 
-    // Hide on Sign In
-    if (currentSpoke === 'sign-in') return null;
+    // Hide logic
+    const lastSegment = segments[segments.length - 1];
+    const isHidden =
+        currentSpoke === 'sign-in' ||
+        currentSpoke === 'leave' || // Hide on Leave Wizard
+        lastSegment === 'discovery' || // Hide on Discovery
+        lastSegment === 'cycle' ||
+        lastSegment === 'MenuHubModal' ||
+        (segments as string[]).includes('MenuHubModal'); // Redundant but safe
+
+    if (isHidden) return null;
 
     // Determine target spoke for configuration:
     // 1. If we are in a known spoke, use it.
@@ -166,22 +173,32 @@ export default function GlobalTabBar() {
             {/* 1. HOME (Fixed) */}
             {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox'))}
 
-            {/* 2. SPOKE PRIMARY (Dynamic) */}
+            {/* 2. CALENDAR (Generic) */}
+            {renderTab('Calendar', '/calendar', CalendarIcon, pathname.includes('/calendar'))}
+
+            {/* 3. SPOKE PRIMARY (Dynamic) */}
             {config && renderTab(config.primary.label, config.primary.route, config.primary.icon)}
 
-            {/* 3. INBOX (Fixed - Center) */}
+            {/* 4. INBOX (Fixed - Center) */}
             {renderTab('Inbox', '/inbox', Inbox, pathname.includes('/inbox'))}
 
-            {/* 4. SPOKE SECONDARY (Dynamic) */}
+            {/* 5. SPOKE SECONDARY (Dynamic) */}
             {config && renderTab(config.secondary.label, config.secondary.route, config.secondary.icon)}
 
-            {/* 5. PROFILE (Fixed - User Menu) */}
+            {/* 6. MENU (Fixed - User Menu) */}
             <Pressable
-                onPress={() => useUIStore.getState().openAccountDrawer()}
+                onPress={() => router.push('/menu' as any)}
                 className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full`}
+                accessibilityRole="button"
+                accessibilityLabel="Open Menu"
             >
-                <UserCircle size={24} color={inactiveColor} />
-                <Text style={{ color: inactiveColor, fontSize: 11 }}>Profile</Text>
+                <LayoutGrid
+                    size={24}
+                    color={inactiveColor}
+                />
+                <Text style={{ color: inactiveColor, fontSize: 11 }}>
+                    Menu
+                </Text>
             </Pressable>
         </View>
     );

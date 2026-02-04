@@ -4,13 +4,14 @@ import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { calculateLeave } from '@/utils/leaveLogic';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { eachDayOfInterval, format } from 'date-fns';
+import { addDays, eachDayOfInterval, format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
-import { AlertCircle, Clock } from 'lucide-react-native';
+import { AlertCircle, Clock, Lock } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Modal, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Platform, Pressable, Text, View, useColorScheme } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import Animated, { FadeIn, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
+
 
 // --- Types & Constants ---
 const WORKING_HOURS_OPTIONS = [
@@ -42,6 +43,7 @@ interface Step1IntentProps {
     departureWorkingHours?: string;
     returnWorkingHours?: string;
     onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    embedded?: boolean;
 }
 
 export function Step1Intent({
@@ -52,7 +54,8 @@ export function Step1Intent({
     endTime = '16:00',
     departureWorkingHours = '0730-1600',
     returnWorkingHours = '0730-1600',
-    onUpdate
+    onUpdate,
+    embedded = false
 }: Step1IntentProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
@@ -126,20 +129,48 @@ export function Step1Intent({
     // Handle Day Press (Range Selection)
     const handleDayPress = (day: DateData) => {
         Haptics.selectionAsync();
-        if (!startDate || (startDate && endDate)) {
-            // New range start
+
+        // Scenario 1: New Selection Flow (Reset if both set)
+        if (startDate && endDate) {
+            // User is starting a fresh selection
             onUpdate('startDate', day.dateString);
-            onUpdate('endDate', '');
+            onUpdate('endDate', ''); // Clear end date
+            return;
+        }
+
+        // Scenario 2: No Start Date (Initial) -> Set Start
+        if (!startDate) {
+            onUpdate('startDate', day.dateString);
+            return;
+        }
+
+        // Scenario 3: Start Date exists (Waiting for End Date)
+        if (day.dateString < startDate) {
+            // User tapped before current start -> Update Start
+            onUpdate('startDate', day.dateString);
+        } else if (day.dateString === startDate) {
+            // User tapped same day -> Single Day Leave (Start = End)
+            onUpdate('endDate', day.dateString);
         } else {
-            // Range end
-            if (day.dateString < startDate) {
-                // If selected before start, reset start
-                onUpdate('startDate', day.dateString);
-            } else {
-                onUpdate('endDate', day.dateString);
-            }
+            // User tapped after Start -> Set End
+            onUpdate('endDate', day.dateString);
         }
     };
+
+    // Smart Correction Effect: Ensure End Date is never before Start Date
+    // This catches manual updates or weird state flows.
+    React.useEffect(() => {
+        if (startDate && endDate) {
+            if (endDate < startDate) {
+                // Invalid state detected.
+                // Auto-push End Date to Start + 0 (same day) or Start + 1?
+                // Defaulting to "Same Day" (1 day leave) is safest minimum.
+                // Or clear it? The requirement said "auto-update End = newStart + 1".
+                const newEnd = addDays(new Date(startDate), 1);
+                onUpdate('endDate', format(newEnd, 'yyyy-MM-dd'));
+            }
+        }
+    }, [startDate, endDate]);
 
     // --- Time Handling ---
     const handleTimeChange = (event: any, selectedDate?: Date) => {
@@ -188,9 +219,15 @@ export function Step1Intent({
         };
     }, [isOverdraft]);
 
+    // SEQUENTIAL REVEAL LOGIC
+    // We only show the Calendar if a Leave Type is selected (or if dates already exist).
+    const showCalendar = !!leaveType || !!startDate;
+    // We only show the Time/Schedule section if we have a valid Date Range.
+    const showTimeSection = !!startDate && !!endDate;
+
     return (
-        <WizardCard title="Request Details" scrollable={true}>
-            <View className="gap-6 pb-24">
+        <WizardCard title="Request Details" scrollable={!embedded} noPadding={true}>
+            <View className="gap-6 pt-6 pb-6 px-4 md:px-6">
                 {/* 1. Leave Type */}
                 <View>
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Leave Category</Text>
@@ -199,15 +236,15 @@ export function Step1Intent({
                             setShowLeaveTypePicker(true);
                             Haptics.selectionAsync();
                         }}
-                        className="bg-inputBackground p-4 rounded-xl border border-slate-200 dark:border-slate-700"
+                        className="bg-inputBackground p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-[0.98] transition-transform"
                     >
                         <View className="flex-row justify-between items-center">
                             <View>
                                 <Text className="text-base font-bold text-slate-900 dark:text-white capitalize">
-                                    {LEAVE_TYPE_OPTIONS.find(o => o.value === leaveType)?.label || 'Annual Leave'}
+                                    {LEAVE_TYPE_OPTIONS.find(o => o.value === leaveType)?.label || 'Select Category...'}
                                 </Text>
                                 <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    {leaveType ? 'Category selected' : 'Standard chargeable leave'}
+                                    {leaveType ? 'Category selected' : 'Tap to choose leave type'}
                                 </Text>
                             </View>
                             <Text className="text-blue-500 font-medium">Change</Text>
@@ -215,120 +252,125 @@ export function Step1Intent({
                     </Pressable>
                 </View>
 
-                {/* 2. Premium Calendar */}
-                <View>
-                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Select Dates</Text>
-                    <View className="bg-cardBackground dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <Calendar
-                            key={colorScheme}
-                            current={startDate || undefined}
-                            onDayPress={handleDayPress}
-                            markingType={'period'}
-                            markedDates={markedDates}
-                            theme={{
-                                calendarBackground: isDark ? themeColors.background : '#ffffff',
-                                textSectionTitleColor: isDark ? '#94a3b8' : '#b6c1cd',
-                                selectedDayBackgroundColor: themeColors.tint,
-                                selectedDayTextColor: '#ffffff',
-                                todayTextColor: themeColors.tint,
-                                dayTextColor: isDark ? '#e2e8f0' : '#2d4150',
-                                textDisabledColor: isDark ? '#334155' : '#d9e1e8',
-                                arrowColor: themeColors.tint,
-                                monthTextColor: isDark ? '#f8fafc' : '#1e293b',
-                                textDayFontWeight: '600',
-                                textMonthFontWeight: 'bold',
-                                textDayHeaderFontWeight: '500',
-                            }}
-                        />
-                    </View>
-                    {/* Range Display */}
-                    <View className="flex-row justify-between mt-3 px-1">
-                        <View>
-                            <Text className="text-xs text-slate-500 mb-1">Start Date</Text>
-                            <Text className={`font-bold ${startDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
-                                {startDate || 'Select'}
-                            </Text>
+                {/* 2. Premium Calendar (Progressive Reveal) */}
+                {showCalendar && (
+                    <Animated.View entering={FadeIn.delay(100).springify()}>
+                        <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Select Dates</Text>
+                        <View className="bg-cardBackground dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <Calendar
+                                key={colorScheme}
+                                current={startDate || undefined}
+                                onDayPress={handleDayPress}
+                                markingType={'period'}
+                                markedDates={markedDates}
+                                theme={{
+                                    calendarBackground: isDark ? themeColors.background : '#ffffff',
+                                    textSectionTitleColor: isDark ? '#94a3b8' : '#b6c1cd',
+                                    selectedDayBackgroundColor: themeColors.tint,
+                                    selectedDayTextColor: '#ffffff',
+                                    todayTextColor: themeColors.tint,
+                                    dayTextColor: isDark ? '#e2e8f0' : '#2d4150',
+                                    textDisabledColor: isDark ? '#334155' : '#d9e1e8',
+                                    arrowColor: themeColors.tint,
+                                    monthTextColor: isDark ? '#f8fafc' : '#1e293b',
+                                    textDayFontWeight: '600',
+                                    textMonthFontWeight: 'bold',
+                                    textDayHeaderFontWeight: '500',
+                                }}
+                            />
                         </View>
-                        <View className="items-end">
-                            <Text className="text-xs text-slate-500 mb-1">End Date</Text>
-                            <Text className={`font-bold ${endDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
-                                {endDate || 'Select'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* 3. Time & Working Hours Logic */}
-                <View className="gap-4">
-                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">Time & Schedule</Text>
-
-                    {/* Start Block */}
-                    {/* Start Block */}
-                    <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <View className="flex-row items-center mb-3">
-                            <View className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-md mr-2">
-                                <Clock size={16} className="text-blue-600 dark:text-blue-400" />
-                            </View>
-                            <Text className="font-bold text-slate-700 dark:text-slate-300">Departure</Text>
-                        </View>
-
-                        <View className="flex-row gap-4">
-                            {/* Time Picker */}
-                            <Pressable
-                                onPress={() => openTimePicker('startTime')}
-                                className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
-                            >
-                                <Text className="text-xs text-slate-500 mb-0.5">Time</Text>
-                                <Text className="font-bold text-slate-900 dark:text-white">{startTime}</Text>
-                            </Pressable>
-
-                            {/* Working Hours Dropdown Stub */}
-                            <Pressable
-                                onPress={() => setHoursField('departure')}
-                                className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
-                            // In real app, open modal to select options
-                            >
-                                <Text className="text-xs text-slate-500 mb-0.5">Working Hours</Text>
-                                <Text className="font-bold text-slate-900 dark:text-white text-xs truncate" numberOfLines={1}>
-                                    {WORKING_HOURS_OPTIONS.find(o => o.value === departureWorkingHours)?.label || departureWorkingHours}
+                        {/* Range Display */}
+                        <View className="flex-row justify-between mt-3 px-1">
+                            <Pressable onPress={() => {
+                                onUpdate('startDate', '');
+                                onUpdate('endDate', '');
+                                Haptics.selectionAsync();
+                            }}>
+                                <Text className="text-xs text-slate-500 mb-1">Start Date</Text>
+                                <Text className={`font-bold ${startDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                                    {startDate || 'Select'}
                                 </Text>
                             </Pressable>
-                        </View>
-                    </View>
-
-                    {/* End Block */}
-                    {/* End Block */}
-                    <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <View className="flex-row items-center mb-3">
-                            <View className="bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md mr-2">
-                                <Clock size={16} className="text-orange-600 dark:text-orange-400" />
-                            </View>
-                            <Text className="font-bold text-slate-700 dark:text-slate-300">Return</Text>
-                        </View>
-
-                        <View className="flex-row gap-4">
-                            {/* Time Picker */}
-                            <Pressable
-                                onPress={() => openTimePicker('endTime')}
-                                className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
-                            >
-                                <Text className="text-xs text-slate-500 mb-0.5">Time</Text>
-                                <Text className="font-bold text-slate-900 dark:text-white">{endTime}</Text>
-                            </Pressable>
-
-                            {/* Working Hours Dropdown Stub */}
-                            <Pressable
-                                onPress={() => setHoursField('return')}
-                                className="flex-1 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-600"
-                            >
-                                <Text className="text-xs text-slate-500 mb-0.5">Working Hours</Text>
-                                <Text className="font-bold text-slate-900 dark:text-white text-xs truncate" numberOfLines={1}>
-                                    {WORKING_HOURS_OPTIONS.find(o => o.value === returnWorkingHours)?.label || returnWorkingHours}
+                            <View className="items-end">
+                                <Text className="text-xs text-slate-500 mb-1">End Date</Text>
+                                <Text className={`font-bold ${endDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                                    {endDate || 'Select'}
                                 </Text>
-                            </Pressable>
+                            </View>
                         </View>
-                    </View>
-                </View>
+                    </Animated.View>
+                )}
+
+                {/* 3. Time & Working Hours Logic (Progressive Reveal) */}
+                {showTimeSection && (
+                    <Animated.View entering={FadeIn.delay(200).springify()} className="gap-4">
+                        <View className="flex-row items-center justify-between">
+                            <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">Time & Schedule</Text>
+                        </View>
+
+                        {/* Start Block */}
+                        <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <View className="flex-row items-center justify-between mb-3">
+                                <View className="flex-row items-center">
+                                    <View className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-md mr-2">
+                                        <Clock size={16} className="text-blue-600 dark:text-blue-400" />
+                                    </View>
+                                    <View>
+                                        <Text className="font-bold text-slate-700 dark:text-slate-300">Departure</Text>
+                                        <Text className="text-[10px] text-slate-400 font-medium">
+                                            {WORKING_HOURS_OPTIONS.find(o => o.value === departureWorkingHours)?.label || 'Custom'}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <Pressable
+                                    onPress={() => setHoursField('departure')}
+                                    className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600"
+                                >
+                                    <Text className="text-xs font-bold text-slate-600 dark:text-slate-300">Edit Hours</Text>
+                                </Pressable>
+                            </View>
+
+                            <View className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 flex-row justify-between items-center opacity-80">
+                                <Text className="text-xs text-slate-400 font-medium">Locked to End of Working Day</Text>
+                                <View className="flex-row items-center gap-1.5">
+                                    <Text className="font-bold text-slate-500 dark:text-slate-400">{startTime}</Text>
+                                    <Lock size={12} className="text-slate-400" />
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* End Block */}
+                        <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <View className="flex-row items-center justify-between mb-3">
+                                <View className="flex-row items-center">
+                                    <View className="bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md mr-2">
+                                        <Clock size={16} className="text-orange-600 dark:text-orange-400" />
+                                    </View>
+                                    <View>
+                                        <Text className="font-bold text-slate-700 dark:text-slate-300">Return</Text>
+                                        <Text className="text-[10px] text-slate-400 font-medium">
+                                            {WORKING_HOURS_OPTIONS.find(o => o.value === returnWorkingHours)?.label || 'Custom'}
+                                        </Text>
+                                    </View>
+                                </View>
+                                <Pressable
+                                    onPress={() => setHoursField('return')}
+                                    className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600"
+                                >
+                                    <Text className="text-xs font-bold text-slate-600 dark:text-slate-300">Edit Hours</Text>
+                                </Pressable>
+                            </View>
+
+                            <View className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 flex-row justify-between items-center opacity-80">
+                                <Text className="text-xs text-slate-400 font-medium">Locked to Start of Working Day</Text>
+                                <View className="flex-row items-center gap-1.5">
+                                    <Text className="font-bold text-slate-500 dark:text-slate-400">{endTime}</Text>
+                                    <Lock size={12} className="text-slate-400" />
+                                </View>
+                            </View>
+                        </View>
+                    </Animated.View>
+                )}
 
                 {/* Errors / Warnings */}
                 {errors.length > 0 && (
@@ -345,70 +387,43 @@ export function Step1Intent({
                 )}
 
 
-                {/* Compact HUD (Bottom) */}
-                <Animated.View style={shakeStyle}>
-                    <View className="mt-4 bg-white dark:bg-slate-800 p-4 rounded-2xl flex-row justify-between items-center shadow-sm border border-slate-200 dark:border-slate-700">
-                        <View>
-                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Leave Charge</Text>
-                            <Text className="text-slate-900 dark:text-white font-bold text-lg">
-                                {chargeableDays.toFixed(1)} <Text className="text-sm font-normal text-slate-500 dark:text-slate-400">Days</Text>
-                            </Text>
-                        </View>
-                        <View className="h-8 w-[1px] bg-slate-200 dark:bg-slate-700" />
-                        <View className="items-end">
-                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Remaining Balance</Text>
-                            <Text className={`font-bold text-lg ${isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                                {projectedBalance.toFixed(1)}
-                            </Text>
-                        </View>
-                    </View>
-                </Animated.View>
+
 
             </View>
 
-            {/* iOS Time Picker Modal */}
-            {Platform.OS === 'ios' && (
-                <Modal
-                    visible={showTimePicker}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setShowTimePicker(false)}
+            {/* iOS Time Picker Overlay */}
+            {Platform.OS === 'ios' && showTimePicker && (
+                <View
+                    className="absolute inset-0 z-50 justify-end bg-black/80"
                 >
-                    <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }} onPress={() => setShowTimePicker(false)}>
-                        <View className="bg-white dark:bg-slate-800 pb-8 pt-4 rounded-t-3xl">
-                            <View className="flex-row justify-between px-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
-                                <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                                    Select Time
-                                </Text>
-                                <Pressable onPress={() => setShowTimePicker(false)}>
-                                    <Text className="text-blue-600 font-bold text-lg">Done</Text>
-                                </Pressable>
-                            </View>
-                            {/* Note: In a real implementation we need to pass a valid Date object derived from existing string */}
-                            <DateTimePicker
-                                value={new Date()}
-                                mode="time"
-                                display="spinner"
-                                onChange={handleTimeChange}
-                                themeVariant={colorScheme}
-                            />
+                    <Pressable className="absolute inset-0" onPress={() => setShowTimePicker(false)} />
+                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 pb-8 pt-4 rounded-t-3xl">
+                        <View className="flex-row justify-between px-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
+                            <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                                Select Time
+                            </Text>
+                            <Pressable onPress={() => setShowTimePicker(false)}>
+                                <Text className="text-blue-600 font-bold text-lg">Done</Text>
+                            </Pressable>
                         </View>
-                    </Pressable>
-                </Modal>
+                        <DateTimePicker
+                            value={new Date()}
+                            mode="time"
+                            display="spinner"
+                            onChange={handleTimeChange}
+                            themeVariant={colorScheme}
+                        />
+                    </Animated.View>
+                </View>
             )}
 
-            {/* Working Hours Picker Modal (Universal) */}
-            <Modal
-                visible={!!hoursField}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setHoursField(null)}
-            >
-                <Pressable
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}
-                    onPress={() => setHoursField(null)}
+            {/* Working Hours Picker Overlay */}
+            {!!hoursField && (
+                <View
+                    className="absolute inset-0 z-50 justify-end bg-black/80"
                 >
-                    <View className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
+                    <Pressable className="absolute inset-0" onPress={() => setHoursField(null)} />
+                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
                         <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
                             <Text className="text-lg font-bold text-slate-900 dark:text-white">
                                 Select Schedule
@@ -452,22 +467,17 @@ export function Step1Intent({
                                 );
                             })}
                         </View>
-                    </View>
-                </Pressable>
-            </Modal>
+                    </Animated.View>
+                </View>
+            )}
 
-            {/* Leave Type Picker Modal */}
-            <Modal
-                visible={showLeaveTypePicker}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setShowLeaveTypePicker(false)}
-            >
-                <Pressable
-                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}
-                    onPress={() => setShowLeaveTypePicker(false)}
+            {/* Leave Type Picker Overlay */}
+            {showLeaveTypePicker && (
+                <View
+                    className="absolute inset-0 z-50 justify-end bg-black/80"
                 >
-                    <View className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
+                    <Pressable className="absolute inset-0" onPress={() => setShowLeaveTypePicker(false)} />
+                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
                         <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
                             <Text className="text-lg font-bold text-slate-900 dark:text-white">
                                 Select Leave Category
@@ -508,9 +518,9 @@ export function Step1Intent({
                                 );
                             })}
                         </View>
-                    </View>
-                </Pressable>
-            </Modal>
+                    </Animated.View>
+                </View>
+            )}
         </WizardCard>
     );
 }

@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js';
+import 'react-native-get-random-values';
 
 // In a real production environment, this key should be managed securely,
 // potentially retrieved from a server or derived from user credentials.
@@ -46,8 +47,10 @@ const ENCRYPTION_KEY = getEncryptionKey();
  * @returns The encrypted string.
  */
 export const encryptData = (data: string): string => {
-  if (!data) return data;
-  return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
+  // Encryption disabled for dev phase as per user request
+  return data;
+  // if (!data) return data;
+  // return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
 };
 
 /**
@@ -58,22 +61,16 @@ export const encryptData = (data: string): string => {
  * @returns The decrypted string.
  */
 export const decryptData = (data: string): string => {
-  if (!data) return data;
-  try {
-    const bytes = CryptoJS.AES.decrypt(data, ENCRYPTION_KEY);
-    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-    // If decryption results in an empty string but input was not empty,
-    // it likely failed (wrong key or not encrypted).
-    // However, empty string is valid plaintext.
-    // Usually invalid decryption yields malformed UTF8 or empty string.
-    // Given we store JSON, we expect a valid string.
-    if (!decrypted) {
-      // Fallback: assume it was plain text
-      return data;
-    }
-    return decrypted;
-  } catch (error) {
-    // If it crashes, return original data (likely plain text)
-    return data;
-  }
+  return data;
+  // if (!data) return data;
+  // try {
+  //   const bytes = CryptoJS.AES.decrypt(data, ENCRYPTION_KEY);
+  //   const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+  //   if (!decrypted) {
+  //     return data;
+  //   }
+  //   return decrypted;
+  // } catch (error) {
+  //   return data;
+  // }
 };

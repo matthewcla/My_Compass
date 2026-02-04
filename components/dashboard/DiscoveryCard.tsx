@@ -53,7 +53,7 @@ export function DiscoveryCard({ matchingBillets, onStartExploring, onJobPreferen
                         <Text className="text-xl font-bold leading-tight mb-1 text-white">Discovery Mode</Text>
                         <Text className="text-slate-400 text-xs font-medium">Explore & sort available billets.</Text>
                     </View>
-                    <View className="w-8 h-8 rounded-full bg-white/10 items-center justify-center backdrop-blur-md border border-white/10">
+                    <View className="w-8 h-8 rounded-full bg-slate-800/50 items-center justify-center border border-white/10">
                         <Search size={16} className="text-emerald-400" color="#34d399" />
                     </View>
                 </View>

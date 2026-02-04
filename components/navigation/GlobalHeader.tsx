@@ -10,6 +10,7 @@ export default function GlobalHeader() {
     const rightAction = useHeaderStore((state) => state.rightAction);
     const isVisible = useHeaderStore((state) => state.isVisible);
     const variant = useHeaderStore((state) => state.variant);
+    const searchConfig = useHeaderStore((state) => state.searchConfig);
     const pathname = usePathname();
 
     // Hide on Sign In
@@ -29,6 +30,7 @@ export default function GlobalHeader() {
             rightAction={rightAction}
             withSafeArea={true}
             variant={variant}
+            searchConfig={searchConfig}
         />
     );
 }

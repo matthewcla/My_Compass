@@ -1,18 +1,20 @@
+import { AliveInput } from '@/components/ui/AliveInput';
 import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import * as Haptics from 'expo-haptics';
 import { Bus, Car, Globe2, MapPin, Phone, Plane, Train } from 'lucide-react-native';
 import React from 'react';
-import { Switch, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import Animated, { FadeIn, FadeOut, LinearTransition, ZoomIn } from 'react-native-reanimated';
 
 interface Step2ContactProps {
     formData: Partial<CreateLeaveRequestPayload>;
     onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    embedded?: boolean;
 }
 
-export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
+export function Step2Contact({ formData, onUpdate, embedded = false }: Step2ContactProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
     const isDark = colorScheme === 'dark';
@@ -22,28 +24,28 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
     };
 
     const MODES = [
-        { id: 'Air', label: 'Air', icon: Plane },
-        { id: 'Car', label: 'Car', icon: Car },
-        { id: 'Train', label: 'Train', icon: Train },
-        { id: 'Bus', label: 'Bus', icon: Bus },
+        { id: 'Air', label: 'Air', icon: Plane, color: 'blue' },
+        { id: 'Car', label: 'Car', icon: Car, color: 'orange' },
+        { id: 'Train', label: 'Train', icon: Train, color: 'purple' },
+        { id: 'Bus', label: 'Bus', icon: Bus, color: 'green' },
     ];
 
     return (
-        <WizardCard title="Location & Travel">
-            <View className="gap-6">
+        <WizardCard title="Location & Travel" scrollable={!embedded}>
+            <View className="gap-8">
 
-                {/* 0. Location & Legal (Moved from Step 1) */}
+                {/* 0. Location & Legal */}
                 <View>
-                    <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3 ml-1">
+                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">
                         Deployment Status
                     </Text>
 
-                    <View className="bg-inputBackground rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <Animated.View layout={LinearTransition} className="bg-inputBackground rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                         {/* CONUS Toggle */}
                         <View className="flex-row items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700/50">
                             <View className="flex-row items-center flex-1 mr-4">
-                                <View className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center mr-3">
-                                    <MapPin size={16} className="text-blue-600 dark:text-blue-400" />
+                                <View className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center mr-3">
+                                    <MapPin size={20} className="text-blue-600 dark:text-blue-400" />
                                 </View>
                                 <View>
                                     <Text className="text-base font-bold text-labelPrimary dark:text-white">Leave inside CONUS?</Text>
@@ -64,115 +66,102 @@ export function Step2Contact({ formData, onUpdate }: Step2ContactProps) {
                         {/* Destination Country (Conditional) */}
                         {!formData.leaveInConus && (
                             <Animated.View entering={FadeIn} exiting={FadeOut}>
-                                <View className="flex-row items-center p-4 bg-white dark:bg-slate-900/30">
-                                    <View className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 items-center justify-center mr-3">
-                                        <Globe2 size={16} className="text-orange-600 dark:text-orange-400" />
-                                    </View>
-                                    <View className="flex-1">
-                                        <View className="flex-row justify-between mb-1">
-                                            <Text className="text-sm font-bold text-labelPrimary">Destination Country</Text>
-                                            <Text className="text-xs text-orange-600 dark:text-orange-400 font-medium">OCONUS Required</Text>
-                                        </View>
-                                        <TextInput
-                                            className="h-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 text-labelPrimary dark:text-white"
-                                            placeholder="e.g. Japan, Germany, Italy"
-                                            value={formData.destinationCountry}
-                                            onChangeText={(text) => onUpdate('destinationCountry', text)}
-                                            placeholderTextColor={Colors.gray[500]}
-                                        />
-                                    </View>
+                                <View className="p-4 bg-white dark:bg-slate-900/30">
+                                    <AliveInput
+                                        value={formData.destinationCountry}
+                                        onChangeText={(text) => onUpdate('destinationCountry', text)}
+                                        placeholder="e.g. Japan, Germany, Italy"
+                                        icon={<Globe2 size={20} className="text-orange-600 dark:text-orange-400" />}
+                                        containerClassName="border-orange-200 dark:border-orange-900/50 bg-orange-50/50 dark:bg-orange-950/20"
+                                    />
                                 </View>
                             </Animated.View>
                         )}
-                    </View>
+                    </Animated.View>
                 </View>
 
-                {/* 1. Leave Address */}
-                <View className="gap-3">
-                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
-                        LEAVE ADDRESS
+                {/* 1. Address & Phone */}
+                <View className="gap-4">
+                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+                        Contact Info
                     </Text>
 
-                    <View className="flex-row items-start bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
-                        <MapPin
-                            size={20}
-                            color={themeColors.tint}
-                            className="mr-3 mt-1"
-                            strokeWidth={2}
-                        />
-                        <TextInput
-                            className="flex-1 text-base text-labelPrimary dark:text-white min-h-[80px]"
-                            placeholder="Full address where you can be reached..."
-                            placeholderTextColor={Colors.gray[500]}
-                            value={formData.leaveAddress}
-                            onChangeText={(text) => handleTextChange('leaveAddress', text)}
-                            multiline
-                            textAlignVertical="top"
-                            autoCapitalize="words"
-                        />
-                    </View>
+                    <AliveInput
+                        value={formData.leaveAddress}
+                        onChangeText={(text) => handleTextChange('leaveAddress', text)}
+                        placeholder="Full address where you can be reached..."
+                        multiline
+                        textAlignVertical="top"
+                        autoCapitalize="words"
+                        icon={<MapPin size={20} color={themeColors.tint} />}
+                        containerClassName="min-h-[100px]"
+                    />
+
+                    <AliveInput
+                        value={formData.leavePhoneNumber}
+                        onChangeText={(text) => handleTextChange('leavePhoneNumber', text)}
+                        placeholder="555-123-4567"
+                        keyboardType="phone-pad"
+                        icon={<Phone size={20} color={themeColors.tint} />}
+                    />
                 </View>
 
-                {/* 2. Leave Phone */}
+                {/* 3. Mode of Travel (Visual Cards) */}
                 <View className="gap-3">
-                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
-                        LEAVE PHONE NUMBER
+                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+                        Mode of Travel
                     </Text>
-
-                    <View className="flex-row items-center bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
-                        <Phone
-                            size={20}
-                            color={themeColors.tint}
-                            className="mr-3"
-                            strokeWidth={2}
-                        />
-                        <TextInput
-                            className="flex-1 text-base text-labelPrimary dark:text-white"
-                            placeholder="555-123-4567"
-                            placeholderTextColor={Colors.gray[500]}
-                            value={formData.leavePhoneNumber}
-                            onChangeText={(text) => handleTextChange('leavePhoneNumber', text)}
-                            keyboardType="phone-pad"
-                        />
-                    </View>
-                </View>
-
-                {/* 3. Mode of Travel */}
-                <View className="gap-3">
-                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
-                        MODE OF TRAVEL
-                    </Text>
-                    <View className="flex-row flex-wrap gap-3">
-                        {MODES.map((mode) => {
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ paddingRight: 40, gap: 12 }}
+                    >
+                        {MODES.map((mode, index) => {
                             const isSelected = formData.modeOfTravel === mode.id;
                             const Icon = mode.icon;
 
+                            // Dynamic Colors based on selection
+                            const activeBg = isDark ? 'bg-slate-800' : 'bg-white';
+                            const activeBorder = isDark ? 'border-blue-500' : 'border-blue-500';
+
                             return (
-                                <TouchableOpacity
+                                <Animated.View
                                     key={mode.id}
-                                    onPress={() => onUpdate('modeOfTravel', mode.id)}
-                                    className={`flex-1 min-w-[45%] flex-row items-center justify-center py-4 px-3 rounded-xl border ${isSelected
-                                        ? 'bg-blue-500 border-blue-600 dark:bg-blue-600 dark:border-blue-500'
-                                        : 'bg-inputBackground border-slate-200 dark:border-slate-700'
-                                        }`}
+                                    entering={ZoomIn.delay(index * 50)}
                                 >
-                                    <Icon
-                                        size={18}
-                                        color={isSelected ? 'white' : (isDark ? '#94a3b8' : '#64748b')}
-                                        strokeWidth={2}
-                                    />
-                                    <Text
-                                        className={`ml-2 font-medium ${isSelected
-                                            ? 'text-white'
-                                            : 'text-gray-600 dark:text-slate-300'
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            Haptics.selectionAsync();
+                                            onUpdate('modeOfTravel', mode.id);
+                                        }}
+                                        activeOpacity={0.7}
+                                        className={`w-28 h-28 p-3 rounded-2xl border-2 justify-between ${isSelected
+                                            ? `${activeBg} ${activeBorder}`
+                                            : 'bg-inputBackground border-transparent'
                                             }`}
                                     >
-                                        {mode.label}
-                                    </Text>
-                                </TouchableOpacity>
+                                        <View className={`w-10 h-10 rounded-full items-center justify-center ${isSelected ? 'bg-blue-500' : 'bg-slate-200 dark:bg-slate-700'
+                                            }`}>
+                                            <Icon
+                                                size={20}
+                                                color={isSelected ? 'white' : (isDark ? '#94a3b8' : '#64748b')}
+                                                strokeWidth={2.5}
+                                            />
+                                        </View>
+                                        <View>
+                                            <Text className={`font-bold text-base ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'
+                                                }`}>
+                                                {mode.label}
+                                            </Text>
+                                            {isSelected && (
+                                                <Animated.View entering={FadeIn} className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1" />
+                                            )}
+                                        </View>
+                                    </TouchableOpacity>
+                                </Animated.View>
                             );
                         })}
-                    </View>
+                    </ScrollView>
                 </View>
 
             </View >

@@ -39,7 +39,7 @@ export type SyncMetadata = z.infer<typeof SyncMetadataSchema>;
 // =============================================================================
 
 export const DashboardCacheSchema = z.object({
-    userId: z.string().uuid(),
+    userId: z.string(),
     data: z.string(), // JSON stringified DashboardData
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
@@ -80,32 +80,14 @@ export function computeBilletLockContext(
     billet: Billet,
     currentUserId: string
 ): BilletLockContext {
-    const { lockStatus, lockedByUserId, lockExpiresAt } = billet.compass;
-    const isLocked = lockStatus !== 'open';
-    const isLockedByMe = lockStatus === 'locked_by_user' && lockedByUserId === currentUserId;
-    const isLockedByOther = lockStatus === 'locked_by_other' ||
-        (isLocked && lockedByUserId !== currentUserId);
-
-    let lockMessage: string | null = null;
-    let lockExpiresIn: number | null = null;
-
-    if (isLockedByMe && lockExpiresAt) {
-        lockExpiresIn = new Date(lockExpiresAt).getTime() - Date.now();
-        lockMessage = lockExpiresIn > 0
-            ? `Your lock expires in ${Math.ceil(lockExpiresIn / 60000)} minutes`
-            : 'Your lock has expired';
-    } else if (isLockedByOther) {
-        lockMessage = 'This billet is currently locked by another applicant';
-    }
-
     return {
-        rawStatus: lockStatus,
-        isLocked,
-        isLockedByMe,
-        isLockedByOther,
-        canApply: !isLocked || isLockedByMe,
-        lockMessage,
-        lockExpiresIn,
+        rawStatus: 'open',
+        isLocked: false,
+        isLockedByMe: false,
+        isLockedByOther: false,
+        canApply: true,
+        lockMessage: null,
+        lockExpiresIn: null,
     };
 }
 
@@ -127,6 +109,8 @@ export const SQLiteTableDefinitions = {
       rank TEXT,
       title TEXT,
       uic TEXT,
+      prd TEXT, -- ISO 8601
+      seaos TEXT, -- ISO 8601
       preferences TEXT, -- JSON object
       last_sync_timestamp TEXT NOT NULL,
       sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error'))
@@ -198,6 +182,28 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
   `,
 
+    assignment_decisions: `
+    CREATE TABLE IF NOT EXISTS assignment_decisions (
+      user_id TEXT PRIMARY KEY,
+      data TEXT NOT NULL, -- JSON record of billetId -> decision
+      last_sync_timestamp TEXT NOT NULL,
+      sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error')),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+  `,
+
+    assignment_decisions_entries: `
+    CREATE TABLE IF NOT EXISTS assignment_decisions_entries (
+      user_id TEXT NOT NULL,
+      billet_id TEXT NOT NULL,
+      decision TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      PRIMARY KEY (user_id, billet_id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_assignment_decisions_entries_user_id ON assignment_decisions_entries(user_id);
+  `,
+
     leave_balances: `
     CREATE TABLE IF NOT EXISTS leave_balances (
       id TEXT PRIMARY KEY,
@@ -263,6 +269,21 @@ export const SQLiteTableDefinitions = {
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
   `,
+
+    inbox_messages: `
+    CREATE TABLE IF NOT EXISTS inbox_messages (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      timestamp TEXT NOT NULL,
+      is_read INTEGER DEFAULT 0,
+      is_pinned INTEGER DEFAULT 0,
+      metadata TEXT, -- JSON
+      last_sync_timestamp TEXT,
+      sync_status TEXT
+    );
+  `,
 } as const;
 
 /**
@@ -313,6 +334,36 @@ async function runMigrations(db: { execAsync: (sql: string) => Promise<void> }):
             console.error('[DB Migration] Error adding leave_in_conus column:', e);
         }
     }
+
+    // Migration 3: Add prd and seaos to users table
+    try {
+        await db.execAsync(`ALTER TABLE users ADD COLUMN prd TEXT;`);
+        console.log('[DB Migration] Added prd column to users table');
+    } catch (e: any) {
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding prd column:', e);
+        }
+    }
+
+    try {
+        await db.execAsync(`ALTER TABLE users ADD COLUMN seaos TEXT;`);
+        console.log('[DB Migration] Added seaos column to users table');
+    } catch (e: any) {
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding seaos column:', e);
+        }
+    }
+
+    // Migration 4: Create assignment_decisions_entries table
+    try {
+        await db.execAsync(SQLiteTableDefinitions.assignment_decisions_entries);
+        console.log('[DB Migration] Created assignment_decisions_entries table');
+    } catch (e: any) {
+        // Table might already exist if initialized via main loop, but this ensures migration for existing DBs
+        if (!e.message?.includes('already exists')) {
+            console.error('[DB Migration] Error creating assignment_decisions_entries table:', e);
+        }
+    }
 }
 
 // =============================================================================
@@ -338,10 +389,6 @@ export type BilletLockStatus = z.infer<typeof BilletLockStatusSchema>;
 export const CompassBilletMetadataSchema = z.object({
     matchScore: z.number().min(0).max(100), // AI-computed fit score (0-100)
     contextualNarrative: z.string(), // AI-generated "Why this fits you" explanation
-    isBuyItNowEligible: z.boolean(), // Indicates if immediate lock is available
-    lockStatus: BilletLockStatusSchema,
-    lockExpiresAt: z.string().datetime().optional(), // Expiration for locked_by_user state
-    lockedByUserId: z.string().uuid().optional(), // Who holds the lock (for locked_by_other)
 });
 export type CompassBilletMetadata = z.infer<typeof CompassBilletMetadataSchema>;
 
@@ -349,19 +396,22 @@ export type CompassBilletMetadata = z.infer<typeof CompassBilletMetadataSchema>;
  * Standard Navy billet/job posting fields.
  */
 export const BilletSchema = z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     title: z.string(), // Job title
     uic: z.string(), // Unit Identification Code
     location: z.string(), // Geographic location
     payGrade: z.string(), // E-1 through O-10, W-1 through W-5
-    nec: z.string().optional(), // Navy Enlisted Classification code
-    designator: z.string().optional(), // Officer designator code
-    dutyType: z.string().optional(), // Sea, Shore, Overseas, etc.
-    reportNotLaterThan: z.string().datetime().optional(), // RNLTD
-    billetDescription: z.string().optional(),
+    nec: z.string().nullable().optional(), // Navy Enlisted Classification code
+    designator: z.string().nullable().optional(), // Officer designator code
+    dutyType: z.string().nullable().optional(), // Sea, Shore, Overseas, etc.
+    reportNotLaterThan: z.string().datetime().nullable().optional(), // RNLTD
+    billetDescription: z.string().nullable().optional(),
 
     // Compass AI Enhancements
     compass: CompassBilletMetadataSchema,
+
+    // Status for MyNavy Assignment Projection
+    advertisementStatus: z.enum(['projected', 'confirmed_open', 'closed']).default('confirmed_open'),
 
     // Sync metadata (billets are reference data, but we cache locally)
     lastSyncTimestamp: z.string().datetime(),
@@ -374,23 +424,19 @@ export type Billet = z.infer<typeof BilletSchema>;
 // -----------------------------------------------------------------------------
 
 /**
- * Application state machine for Buy-It-Now race condition handling.
+ * Application state machine for Slate/Cycle handling.
  * 
  * Workflow:
- * 1. draft → User is composing application locally
- * 2. optimistically_locked → User clicked "Apply/Buy-It-Now", lock requested
- * 3. submitted → Server confirmed lock acquisition, application in review
- * 4. confirmed → Application accepted by detailer
- * 5. rejected_race_condition → Lock failed (another user won the race)
- * 6. withdrawn → User cancelled application
- * 7. declined → Detailer rejected application
+ * 1. draft → User is composing application locally on the Slate
+ * 2. submitted → User submitted the Slate
+ * 3. confirmed → Application accepted by detailer
+ * 4. withdrawn → User withdrew application
+ * 5. declined → Detailer rejected application
  */
 export const ApplicationStatusSchema = z.enum([
     'draft',
-    'optimistically_locked',
     'submitted',
     'confirmed',
-    'rejected_race_condition',
     'withdrawn',
     'declined',
 ]);
@@ -400,22 +446,17 @@ export type ApplicationStatus = z.infer<typeof ApplicationStatusSchema>;
  * Application record representing a user's intent to fill a billet.
  */
 export const ApplicationSchema = z.object({
-    id: z.string().uuid(),
-    billetId: z.string().uuid(),
-    userId: z.string().uuid(),
+    id: z.string(),
+    billetId: z.string(),
+    userId: z.string(),
 
     // State machine
     status: ApplicationStatusSchema,
     statusHistory: z.array(z.object({
         status: ApplicationStatusSchema,
         timestamp: z.string().datetime(),
-        reason: z.string().optional(), // e.g., "Lock acquired by user X" for race condition
+        reason: z.string().optional(),
     })),
-
-    // Optimistic locking fields
-    optimisticLockToken: z.string().optional(), // Server-issued token for lock validation
-    lockRequestedAt: z.string().datetime().optional(),
-    lockExpiresAt: z.string().datetime().optional(),
 
     // Application content
     personalStatement: z.string().optional(),
@@ -449,8 +490,8 @@ export type Application = z.infer<typeof ApplicationSchema>;
  * Leave balance snapshot for the authenticated user.
  */
 export const LeaveBalanceSchema = z.object({
-    id: z.string().uuid(),
-    userId: z.string().uuid(),
+    id: z.string(),
+    userId: z.string(),
 
     // Core balance fields
     currentBalance: z.number().min(0), // Days currently available
@@ -523,7 +564,7 @@ export type EmergencyContact = z.infer<typeof EmergencyContactSchema>;
  * Approval chain member.
  */
 export const ApproverSchema = z.object({
-    id: z.string().uuid(),
+    id: z.string(),
     name: z.string(),
     title: z.string().optional(), // e.g., "Division Officer", "Department Head"
     action: z.enum(['pending', 'approved', 'denied', 'returned']).optional(),
@@ -549,8 +590,8 @@ export type PreReviewChecks = z.infer<typeof PreReviewChecksSchema>;
  * Leave request record (modeled after USAF LeaveWeb structure).
  */
 export const LeaveRequestSchema = z.object({
-    id: z.string().uuid(),
-    userId: z.string().uuid(),
+    id: z.string(),
+    userId: z.string(),
 
     // Leave period
     startDate: z.string().datetime(), // Leave start date/time
@@ -588,13 +629,13 @@ export const LeaveRequestSchema = z.object({
     statusHistory: z.array(z.object({
         status: LeaveRequestStatusSchema,
         timestamp: z.string().datetime(),
-        actorId: z.string().uuid().optional(),
+        actorId: z.string().optional(),
         comments: z.string().optional(),
     })),
 
     // Approval chain
     approvalChain: z.array(ApproverSchema),
-    currentApproverId: z.string().uuid().optional(), // Who needs to act next
+    currentApproverId: z.string().optional(), // Who needs to act next
 
     // Return reason (if status = returned)
     returnReason: z.string().optional(),
@@ -698,3 +739,10 @@ export interface MyCompassStore {
     assignment: MyAssignmentState;
     admin: MyAdminState;
 }
+
+// =============================================================================
+// SWIPE DECISIONS
+// =============================================================================
+
+export const SwipeDecisionSchema = z.enum(['like', 'nope', 'super']);
+export type SwipeDecision = z.infer<typeof SwipeDecisionSchema>;

@@ -16,7 +16,7 @@ import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -30,13 +30,17 @@ export default function HubDashboard() {
     const { data, loading, error } = useDashboardData();
 
     const [quickDraft, setQuickDraft] = useState<LeaveRequest | null>(null);
+    const listRef = React.useRef<any>(null);
 
-    const leaveRequests = useLeaveStore(useShallow(state =>
-        state.userLeaveRequestIds
-            .map(id => state.leaveRequests[id])
+    const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
+    const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
+
+    const leaveRequests = React.useMemo(() => {
+        return userLeaveRequestIds
+            .map(id => leaveRequestsMap[id])
             .filter(Boolean)
-            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    ));
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    }, [userLeaveRequestIds, leaveRequestsMap]);
 
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -95,7 +99,7 @@ export default function HubDashboard() {
 
     const handleSuperLikedPress = React.useCallback(() => {
         // Navigate to saved billets filtered by super-liked
-        router.push('/(assignment)/assignments' as any);
+        router.push('/(assignment)' as any);
     }, [router]);
 
     // Loading state
@@ -171,6 +175,13 @@ export default function HubDashboard() {
                             }
                         }}
                         onQuickRequest={handleQuickLeavePress}
+                        onExpand={(expanded) => {
+                            if (expanded) {
+                                setTimeout(() => {
+                                    listRef.current?.scrollToEnd({ animated: true });
+                                }, 300);
+                            }
+                        }}
                     />
                 );
             default:
@@ -184,6 +195,7 @@ export default function HubDashboard() {
             style={{ flex: 1 }}
         >
             <FlashList
+                ref={listRef}
                 data={sections}
                 renderItem={renderItem}
                 ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
@@ -192,33 +204,25 @@ export default function HubDashboard() {
                 style={{ flex: 1 }}
                 contentContainerStyle={{
                     padding: 16,
-                    paddingTop: 10,
+                    paddingTop: insets.top + 10,
                     paddingBottom: 100 + insets.bottom,
                 }}
             />
 
-            {/* Quick Leave Modal Overlay */}
-            <Modal
-                visible={!!quickDraft}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setQuickDraft(null)}
-            >
-                <View className="flex-1 justify-center items-center bg-black/60 relative">
+            {/* Quick Leave Overlay (Replaces Native Modal to fix Navigation Context loss) */}
+            {quickDraft && (
+                <View className="absolute inset-0 z-50 flex-1 justify-center items-center bg-black/60">
                     <Pressable
                         className="absolute inset-0"
                         onPress={() => setQuickDraft(null)}
                     />
-
-                    {quickDraft && (
-                        <QuickLeaveTicket
-                            draft={quickDraft}
-                            onSubmit={handleQuickLeaveSubmit}
-                            onEdit={handleQuickLeaveEdit}
-                        />
-                    )}
+                    <QuickLeaveTicket
+                        draft={quickDraft}
+                        onSubmit={handleQuickLeaveSubmit}
+                        onEdit={handleQuickLeaveEdit}
+                    />
                 </View>
-            </Modal>
+            )}
         </LinearGradient>
     );
 }

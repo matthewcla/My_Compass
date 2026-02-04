@@ -1,4 +1,5 @@
 import { DashboardData } from '@/types/dashboard';
+import { InboxMessage } from '@/types/inbox';
 import {
   Application,
   Billet,
@@ -26,11 +27,17 @@ export interface IStorageService {
   saveBillet(billet: Billet): Promise<void>;
   getBillet(id: string): Promise<Billet | null>;
   getAllBillets(): Promise<Billet[]>;
+  getPagedBillets(limit: number, offset: number): Promise<Billet[]>;
 
   // Applications
   saveApplication(app: Application): Promise<void>;
   getApplication(id: string): Promise<Application | null>;
   getUserApplications(userId: string): Promise<Application[]>;
+
+  // Assignment Decisions
+  saveAssignmentDecision(userId: string, billetId: string, decision: string): Promise<void>;
+  removeAssignmentDecision(userId: string, billetId: string): Promise<void>;
+  getAssignmentDecisions(userId: string): Promise<Record<string, string> | null>;
 
   // Leave Requests
   saveLeaveRequest(request: LeaveRequest): Promise<void>;
@@ -49,4 +56,8 @@ export interface IStorageService {
   // Dashboard
   saveDashboardCache(userId: string, data: DashboardData): Promise<void>;
   getDashboardCache(userId: string): Promise<DashboardData | null>;
+
+  // Inbox
+  saveInboxMessages(messages: InboxMessage[]): Promise<void>;
+  getInboxMessages(): Promise<InboxMessage[]>;
 }

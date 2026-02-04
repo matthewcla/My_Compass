@@ -4,21 +4,19 @@ import { CreateLeaveRequestPayload } from '@/types/api';
 import { CheckCircle2 } from 'lucide-react-native';
 import React from 'react';
 import { Text, View, useColorScheme } from 'react-native';
-import { Step4Checklist, VerificationChecks } from './Step4Checklist';
 
 interface ReviewSignProps {
     formData: Partial<CreateLeaveRequestPayload>;
-    verificationChecks: VerificationChecks;
-    onToggleVerification: (key: keyof VerificationChecks) => void;
+    embedded?: boolean;
 }
 
-export function ReviewSign({ formData, verificationChecks, onToggleVerification }: ReviewSignProps) {
+export function ReviewSign({ formData, embedded = false }: ReviewSignProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
 
     return (
-        <WizardCard title="Review Request" scrollable={true}>
-            <View className="gap-6 pb-24">
+        <WizardCard title="Review Request" scrollable={!embedded}>
+            <View className="gap-6 pb-6">
                 <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50">
                     <Text className="text-blue-900 dark:text-blue-100 font-bold text-lg mb-4">Summary</Text>
 
@@ -51,9 +49,6 @@ export function ReviewSign({ formData, verificationChecks, onToggleVerification 
                         </View>
                     </View>
                 </View>
-
-                {/* Verification Checklist */}
-                <Step4Checklist checks={verificationChecks} onToggle={onToggleVerification} />
 
                 <View className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/50 flex-row items-start">
                     <View className="mt-1 mr-3">

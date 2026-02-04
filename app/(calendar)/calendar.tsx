@@ -11,6 +11,7 @@ import { Stack } from 'expo-router';
 import { Clock, MapPin, QrCode } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, SectionList, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // =============================================================================
 // HELPER COMPONENTS
@@ -89,6 +90,7 @@ function EventCard({ event }: { event: CareerEvent }) {
 
 export default function CalendarScreen() {
     const { groupedEvents, loading, refresh } = useCareerEvents();
+    const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
@@ -123,7 +125,10 @@ export default function CalendarScreen() {
             <Stack.Screen options={{ headerShown: false }} />
 
 
-            <View className="flex-1 bg-slate-50 dark:bg-black">
+            <View
+                className="flex-1 bg-slate-50 dark:bg-black"
+                style={{ paddingTop: insets.top }}
+            >
                 {loading && groupedEvents.length === 0 ? (
                     <View className="flex-1 items-center justify-center">
                         <ActivityIndicator size="large" />

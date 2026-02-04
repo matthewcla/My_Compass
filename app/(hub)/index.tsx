@@ -204,7 +204,7 @@ export default function HubDashboard() {
                 style={{ flex: 1 }}
                 contentContainerStyle={{
                     padding: 16,
-                    paddingTop: 10,
+                    paddingTop: insets.top + 10,
                     paddingBottom: 100 + insets.bottom,
                 }}
             />

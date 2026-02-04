@@ -10,8 +10,8 @@ import {
     FileText,
     Home,
     Inbox,
+    LayoutGrid,
     Map as MapIcon,
-    Menu,
     Settings,
     Shield,
     Target
@@ -77,8 +77,17 @@ export default function GlobalTabBar() {
         // If 'inbox' or other generic routes, do nothing (keep last active spoke)
     }, [currentSpoke, setActiveSpoke]);
 
-    // Hide on Sign In
-    if (currentSpoke === 'sign-in') return null;
+    // Hide logic
+    const lastSegment = segments[segments.length - 1];
+    const isHidden =
+        currentSpoke === 'sign-in' ||
+        currentSpoke === 'leave' || // Hide on Leave Wizard
+        lastSegment === 'discovery' || // Hide on Discovery
+        lastSegment === 'cycle' ||
+        lastSegment === 'MenuHubModal' ||
+        (segments as string[]).includes('MenuHubModal'); // Redundant but safe
+
+    if (isHidden) return null;
 
     // Determine target spoke for configuration:
     // 1. If we are in a known spoke, use it.
@@ -178,12 +187,12 @@ export default function GlobalTabBar() {
 
             {/* 6. MENU (Fixed - User Menu) */}
             <Pressable
-                onPress={() => useUIStore.getState().openAccountDrawer()}
+                onPress={() => router.push('/menu' as any)}
                 className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full`}
                 accessibilityRole="button"
                 accessibilityLabel="Open Menu"
             >
-                <Menu
+                <LayoutGrid
                     size={24}
                     color={inactiveColor}
                 />

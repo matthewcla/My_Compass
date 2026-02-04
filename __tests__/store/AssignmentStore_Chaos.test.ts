@@ -52,7 +52,7 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
             useAssignmentStore.setState({ cursor: 0 });
             await useAssignmentStore.getState().swipe(targetBilletId, 'up', TEST_USER_ID);
 
-            useAssignmentStore.getState().undo();
+            useAssignmentStore.getState().undo(TEST_USER_ID);
         }
 
         const finalState = useAssignmentStore.getState();
@@ -107,7 +107,7 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
 
         // Withdraw one of the original 7 to free a slot
         const firstAppId = stateAfter8.userApplicationIds[0];
-        useAssignmentStore.getState().withdrawApplication(firstAppId);
+        useAssignmentStore.getState().withdrawApplication(firstAppId, TEST_USER_ID);
 
         // Now try to promote the 8th item
         const promotionResult = useAssignmentStore.getState().promoteToSlate(eighthBillet.id, TEST_USER_ID);
@@ -153,7 +153,7 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
         expect(stateAfterSwipe.realDecisions[targetBilletId]).toBe('super');
 
         // Withdraw (hard delete for draft)
-        useAssignmentStore.getState().withdrawApplication(appId);
+        useAssignmentStore.getState().withdrawApplication(appId, TEST_USER_ID);
 
         const finalState = useAssignmentStore.getState();
 

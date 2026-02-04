@@ -36,7 +36,13 @@
       "expo-router",
       "expo-secure-store",
       "expo-notifications",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Required for event check-in"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

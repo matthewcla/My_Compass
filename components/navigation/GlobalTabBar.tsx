@@ -164,11 +164,11 @@ export default function GlobalTabBar() {
             {/* 1. HOME (Fixed) */}
             {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox'))}
 
-            {/* 2. SPOKE PRIMARY (Dynamic) */}
-            {config && renderTab(config.primary.label, config.primary.route, config.primary.icon)}
+            {/* 2. CALENDAR (Generic) */}
+            {renderTab('Calendar', '/calendar', CalendarIcon, pathname.includes('/calendar'))}
 
-            {/* 3. CALENDAR (Dynamic - Inserted) */}
-            {renderTab('Calendar', '/(calendar)', CalendarIcon, pathname.includes('(calendar)'))}
+            {/* 3. SPOKE PRIMARY (Dynamic) */}
+            {config && renderTab(config.primary.label, config.primary.route, config.primary.icon)}
 
             {/* 4. INBOX (Fixed - Center) */}
             {renderTab('Inbox', '/inbox', Inbox, pathname.includes('/inbox'))}

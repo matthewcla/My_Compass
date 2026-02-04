@@ -9,6 +9,8 @@ import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
+const NO_OP = () => { };
+
 export default function ManifestScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
@@ -46,7 +48,7 @@ export default function ManifestScreen() {
             <View className="px-4 py-2 opacity-70 grayscale">
                 <JobCard
                     billet={item.billet}
-                    onBuyPress={() => { }}
+                    onBuyPress={NO_OP}
                     isProcessing={false}
                     applicationStatus={undefined}
                 />

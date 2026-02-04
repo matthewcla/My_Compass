@@ -10,8 +10,8 @@ import {
     FileText,
     Home,
     Inbox,
+    LayoutGrid,
     Map as MapIcon,
-    Menu,
     Settings,
     Shield,
     Target
@@ -178,12 +178,12 @@ export default function GlobalTabBar() {
 
             {/* 6. MENU (Fixed - User Menu) */}
             <Pressable
-                onPress={() => useUIStore.getState().openAccountDrawer()}
+                onPress={() => router.push('/MenuHubModal' as any)}
                 className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full`}
                 accessibilityRole="button"
                 accessibilityLabel="Open Menu"
             >
-                <Menu
+                <LayoutGrid
                     size={24}
                     color={inactiveColor}
                 />

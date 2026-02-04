@@ -1,4 +1,3 @@
-import GlobalHeader from '@/components/navigation/GlobalHeader';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { useSession } from '@/lib/ctx';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -24,7 +23,6 @@ export default function HubLayout() {
 
   return (
     <>
-      <GlobalHeader />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
       </Stack>

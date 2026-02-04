@@ -9,12 +9,10 @@ import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 
-import { AccountDrawer } from '@/components/AccountDrawer';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
-import { useUIStore } from '@/store/useUIStore';
 import { LogBox, View } from 'react-native';
 
 // Suppress known warnings from dependencies and Expo Go
@@ -60,8 +58,6 @@ export default function RootLayout() {
 
   // Track splash state to prevent double-hide race conditions
   const isSplashHidden = useRef(false);
-
-  const isAccountDrawerOpen = useUIStore((state) => state.isAccountDrawerOpen);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -129,12 +125,8 @@ export default function RootLayout() {
               <Stack.Screen name="leave" />
               <Stack.Screen name="(career)" />
               <Stack.Screen name="(calendar)" />
+              <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
             </Stack>
-            {/* AccountDrawer is rendered AFTER Stack to ensure navigation context is available */}
-            <AccountDrawer
-              visible={isAccountDrawerOpen}
-              onClose={() => useUIStore.getState().closeAccountDrawer()}
-            />
           </View>
         </SessionProvider>
       </SafeAreaProvider>

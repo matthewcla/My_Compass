@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Linking, TouchableOpacity } from 'react-native';
 
 // Safely import Camera for Expo Go compatibility
 let Camera: any = null;
@@ -17,9 +17,10 @@ try {
 
 interface ScannerViewProps {
     onScan: (code: string) => void;
+    torchOn?: boolean;
 }
 
-export function ScannerView({ onScan }: ScannerViewProps) {
+export function ScannerView({ onScan, torchOn = false }: ScannerViewProps) {
     const [hasPermission, setHasPermission] = useState(false);
 
     // If Camera lib didn't load (Expo Go), show fallback
@@ -64,8 +65,14 @@ export function ScannerView({ onScan }: ScannerViewProps) {
 
     if (!hasPermission) {
         return (
-            <View className="flex-1 items-center justify-center bg-black">
-                <Text className="text-white">Camera permission required</Text>
+            <View className="flex-1 items-center justify-center bg-black px-6">
+                <Text className="text-white text-center mb-4 font-medium">Camera permission is required to scan QR codes.</Text>
+                <TouchableOpacity
+                    onPress={() => Linking.openSettings()}
+                    className="bg-white/10 border border-white/20 px-4 py-3 rounded-lg"
+                >
+                    <Text className="text-white font-bold">Open Settings</Text>
+                </TouchableOpacity>
             </View>
         );
     }
@@ -84,6 +91,7 @@ export function ScannerView({ onScan }: ScannerViewProps) {
             device={device}
             isActive={true}
             codeScanner={codeScanner}
+            torch={torchOn ? 'on' : 'off'}
         />
     );
 }

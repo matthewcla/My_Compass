@@ -4,9 +4,10 @@ import { StyleSheet, Text, View } from 'react-native';
 
 interface ScannerViewProps {
     onScan: (code: string) => void;
+    torchOn?: boolean;
 }
 
-export function ScannerView({ onScan }: ScannerViewProps) {
+export function ScannerView({ onScan, torchOn }: ScannerViewProps) {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [error, setError] = useState<string | null>(null);

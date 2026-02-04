@@ -464,6 +464,52 @@ const MOCK_BILLETS: Billet[] = [
 ];
 
 // =============================================================================
+// SELECTORS
+// =============================================================================
+
+export const selectManifestItems = (
+    state: Pick<AssignmentStore, 'billets' | 'realDecisions' | 'applications'>,
+    filter: 'candidates' | 'favorites' | 'archived'
+): SmartBenchItem[] => {
+    const { billets, realDecisions, applications } = state;
+
+    // Exclude things that are already applications
+    const activeBilletIds = new Set(Object.values(applications).map(a => a.billetId));
+
+    const items: SmartBenchItem[] = [];
+
+    Object.entries(realDecisions).forEach(([billetId, decision]) => {
+        const billet = billets[billetId];
+        if (!billet) return;
+        if (activeBilletIds.has(billetId)) return; // Already in slate
+
+        if (filter === 'archived') {
+            if (decision === 'nope') items.push({ billet, type: 'manifest' });
+        } else if (filter === 'favorites') {
+            if (decision === 'super') items.push({ billet, type: 'manifest' });
+        } else { // candidates (DEFAULT View)
+            // Show likes and supers that aren't yet applications
+            if (decision === 'like' || decision === 'super') {
+                items.push({ billet, type: 'manifest' });
+            }
+        }
+    });
+
+    // Sort candidates: Super Liikes first
+    if (filter === 'candidates') {
+        items.sort((a, b) => {
+            const decisionA = realDecisions[a.billet.id];
+            const decisionB = realDecisions[b.billet.id];
+            if (decisionA === 'super' && decisionB !== 'super') return -1;
+            if (decisionA !== 'super' && decisionB === 'super') return 1;
+            return 0;
+        });
+    }
+
+    return items;
+};
+
+// =============================================================================
 // STORE IMPLEMENTATION
 // =============================================================================
 
@@ -919,42 +965,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     getManifestItems: (filter: 'candidates' | 'favorites' | 'archived') => {
-        const { billets, realDecisions, applications } = get();
-
-        // Exclude things that are already applications
-        const activeBilletIds = new Set(Object.values(applications).map(a => a.billetId));
-
-        const items: SmartBenchItem[] = [];
-
-        Object.entries(realDecisions).forEach(([billetId, decision]) => {
-            const billet = billets[billetId];
-            if (!billet) return;
-            if (activeBilletIds.has(billetId)) return; // Already in slate
-
-            if (filter === 'archived') {
-                if (decision === 'nope') items.push({ billet, type: 'manifest' });
-            } else if (filter === 'favorites') {
-                if (decision === 'super') items.push({ billet, type: 'manifest' });
-            } else { // candidates (DEFAULT View)
-                // Show likes and supers that aren't yet applications
-                if (decision === 'like' || decision === 'super') {
-                    items.push({ billet, type: 'manifest' });
-                }
-            }
-        });
-
-        // Sort candidates: Super Liikes first
-        if (filter === 'candidates') {
-            items.sort((a, b) => {
-                const decisionA = realDecisions[a.billet.id];
-                const decisionB = realDecisions[b.billet.id];
-                if (decisionA === 'super' && decisionB !== 'super') return -1;
-                if (decisionA !== 'super' && decisionB === 'super') return 1;
-                return 0;
-            });
-        }
-
-        return items;
+        return selectManifestItems(get(), filter);
     },
 
     getProjectedBillets: () => {

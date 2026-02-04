@@ -1,27 +1,32 @@
 import { ManifestRail } from '@/components/cycle/ManifestRail';
 import { SlateSlot } from '@/components/cycle/SlateSlot';
-import { useAssignmentStore } from '@/store/useAssignmentStore';
+import { selectManifestItems, useAssignmentStore } from '@/store/useAssignmentStore';
 import { Application } from '@/types/schema';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Send } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useShallow } from 'zustand/react/shallow';
 
 export default function CycleScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    const {
-        applications,
-        billets,
-        demoteToManifest,
-        promoteToSlate,
-        getManifestItems,
-        reorderApplications,
-        swipe // used for moving items to manifest if needed implicitly? No, demoteToManifest handles it
-    } = useAssignmentStore();
+    const applications = useAssignmentStore(useShallow(state => state.applications));
+    const billets = useAssignmentStore(useShallow(state => state.billets));
+    const { demoteToManifest, promoteToSlate, reorderApplications } = useAssignmentStore(
+        useShallow(state => ({
+            demoteToManifest: state.demoteToManifest,
+            promoteToSlate: state.promoteToSlate,
+            reorderApplications: state.reorderApplications
+        }))
+    );
+
+    const manifestCandidates = useAssignmentStore(
+        useShallow(state => selectManifestItems(state, 'candidates'))
+    );
 
     // 1. Prepare Slate Slots (Fixed 7 slots)
     // Get active applications, sorted by rank
@@ -43,11 +48,6 @@ export default function CycleScreen() {
             billet: assignedApp ? billets[assignedApp.billetId] : undefined
         };
     });
-
-    // 2. Prepare Manifest Rail Data
-    const manifestCandidates = useMemo(() => {
-        return getManifestItems('candidates');
-    }, [getManifestItems, applications, billets]); // Dependencies might need tuning if store identity changes
 
     // 3. Handlers
     const handleSlotPress = (rank: number, app?: Application) => {

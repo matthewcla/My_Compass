@@ -133,8 +133,9 @@ class SQLiteStorage implements IStorageService {
     const sql = `
       INSERT OR REPLACE INTO users (
         id, dod_id, display_name, email, rank, title, uic,
+        prd, seaos,
         preferences, last_sync_timestamp, sync_status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
     await db.runAsync(
       sql,
@@ -145,6 +146,8 @@ class SQLiteStorage implements IStorageService {
       user.rank || null,
       user.title || null,
       user.uic || null,
+      user.prd || null,
+      user.seaos || null,
       JSON.stringify(user.preferences || {}),
       user.lastSyncTimestamp,
       user.syncStatus
@@ -173,6 +176,8 @@ class SQLiteStorage implements IStorageService {
         rank: row.rank,
         title: row.title,
         uic: row.uic,
+        prd: row.prd,
+        seaos: row.seaos,
         preferences: safeJsonParse(row.preferences),
         lastSyncTimestamp: row.last_sync_timestamp,
         syncStatus: row.sync_status,

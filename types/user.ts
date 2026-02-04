@@ -44,6 +44,18 @@ export const UserSchema = z.object({
     rating: z.string().optional(), // Enlisted rating (e.g., "IT", "ET")
     title: z.string().optional(), // Billet title / role
     uic: z.string().optional(), // Current unit
+    /**
+     * Projected Rotation Date (PRD).
+     * Critical for "Detailing Countdown" logic.
+     * - 12 months prior: Negotiation Window
+     * - 15 months prior: Preparatory Phase
+     */
+    prd: z.string().datetime().optional(),
+    /**
+     * Soft End of Active Obligated Service (SEAOS).
+     * Used for retention logic and career timing.
+     */
+    seaos: z.string().datetime().optional(),
     preferences: z.object({
         regions: z.array(z.string()).optional(),
         dutyTypes: z.array(z.string()).optional(),

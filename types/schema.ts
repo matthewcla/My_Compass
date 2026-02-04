@@ -109,6 +109,8 @@ export const SQLiteTableDefinitions = {
       rank TEXT,
       title TEXT,
       uic TEXT,
+      prd TEXT, -- ISO 8601
+      seaos TEXT, -- ISO 8601
       preferences TEXT, -- JSON object
       last_sync_timestamp TEXT NOT NULL,
       sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error'))
@@ -303,6 +305,25 @@ async function runMigrations(db: { execAsync: (sql: string) => Promise<void> }):
     } catch (e: any) {
         if (!e.message?.includes('duplicate column name')) {
             console.error('[DB Migration] Error adding leave_in_conus column:', e);
+        }
+    }
+
+    // Migration 3: Add prd and seaos to users table
+    try {
+        await db.execAsync(`ALTER TABLE users ADD COLUMN prd TEXT;`);
+        console.log('[DB Migration] Added prd column to users table');
+    } catch (e: any) {
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding prd column:', e);
+        }
+    }
+
+    try {
+        await db.execAsync(`ALTER TABLE users ADD COLUMN seaos TEXT;`);
+        console.log('[DB Migration] Added seaos column to users table');
+    } catch (e: any) {
+        if (!e.message?.includes('duplicate column name')) {
+            console.error('[DB Migration] Error adding seaos column:', e);
         }
     }
 }

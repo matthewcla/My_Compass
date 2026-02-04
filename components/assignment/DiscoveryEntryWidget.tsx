@@ -1,5 +1,6 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { SwipeDecision, useAssignmentStore } from '@/store/useAssignmentStore';
+import { useAssignmentStore } from '@/store/useAssignmentStore';
+import { SwipeDecision } from '@/types/schema';
 import { Compass } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';

@@ -12,7 +12,7 @@ interface JobCardProps {
     applicationStatus: ApplicationStatus | undefined;
 }
 
-export function JobCard({
+export const JobCard = React.memo(function JobCard({
     billet,
     onBuyPress,
     isProcessing,
@@ -102,4 +102,4 @@ export function JobCard({
             </TouchableOpacity>
         </ScalePressable>
     );
-}
+});

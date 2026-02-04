@@ -14,18 +14,27 @@ export default function CycleScreen() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    const applications = useAssignmentStore(useShallow(state => state.applications));
-    const billets = useAssignmentStore(useShallow(state => state.billets));
-    const { demoteToManifest, promoteToSlate, reorderApplications } = useAssignmentStore(
+    const {
+        applications,
+        billets,
+        realDecisions,
+        demoteToManifest,
+        promoteToSlate,
+        reorderApplications
+    } = useAssignmentStore(
         useShallow(state => ({
+            applications: state.applications,
+            billets: state.billets,
+            realDecisions: state.realDecisions,
             demoteToManifest: state.demoteToManifest,
             promoteToSlate: state.promoteToSlate,
             reorderApplications: state.reorderApplications
         }))
     );
 
-    const manifestCandidates = useAssignmentStore(
-        useShallow(state => selectManifestItems(state, 'candidates'))
+    const manifestCandidates = useMemo(() =>
+        selectManifestItems({ billets, realDecisions, applications }, 'candidates'),
+        [billets, realDecisions, applications]
     );
 
     // 1. Prepare Slate Slots (Fixed 7 slots)

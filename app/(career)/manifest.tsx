@@ -1,12 +1,15 @@
 import { JobCard } from '@/components/JobCard';
 import { useFeedback } from '@/hooks/useFeedback';
-import { SmartBenchItem, useAssignmentStore } from '@/store/useAssignmentStore';
+import { SmartBenchItem, selectManifestItems, useAssignmentStore } from '@/store/useAssignmentStore';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Undo2 } from 'lucide-react-native';
 import React, { useCallback, useMemo } from 'react';
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useShallow } from 'zustand/react/shallow';
+
+const NO_OP = () => { };
 
 export default function ManifestScreen() {
     const router = useRouter();
@@ -15,17 +18,25 @@ export default function ManifestScreen() {
     const { showFeedback, FeedbackComponent } = useFeedback();
 
     const {
-        getManifestItems,
-        promoteToSlate,
-        swipe, // used for removing (swipe left)
+        billets,
+        realDecisions,
+        applications,
         recoverBillet,
         mode
-    } = useAssignmentStore();
+    } = useAssignmentStore(
+        useShallow(state => ({
+            billets: state.billets,
+            realDecisions: state.realDecisions,
+            applications: state.applications,
+            recoverBillet: state.recoverBillet,
+            mode: state.mode
+        }))
+    );
 
     const items = useMemo(() => {
         // "Archive" = Nopes (Left Swipes)
-        return getManifestItems('archived');
-    }, [getManifestItems, mode]);
+        return selectManifestItems({ billets, realDecisions, applications }, 'archived');
+    }, [billets, realDecisions, applications]);
 
     const handleRecover = useCallback((billetId: string) => {
         recoverBillet(billetId, 'user-123');
@@ -37,7 +48,7 @@ export default function ManifestScreen() {
             <View className="px-4 py-2 opacity-70 grayscale">
                 <JobCard
                     billet={item.billet}
-                    onBuyPress={() => { }}
+                    onBuyPress={NO_OP}
                     isProcessing={false}
                     applicationStatus={undefined}
                 />

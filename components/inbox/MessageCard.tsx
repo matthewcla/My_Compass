@@ -6,7 +6,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 
 interface MessageCardProps {
     message: InboxMessage;
-    onPress?: () => void;
+    onPress?: (id: string) => void;
     onTogglePin?: (id: string) => void;
 }
 
@@ -30,7 +30,7 @@ export const MessageCard: React.FC<MessageCardProps> = React.memo(({ message, on
 
     return (
         <TouchableOpacity
-            onPress={onPress}
+            onPress={() => onPress?.(message.id)}
             className={`mb-3 mx-4 p-4 rounded-lg shadow-sm ${accentColor} ${accentBorder}`}
         >
             <View className="flex-row justify-between items-start mb-2">

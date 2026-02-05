@@ -42,6 +42,11 @@ export default function InboxScreen() {
         fetchMessages({ force: true });
     }, [fetchMessages]);
 
+    // Performance: Use stable callback to prevent MessageCard re-renders
+    const handlePress = useCallback((id: string) => {
+        router.push(`/inbox/${id}`);
+    }, [router]);
+
     const filteredMessages = useMemo(() => {
         return messages.filter(msg => {
             // Text Search
@@ -126,7 +131,8 @@ export default function InboxScreen() {
                 renderItem={({ item }) => (
                     <MessageCard
                         message={item}
-                        onPress={() => router.push(`/inbox/${item.id}`)}
+                        // Pass stable handler to enable React.memo optimization
+                        onPress={handlePress}
                         onTogglePin={togglePin}
                     />
                 )}

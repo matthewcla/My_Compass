@@ -121,6 +121,8 @@ export default function InboxScreen() {
             {renderHeader()}
             <SectionList
                 sections={sections}
+                initialNumToRender={10}
+                windowSize={5}
                 renderItem={({ item }) => (
                     <MessageCard
                         message={item}

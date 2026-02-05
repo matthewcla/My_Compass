@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // HELPER COMPONENTS
 // =============================================================================
 
-function EventCard({ event }: { event: CareerEvent }) {
+const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
@@ -82,7 +82,7 @@ function EventCard({ event }: { event: CareerEvent }) {
             </View>
         </ScalePressable>
     );
-}
+});
 
 // =============================================================================
 // MAIN SCREEN
@@ -136,6 +136,8 @@ export default function CalendarScreen() {
                 ) : (
                     <SectionList
                         sections={groupedEvents}
+                        initialNumToRender={10}
+                        windowSize={5}
                         keyExtractor={(item) => item.eventId}
                         renderItem={({ item }) => (
                             <View className="px-5">

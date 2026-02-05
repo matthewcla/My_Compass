@@ -1,3 +1,4 @@
+import { CareerEvent } from '@/types/career';
 import { DashboardData } from '@/types/dashboard';
 import { InboxMessage } from '@/types/inbox';
 import {
@@ -60,4 +61,8 @@ export interface IStorageService {
   // Inbox
   saveInboxMessages(messages: InboxMessage[]): Promise<void>;
   getInboxMessages(): Promise<InboxMessage[]>;
+
+  // Career Events
+  saveCareerEvents(events: CareerEvent[]): Promise<void>;
+  getCareerEvents(): Promise<CareerEvent[]>;
 }

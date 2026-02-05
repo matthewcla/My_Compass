@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { CareerEvent } from '@/types/career';
+import { storage } from '@/services/storage';
 
 // Mock Data Service
 const MOCK_EVENTS: CareerEvent[] = [
@@ -81,9 +82,29 @@ export const useCareerStore = create<CareerState>((set, get) => ({
 
         set({ isLoading: true, error: null });
         try {
-            set({ events: MOCK_EVENTS, isLoading: false, lastFetched: Date.now() });
+            // Load from storage first if we don't have events in memory
+            if (get().events.length === 0) {
+                const cached = await storage.getCareerEvents();
+                if (cached.length > 0) {
+                    set({ events: cached, isLoading: false });
+                }
+            }
+
+            // Fetch fresh data (MOCK_EVENTS)
+            // In a real app, this would be an API call
+            const newEvents = MOCK_EVENTS;
+
+            set({ events: newEvents, isLoading: false, lastFetched: Date.now() });
+
+            // Persist to storage
+            await storage.saveCareerEvents(newEvents);
         } catch (error) {
-            set({ isLoading: false, error: 'Failed to fetch career events' });
+            if (get().events.length === 0) {
+                set({ isLoading: false, error: 'Failed to fetch career events' });
+            } else {
+                console.warn('Failed to fetch fresh career events', error);
+                set({ isLoading: false });
+            }
         }
     }
 }));

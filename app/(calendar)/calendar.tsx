@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // HELPER COMPONENTS
 // =============================================================================
 
-function EventCard({ event }: { event: CareerEvent }) {
+const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
@@ -82,7 +82,7 @@ function EventCard({ event }: { event: CareerEvent }) {
             </View>
         </ScalePressable>
     );
-}
+});
 
 // =============================================================================
 // MAIN SCREEN
@@ -117,7 +117,7 @@ export default function CalendarScreen() {
 
     // Set Global Header
     useEffect(() => {
-        useHeaderStore.getState().setHeader('Calendar', 'MARCH 2024', null, 'large');
+        useHeaderStore.getState().setHeader('My Navy HR', 'Calendar', null, 'large');
     }, []);
 
     return (
@@ -127,7 +127,6 @@ export default function CalendarScreen() {
 
             <View
                 className="flex-1 bg-slate-50 dark:bg-black"
-                style={{ paddingTop: insets.top }}
             >
                 {loading && groupedEvents.length === 0 ? (
                     <View className="flex-1 items-center justify-center">
@@ -136,6 +135,8 @@ export default function CalendarScreen() {
                 ) : (
                     <SectionList
                         sections={groupedEvents}
+                        initialNumToRender={10}
+                        windowSize={5}
                         keyExtractor={(item) => item.eventId}
                         renderItem={({ item }) => (
                             <View className="px-5">

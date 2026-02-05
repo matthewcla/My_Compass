@@ -1,4 +1,5 @@
 import { decryptData, encryptData } from '@/lib/encryption';
+import { CareerEvent } from '@/types/career';
 import { DashboardData } from '@/types/dashboard';
 import { InboxMessage } from '@/types/inbox';
 import {
@@ -714,6 +715,53 @@ class SQLiteStorage implements IStorageService {
       return [];
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Career Events
+  // ---------------------------------------------------------------------------
+
+  async saveCareerEvents(events: CareerEvent[]): Promise<void> {
+    const db = await this.getDB();
+    await db.withTransactionAsync(async () => {
+      for (const event of events) {
+        await db.runAsync(
+          `INSERT OR REPLACE INTO career_events (
+            event_id, event_type, title, date, location, attendance_status, priority, qr_token, last_sync_timestamp, sync_status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          event.eventId,
+          event.eventType,
+          event.title,
+          event.date,
+          event.location,
+          event.attendanceStatus,
+          event.priority,
+          event.qr_token || null,
+          new Date().toISOString(),
+          'synced'
+        );
+      }
+    });
+  }
+
+  async getCareerEvents(): Promise<CareerEvent[]> {
+    const db = await this.getDB();
+    try {
+      const results = await db.getAllAsync<any>('SELECT * FROM career_events');
+      return results.map(row => ({
+        eventId: row.event_id,
+        eventType: row.event_type,
+        title: row.title,
+        date: row.date,
+        location: row.location,
+        attendanceStatus: row.attendance_status,
+        priority: row.priority,
+        qr_token: row.qr_token || undefined,
+      }));
+    } catch (error) {
+      console.error('Failed to fetch career events', error);
+      return [];
+    }
+  }
 }
 
 // =============================================================================
@@ -730,6 +778,7 @@ class MockStorage implements IStorageService {
   private dashboardCache = new Map<string, DashboardData>();
   private decisions = new Map<string, Record<string, string>>();
   private inboxMessages = new Map<string, InboxMessage>();
+  private careerEvents = new Map<string, CareerEvent>();
 
   async init(): Promise<void> {
     console.log('[MockStorage] Initialized in-memory storage');
@@ -832,6 +881,15 @@ class MockStorage implements IStorageService {
 
   async getInboxMessages(): Promise<InboxMessage[]> {
     return Array.from(this.inboxMessages.values());
+  }
+
+  // Career Events
+  async saveCareerEvents(events: CareerEvent[]): Promise<void> {
+    events.forEach(event => this.careerEvents.set(event.eventId, event));
+  }
+
+  async getCareerEvents(): Promise<CareerEvent[]> {
+    return Array.from(this.careerEvents.values());
   }
 }
 
@@ -963,6 +1021,15 @@ class WebStorage implements IStorageService {
 
   async getInboxMessages(): Promise<InboxMessage[]> {
     return this.getItem<InboxMessage[]>('inbox_messages') || [];
+  }
+
+  // --- Career Events ---
+  async saveCareerEvents(events: CareerEvent[]): Promise<void> {
+    this.setItem('career_events', events);
+  }
+
+  async getCareerEvents(): Promise<CareerEvent[]> {
+    return this.getItem<CareerEvent[]>('career_events') || [];
   }
 }
 

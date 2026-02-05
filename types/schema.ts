@@ -284,6 +284,22 @@ export const SQLiteTableDefinitions = {
       sync_status TEXT
     );
   `,
+
+    career_events: `
+    CREATE TABLE IF NOT EXISTS career_events (
+      event_id TEXT PRIMARY KEY,
+      event_type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      date TEXT NOT NULL,
+      location TEXT NOT NULL,
+      attendance_status TEXT NOT NULL,
+      priority TEXT NOT NULL,
+      qr_token TEXT,
+      last_sync_timestamp TEXT NOT NULL,
+      sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_career_events_date ON career_events(date);
+  `,
 } as const;
 
 /**
@@ -477,6 +493,40 @@ export const ApplicationSchema = z.object({
     localModifiedAt: z.string().datetime().optional(),
 });
 export type Application = z.infer<typeof ApplicationSchema>;
+
+// =============================================================================
+// DOMAIN C: CAREER (CALENDAR & EVENTS)
+// =============================================================================
+
+export const EventPrioritySchema = z.enum(['CRITICAL', 'HIGH', 'STANDARD']);
+export type EventPriority = z.infer<typeof EventPrioritySchema>;
+
+export const CareerEventTypeSchema = z.enum([
+    'ADVANCEMENT_EXAM',
+    'STATUTORY_BOARD',
+    'ADMIN_BOARD',
+    'ATTENDANCE_MUSTER'
+]);
+export type CareerEventType = z.infer<typeof CareerEventTypeSchema>;
+
+export const AttendanceStatusSchema = z.enum(['PENDING', 'PRESENT', 'ABSENT', 'EXCUSED']);
+export type AttendanceStatus = z.infer<typeof AttendanceStatusSchema>;
+
+export const CareerEventSchema = z.object({
+    eventId: z.string(),
+    eventType: CareerEventTypeSchema,
+    title: z.string(),
+    date: z.string().datetime(),
+    location: z.string(),
+    attendanceStatus: AttendanceStatusSchema,
+    priority: EventPrioritySchema,
+    qr_token: z.string().optional(),
+
+    // Sync metadata
+    lastSyncTimestamp: z.string().datetime(),
+    syncStatus: SyncStatusSchema,
+});
+export type CareerEvent = z.infer<typeof CareerEventSchema>;
 
 // =============================================================================
 // DOMAIN B: MY ADMIN (LEAVE MODULE)

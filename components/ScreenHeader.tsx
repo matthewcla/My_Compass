@@ -1,12 +1,12 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { SearchConfig } from '@/store/useHeaderStore';
 import { getShadow } from '@/utils/getShadow';
 import { usePathname, useRouter } from 'expo-router';
 import { Bell, CheckCircle2, ChevronRight, FileText, LayoutGrid, Search, User } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Alert, Modal, Pressable, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SearchConfig } from '@/store/useHeaderStore';
 
 interface ScreenHeaderProps {
     title: string;
@@ -65,6 +65,7 @@ export function ScreenHeader({
                         onPress={() => setMenuVisible(true)}
                         className="mr-4"
                         hitSlop={12}
+                        style={{ display: pathname.includes('inbox') || pathname.includes('calendar') ? 'none' : 'flex' }}
                     >
                         {/* REPLACEMENT: LayoutGrid for 'System/Function' Context Switcher */}
                         <LayoutGrid
@@ -103,20 +104,22 @@ export function ScreenHeader({
                         </Pressable>
                     )}
 
-                    <Pressable
-                        onPress={handleAlert}
-                        accessibilityLabel="Notifications"
-                        hitSlop={12}
-                    >
-                        {({ pressed }) => (
-                            <Bell
-                                color={colors.text}
-                                size={isInline ? 20 : 24}
-                                strokeWidth={2}
-                                style={{ opacity: pressed ? 0.7 : 1 }}
-                            />
-                        )}
-                    </Pressable>
+                    {!pathname.includes('inbox') && !pathname.includes('calendar') && (
+                        <Pressable
+                            onPress={handleAlert}
+                            accessibilityLabel="Notifications"
+                            hitSlop={12}
+                        >
+                            {({ pressed }) => (
+                                <Bell
+                                    color={colors.text}
+                                    size={isInline ? 20 : 24}
+                                    strokeWidth={2}
+                                    style={{ opacity: pressed ? 0.7 : 1 }}
+                                />
+                            )}
+                        </Pressable>
+                    )}
                 </View>
             </View>
 

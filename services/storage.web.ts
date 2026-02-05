@@ -1,6 +1,7 @@
 // Web-specific storage implementation
 // SQLite is not available on web, so we use a stub/localStorage implementation
 
+import { CareerEvent } from '@/types/career';
 import { DashboardData } from '@/types/dashboard';
 import { InboxMessage } from '@/types/inbox';
 import {
@@ -265,6 +266,25 @@ class WebStorage implements IStorageService {
       return JSON.parse(decryptData(data));
     } catch (e) {
       console.warn('Failed to parse InboxMessages data (healing)', e);
+      return [];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Career Events
+  // ---------------------------------------------------------------------------
+
+  async saveCareerEvents(events: CareerEvent[]): Promise<void> {
+    localStorage.setItem('my_compass_career_events', encryptData(JSON.stringify(events)));
+  }
+
+  async getCareerEvents(): Promise<CareerEvent[]> {
+    const data = localStorage.getItem('my_compass_career_events');
+    if (!data) return [];
+    try {
+      return JSON.parse(decryptData(data));
+    } catch (e) {
+      console.warn('Failed to parse CareerEvents data (healing)', e);
       return [];
     }
   }

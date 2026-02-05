@@ -128,8 +128,6 @@ export const CorrespondenceService = {
      * Simulates fetching inbox messages from a remote server.
      */
     fetchMessages: async (): Promise<InboxMessage[]> => {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
         return generateDummyMessages();
     },
 

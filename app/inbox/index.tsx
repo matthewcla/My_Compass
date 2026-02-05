@@ -2,7 +2,7 @@ import { MessageCard } from '@/components/inbox/MessageCard';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useInboxStore } from '@/store/useInboxStore';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SectionList, Text, TouchableOpacity, View } from 'react-native';
 
 type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
@@ -37,6 +37,10 @@ export default function InboxScreen() {
     useEffect(() => {
         fetchMessages();
     }, []);
+
+    const handleRefresh = useCallback(() => {
+        fetchMessages({ force: true });
+    }, [fetchMessages]);
 
     const filteredMessages = useMemo(() => {
         return messages.filter(msg => {
@@ -133,7 +137,7 @@ export default function InboxScreen() {
                 stickySectionHeadersEnabled={false} // Sticky headers with sticky list header can be tricky, verifying without first
                 contentContainerStyle={{ paddingBottom: 24 }}
                 refreshing={isLoading}
-                onRefresh={fetchMessages}
+                onRefresh={handleRefresh}
                 ListEmptyComponent={
                     <View className="p-8 items-center">
                         <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>

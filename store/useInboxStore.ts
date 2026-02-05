@@ -7,7 +7,8 @@ interface InboxState {
     messages: InboxMessage[];
     isLoading: boolean;
     error: string | null;
-    fetchMessages: () => Promise<void>;
+    lastFetched: number | null;
+    fetchMessages: (options?: { force?: boolean }) => Promise<void>;
     markAsRead: (id: string) => void;
     togglePin: (id: string) => void;
 }
@@ -16,24 +17,39 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     messages: [],
     isLoading: false,
     error: null,
+    lastFetched: null,
 
-    fetchMessages: async () => {
+    fetchMessages: async (options) => {
+        const { messages, lastFetched, isLoading } = get();
+        const now = Date.now();
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+        // Skip if data is fresh and not forced
+        if (!options?.force && messages.length > 0 && lastFetched && (now - lastFetched < CACHE_DURATION)) {
+            return;
+        }
+
+        // Prevent duplicate requests if already loading and not forced
+        if (isLoading && !options?.force) return;
+
         set({ isLoading: true, error: null });
         try {
-            // Load from cache first
-            const cached = await storage.getInboxMessages();
-            if (cached.length > 0) {
-                set({ messages: cached, isLoading: false });
+            // Load from cache only if we don't have messages in memory (Hydration)
+            if (messages.length === 0) {
+                const cached = await storage.getInboxMessages();
+                if (cached.length > 0) {
+                    set({ messages: cached, isLoading: false });
+                }
             }
 
             // Fetch fresh data
-            const messages = await CorrespondenceService.fetchMessages();
-            set({ messages, isLoading: false });
+            const newMessages = await CorrespondenceService.fetchMessages();
+            set({ messages: newMessages, isLoading: false, lastFetched: Date.now() });
 
             // Update cache
-            await storage.saveInboxMessages(messages);
+            await storage.saveInboxMessages(newMessages);
         } catch (error) {
-            // If we have cached messages, just warn. Otherwise set error state.
+            // If we have cached messages (in memory), just warn. Otherwise set error state.
             if (get().messages.length === 0) {
                 set({ isLoading: false, error: 'Failed to fetch messages' });
             } else {

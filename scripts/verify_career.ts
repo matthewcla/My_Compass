@@ -52,8 +52,8 @@ async function runTest() {
     console.log(`Fetch 3 took ${duration3}ms`);
 
     const state3 = useCareerStore.getState();
-    // We expect around 800ms delay.
-    if (duration3 < 700) throw new Error('Fetch 3 should have waited for network delay');
+    // Delay removed, should be fast
+    if (duration3 > 200) throw new Error('Fetch 3 should be immediate (delay removed)');
     if (state3.lastFetched === firstFetchTime) throw new Error('lastFetched should update on forced fetch');
 
     console.log('\n--- Career Store Verification Passed ---');

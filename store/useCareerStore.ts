@@ -81,8 +81,6 @@ export const useCareerStore = create<CareerState>((set, get) => ({
 
         set({ isLoading: true, error: null });
         try {
-            // Simulate network delay
-            await new Promise(resolve => setTimeout(resolve, 800));
             set({ events: MOCK_EVENTS, isLoading: false, lastFetched: Date.now() });
         } catch (error) {
             set({ isLoading: false, error: 'Failed to fetch career events' });

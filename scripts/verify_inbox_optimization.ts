@@ -52,7 +52,7 @@ async function runTest() {
     console.log(`Fetch 3 took ${duration3}ms`);
 
     const state3 = useInboxStore.getState();
-    if (duration3 < 50) throw new Error('Fetch 3 should have waited for network delay');
+    if (duration3 > 200) throw new Error('Fetch 3 should be immediate (delay removed)');
     if (state3.lastFetched === firstFetchTime) throw new Error('lastFetched should update on forced fetch');
 
     console.log('\n--- Inbox Store Verification Passed ---');

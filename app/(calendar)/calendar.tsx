@@ -117,7 +117,7 @@ export default function CalendarScreen() {
 
     // Set Global Header
     useEffect(() => {
-        useHeaderStore.getState().setHeader('Calendar', 'MARCH 2024', null, 'large');
+        useHeaderStore.getState().setHeader('My Navy HR', 'Calendar', null, 'large');
     }, []);
 
     return (
@@ -127,7 +127,6 @@ export default function CalendarScreen() {
 
             <View
                 className="flex-1 bg-slate-50 dark:bg-black"
-                style={{ paddingTop: insets.top }}
             >
                 {loading && groupedEvents.length === 0 ? (
                     <View className="flex-1 items-center justify-center">

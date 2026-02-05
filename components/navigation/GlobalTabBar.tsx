@@ -171,7 +171,7 @@ export default function GlobalTabBar() {
             className={`flex-row w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 ${isHubMode ? 'justify-around' : ''}`}
         >
             {/* 1. HOME (Fixed) */}
-            {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox'))}
+            {renderTab('Home', '/(hub)', Home, currentSpoke === '(hub)' && !pathname.includes('inbox') && !pathname.includes('menu'))}
 
             {/* 2. CALENDAR (Generic) */}
             {renderTab('Calendar', '/calendar', CalendarIcon, pathname.includes('/calendar'))}
@@ -186,20 +186,8 @@ export default function GlobalTabBar() {
             {config && renderTab(config.secondary.label, config.secondary.route, config.secondary.icon)}
 
             {/* 6. MENU (Fixed - User Menu) */}
-            <Pressable
-                onPress={() => router.push('/menu' as any)}
-                className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full`}
-                accessibilityRole="button"
-                accessibilityLabel="Open Menu"
-            >
-                <LayoutGrid
-                    size={24}
-                    color={inactiveColor}
-                />
-                <Text style={{ color: inactiveColor, fontSize: 11 }}>
-                    Menu
-                </Text>
-            </Pressable>
+            {/* 6. MENU (Fixed - User Menu) */}
+            {renderTab('Menu', '/menu', LayoutGrid, pathname.includes('menu'))}
         </View>
     );
 }

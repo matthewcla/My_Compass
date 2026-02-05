@@ -1,6 +1,6 @@
-import { useEffect, useCallback } from 'react';
-import { CareerEvent } from '@/types/career';
 import { useCareerStore } from '@/store/useCareerStore';
+import { CareerEvent } from '@/types/career';
+import { useCallback, useEffect } from 'react';
 
 export interface Section<T> {
     title: string;

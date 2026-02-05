@@ -27,7 +27,7 @@ export default function InboxScreen() {
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [searchQuery, setSearchQuery] = useState('');
 
-    useScreenHeader("Inbox", "Notifications", undefined, {
+    useScreenHeader("My Navy HR", "Correspondence", undefined, {
         visible: true,
         onChangeText: setSearchQuery,
         placeholder: 'Search messages (e.g. 041200Z)...',

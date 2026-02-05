@@ -4,6 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import {
   Briefcase,
+  ChevronRight,
   Copy,
   FileText,
   LogOut,
@@ -61,7 +62,7 @@ export default function MenuHubScreen() {
         }}
         className="px-5 pb-4"
       >
-        <Text style={{ color: theme.text }} className="text-4xl font-extrabold tracking-tight mb-4 mt-2">
+        <Text style={{ color: theme.text }} className="text-2xl font-extrabold tracking-tight mb-4 mt-2">
           Menu Hub
         </Text>
 
@@ -72,7 +73,11 @@ export default function MenuHubScreen() {
           style={{
             backgroundColor: theme.card,
             borderColor: theme.border,
-            borderRadius: 24
+            borderRadius: 24,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 14, // Matches py-3.5/4 logic approx 50-54px height
+            paddingHorizontal: 16,
           }}
           className="rounded-3xl flex-row items-center px-4 py-4 shadow-sm border"
         >
@@ -180,7 +185,7 @@ export default function MenuHubScreen() {
               <Text style={{ color: theme.text }} className="font-bold text-[17px]">Settings</Text>
             </View>
             <View style={{ backgroundColor: isDark ? '#27272A' : '#F8FAFC' }} className="p-2 rounded-full">
-              <View className="w-2 h-2 rounded-full bg-slate-300" />
+              <ChevronRight size={20} color={theme.icon} />
             </View>
           </TouchableOpacity>
         </MotiView>

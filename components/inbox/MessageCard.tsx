@@ -10,7 +10,7 @@ interface MessageCardProps {
     onTogglePin?: (id: string) => void;
 }
 
-export const MessageCard: React.FC<MessageCardProps> = ({ message, onPress, onTogglePin }) => {
+export const MessageCard: React.FC<MessageCardProps> = React.memo(({ message, onPress, onTogglePin }) => {
     const isNavAdmin = message.type === 'NAVADMIN';
     const isStatusReport = message.type === 'STATUS_REPORT';
 
@@ -70,4 +70,4 @@ export const MessageCard: React.FC<MessageCardProps> = ({ message, onPress, onTo
             </Text>
         </TouchableOpacity>
     );
-};
+});

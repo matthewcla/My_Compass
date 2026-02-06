@@ -112,6 +112,7 @@ class SQLiteStorage implements IStorageService {
     await db.runAsync('DELETE FROM leave_requests WHERE id = ?', requestId);
   }
   private dbInstance: SQLite.SQLiteDatabase | null = null;
+  private writeQueue: Promise<void> = Promise.resolve();
 
   private async getDB(): Promise<SQLite.SQLiteDatabase> {
     if (this.dbInstance) {
@@ -119,6 +120,31 @@ class SQLiteStorage implements IStorageService {
     }
     this.dbInstance = await SQLite.openDatabaseAsync(DB_NAME);
     return this.dbInstance;
+  }
+
+  private async enqueueWrite<T>(operation: () => Promise<T>): Promise<T> {
+    const queuedOperation = this.writeQueue.then(operation, operation);
+    this.writeQueue = queuedOperation.then(
+      () => undefined,
+      () => undefined
+    );
+    return queuedOperation;
+  }
+
+  private async withWriteTransaction(task: (runner: SQLite.SQLiteDatabase) => Promise<void>): Promise<void> {
+    const db = await this.getDB();
+    await this.enqueueWrite(async () => {
+      if (Platform.OS === 'web') {
+        await db.withTransactionAsync(async () => {
+          await task(db);
+        });
+        return;
+      }
+
+      await db.withExclusiveTransactionAsync(async (txn) => {
+        await task(txn);
+      });
+    });
   }
 
   async init(): Promise<void> {
@@ -673,11 +699,9 @@ class SQLiteStorage implements IStorageService {
   // ---------------------------------------------------------------------------
 
   async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
-    const db = await this.getDB();
-    // Using transaction for bulk insert
-    await db.withTransactionAsync(async () => {
+    await this.withWriteTransaction(async (runner) => {
       for (const msg of messages) {
-        await db.runAsync(
+        await runner.runAsync(
           `INSERT OR REPLACE INTO inbox_messages (
             id, type, subject, body, timestamp, is_read, is_pinned, metadata, last_sync_timestamp, sync_status
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
@@ -721,10 +745,9 @@ class SQLiteStorage implements IStorageService {
   // ---------------------------------------------------------------------------
 
   async saveCareerEvents(events: CareerEvent[]): Promise<void> {
-    const db = await this.getDB();
-    await db.withTransactionAsync(async () => {
+    await this.withWriteTransaction(async (runner) => {
       for (const event of events) {
-        await db.runAsync(
+        await runner.runAsync(
           `INSERT OR REPLACE INTO career_events (
             event_id, event_type, title, date, location, attendance_status, priority, qr_token, last_sync_timestamp, sync_status
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,

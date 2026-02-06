@@ -115,10 +115,17 @@ export default function CalendarScreen() {
         }
     };
 
+    const [searchQuery, setSearchQuery] = useState('');
+
     // Set Global Header
     useEffect(() => {
-        useHeaderStore.getState().setHeader('My Navy HR', 'Calendar', null, 'large');
-    }, []);
+        useHeaderStore.getState().setHeader('', '', null, 'large', {
+            visible: true,
+            onChangeText: setSearchQuery,
+            placeholder: 'Search events...',
+            value: searchQuery
+        });
+    }, [searchQuery]); // Re-run when query changes to update the value in store
 
     return (
         <>
@@ -150,7 +157,7 @@ export default function CalendarScreen() {
                                 </Text>
                             </View>
                         )}
-                        contentContainerStyle={{ paddingBottom: 100, paddingTop: 24 }} // Standard spacing
+                        contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }} // Reduced spacing for tighter layout
                         stickySectionHeadersEnabled={true}
                         refreshing={loading}
                         onRefresh={refresh}

@@ -48,8 +48,8 @@ export function Step4Safety({ formData, onUpdate, embedded = false }: Step4Safet
                         {/* Name */}
                         <View className="gap-2">
                             <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Name</Text>
-                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3">
-                                <User size={18} color={themeColors.tabIconDefault} className="mr-3" />
+                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 gap-3">
+                                <User size={18} color={themeColors.tabIconDefault} />
                                 <TextInput
                                     className="flex-1 text-base text-gray-900 dark:text-white"
                                     placeholder="Full Name"
@@ -63,8 +63,8 @@ export function Step4Safety({ formData, onUpdate, embedded = false }: Step4Safet
                         {/* Relationship */}
                         <View className="gap-2">
                             <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Relationship</Text>
-                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3">
-                                <User size={18} color={themeColors.tabIconDefault} className="mr-3" />
+                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 gap-3">
+                                <User size={18} color={themeColors.tabIconDefault} />
                                 <TextInput
                                     className="flex-1 text-base text-gray-900 dark:text-white"
                                     placeholder="e.g. Spouse, Parent"
@@ -78,8 +78,8 @@ export function Step4Safety({ formData, onUpdate, embedded = false }: Step4Safet
                         {/* Phone */}
                         <View className="gap-2">
                             <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Phone Number</Text>
-                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3">
-                                <Phone size={18} color={themeColors.tabIconDefault} className="mr-3" />
+                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 gap-3">
+                                <Phone size={18} color={themeColors.tabIconDefault} />
                                 <TextInput
                                     className="flex-1 text-base text-gray-900 dark:text-white"
                                     placeholder="555-123-4567"

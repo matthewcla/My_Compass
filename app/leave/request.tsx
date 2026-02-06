@@ -406,7 +406,7 @@ export default function LeaveRequestScreen() {
                             entering={FadeInDown.delay(200).springify()}
                             ref={scrollViewRef}
                             className="flex-1"
-                            contentContainerClassName="px-4 pt-4 pb-80" // Large bottom padding for Floating Footer
+                            contentContainerClassName="px-4 pt-4 pb-56" // Adjusted bottom padding for Floating Footer
                             onScroll={handleScroll}
                             scrollEventThrottle={16}
                             keyboardShouldPersistTaps="handled"

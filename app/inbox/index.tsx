@@ -4,6 +4,7 @@ import { useInboxStore } from '@/store/useInboxStore';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SectionList, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
 
@@ -22,12 +23,13 @@ const formatDTG = (dateString: string) => {
 };
 
 export default function InboxScreen() {
+    const insets = useSafeAreaInsets();
     const { messages, fetchMessages, isLoading, togglePin } = useInboxStore();
     const router = useRouter();
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [searchQuery, setSearchQuery] = useState('');
 
-    useScreenHeader("My Navy HR", "Correspondence", undefined, {
+    useScreenHeader("", "", undefined, {
         visible: true,
         onChangeText: setSearchQuery,
         placeholder: 'Search messages (e.g. 041200Z)...',

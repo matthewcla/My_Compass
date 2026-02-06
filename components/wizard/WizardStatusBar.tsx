@@ -34,6 +34,8 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
                 // Determine Icon Color based on state and theme (Semantic Colors)
                 const getIconColor = () => {
                     if (isError) return isDark ? Colors.dark.status.error : Colors.light.status.error;
+                    // If it's the last step and active, we want it to look "Completed" (Green)
+                    if (isActive && isLast) return isDark ? Colors.green[500] : Colors.green[600];
                     if (isActive) return isDark ? Colors.blue[500] : Colors.blue[600];
                     if (isCompleted) return isDark ? Colors.green[500] : Colors.green[600];
                     return isDark ? Colors.gray[500] : Colors.gray[400];
@@ -48,11 +50,13 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
                         >
                             <View className={`w-10 h-10 rounded-full items-center justify-center border-2 ${isError
                                 ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20'
-                                : isActive
-                                    ? 'border-blue-600 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                    : isCompleted
-                                        ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
-                                        : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
+                                : (isActive && isLast)
+                                    ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
+                                    : isActive
+                                        ? 'border-blue-600 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                        : isCompleted
+                                            ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
+                                            : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
                                 }`}>
                                 <Icon
                                     size={18}
@@ -62,9 +66,10 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
                             </View>
                             <Text
                                 className={`text-[10px] font-bold mt-1 ${isError ? 'text-red-600 dark:text-red-400' :
-                                    isActive ? 'text-blue-600 dark:text-blue-400' :
-                                        isCompleted ? 'text-green-600 dark:text-green-500' :
-                                            'text-slate-400 dark:text-gray-500'
+                                    (isActive && isLast) ? 'text-green-600 dark:text-green-500' :
+                                        isActive ? 'text-blue-600 dark:text-blue-400' :
+                                            isCompleted ? 'text-green-600 dark:text-green-500' :
+                                                'text-slate-400 dark:text-gray-500'
                                     }`}
                             >{step.label}</Text>
                         </Pressable>

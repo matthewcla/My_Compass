@@ -12,6 +12,8 @@ import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const NO_OP = () => { };
+
 export default function DiscoveryScreen() {
     const router = useRouter();
     const {
@@ -198,7 +200,7 @@ export default function DiscoveryScreen() {
                                                 index={0}
                                                 active={false}
                                                 billet={filteredBillets[deck.step + 1]}
-                                                onSwipe={() => { }}
+                                                onSwipe={NO_OP}
                                                 isSandbox={mode === 'sandbox'}
                                             />
                                         </View>

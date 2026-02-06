@@ -83,14 +83,14 @@ export function ScreenHeader({
                         onPress={() => searchInputRef.current?.focus()}
                         className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 py-3.5 border border-slate-200 dark:border-slate-800 shadow-sm"
                     >
-                        <Search size={22} color={colors.text} strokeWidth={2.5} className="mr-4 opacity-70" />
+                        <Search size={22} color={colors.text} strokeWidth={2.5} className="opacity-70" />
                         <TextInput
                             ref={searchInputRef}
                             value={searchConfig.value}
                             onChangeText={searchConfig.onChangeText}
                             placeholder={searchConfig.placeholder || 'Search...'}
                             placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
-                            className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
+                            className="flex-1 ml-4 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
                             style={{ outline: 'none' } as any}
                         />
                     </Pressable>

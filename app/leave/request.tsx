@@ -11,6 +11,7 @@ import { useHeaderStore } from '@/store/useHeaderStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { calculateLeave } from '@/utils/leaveLogic';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { CheckCircle, X } from 'lucide-react-native';
@@ -47,6 +48,8 @@ export default function LeaveRequestScreen() {
     const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
     const [showExitModal, setShowExitModal] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+
+
 
     const handleExit = () => {
         setShowExitModal(true);
@@ -328,6 +331,12 @@ export default function LeaveRequestScreen() {
             const currentUserId = "user-123";
             await submitRequest(formData as CreateLeaveRequestPayload, currentUserId);
 
+            // Cleanup: Remove the draft so it doesn't persist as a zombie
+            if (currentDraftId) {
+                console.log('Cleaning up draft:', currentDraftId);
+                await discardDraft(currentDraftId);
+            }
+
             // Success Celebration
             setShowSuccess(true);
             setTimeout(() => {
@@ -557,17 +566,23 @@ export default function LeaveRequestScreen() {
                 showSuccess && (
                     <Animated.View
                         entering={FadeIn}
-                        className="absolute inset-0 z-50 bg-blue-600/98 dark:bg-blue-950/98 items-center justify-center"
+                        className="absolute inset-0 z-50 items-center justify-center"
                     >
-                        <Animated.View entering={ZoomIn.delay(200).springify()}>
-                            <CheckCircle size={100} color="white" strokeWidth={2.5} />
-                        </Animated.View>
-                        <Animated.Text entering={FadeInUp.delay(500)} className="text-white text-3xl font-bold mt-8 tracking-tight">
-                            Request Sent!
-                        </Animated.Text>
-                        <Animated.Text entering={FadeInUp.delay(600)} className="text-blue-100 text-lg mt-3 text-center">
-                            Your leave request is on its way{'\n'}to the approver.
-                        </Animated.Text>
+                        <BlurView
+                            intensity={40}
+                            tint="dark"
+                            className="absolute inset-0 items-center justify-center bg-black/40"
+                        >
+                            <Animated.View entering={ZoomIn.delay(200).springify()}>
+                                <CheckCircle size={100} color="white" strokeWidth={2.5} />
+                            </Animated.View>
+                            <Animated.Text entering={FadeInUp.delay(500)} className="text-white text-3xl font-bold mt-8 tracking-tight">
+                                Request Sent!
+                            </Animated.Text>
+                            <Animated.Text entering={FadeInUp.delay(600)} className="text-blue-100 text-lg mt-3 text-center">
+                                Your leave request is on its way{'\n'}to the approver.
+                            </Animated.Text>
+                        </BlurView>
                     </Animated.View>
                 )
             }

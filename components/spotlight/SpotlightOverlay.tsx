@@ -512,7 +512,6 @@ export function SpotlightOverlay() {
     const closeWithKeyboardGuard = React.useCallback(() => {
         if (keyboardVisible) {
             Keyboard.dismiss();
-            return;
         }
         close();
     }, [close, keyboardVisible]);
@@ -916,7 +915,7 @@ export function SpotlightOverlay() {
             </View>
 
             <Pressable
-                onPress={close}
+                onPress={closeWithKeyboardGuard}
                 hitSlop={8}
                 className="w-8 h-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
                 accessibilityLabel="Close search results"

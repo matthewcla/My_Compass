@@ -700,6 +700,11 @@ class SQLiteStorage implements IStorageService {
 
   async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
     await this.withWriteTransaction(async (runner) => {
+      if (messages.length === 0) {
+        await runner.runAsync('DELETE FROM inbox_messages;');
+        return;
+      }
+
       for (const msg of messages) {
         await runner.runAsync(
           `INSERT OR REPLACE INTO inbox_messages (
@@ -717,13 +722,21 @@ class SQLiteStorage implements IStorageService {
           'synced'
         );
       }
+
+      const placeholders = messages.map(() => '?').join(', ');
+      await runner.runAsync(
+        `DELETE FROM inbox_messages WHERE id NOT IN (${placeholders});`,
+        ...messages.map((msg) => msg.id)
+      );
     });
   }
 
   async getInboxMessages(): Promise<InboxMessage[]> {
     const db = await this.getDB();
     try {
-      const results = await db.getAllAsync<any>('SELECT * FROM inbox_messages');
+      const results = await db.getAllAsync<any>(
+        'SELECT * FROM inbox_messages ORDER BY timestamp DESC LIMIT 500'
+      );
       return results.map(row => ({
         id: row.id,
         type: row.type,
@@ -732,7 +745,7 @@ class SQLiteStorage implements IStorageService {
         timestamp: row.timestamp,
         isRead: Boolean(row.is_read),
         isPinned: Boolean(row.is_pinned),
-        metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
+        metadata: row.metadata ? safeJsonParse(row.metadata) : undefined,
       }));
     } catch (error) {
       console.error('Failed to fetch inbox messages', error);
@@ -899,11 +912,12 @@ class MockStorage implements IStorageService {
 
   // Inbox
   async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
-    messages.forEach(msg => this.inboxMessages.set(msg.id, msg));
+    this.inboxMessages.clear();
+    messages.slice(0, 500).forEach(msg => this.inboxMessages.set(msg.id, msg));
   }
 
   async getInboxMessages(): Promise<InboxMessage[]> {
-    return Array.from(this.inboxMessages.values());
+    return Array.from(this.inboxMessages.values()).slice(0, 500);
   }
 
   // Career Events
@@ -1039,11 +1053,11 @@ class WebStorage implements IStorageService {
 
   // --- Inbox ---
   async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
-    this.setItem('inbox_messages', messages);
+    this.setItem('inbox_messages', messages.slice(0, 500));
   }
 
   async getInboxMessages(): Promise<InboxMessage[]> {
-    return this.getItem<InboxMessage[]>('inbox_messages') || [];
+    return (this.getItem<InboxMessage[]>('inbox_messages') || []).slice(0, 500);
   }
 
   // --- Career Events ---

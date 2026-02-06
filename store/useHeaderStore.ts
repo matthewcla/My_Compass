@@ -36,7 +36,21 @@ export const useHeaderStore = create<HeaderState>((set) => ({
     isVisible: true,
     variant: 'large',
     setHeader: (title, subtitle, rightAction = null, variant = 'large', searchConfig = null) =>
-        set({ title, subtitle, rightAction, isVisible: true, variant, searchConfig }),
+        set((state) => {
+            const isSame =
+                state.title === title &&
+                state.subtitle === subtitle &&
+                state.rightAction === rightAction &&
+                state.variant === variant &&
+                state.searchConfig === searchConfig &&
+                state.isVisible === true;
+
+            if (isSame) {
+                return state;
+            }
+
+            return { title, subtitle, rightAction, isVisible: true, variant, searchConfig };
+        }),
     setSearchConfig: (searchConfig) => set({ searchConfig }),
     setVisible: (visible) => set({ isVisible: visible }),
     resetHeader: () => set({ title: '', subtitle: '', rightAction: null, isVisible: true, variant: 'large', searchConfig: null }),

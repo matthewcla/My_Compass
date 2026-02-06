@@ -3,6 +3,14 @@ import { InboxMessage } from '@/types/inbox';
 import { CorrespondenceService } from '@/services/correspondence';
 import { storage } from '@/services/storage';
 
+const MAX_INBOX_MESSAGES = 500;
+
+const sortByNewest = (a: InboxMessage, b: InboxMessage) =>
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+
+const clipMessages = (messages: InboxMessage[]) =>
+    [...messages].sort(sortByNewest).slice(0, MAX_INBOX_MESSAGES);
+
 interface InboxState {
     messages: InboxMessage[];
     isLoading: boolean;
@@ -38,16 +46,27 @@ export const useInboxStore = create<InboxState>((set, get) => ({
             if (messages.length === 0) {
                 const cached = await storage.getInboxMessages();
                 if (cached.length > 0) {
-                    set({ messages: cached, isLoading: false });
+                    set({ messages: clipMessages(cached), isLoading: false });
                 }
             }
 
             // Fetch fresh data
             const newMessages = await CorrespondenceService.fetchMessages();
-            set({ messages: newMessages, isLoading: false, lastFetched: Date.now() });
+
+            const existingById = new Map(get().messages.map((m) => [m.id, m]));
+            const mergedMessages = clipMessages(
+                newMessages.map((msg) => {
+                    const existing = existingById.get(msg.id);
+                    return existing
+                        ? { ...msg, isRead: existing.isRead, isPinned: existing.isPinned }
+                        : msg;
+                })
+            );
+
+            set({ messages: mergedMessages, isLoading: false, lastFetched: Date.now() });
 
             // Update cache
-            await storage.saveInboxMessages(newMessages);
+            await storage.saveInboxMessages(mergedMessages);
         } catch (error) {
             // If we have cached messages (in memory), just warn. Otherwise set error state.
             if (get().messages.length === 0) {
@@ -60,13 +79,13 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     },
 
     markAsRead: (id: string) => {
-        const newMessages = get().messages.map(m => m.id === id ? { ...m, isRead: true } : m);
+        const newMessages = clipMessages(get().messages.map(m => m.id === id ? { ...m, isRead: true } : m));
         set({ messages: newMessages });
         storage.saveInboxMessages(newMessages).catch(e => console.error('Failed to save read status', e));
     },
 
     togglePin: (id: string) => {
-        const newMessages = get().messages.map(m => m.id === id ? { ...m, isPinned: !m.isPinned } : m);
+        const newMessages = clipMessages(get().messages.map(m => m.id === id ? { ...m, isPinned: !m.isPinned } : m));
         set({ messages: newMessages });
         storage.saveInboxMessages(newMessages).catch(e => console.error('Failed to save pin status', e));
     }

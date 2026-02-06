@@ -103,7 +103,7 @@ export function ScreenHeader({
                         onPress={() => searchInputRef.current?.focus()}
                         className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 py-3.5 border border-slate-200 dark:border-slate-800 shadow-sm"
                     >
-                        <Search size={22} color={colors.text} strokeWidth={2.5} className="mr-4 opacity-70" />
+                        <Search size={22} color={colors.text} strokeWidth={2.5} style={{ marginRight: 20 }} className="opacity-70" />
                         <TextInput
                             ref={searchInputRef}
                             value={localSearchValue}

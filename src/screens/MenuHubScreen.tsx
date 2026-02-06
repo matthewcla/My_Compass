@@ -91,8 +91,8 @@ export default function MenuHubScreen() {
               ref={inputRef}
               placeholder="Search..."
               placeholderTextColor={theme.icon}
-              style={{ color: theme.text }}
-              className="flex-1 ml-4 text-[17px] font-medium h-full"
+              style={{ color: theme.text, marginLeft: 20 }}
+              className="flex-1 text-[17px] font-medium h-full"
             />
           </Pressable>
         </MotiView>

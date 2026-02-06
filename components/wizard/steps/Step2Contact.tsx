@@ -37,7 +37,7 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                 {/* 0. Location & Legal */}
                 <View>
                     <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">
-                        Deployment Status
+                        Leave Area
                     </Text>
 
                     <Animated.View layout={LinearTransition} className="bg-inputBackground rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">

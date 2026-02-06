@@ -11,7 +11,7 @@ export const InboxMessageSchema = z.object({
     timestamp: z.string().datetime(),
     isRead: z.boolean().default(false),
     isPinned: z.boolean().default(false),
-    metadata: z.record(z.any()).optional(), // JSON object for deep linking
+    metadata: z.record(z.string(), z.any()).optional(), // JSON object for deep linking
 });
 
 export type InboxMessage = z.infer<typeof InboxMessageSchema>;

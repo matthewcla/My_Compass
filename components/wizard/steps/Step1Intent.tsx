@@ -8,7 +8,7 @@ import { addDays, eachDayOfInterval, format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { AlertCircle, Clock, Lock } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, Text, useColorScheme, View } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import Animated, { FadeIn, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
 
@@ -393,133 +393,154 @@ export function Step1Intent({
 
             {/* iOS Time Picker Overlay */}
             {Platform.OS === 'ios' && showTimePicker && (
-                <View
-                    className="absolute inset-0 z-50 justify-end bg-black/80"
+                <Modal
+                    transparent
+                    animationType="fade"
+                    visible={showTimePicker}
+                    onRequestClose={() => setShowTimePicker(false)}
                 >
-                    <Pressable className="absolute inset-0" onPress={() => setShowTimePicker(false)} />
-                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 pb-8 pt-4 rounded-t-3xl">
-                        <View className="flex-row justify-between px-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
-                            <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                                Select Time
-                            </Text>
-                            <Pressable onPress={() => setShowTimePicker(false)}>
-                                <Text className="text-blue-600 font-bold text-lg">Done</Text>
-                            </Pressable>
-                        </View>
-                        <DateTimePicker
-                            value={new Date()}
-                            mode="time"
-                            display="spinner"
-                            onChange={handleTimeChange}
-                            themeVariant={colorScheme}
-                        />
-                    </Animated.View>
-                </View>
+                    <View
+                        className="flex-1 bg-black/80"
+                    >
+                        <Pressable className="absolute inset-0" onPress={() => setShowTimePicker(false)} />
+                        <Animated.View entering={FadeIn.duration(200)} className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 pb-8 pt-4 rounded-t-3xl">
+                            <View className="flex-row justify-between px-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
+                                <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                                    Select Time
+                                </Text>
+                                <Pressable onPress={() => setShowTimePicker(false)}>
+                                    <Text className="text-blue-600 font-bold text-lg">Done</Text>
+                                </Pressable>
+                            </View>
+                            <DateTimePicker
+                                value={new Date()}
+                                mode="time"
+                                display="spinner"
+                                onChange={handleTimeChange}
+                                themeVariant={colorScheme}
+                            />
+                        </Animated.View>
+                    </View>
+                </Modal>
             )}
 
             {/* Working Hours Picker Overlay */}
             {!!hoursField && (
-                <View
-                    className="absolute inset-0 z-50 justify-end bg-black/80"
+                <Modal
+                    transparent
+                    animationType="fade"
+                    visible={!!hoursField}
+                    onRequestClose={() => setHoursField(null)}
                 >
-                    <Pressable className="absolute inset-0" onPress={() => setHoursField(null)} />
-                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
-                        <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
-                            <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                                Select Schedule
-                            </Text>
-                            <Pressable onPress={() => setHoursField(null)}>
-                                <View className="bg-slate-200 dark:bg-slate-700 rounded-full p-1">
-                                    <Text className="text-slate-500 dark:text-slate-400 font-bold px-2">Close</Text>
-                                </View>
-                            </Pressable>
-                        </View>
+                    <View
+                        className="flex-1 bg-black/80"
+                    >
+                        <Pressable className="absolute inset-0" onPress={() => setHoursField(null)} />
+                        <Animated.View entering={FadeIn.duration(200)} className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
+                            <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
+                                <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                                    Select Schedule
+                                </Text>
+                                <Pressable onPress={() => setHoursField(null)}>
+                                    <View className="bg-slate-200 dark:bg-slate-700 rounded-full p-1">
+                                        <Text className="text-slate-500 dark:text-slate-400 font-bold px-2">Close</Text>
+                                    </View>
+                                </Pressable>
+                            </View>
 
-                        <View className="p-4 pb-10 gap-2">
-                            {WORKING_HOURS_OPTIONS.map((option) => {
-                                const currentVal = hoursField === 'departure' ? departureWorkingHours : returnWorkingHours;
-                                const isSelected = currentVal === option.value;
+                            <View className="p-4 pb-10 gap-2">
+                                {WORKING_HOURS_OPTIONS.map((option) => {
+                                    const currentVal = hoursField === 'departure' ? departureWorkingHours : returnWorkingHours;
+                                    const isSelected = currentVal === option.value;
 
-                                return (
-                                    <Pressable
-                                        key={option.value}
-                                        onPress={() => {
-                                            if (hoursField) {
-                                                onUpdate(hoursField === 'departure' ? 'departureWorkingHours' : 'returnWorkingHours', option.value);
-                                                setHoursField(null);
-                                                Haptics.selectionAsync();
-                                            }
-                                        }}
-                                        className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
-                                            ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
-                                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
-                                            }`}
-                                    >
-                                        <Text className={`font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                                            {option.label}
-                                        </Text>
-                                        {isSelected && (
-                                            <View className="w-5 h-5 rounded-full bg-blue-500 items-center justify-center">
-                                                <View className="w-2 h-2 rounded-full bg-white" />
-                                            </View>
-                                        )}
-                                    </Pressable>
-                                );
-                            })}
-                        </View>
-                    </Animated.View>
-                </View>
+                                    return (
+                                        <Pressable
+                                            key={option.value}
+                                            onPress={() => {
+                                                if (hoursField) {
+                                                    onUpdate(hoursField === 'departure' ? 'departureWorkingHours' : 'returnWorkingHours', option.value);
+                                                    setHoursField(null);
+                                                    Haptics.selectionAsync();
+                                                }
+                                            }}
+                                            className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
+                                                ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
+                                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
+                                                }`}
+                                        >
+                                            <Text className={`font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                                                {option.label}
+                                            </Text>
+                                            {isSelected && (
+                                                <View className="w-5 h-5 rounded-full bg-blue-500 items-center justify-center">
+                                                    <View className="w-2 h-2 rounded-full bg-white" />
+                                                </View>
+                                            )}
+                                        </Pressable>
+                                    );
+                                })}
+                            </View>
+                        </Animated.View>
+                    </View>
+                </Modal>
             )}
 
             {/* Leave Type Picker Overlay */}
             {showLeaveTypePicker && (
-                <View
-                    className="absolute inset-0 z-50 justify-end bg-black/80"
+                <Modal
+                    transparent
+                    animationType="fade"
+                    visible={showLeaveTypePicker}
+                    onRequestClose={() => setShowLeaveTypePicker(false)}
                 >
-                    <Pressable className="absolute inset-0" onPress={() => setShowLeaveTypePicker(false)} />
-                    <Animated.View entering={FadeIn.duration(200)} className="bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
-                        <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
-                            <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                                Select Leave Category
-                            </Text>
-                            <Pressable onPress={() => setShowLeaveTypePicker(false)}>
-                                <View className="bg-slate-200 dark:bg-slate-700 rounded-full p-1">
-                                    <Text className="text-slate-500 dark:text-slate-400 font-bold px-2">Close</Text>
-                                </View>
-                            </Pressable>
-                        </View>
+                    <View
+                        className="flex-1 bg-black/80"
+                    >
+                        <Pressable className="absolute inset-0" onPress={() => setShowLeaveTypePicker(false)} />
+                        <Animated.View entering={FadeIn.duration(200)} className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
+                            <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
+                                <Text className="text-lg font-bold text-slate-900 dark:text-white">
+                                    Select Leave Category
+                                </Text>
+                                <Pressable onPress={() => setShowLeaveTypePicker(false)}>
+                                    <View className="bg-slate-200 dark:bg-slate-700 rounded-full p-1">
+                                        <Text className="text-slate-500 dark:text-slate-400 font-bold px-2">Close</Text>
+                                    </View>
+                                </Pressable>
+                            </View>
 
-                        <View className="p-4 pb-10 gap-2">
-                            {LEAVE_TYPE_OPTIONS.map((option) => {
-                                const isSelected = (leaveType || 'annual') === option.value;
+                            <ScrollView className="p-4 flex-1" contentContainerStyle={{ paddingBottom: 40, gap: 8 }} showsVerticalScrollIndicator={false}>
+                                {LEAVE_TYPE_OPTIONS.map((option) => {
+                                    const isSelected = (leaveType || 'annual') === option.value;
 
-                                return (
-                                    <Pressable
-                                        key={option.value}
-                                        onPress={() => {
-                                            onUpdate('leaveType', option.value);
-                                            setShowLeaveTypePicker(false);
-                                            Haptics.selectionAsync();
-                                        }}
-                                        className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
-                                            ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
-                                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
-                                            }`}
-                                    >
-                                        <Text className={`font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                                            {option.label}
-                                        </Text>
-                                        {isSelected && (
-                                            <View className="w-5 h-5 rounded-full bg-blue-500 items-center justify-center">
-                                                <View className="w-2 h-2 rounded-full bg-white" />
-                                            </View>
-                                        )}
-                                    </Pressable>
-                                );
-                            })}
-                        </View>
-                    </Animated.View>
-                </View>
+                                    return (
+                                        <Pressable
+                                            key={option.value}
+                                            onPress={() => {
+                                                onUpdate('leaveType', option.value);
+                                                setShowLeaveTypePicker(false);
+                                                Haptics.selectionAsync();
+                                            }}
+                                            className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
+                                                ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
+                                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
+                                                }`}
+                                        >
+                                            <Text className={`font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                                                {option.label}
+                                            </Text>
+                                            {isSelected && (
+                                                <View className="w-5 h-5 rounded-full bg-blue-500 items-center justify-center">
+                                                    <View className="w-2 h-2 rounded-full bg-white" />
+                                                </View>
+                                            )}
+                                        </Pressable>
+                                    );
+                                })}
+                            </ScrollView>
+                        </Animated.View>
+                    </View>
+                </Modal>
             )}
         </WizardCard>
     );

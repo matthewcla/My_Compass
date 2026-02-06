@@ -8,8 +8,8 @@ import { getShadow } from '@/utils/getShadow';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { Stack } from 'expo-router';
-import { Clock, MapPin, QrCode } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import { Clock, MapPin, QrCode, Calendar as CalendarIcon } from 'lucide-react-native';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ActivityIndicator, Alert, SectionList, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -127,6 +127,21 @@ export default function CalendarScreen() {
         });
     }, [searchQuery]); // Re-run when query changes to update the value in store
 
+    // Filter Events based on search query
+    const filteredEvents = useMemo(() => {
+        if (!searchQuery) return groupedEvents;
+
+        const query = searchQuery.toLowerCase();
+        return groupedEvents.map(section => ({
+            ...section,
+            data: section.data.filter(event =>
+                event.title.toLowerCase().includes(query) ||
+                (event.location && event.location.toLowerCase().includes(query)) ||
+                event.eventType.toLowerCase().includes(query)
+            )
+        })).filter(section => section.data.length > 0);
+    }, [groupedEvents, searchQuery]);
+
     return (
         <>
             <Stack.Screen options={{ headerShown: false }} />
@@ -141,7 +156,7 @@ export default function CalendarScreen() {
                     </View>
                 ) : (
                     <SectionList
-                        sections={groupedEvents}
+                        sections={filteredEvents}
                         initialNumToRender={10}
                         windowSize={5}
                         keyExtractor={(item) => item.eventId}
@@ -157,11 +172,26 @@ export default function CalendarScreen() {
                                 </Text>
                             </View>
                         )}
-                        contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }} // Reduced spacing for tighter layout
+                        contentContainerStyle={{ paddingBottom: 100, paddingTop: 8, flexGrow: 1 }} // Added flexGrow for empty state centering
                         stickySectionHeadersEnabled={true}
                         refreshing={loading}
                         onRefresh={refresh}
                         showsVerticalScrollIndicator={false}
+                        ListEmptyComponent={
+                            <View className="flex-1 items-center justify-center py-20 px-6">
+                                <View className="bg-slate-100 dark:bg-slate-800 p-6 rounded-full mb-4">
+                                    <CalendarIcon size={48} color={isDark ? '#94a3b8' : '#cbd5e1'} />
+                                </View>
+                                <Text className="text-lg font-bold text-slate-900 dark:text-white mb-2 text-center">
+                                    {searchQuery ? 'No matching events' : 'No upcoming events'}
+                                </Text>
+                                <Text className="text-sm text-slate-500 dark:text-slate-400 text-center max-w-[250px] leading-6">
+                                    {searchQuery
+                                        ? `We couldn't find any events matching "${searchQuery}".`
+                                        : "You're all caught up! check back later for new schedules."}
+                                </Text>
+                            </View>
+                        }
                     />
                 )}
 

@@ -30,6 +30,25 @@ export function ScreenHeader({
     const isInline = variant === 'inline';
     const searchInputRef = React.useRef<TextInput>(null);
 
+    // Local state to prevent race conditions/flickering with async store updates
+    const [localSearchValue, setLocalSearchValue] = React.useState(searchConfig?.value || '');
+
+    // Sync local state when prop changes externally (e.g. clear button, or initial load)
+    // We only sync if the values are significantly different to avoid loop
+    React.useEffect(() => {
+        if (searchConfig?.value !== undefined && searchConfig.value !== localSearchValue) {
+            setLocalSearchValue(searchConfig.value);
+        }
+    }, [searchConfig?.value]);
+
+    const handleSearchChange = (text: string) => {
+        // 1. Immediate local update (Sync) - Fixes flickering
+        setLocalSearchValue(text);
+
+        // 2. Propagate to store (Async)
+        searchConfig?.onChangeText?.(text);
+    };
+
     return (
         <View className="z-50 bg-gray-100 dark:bg-black">
             <View
@@ -83,14 +102,14 @@ export function ScreenHeader({
                         onPress={() => searchInputRef.current?.focus()}
                         className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 py-3.5 border border-slate-200 dark:border-slate-800 shadow-sm"
                     >
-                        <Search size={22} color={colors.text} strokeWidth={2.5} className="mr-4 opacity-70" />
+                        <Search size={22} color={colors.text} strokeWidth={2.5} className="opacity-70" />
                         <TextInput
                             ref={searchInputRef}
-                            value={searchConfig.value}
-                            onChangeText={searchConfig.onChangeText}
+                            value={localSearchValue}
+                            onChangeText={handleSearchChange}
                             placeholder={searchConfig.placeholder || 'Search...'}
                             placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
-                            className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
+                            className="flex-1 ml-4 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
                             style={{ outline: 'none' } as any}
                         />
                     </Pressable>

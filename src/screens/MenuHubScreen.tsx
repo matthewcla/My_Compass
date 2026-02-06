@@ -1,5 +1,6 @@
 import { MenuTile } from '@/components/menu/MenuTile';
 import { useSession } from '@/lib/ctx';
+import { useSpotlightStore } from '@/store/useSpotlightStore';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import {
@@ -14,8 +15,8 @@ import {
   User
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React, { useRef, useState } from 'react';
-import { Pressable, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import React, { useState } from 'react';
+import { Platform, Pressable, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MenuHubScreen() {
@@ -37,7 +38,10 @@ export default function MenuHubScreen() {
   };
 
   const [toastVisible, setToastVisible] = useState(false);
-  const inputRef = useRef<TextInput>(null);
+  const openSpotlight = useSpotlightStore((state) => state.open);
+  const spotlightQuery = useSpotlightStore((state) => state.query);
+  const spotlightOpen = useSpotlightStore((state) => state.isOpen);
+  const setSpotlightQuery = useSpotlightStore((state) => state.setQuery);
 
   const handleTilePress = (route: string) => {
     // router.push(route);
@@ -73,12 +77,10 @@ export default function MenuHubScreen() {
             backgroundColor: theme.card,
             borderColor: theme.border,
             borderRadius: 24,
-            // Padding removed here and moved to Pressable
           }}
           className="rounded-3xl shadow-sm border"
         >
-          <Pressable
-            onPress={() => inputRef.current?.focus()}
+          <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -88,13 +90,37 @@ export default function MenuHubScreen() {
           >
             <Search size={22} color={theme.icon} strokeWidth={2.5} />
             <TextInput
-              ref={inputRef}
-              placeholder="Search..."
+              value={spotlightQuery}
+              onChangeText={(text) => {
+                if (!spotlightOpen) {
+                  openSpotlight({ source: 'primary', preserveQuery: true });
+                }
+                setSpotlightQuery(text);
+              }}
+              onFocus={() => openSpotlight({ source: 'primary', preserveQuery: true })}
+              placeholder="Search all app functions..."
               placeholderTextColor={theme.icon}
               style={{ color: theme.text, marginLeft: 20 }}
               className="flex-1 text-[17px] font-medium h-full"
+              autoCorrect={false}
+              autoCapitalize="none"
+              returnKeyType="search"
+              accessibilityLabel="Global search input"
             />
-          </Pressable>
+            {Platform.OS === 'web' && (
+              <View
+                style={{
+                  borderColor: theme.border,
+                  backgroundColor: theme.inputBg
+                }}
+                className="border rounded-md px-2 py-1"
+              >
+                <Text style={{ color: theme.subText }} className="text-[10px] font-bold uppercase tracking-wider">
+                  ⌘K
+                </Text>
+              </View>
+            )}
+          </View>
         </MotiView>
       </View>
 

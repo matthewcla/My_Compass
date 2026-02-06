@@ -2,7 +2,9 @@ import { create } from 'zustand';
 
 export interface SearchConfig {
     visible: boolean;
-    onChangeText: (text: string) => void;
+    mode?: 'local' | 'global';
+    onChangeText?: (text: string) => void;
+    onPress?: () => void;
     placeholder?: string;
     value?: string;
 }

@@ -3,7 +3,7 @@ import Colors from '@/constants/Colors';
 import { SearchConfig } from '@/store/useHeaderStore';
 import { Search } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ScreenHeaderProps {
@@ -28,6 +28,7 @@ export function ScreenHeader({
     const colors = Colors[colorScheme ?? 'light'];
 
     const isInline = variant === 'inline';
+    const isGlobalSearch = searchConfig?.mode === 'global';
     const searchInputRef = React.useRef<TextInput>(null);
 
     // Local state to prevent race conditions/flickering with async store updates
@@ -99,21 +100,65 @@ export function ScreenHeader({
 
             {searchConfig && searchConfig.visible && (
                 <View className="px-5 pb-4">
-                    <Pressable
-                        onPress={() => searchInputRef.current?.focus()}
-                        className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 py-3.5 border border-slate-200 dark:border-slate-800 shadow-sm"
-                    >
-                        <Search size={22} color={colors.text} strokeWidth={2.5} style={{ marginRight: 20 }} className="opacity-70" />
-                        <TextInput
-                            ref={searchInputRef}
-                            value={localSearchValue}
-                            onChangeText={handleSearchChange}
-                            placeholder={searchConfig.placeholder || 'Search...'}
-                            placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
-                            className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
-                            style={{ outline: 'none' } as any}
-                        />
-                    </Pressable>
+                    {isGlobalSearch ? (
+                        <View
+                            className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 py-3.5 border border-slate-200 dark:border-slate-800 shadow-sm"
+                            accessibilityRole="search"
+                            accessibilityLabel={searchConfig.placeholder || 'Global search'}
+                        >
+                            <Search
+                                size={22}
+                                color={colors.text}
+                                strokeWidth={2.5}
+                                style={{ marginRight: 20 }}
+                                className="opacity-70"
+                            />
+
+                            <TextInput
+                                value={searchConfig.value || ''}
+                                onChangeText={searchConfig.onChangeText}
+                                onFocus={searchConfig.onPress}
+                                placeholder={searchConfig.placeholder || 'Search...'}
+                                placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
+                                className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
+                                style={{ outline: 'none' } as any}
+                                autoCorrect={false}
+                                autoCapitalize="none"
+                                returnKeyType="search"
+                                accessibilityLabel={searchConfig.placeholder || 'Global search input'}
+                            />
+
+                            {Platform.OS === 'web' && (
+                                <View className="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-700">
+                                    <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        ⌘K
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                    ) : (
+                        <Pressable
+                            onPress={() => searchInputRef.current?.focus()}
+                            className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 py-3.5 border border-slate-200 dark:border-slate-800 shadow-sm"
+                        >
+                            <Search
+                                size={22}
+                                color={colors.text}
+                                strokeWidth={2.5}
+                                style={{ marginRight: 20 }}
+                                className="opacity-70"
+                            />
+                            <TextInput
+                                ref={searchInputRef}
+                                value={localSearchValue}
+                                onChangeText={handleSearchChange}
+                                placeholder={searchConfig.placeholder || 'Search...'}
+                                placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
+                                className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
+                                style={{ outline: 'none' } as any}
+                            />
+                        </Pressable>
+                    )}
                 </View>
             )}
         </View >

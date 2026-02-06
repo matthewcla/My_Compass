@@ -156,6 +156,7 @@ export default function LeaveRequestScreen() {
             relationship: '',
             phoneNumber: '',
         },
+        rationStatus: 'not_applicable', // Default to avoid validation lock
     });
 
     const createDraft = useLeaveStore((state) => state.createDraft);
@@ -272,11 +273,15 @@ export default function LeaveRequestScreen() {
             case 0: // Intent
                 return !!(formData.startDate && formData.endDate && formData.leaveType);
             case 1: // Location
-                return !!(formData.leaveAddress && formData.leavePhoneNumber);
+                const isLocationValid = !!(formData.leaveAddress && formData.leavePhoneNumber && formData.modeOfTravel);
+                if (formData.leaveInConus) {
+                    return isLocationValid;
+                }
+                return isLocationValid && !!formData.destinationCountry;
             case 2: // Command
                 return !!(formData.dutySection && formData.deptDiv && formData.dutyPhone && formData.rationStatus);
             case 3: // Safety
-                return !!(formData.emergencyContact?.name && formData.emergencyContact?.phoneNumber);
+                return !!(formData.emergencyContact?.name && formData.emergencyContact?.phoneNumber && formData.memberRemarks);
             default:
                 return true;
         }
@@ -375,14 +380,14 @@ export default function LeaveRequestScreen() {
     }
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+        <View className="flex-1 bg-slate-50 dark:bg-slate-950" >
             {colorScheme === 'dark' && (
                 <LinearGradient
                     colors={['#0f172a', '#020617']} // slate-900 to slate-950
                     style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
                 />
             )}
-            <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+            < SafeAreaView style={{ flex: 1 }} edges={['top']} >
                 <View className="flex-1">
                     {/* Header: StatusBar */}
                     <Animated.View
@@ -495,73 +500,77 @@ export default function LeaveRequestScreen() {
                         </View>
                     </View>
                 </View>
-            </SafeAreaView>
+            </SafeAreaView >
 
             {/* Exit Confirmation Overlay */}
-            {showExitModal && (
-                <View className="absolute inset-0 z-50 items-center justify-center p-4">
-                    {/* Backdrop */}
-                    <Animated.View entering={FadeIn} className="absolute inset-0 bg-black/60">
-                        <Pressable className="flex-1" onPress={() => setShowExitModal(false)} />
-                    </Animated.View>
+            {
+                showExitModal && (
+                    <View className="absolute inset-0 z-50 items-center justify-center p-4">
+                        {/* Backdrop */}
+                        <Animated.View entering={FadeIn} className="absolute inset-0 bg-black/60">
+                            <Pressable className="flex-1" onPress={() => setShowExitModal(false)} />
+                        </Animated.View>
 
-                    {/* Content */}
-                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
-                        <View className="p-6 items-center">
-                            <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
-                                Save Draft?
-                            </Text>
-                            <Text className="text-slate-500 dark:text-slate-400 text-center mb-6">
-                                Would you like to save this request as a draft before exiting?
-                            </Text>
+                        {/* Content */}
+                        <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+                            <View className="p-6 items-center">
+                                <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
+                                    Save Draft?
+                                </Text>
+                                <Text className="text-slate-500 dark:text-slate-400 text-center mb-6">
+                                    Would you like to save this request as a draft before exiting?
+                                </Text>
 
-                            <View className="w-full gap-3">
-                                {/* Save & Exit */}
-                                <Pressable
-                                    onPress={() => confirmExit('save')}
-                                    className="w-full py-3 bg-blue-600 rounded-xl items-center active:bg-blue-700"
-                                >
-                                    <Text className="text-white font-semibold">Save & Exit</Text>
-                                </Pressable>
+                                <View className="w-full gap-3">
+                                    {/* Save & Exit */}
+                                    <Pressable
+                                        onPress={() => confirmExit('save')}
+                                        className="w-full py-3 bg-blue-600 rounded-xl items-center active:bg-blue-700"
+                                    >
+                                        <Text className="text-white font-semibold">Save & Exit</Text>
+                                    </Pressable>
 
-                                {/* Discard */}
-                                <Pressable
-                                    onPress={() => confirmExit('discard')}
-                                    className="w-full py-3 bg-red-50 dark:bg-red-900/20 rounded-xl items-center active:bg-red-100 dark:active:bg-red-900/30"
-                                >
-                                    <Text className="text-red-600 dark:text-red-400 font-semibold">Discard</Text>
-                                </Pressable>
+                                    {/* Discard */}
+                                    <Pressable
+                                        onPress={() => confirmExit('discard')}
+                                        className="w-full py-3 bg-red-50 dark:bg-red-900/20 rounded-xl items-center active:bg-red-100 dark:active:bg-red-900/30"
+                                    >
+                                        <Text className="text-red-600 dark:text-red-400 font-semibold">Discard</Text>
+                                    </Pressable>
 
-                                {/* Cancel */}
-                                <Pressable
-                                    onPress={() => setShowExitModal(false)}
-                                    className="w-full py-3 mt-2 items-center"
-                                >
-                                    <Text className="text-slate-500 dark:text-slate-400 font-medium">Cancel</Text>
-                                </Pressable>
+                                    {/* Cancel */}
+                                    <Pressable
+                                        onPress={() => setShowExitModal(false)}
+                                        className="w-full py-3 mt-2 items-center"
+                                    >
+                                        <Text className="text-slate-500 dark:text-slate-400 font-medium">Cancel</Text>
+                                    </Pressable>
+                                </View>
                             </View>
-                        </View>
-                    </Animated.View>
-                </View>
-            )}
+                        </Animated.View>
+                    </View>
+                )
+            }
 
             {/* Success Celebration Overlay */}
-            {showSuccess && (
-                <Animated.View
-                    entering={FadeIn}
-                    className="absolute inset-0 z-50 bg-blue-600/98 dark:bg-blue-950/98 items-center justify-center"
-                >
-                    <Animated.View entering={ZoomIn.delay(200).springify()}>
-                        <CheckCircle size={100} color="white" strokeWidth={2.5} />
+            {
+                showSuccess && (
+                    <Animated.View
+                        entering={FadeIn}
+                        className="absolute inset-0 z-50 bg-blue-600/98 dark:bg-blue-950/98 items-center justify-center"
+                    >
+                        <Animated.View entering={ZoomIn.delay(200).springify()}>
+                            <CheckCircle size={100} color="white" strokeWidth={2.5} />
+                        </Animated.View>
+                        <Animated.Text entering={FadeInUp.delay(500)} className="text-white text-3xl font-bold mt-8 tracking-tight">
+                            Request Sent!
+                        </Animated.Text>
+                        <Animated.Text entering={FadeInUp.delay(600)} className="text-blue-100 text-lg mt-3 text-center">
+                            Your leave request is on its way{'\n'}to the approver.
+                        </Animated.Text>
                     </Animated.View>
-                    <Animated.Text entering={FadeInUp.delay(500)} className="text-white text-3xl font-bold mt-8 tracking-tight">
-                        Request Sent!
-                    </Animated.Text>
-                    <Animated.Text entering={FadeInUp.delay(600)} className="text-blue-100 text-lg mt-3 text-center">
-                        Your leave request is on its way{'\n'}to the approver.
-                    </Animated.Text>
-                </Animated.View>
-            )}
-        </View>
+                )
+            }
+        </View >
     );
 }

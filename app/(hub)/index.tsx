@@ -65,7 +65,15 @@ export default function HubDashboard() {
     };
 
     // Hoist Header State
-    useScreenHeader("HUB", renderGreeting());
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Hoist Header State
+    useScreenHeader("", "", undefined, {
+        visible: true,
+        onChangeText: setSearchQuery,
+        placeholder: 'Search...',
+        value: searchQuery
+    });
 
     // Navigation Handlers
     const handleStartExploring = () => {
@@ -204,7 +212,7 @@ export default function HubDashboard() {
                 style={{ flex: 1 }}
                 contentContainerStyle={{
                     padding: 16,
-                    paddingTop: insets.top + 10,
+                    paddingTop: 16,
                     paddingBottom: 100 + insets.bottom,
                 }}
             />

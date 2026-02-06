@@ -14,8 +14,8 @@ import {
   User
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React, { useState } from 'react';
-import { ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Pressable, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MenuHubScreen() {
@@ -37,6 +37,7 @@ export default function MenuHubScreen() {
   };
 
   const [toastVisible, setToastVisible] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
   const handleTilePress = (route: string) => {
     // router.push(route);
@@ -56,15 +57,13 @@ export default function MenuHubScreen() {
       {/* Sticky Header */}
       <View
         style={{
-          paddingTop: Math.max(insets.top, 20),
+          paddingTop: Math.max(insets.top, 20) + 16,
           backgroundColor: theme.background,
           zIndex: 10
         }}
         className="px-5 pb-4"
       >
-        <Text style={{ color: theme.text }} className="text-2xl font-extrabold tracking-tight mb-4 mt-2">
-          Menu Hub
-        </Text>
+
 
         <MotiView
           from={{ opacity: 0, translateY: -10 }}
@@ -74,20 +73,28 @@ export default function MenuHubScreen() {
             backgroundColor: theme.card,
             borderColor: theme.border,
             borderRadius: 24,
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingVertical: 14, // Matches py-3.5/4 logic approx 50-54px height
-            paddingHorizontal: 16,
+            // Padding removed here and moved to Pressable
           }}
-          className="rounded-3xl flex-row items-center px-4 py-4 shadow-sm border"
+          className="rounded-3xl shadow-sm border"
         >
-          <Search size={22} color={theme.icon} strokeWidth={2.5} />
-          <TextInput
-            placeholder="Search..."
-            placeholderTextColor={theme.icon}
-            style={{ color: theme.text }}
-            className="flex-1 ml-3 text-[17px] font-medium h-full"
-          />
+          <Pressable
+            onPress={() => inputRef.current?.focus()}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 14,
+              paddingHorizontal: 16,
+            }}
+          >
+            <Search size={22} color={theme.icon} strokeWidth={2.5} />
+            <TextInput
+              ref={inputRef}
+              placeholder="Search..."
+              placeholderTextColor={theme.icon}
+              style={{ color: theme.text }}
+              className="flex-1 ml-4 text-[17px] font-medium h-full"
+            />
+          </Pressable>
         </MotiView>
       </View>
 

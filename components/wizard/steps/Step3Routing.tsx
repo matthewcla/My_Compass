@@ -39,8 +39,8 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                     <View className="bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700 gap-4">
 
                         {/* Duty Section */}
-                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 pb-2">
-                            <Briefcase size={20} color={themeColors.tint} className="mr-3" strokeWidth={2} />
+                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 pb-2 gap-3">
+                            <Briefcase size={20} color={themeColors.tint} strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-labelPrimary dark:text-white"
                                 placeholder="Duty Section (e.g. N1 Admin)"
@@ -51,8 +51,8 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                         </View>
 
                         {/* Dept/Div */}
-                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 pb-2">
-                            <Building2 size={20} color={themeColors.tint} className="mr-3" strokeWidth={2} />
+                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 pb-2 gap-3">
+                            <Building2 size={20} color={themeColors.tint} strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-labelPrimary dark:text-white"
                                 placeholder="Dept / Div"
@@ -63,8 +63,8 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                         </View>
 
                         {/* Duty Phone */}
-                        <View className="flex-row items-center">
-                            <Phone size={20} color={themeColors.tint} className="mr-3" strokeWidth={2} />
+                        <View className="flex-row items-center gap-3">
+                            <Phone size={20} color={themeColors.tint} strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-labelPrimary dark:text-white"
                                 placeholder="Duty Phone"

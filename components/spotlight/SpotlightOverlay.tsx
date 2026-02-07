@@ -679,8 +679,10 @@ export function SpotlightOverlay() {
     if (!session || !isOpen) return null;
 
     const inputBackgroundClass = isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200';
-    const fallbackTopPassthrough = Math.max(insets.top + 122, 134);
-    const primaryTop = globalSearchBottomY ?? fallbackTopPassthrough;
+    // Web needs significantly more clearance due to lack of safe area inset and different header height behavior
+    const webTopOffset = Platform.OS === 'web' ? 20 : 0;
+    const fallbackTopPassthrough = Math.max(insets.top + 122, 134) + webTopOffset;
+    const primaryTop = (globalSearchBottomY ?? fallbackTopPassthrough) + webTopOffset;
     const mobileSheetHeight = Math.min(height * 0.62, height - Math.max(insets.top, 10) - 84);
     const desktopPanelHeight = Math.min(height * 0.82, height - Math.max(insets.top, 12) - 18);
 
@@ -803,6 +805,31 @@ export function SpotlightOverlay() {
         </ScrollView>
     );
 
+    const renderFilterChips = (
+        <View className="flex-1 flex-row flex-wrap gap-2">
+            {SCOPE_OPTIONS.map((option) => {
+                const isSelected = scope === option.value;
+                return (
+                    <Pressable
+                        key={option.value}
+                        onPress={() => setScope(option.value)}
+                        className={`px-3 py-1.5 rounded-full border ${isSelected
+                            ? 'bg-blue-600 border-blue-600'
+                            : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700'
+                            }`}
+                    >
+                        <Text
+                            className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-slate-600 dark:text-slate-300'
+                                }`}
+                        >
+                            {option.label}
+                        </Text>
+                    </Pressable>
+                );
+            })}
+        </View>
+    );
+
     const renderSearchHeader = (showEscHint: boolean, showInput: boolean) => (
         <View className="px-4 pt-3 pb-3 border-b border-slate-200 dark:border-slate-800">
             {showInput ? (
@@ -860,21 +887,8 @@ export function SpotlightOverlay() {
                     </Pressable>
                 </View>
             ) : (
-                <View className="flex-row items-center justify-between">
-                    <View className="flex-1 pr-3">
-                        <Text className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                            Spotlight Results
-                        </Text>
-                        <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            Type in the top search bar to refine results.
-                        </Text>
-                        {query ? (
-                            <Text className="text-xs text-slate-600 dark:text-slate-300 mt-2">
-                                Query: "{query}"
-                            </Text>
-                        ) : null}
-                    </View>
-
+                <View className="flex-row items-center gap-3">
+                    {renderFilterChips}
                     <Pressable
                         onPress={dismissSpotlight}
                         accessibilityRole="button"
@@ -890,38 +904,7 @@ export function SpotlightOverlay() {
 
     const renderScopeRow = (
         <View className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex-row items-center gap-3">
-            <View className="flex-1 flex-row flex-wrap gap-2">
-                {SCOPE_OPTIONS.map((option) => {
-                    const isSelected = scope === option.value;
-                    return (
-                        <Pressable
-                            key={option.value}
-                            onPress={() => setScope(option.value)}
-                            className={`px-3 py-1.5 rounded-full border ${isSelected
-                                ? 'bg-blue-600 border-blue-600'
-                                : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700'
-                                }`}
-                        >
-                            <Text
-                                className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-slate-600 dark:text-slate-300'
-                                    }`}
-                            >
-                                {option.label}
-                            </Text>
-                        </Pressable>
-                    );
-                })}
-            </View>
-
-            <Pressable
-                onPress={dismissSpotlight}
-                hitSlop={8}
-                className="w-8 h-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
-                accessibilityLabel="Close search results"
-                accessibilityRole="button"
-            >
-                <X size={16} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.5} />
-            </Pressable>
+            {renderFilterChips}
         </View>
     );
 
@@ -981,7 +964,7 @@ export function SpotlightOverlay() {
                             }}
                         >
                             {renderSearchHeader(false, false)}
-                            {renderScopeRow}
+                            {/* renderScopeRow merged into header for primary flow */}
                             {renderResultRows}
                         </Animated.View>
                     </KeyboardAvoidingView>

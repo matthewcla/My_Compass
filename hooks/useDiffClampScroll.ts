@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import { useCallback, useEffect } from 'react';
+import { NativeScrollEvent, NativeSyntheticEvent, useWindowDimensions } from 'react-native';
 import {
     Easing,
     Extrapolation,
@@ -55,6 +55,17 @@ export function useDiffClampScroll({
     const scrollY = useSharedValue(initialScrollY);
     const previousY = useSharedValue(initialScrollY);
     const clampedScrollValue = useSharedValue(0);
+
+    const { width } = useWindowDimensions();
+    const isMobileBreakpoint = width <= 768;
+    const isMobileSV = useSharedValue(isMobileBreakpoint);
+
+    useEffect(() => {
+        isMobileSV.value = isMobileBreakpoint;
+        if (!isMobileBreakpoint) {
+            clampedScrollValue.value = 0;
+        }
+    }, [clampedScrollValue, isMobileBreakpoint, isMobileSV]);
 
     const clampAndApplyDelta = useCallback((deltaY: number) => {
         if (!enabled || !Number.isFinite(deltaY)) {
@@ -164,7 +175,7 @@ export function useDiffClampScroll({
                 return;
             }
 
-            if (!enabled) return;
+            if (!enabled || !isMobileSV.value) return;
 
             const next = clampedScrollValue.value + dy;
             clampedScrollValue.value = Math.min(Math.max(next, 0), headerHeight);
@@ -199,6 +210,9 @@ export function useDiffClampScroll({
     });
 
     const headerTranslateY = useDerivedValue(() => {
+        if (!isMobileSV.value) {
+            return 0;
+        }
         return interpolate(
             clampedScrollValue.value,
             [0, headerHeight],

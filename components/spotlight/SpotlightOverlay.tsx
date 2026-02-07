@@ -680,7 +680,7 @@ export function SpotlightOverlay() {
 
     const inputBackgroundClass = isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200';
     // Web needs significantly more clearance due to lack of safe area inset and different header height behavior
-    const webTopOffset = Platform.OS === 'web' ? 20 : 0;
+    const webTopOffset = Platform.OS === 'web' ? (isCompactViewport ? 90 : 20) : 0;
     const fallbackTopPassthrough = Math.max(insets.top + 122, 134) + webTopOffset;
     const primaryTop = (globalSearchBottomY ?? fallbackTopPassthrough) + webTopOffset;
     const mobileSheetHeight = Math.min(height * 0.62, height - Math.max(insets.top, 10) - 84);

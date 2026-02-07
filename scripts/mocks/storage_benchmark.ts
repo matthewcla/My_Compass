@@ -1,11 +1,19 @@
 import { IStorageService } from '@/services/storage.interface';
 import { InboxMessage } from '@/types/inbox';
 
-console.log("MOCK STORAGE LOADED");
+console.log("BENCHMARK STORAGE LOADED");
 
-class MockStorage implements IStorageService {
-  // ... (rest of the file)
-  private inboxMessages: InboxMessage[] = [];
+class BenchmarkStorage implements IStorageService {
+  messages: InboxMessage[] = [];
+
+  // Metrics
+  writeOperations = 0;
+  itemsWritten = 0;
+
+  resetMetrics() {
+    this.writeOperations = 0;
+    this.itemsWritten = 0;
+  }
 
   async init(): Promise<void> { }
 
@@ -49,24 +57,24 @@ class MockStorage implements IStorageService {
 
   // Inbox
   async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
-    this.inboxMessages = messages;
+    this.writeOperations++;
+    this.itemsWritten += messages.length; // Simulate O(N) cost
+    this.messages = messages;
   }
   async getInboxMessages(): Promise<InboxMessage[]> {
-    return this.inboxMessages;
+    return this.messages;
   }
 
   async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
-    this.inboxMessages = this.inboxMessages.map(m => m.id === id ? { ...m, isRead } : m);
+    this.writeOperations++;
+    this.itemsWritten += 1; // Simulate O(1) cost
+
+    this.messages = this.messages.map(m => m.id === id ? { ...m, isRead } : m);
   }
 
   // Career Events
-  private careerEvents: any[] = []; // Using any[] to avoid missing import, or could import CareerEvent
-  async saveCareerEvents(events: any[]): Promise<void> {
-    this.careerEvents = events;
-  }
-  async getCareerEvents(): Promise<any[]> {
-    return this.careerEvents;
-  }
+  async saveCareerEvents(events: any[]): Promise<void> { }
+  async getCareerEvents(): Promise<any[]> { return []; }
 }
 
-export const storage = new MockStorage();
+export const storage = new BenchmarkStorage();

@@ -753,6 +753,15 @@ class SQLiteStorage implements IStorageService {
     }
   }
 
+  async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync(
+      'UPDATE inbox_messages SET is_read = ? WHERE id = ?',
+      isRead ? 1 : 0,
+      id
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Career Events
   // ---------------------------------------------------------------------------
@@ -920,6 +929,13 @@ class MockStorage implements IStorageService {
     return Array.from(this.inboxMessages.values()).slice(0, 500);
   }
 
+  async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
+    const msg = this.inboxMessages.get(id);
+    if (msg) {
+      this.inboxMessages.set(id, { ...msg, isRead });
+    }
+  }
+
   // Career Events
   async saveCareerEvents(events: CareerEvent[]): Promise<void> {
     events.forEach(event => this.careerEvents.set(event.eventId, event));
@@ -1058,6 +1074,12 @@ class WebStorage implements IStorageService {
 
   async getInboxMessages(): Promise<InboxMessage[]> {
     return (this.getItem<InboxMessage[]>('inbox_messages') || []).slice(0, 500);
+  }
+
+  async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
+    const messages = await this.getInboxMessages();
+    const newMessages = messages.map(m => m.id === id ? { ...m, isRead } : m);
+    await this.saveInboxMessages(newMessages);
   }
 
   // --- Career Events ---

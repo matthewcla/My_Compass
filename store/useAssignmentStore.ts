@@ -105,7 +105,7 @@ interface AssignmentActions {
     /**
      * Reorder application preference ranks based on the provided ID order.
      */
-    reorderApplications: (orderedAppIds: string[], userId: string) => void;
+    reorderApplications: (orderedAppIds: string[], userId: string) => Promise<void>;
 
     /**
      * Submit all DRAFT applications to the server.
@@ -909,18 +909,21 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         }
     },
 
-    reorderApplications: (orderedAppIds: string[], userId: string) => {
+    reorderApplications: async (orderedAppIds: string[], userId: string) => {
         const { applications } = get();
         const updatedApplications = { ...applications };
+        const appsToSave: Application[] = [];
 
         orderedAppIds.forEach((id, index) => {
             if (updatedApplications[id]) {
-                updatedApplications[id] = {
+                const updatedApp = {
                     ...updatedApplications[id],
                     preferenceRank: index + 1,
                     updatedAt: new Date().toISOString(),
                     localModifiedAt: new Date().toISOString()
                 };
+                updatedApplications[id] = updatedApp;
+                appsToSave.push(updatedApp);
             }
         });
 
@@ -930,11 +933,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
 
         // Persist
-        orderedAppIds.forEach(id => {
-            if (updatedApplications[id]) {
-                storage.saveApplication(updatedApplications[id]);
-            }
-        });
+        await storage.saveApplications(appsToSave);
     },
 
     submitSlate: async () => {
@@ -944,28 +943,35 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         const { applications } = get();
         const updatedApps = { ...applications };
+        const appsToSave: Application[] = [];
 
         // Mark all draft as submitted
         Object.keys(updatedApps).forEach(key => {
             const app = updatedApps[key];
             if (app.status === 'draft') {
-                updatedApps[key] = {
+                const updatedApp = {
                     ...app,
-                    status: 'submitted',
+                    status: 'submitted' as const,
                     submittedAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                     lastSyncTimestamp: new Date().toISOString(),
-                    syncStatus: 'synced',
+                    syncStatus: 'synced' as const,
                 };
-                // In real app, persist these changes
-                storage.saveApplication(updatedApps[key]);
+                updatedApps[key] = updatedApp;
+                appsToSave.push(updatedApp);
             }
         });
 
-        set({
-            applications: updatedApps,
-            isSyncingApplications: false
-        });
+        try {
+            await storage.saveApplications(appsToSave);
+        } catch (e) {
+            console.error('[Store] Failed to persist submitted slate', e);
+        } finally {
+            set({
+                applications: updatedApps,
+                isSyncingApplications: false
+            });
+        }
     },
 
     getManifestItems: (filter: 'candidates' | 'favorites' | 'archived') => {

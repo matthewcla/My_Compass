@@ -32,6 +32,7 @@ export interface IStorageService {
 
   // Applications
   saveApplication(app: Application): Promise<void>;
+  saveApplications(apps: Application[]): Promise<void>;
   getApplication(id: string): Promise<Application | null>;
   getUserApplications(userId: string): Promise<Application[]>;
 

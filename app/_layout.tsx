@@ -59,13 +59,28 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    storage.init()
-      .then(() => setDbInitialized(true))
-      .catch((e) => {
+    let cancelled = false;
+
+    const initStorage = async () => {
+      try {
+        await storage.init();
+        if (!cancelled) {
+          setDbInitialized(true);
+        }
+      } catch (e) {
         console.error('Failed to initialize database:', e);
         // On web, or if DB fails, we still might want to show the UI for testing/audit purposes
-        setDbInitialized(true);
-      });
+        if (!cancelled) {
+          setDbInitialized(true);
+        }
+      }
+    };
+
+    void initStorage();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const hideSplash = useCallback(async () => {

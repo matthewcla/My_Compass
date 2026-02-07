@@ -6,10 +6,10 @@ import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
 import { useLeaveStore } from '@/store/useLeaveStore';
-import { useSpotlightStore } from '@/store/useSpotlightStore';
 import { useUserStore } from '@/store/useUserStore';
 import { LeaveRequest } from '@/types/schema';
 import { formatRate } from '@/utils/format';
@@ -65,25 +65,10 @@ export default function HubDashboard() {
         return `Welcome, ${formattedRank} ${lastName}`.trim();
     };
 
-    const openSpotlight = useSpotlightStore((state) => state.open);
-    const spotlightQuery = useSpotlightStore((state) => state.query);
-    const spotlightOpen = useSpotlightStore((state) => state.isOpen);
-    const setSpotlightQuery = useSpotlightStore((state) => state.setQuery);
+    const globalSearchConfig = useGlobalSpotlightHeaderSearch();
 
     // Hoist Header State
-    useScreenHeader("", "", undefined, {
-        visible: true,
-        mode: 'global',
-        onPress: () => openSpotlight({ source: 'primary', preserveQuery: true }),
-        onChangeText: (text) => {
-            if (!spotlightOpen) {
-                openSpotlight({ source: 'primary', preserveQuery: true });
-            }
-            setSpotlightQuery(text);
-        },
-        placeholder: 'Search all app functions...',
-        value: spotlightQuery,
-    });
+    useScreenHeader("", "", undefined, globalSearchConfig);
 
     // Navigation Handlers
     const handleStartExploring = () => {

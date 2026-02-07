@@ -1,6 +1,6 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { SearchConfig } from '@/store/useHeaderStore';
+import { SearchConfig, useHeaderStore } from '@/store/useHeaderStore';
 import { Search } from 'lucide-react-native';
 import React from 'react';
 import { Platform, Pressable, Text, TextInput, View } from 'react-native';
@@ -30,9 +30,15 @@ export function ScreenHeader({
     const isInline = variant === 'inline';
     const isGlobalSearch = searchConfig?.mode === 'global';
     const searchInputRef = React.useRef<TextInput>(null);
+    const globalSearchRowRef = React.useRef<View>(null);
+    const registerGlobalSearchBlur = useHeaderStore((state) => state.registerGlobalSearchBlur);
+    const setGlobalSearchBottomY = useHeaderStore((state) => state.setGlobalSearchBottomY);
+    const globalSearchBottomY = useHeaderStore((state) => state.globalSearchBottomY);
 
     // Local state to prevent race conditions/flickering with async store updates
     const [localSearchValue, setLocalSearchValue] = React.useState(searchConfig?.value || '');
+
+    const globalSearchOnPress = isGlobalSearch ? searchConfig.onPress : undefined;
 
     // Sync local state when prop changes externally (e.g. clear button, or initial load)
     // We only sync if the values are significantly different to avoid loop
@@ -50,6 +56,48 @@ export function ScreenHeader({
         // 2. Propagate to store (Async)
         searchConfig?.onChangeText?.(text);
     };
+
+    const handleGlobalSearchFocus = React.useCallback(() => {
+        if (!isGlobalSearch) return;
+        requestAnimationFrame(() => {
+            globalSearchOnPress?.();
+        });
+    }, [globalSearchOnPress, isGlobalSearch]);
+
+    const focusGlobalSearchInput = React.useCallback(() => {
+        searchInputRef.current?.focus();
+    }, []);
+
+    React.useEffect(() => {
+        if (!isGlobalSearch) {
+            registerGlobalSearchBlur(null);
+            setGlobalSearchBottomY(null);
+            return;
+        }
+
+        const blurInput = () => {
+            searchInputRef.current?.blur();
+        };
+
+        registerGlobalSearchBlur(blurInput);
+        return () => {
+            registerGlobalSearchBlur(null);
+            setGlobalSearchBottomY(null);
+        };
+    }, [isGlobalSearch, registerGlobalSearchBlur, setGlobalSearchBottomY]);
+
+    const handleGlobalSearchLayout = React.useCallback(() => {
+        if (!isGlobalSearch || !globalSearchRowRef.current) return;
+
+        globalSearchRowRef.current.measureInWindow((_x, y, _width, height) => {
+            const nextBottom = y + height;
+            if (!Number.isFinite(nextBottom)) return;
+
+            if (globalSearchBottomY === null || Math.abs(globalSearchBottomY - nextBottom) >= 1) {
+                setGlobalSearchBottomY(nextBottom);
+            }
+        });
+    }, [globalSearchBottomY, isGlobalSearch, setGlobalSearchBottomY]);
 
     return (
         <View className="z-50 bg-gray-100 dark:bg-black">
@@ -102,29 +150,35 @@ export function ScreenHeader({
                 <View className="px-5 pb-4">
                     {isGlobalSearch ? (
                         <View
-                            className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 py-3.5 border border-slate-200 dark:border-slate-800 shadow-sm"
+                            ref={globalSearchRowRef}
+                            onLayout={handleGlobalSearchLayout}
+                            className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 border border-slate-200 dark:border-slate-800 shadow-sm"
                             accessibilityRole="search"
                             accessibilityLabel={searchConfig.placeholder || 'Global search'}
                         >
-                            <Search
-                                size={22}
-                                color={colors.text}
-                                strokeWidth={2.5}
-                                style={{ marginRight: 20 }}
-                                className="opacity-70"
-                            />
+                            <Pressable onPress={focusGlobalSearchInput} hitSlop={10}>
+                                <Search
+                                    size={22}
+                                    color={colors.text}
+                                    strokeWidth={2.5}
+                                    style={{ marginRight: 20 }}
+                                    className="opacity-70"
+                                />
+                            </Pressable>
 
                             <TextInput
+                                ref={searchInputRef}
                                 value={searchConfig.value || ''}
-                                onChangeText={searchConfig.onChangeText}
-                                onFocus={searchConfig.onPress}
+                                onChangeText={isGlobalSearch ? searchConfig.onChangeText : undefined}
+                                onFocus={handleGlobalSearchFocus}
                                 placeholder={searchConfig.placeholder || 'Search...'}
                                 placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
-                                className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
+                                className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-3.5"
                                 style={{ outline: 'none' } as any}
                                 autoCorrect={false}
                                 autoCapitalize="none"
                                 returnKeyType="search"
+                                showSoftInputOnFocus={true}
                                 accessibilityLabel={searchConfig.placeholder || 'Global search input'}
                             />
 
@@ -137,27 +191,29 @@ export function ScreenHeader({
                             )}
                         </View>
                     ) : (
-                        <Pressable
-                            onPress={() => searchInputRef.current?.focus()}
-                            className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 py-3.5 border border-slate-200 dark:border-slate-800 shadow-sm"
+                        <View
+                            className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 border border-slate-200 dark:border-slate-800 shadow-sm"
                         >
-                            <Search
-                                size={22}
-                                color={colors.text}
-                                strokeWidth={2.5}
-                                style={{ marginRight: 20 }}
-                                className="opacity-70"
-                            />
+                            <Pressable onPress={() => searchInputRef.current?.focus()} hitSlop={10}>
+                                <Search
+                                    size={22}
+                                    color={colors.text}
+                                    strokeWidth={2.5}
+                                    style={{ marginRight: 20 }}
+                                    className="opacity-70"
+                                />
+                            </Pressable>
                             <TextInput
                                 ref={searchInputRef}
                                 value={localSearchValue}
                                 onChangeText={handleSearchChange}
                                 placeholder={searchConfig.placeholder || 'Search...'}
                                 placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
-                                className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-0"
+                                className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-3.5"
                                 style={{ outline: 'none' } as any}
+                                showSoftInputOnFocus={true}
                             />
-                        </Pressable>
+                        </View>
                     )}
                 </View>
             )}

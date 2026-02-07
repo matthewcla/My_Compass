@@ -1,3 +1,7 @@
+
+> my_compass@1.0.0 web
+> expo start --web
+
 Starting project at /app
 Starting Metro Bundler
 The following packages should be updated for best compatibility with the installed expo version:
@@ -7,49 +11,110 @@ Your project may not work correctly until you install the expected versions of t
 Waiting on http://localhost:8081
 Logs for your project will appear below.
 Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Web node_modules/expo-router/entry.js ▓▓▓▓░░░░░░░░░░░░ 25.0% (16/90)
-λ node_modules/expo-router/node/render.js ▓░░░░░░░░░░░░░░░ 11.0% ( 97/293)
-Web node_modules/expo-router/entry.js ▓▓▓▓░░░░░░░░░░░░ 25.0% ( 95/191)
-λ node_modules/expo-router/node/render.js ▓▓▓▓░░░░░░░░░░░░ 25.9% (250/491)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.1% (207/370)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% (446/660)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.1% (287/448)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% ( 586/2693)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.1% (362/578)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% ( 937/2839)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.1% (362/578)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% (2000/2901)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.1% (495/996)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.9% (2683/2955)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.1% ( 587/2727)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.7% (2900/3300)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.1% (1503/2902)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.7% (2940/3365)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 78.5% (2602/2936)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.7% (3099/3495)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.2% (2782/3053)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 87.6% (3375/3624)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.2% (3121/3417)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 89.9% (3633/3844)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 88.6% (3535/3755)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.5% (3836/4033)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.1% (4055/4219)
-λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.0% (4262/4305)
-λ Bundled 50446ms node_modules/expo-router/node/render.js (4336 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓░░░░░░░░░░░░ 30.3% (13/83)
+λ node_modules/expo-router/node/render.js ▓▓░░░░░░░░░░░░░░ 14.2% (110/305)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% (188/264)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓░░░░░░░░░░░ 36.0% (341/568)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% (206/367)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓░░░░░░░░ 53.5% ( 534/2657)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% (364/577)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓░░░░░░░░ 53.5% ( 682/2755)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% (369/581)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓░░░░░░░░ 53.5% (1440/2914)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% (369/581)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.2% (2593/2914)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% ( 572/2722)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.8% (2753/3007)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% ( 664/2783)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.8% (2951/3372)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% (1503/2928)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.8% (2951/3372)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.3% (2685/2959)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.8% (3042/3494)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.6% (2766/3050)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 87.6% (3373/3628)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.8% (3039/3392)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 89.7% (3616/3818)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 87.0% (3365/3619)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.1% (3751/3973)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.3% (3840/4042)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.1% (4132/4260)
+λ Bundled 51916ms node_modules/expo-router/node/render.js (4328 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (4392/4392)
 [expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (4389/4389)
-Web Bundled 58749ms node_modules/expo-router/entry.js (4389 modules)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (4389/4389)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓░░░░░░░░░░ 40.9% (436/939)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓░░░░░░░░░░ 40.9% (1334/2927)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 82.5% (2745/3029)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.0% (3243/3518)
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.1% (4114/4286)
-Web Bundled 19498ms node_modules/expo-router/entry.js (4391 modules)
+Web Bundled 60830ms node_modules/expo-router/entry.js (4392 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (4392/4392)
+Error: Premature close
+    at onclose (node:internal/streams/end-of-stream:171:30)
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+λ Bundled 165ms node_modules/expo-router/node/render.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+Web Bundled 1924ms node_modules/expo-router/entry.js (1 module)
+Web node_modules/expo-router/entry.js ▓▓▓▓░░░░░░░░░░░░ 29.4% (222/411)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓░░░░░░░░░░ 40.9% ( 536/2658)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓░░░░░░░░░░ 42.4% (1806/2774)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.1% (2762/3062)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.1% (3081/3451)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 83.8% (3238/3566)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 87.5% (3566/3835)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.7% (4347/4375)
+Web Bundled 26652ms node_modules/expo-router/entry.js (4394 modules)
  LOG  [web] Logs will appear in the browser console
 Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-λ Bundled 115ms node_modules/expo-router/node/render.js (1 module)
+λ Bundled 129ms node_modules/expo-router/node/render.js (1 module)
 [expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
-Web Bundled 1684ms node_modules/expo-router/entry.js (1 module)
-Web Bundled 385ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 1056ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 142ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 137ms node_modules/expo-router/node/render.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+Web Bundled 1523ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 141ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 117ms node_modules/expo-router/node/render.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web Bundled 1070ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 128ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 126ms node_modules/expo-router/node/render.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+Web Bundled 1512ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 135ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 121ms node_modules/expo-router/node/render.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web Bundled 1057ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 137ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 281ms node_modules/expo-router/node/render.js (1 module)
+Web Bundled 972ms node_modules/expo-router/entry.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+Web Bundled 171ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 125ms node_modules/expo-router/node/render.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web Bundled 1357ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 148ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 134ms node_modules/expo-router/node/render.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+Web Bundled 1504ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 139ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 122ms node_modules/expo-router/node/render.js (1 module)
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+Web Bundled 1000ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 146ms node_modules/expo-router/entry.js (1 module)
  LOG  [web] Logs will appear in the browser console

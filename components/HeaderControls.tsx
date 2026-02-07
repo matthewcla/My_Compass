@@ -42,7 +42,7 @@ export function HeaderControls() {
 
     return (
         <View className="flex-row items-center gap-5 mr-4">
-            <Pressable onPress={handleAlert} accessibilityLabel="Notifications" hitSlop={8}>
+            <Pressable onPress={handleAlert} accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={8}>
                 {({ pressed }) => (
                     <Bell
                         color={colors.text}
@@ -52,7 +52,7 @@ export function HeaderControls() {
                 )}
             </Pressable>
 
-            <Pressable onPress={handleLogout} accessibilityLabel="Sign Out" hitSlop={8}>
+            <Pressable onPress={handleLogout} accessibilityRole="button" accessibilityLabel="Sign Out" hitSlop={8}>
                 {({ pressed }) => (
                     <LogOut
                         color={colors.text}

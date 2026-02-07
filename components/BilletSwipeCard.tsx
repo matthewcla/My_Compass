@@ -371,6 +371,9 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                         <TouchableOpacity
                             onPress={openDrawer}
                             activeOpacity={0.9}
+                            accessibilityRole="button"
+                            accessibilityLabel="Show Details"
+                            accessibilityHint="Double tap to expand job details"
                             className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-[50px]"
                         >
                             <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl pointer-events-none">
@@ -495,6 +498,9 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                                     <TouchableOpacity
                                         onPress={closeDrawer}
                                         activeOpacity={0.9}
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Close Details"
+                                        accessibilityHint="Double tap to close job details"
                                         className="w-full bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-[50px]"
                                     >
                                         <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl pointer-events-none">

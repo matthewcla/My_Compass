@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface ScreenHeaderProps {
     title: string;
     subtitle: string | React.ReactNode;
-    rightAction?: { icon: any; onPress: () => void } | null;
+    rightAction?: { icon: any; onPress: () => void; accessibilityLabel?: string } | null;
     withSafeArea?: boolean;
     variant?: 'large' | 'inline';
     searchConfig?: SearchConfig | null;
@@ -60,6 +60,8 @@ export function ScreenHeader({
                         <Pressable
                             onPress={rightAction.onPress}
                             hitSlop={12}
+                            accessibilityRole="button"
+                            accessibilityLabel={rightAction.accessibilityLabel || 'Header Action'}
                         >
                             {({ pressed }) => {
                                 const Icon = rightAction.icon;

@@ -738,11 +738,17 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             const newDecisions = { ...realDecisions };
             delete newDecisions[billetIdToRemove];
 
-            const appToRemove = Object.values(applications).find(
-                app => app.billetId === billetIdToRemove && app.status === 'draft'
-            );
+            // Find app ID in userApplicationIds that matches billetId
+            // This ensures we only look at the user's active applications
+            const appIdToRemove = userApplicationIds.find(id => {
+                const app = applications[id];
+                return app && app.billetId === billetIdToRemove && app.userId === userId && app.status === 'draft';
+            });
+            const appToRemove = appIdToRemove ? applications[appIdToRemove] : undefined;
+
             let updatedApplications = applications;
             let updatedUserIds = userApplicationIds;
+
             if (appToRemove) {
                 updatedApplications = { ...applications };
                 delete updatedApplications[appToRemove.id];

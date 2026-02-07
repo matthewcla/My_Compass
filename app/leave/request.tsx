@@ -205,6 +205,7 @@ export default function LeaveRequestScreen() {
                 // Only create if user has actually interacted (e.g. selected a date)
                 if (formData.startDate && userId) {
                     console.log('Creating New Auto-Draft');
+                    // Use authenticated user ID
                     const newDraft = generateQuickDraft('standard', userId);
                     // Override defaults with current form data
                     Object.assign(newDraft, formData);

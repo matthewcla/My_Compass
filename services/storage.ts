@@ -455,6 +455,11 @@ class SQLiteStorage implements IStorageService {
     }
   }
 
+  async deleteApplication(appId: string): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync('DELETE FROM applications WHERE id = ?', appId);
+  }
+
   private mapRowToApplication(row: any): Application {
     try {
       return ApplicationSchema.parse({
@@ -900,6 +905,9 @@ class MockStorage implements IStorageService {
   async getUserApplications(userId: string): Promise<Application[]> {
     return Array.from(this.applications.values()).filter(a => a.userId === userId);
   }
+  async deleteApplication(appId: string): Promise<void> {
+    this.applications.delete(appId);
+  }
 
   // Leave Requests
   async saveLeaveRequest(request: LeaveRequest): Promise<void> {
@@ -1047,6 +1055,9 @@ class WebStorage implements IStorageService {
     return keys.filter(k => k.startsWith('app_'))
       .map(k => this.getItem<Application>(k)!)
       .filter(a => a.userId === userId);
+  }
+  async deleteApplication(appId: string): Promise<void> {
+    localStorage.removeItem(`app_${appId}`);
   }
 
   // --- Leave Requests ---

@@ -738,12 +738,17 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             const newDecisions = { ...realDecisions };
             delete newDecisions[billetIdToRemove];
 
-            // FIX: Remove orphaned application if last action was a 'promote'
-            const appToRemove = Object.values(applications).find(
-                app => app.billetId === billetIdToRemove && app.status === 'draft'
-            );
+            // Find app ID in userApplicationIds that matches billetId
+            // This ensures we only look at the user's active applications
+            const appIdToRemove = userApplicationIds.find(id => {
+                const app = applications[id];
+                return app && app.billetId === billetIdToRemove && app.userId === userId && app.status === 'draft';
+            });
+            const appToRemove = appIdToRemove ? applications[appIdToRemove] : undefined;
+
             let updatedApplications = applications;
             let updatedUserIds = userApplicationIds;
+
             if (appToRemove) {
                 updatedApplications = { ...applications };
                 delete updatedApplications[appToRemove.id];
@@ -760,8 +765,10 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             // Persist decision removal in both pending queue and durable storage.
             purgePendingSwipes(userId, billetIdToRemove);
             void storage.removeAssignmentDecision(userId, billetIdToRemove);
-            // Note: Orphaned application deletion from storage not fully implemented yet 
-            // as per storage interface limitations.
+
+            if (appToRemove) {
+                void storage.deleteApplication(appToRemove.id);
+            }
         } else {
             const newDecisions = { ...sandboxDecisions };
             delete newDecisions[billetIdToRemove];

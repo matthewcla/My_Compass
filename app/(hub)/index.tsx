@@ -20,6 +20,9 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
+const SECTIONS = ['status', 'discovery', 'stats', 'leave'];
+const ItemSeparator = () => <View style={{ height: 24 }} />;
+
 export default function HubDashboard() {
     const router = useRouter();
     const { isLoading: isSessionLoading } = useSession();
@@ -76,39 +79,55 @@ export default function HubDashboard() {
     });
 
     // Navigation Handlers
-    const handleStartExploring = () => {
+    const handleStartExploring = React.useCallback(() => {
         router.push('/(career)/discovery' as any);
-    };
+    }, [router]);
 
-    const handleJobPreferencesPress = () => {
+    const handleJobPreferencesPress = React.useCallback(() => {
         router.push('/(profile)/preferences' as any);
-    };
+    }, [router]);
 
-    const handleLeavePress = () => {
+    const handleLeavePress = React.useCallback(() => {
         router.push('/leave' as any);
-    };
+    }, [router]);
 
-    const handleQuickLeavePress = () => {
+    const handleQuickLeavePress = React.useCallback(() => {
         if (!user) return;
         const draft = generateQuickDraft('weekend', user.id);
         setQuickDraft(draft);
-    };
+    }, [user, generateQuickDraft]);
 
-    const handleQuickLeaveSubmit = () => {
+    const handleQuickLeaveSubmit = React.useCallback(() => {
         setQuickDraft(null);
         Alert.alert("Success", "Leave request submitted successfully!");
-    };
+    }, []);
 
-    const handleQuickLeaveEdit = () => {
+    const handleQuickLeaveEdit = React.useCallback(() => {
         setQuickDraft(null);
         // Ideally pass draft params to wizard, but for now just navigate to leave root
         router.push('/leave' as any);
-    };
+    }, [router]);
 
     const handleSuperLikedPress = React.useCallback(() => {
         // Navigate to saved billets filtered by super-liked
         router.push('/(assignment)' as any);
     }, [router]);
+
+    const handleLeaveRequestPress = React.useCallback((req: LeaveRequest) => {
+        if (req.status === 'draft') {
+            router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
+        } else {
+            router.push(`/leave/${req.id}` as any);
+        }
+    }, [router]);
+
+    const handleExpand = React.useCallback((expanded: boolean) => {
+        if (expanded) {
+            setTimeout(() => {
+                listRef.current?.scrollToEnd({ animated: true });
+            }, 300);
+        }
+    }, []);
 
     // Loading state
     if (loading && !data) {
@@ -142,9 +161,7 @@ export default function HubDashboard() {
 
 
 
-    const sections = ['status', 'discovery', 'stats', 'leave'];
-
-    const renderItem = ({ item }: { item: string }) => {
+    const renderItem = React.useCallback(({ item }: { item: string }) => {
         switch (item) {
             case 'status':
                 return (
@@ -175,27 +192,15 @@ export default function HubDashboard() {
                     <LeaveCard
                         balance={data?.leave?.currentBalance ?? 0}
                         requests={leaveRequests}
-                        onPressRequest={(req) => {
-                            if (req.status === 'draft') {
-                                router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
-                            } else {
-                                router.push(`/leave/${req.id}` as any);
-                            }
-                        }}
+                        onPressRequest={handleLeaveRequestPress}
                         onQuickRequest={handleQuickLeavePress}
-                        onExpand={(expanded) => {
-                            if (expanded) {
-                                setTimeout(() => {
-                                    listRef.current?.scrollToEnd({ animated: true });
-                                }, 300);
-                            }
-                        }}
+                        onExpand={handleExpand}
                     />
                 );
             default:
                 return null;
         }
-    };
+    }, [data, handleStartExploring, handleJobPreferencesPress, handleSuperLikedPress, leaveRequests, handleLeaveRequestPress, handleQuickLeavePress, handleExpand]);
 
     return (
         <LinearGradient
@@ -204,9 +209,9 @@ export default function HubDashboard() {
         >
             <FlashList
                 ref={listRef}
-                data={sections}
+                data={SECTIONS}
                 renderItem={renderItem}
-                ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
+                ItemSeparatorComponent={ItemSeparator}
                 // @ts-expect-error: estimatedItemSize is missing in the type definition of @shopify/flash-list v2.2.0 despite being mandatory
                 estimatedItemSize={150}
                 style={{ flex: 1 }}

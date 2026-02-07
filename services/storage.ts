@@ -386,6 +386,40 @@ class SQLiteStorage implements IStorageService {
     );
   }
 
+  async saveApplications(apps: Application[]): Promise<void> {
+    await this.withWriteTransaction(async (runner) => {
+      for (const app of apps) {
+        await runner.runAsync(
+          `INSERT OR REPLACE INTO applications (
+            id, billet_id, user_id, status, status_history,
+            optimistic_lock_token, lock_requested_at, lock_expires_at,
+            personal_statement, preference_rank, submitted_at,
+            server_confirmed_at, server_rejection_reason,
+            created_at, updated_at, last_sync_timestamp, sync_status, local_modified_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          app.id,
+          app.billetId,
+          app.userId,
+          app.status,
+          JSON.stringify(app.statusHistory),
+          null, // optimisticLockToken (Removed from schema)
+          null, // lockRequestedAt (Removed from schema)
+          null, // lockExpiresAt (Removed from schema)
+          app.personalStatement || null,
+          app.preferenceRank || null,
+          app.submittedAt || null,
+          app.serverConfirmedAt || null,
+          app.serverRejectionReason || null,
+          app.createdAt,
+          app.updatedAt,
+          app.lastSyncTimestamp,
+          app.syncStatus,
+          app.localModifiedAt || null
+        );
+      }
+    });
+  }
+
   async getApplication(id: string): Promise<Application | null> {
     const db = await this.getDB();
     try {
@@ -419,6 +453,11 @@ class SQLiteStorage implements IStorageService {
       if (error instanceof DataIntegrityError) throw error;
       throw new DataIntegrityError('Failed to fetch/parse Application records', error);
     }
+  }
+
+  async deleteApplication(appId: string): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync('DELETE FROM applications WHERE id = ?', appId);
   }
 
   private mapRowToApplication(row: any): Application {
@@ -857,11 +896,17 @@ class MockStorage implements IStorageService {
   async saveApplication(app: Application): Promise<void> {
     this.applications.set(app.id, app);
   }
+  async saveApplications(apps: Application[]): Promise<void> {
+    apps.forEach(app => this.applications.set(app.id, app));
+  }
   async getApplication(id: string): Promise<Application | null> {
     return this.applications.get(id) || null;
   }
   async getUserApplications(userId: string): Promise<Application[]> {
     return Array.from(this.applications.values()).filter(a => a.userId === userId);
+  }
+  async deleteApplication(appId: string): Promise<void> {
+    this.applications.delete(appId);
   }
 
   // Leave Requests
@@ -999,6 +1044,9 @@ class WebStorage implements IStorageService {
   async saveApplication(app: Application): Promise<void> {
     this.setItem(`app_${app.id}`, app);
   }
+  async saveApplications(apps: Application[]): Promise<void> {
+    apps.forEach(app => this.setItem(`app_${app.id}`, app));
+  }
   async getApplication(id: string): Promise<Application | null> {
     return this.getItem<Application>(`app_${id}`);
   }
@@ -1007,6 +1055,9 @@ class WebStorage implements IStorageService {
     return keys.filter(k => k.startsWith('app_'))
       .map(k => this.getItem<Application>(k)!)
       .filter(a => a.userId === userId);
+  }
+  async deleteApplication(appId: string): Promise<void> {
+    localStorage.removeItem(`app_${appId}`);
   }
 
   // --- Leave Requests ---

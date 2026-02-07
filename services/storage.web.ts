@@ -114,6 +114,12 @@ class WebStorage implements IStorageService {
     return apps.filter((a) => a.userId === userId);
   }
 
+  async deleteApplication(appId: string): Promise<void> {
+    const apps = await this._getAllApplications();
+    const newApps = apps.filter(a => a.id !== appId);
+    localStorage.setItem(this.APPLICATIONS_KEY, encryptData(JSON.stringify(newApps)));
+  }
+
   private async _getAllApplications(): Promise<Application[]> {
     const data = localStorage.getItem(this.APPLICATIONS_KEY);
     if (!data) return [];

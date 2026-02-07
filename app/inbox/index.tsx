@@ -90,22 +90,27 @@ export default function InboxScreen() {
     }, [filterableMessages, activeFilter, searchQuery]);
 
     const sections = useMemo(() => {
-        // Sort logic: Pinned (Quick Reference) -> Unread -> Read (by date desc)
+        // Optimized: Single pass categorization without redundant sorting.
+        // Relies on filteredMessages already being sorted by date (desc) from useInboxStore.
+        const pinned: typeof filteredMessages = [];
+        const unread: typeof filteredMessages = [];
+        const read: typeof filteredMessages = [];
 
-        const pinned = filteredMessages.filter(m => m.isPinned);
-        const unread = filteredMessages.filter(m => !m.isPinned && !m.isRead).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        const read = filteredMessages.filter(m => !m.isPinned && m.isRead).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        for (const m of filteredMessages) {
+            if (m.isPinned) {
+                pinned.push(m);
+            } else if (!m.isRead) {
+                unread.push(m);
+            } else {
+                read.push(m);
+            }
+        }
 
         const result = [];
 
         if (pinned.length > 0) {
             result.push({ title: 'Quick Reference', data: pinned });
         }
-
-        // Combine unread and read for the main list, or separate if desired. 
-        // Requirement said: Pinned -> Unread -> Rest.
-        // Let's make "Inbox" the title for the rest to keep it simple, or separate sections?
-        // "Unread" and "All Others" sections might be nice.
 
         if (unread.length > 0) {
             result.push({ title: 'Unread', data: unread });

@@ -1,3 +1,6 @@
+import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
+import GlobalTabBar from '@/components/navigation/GlobalTabBar';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { MessageCard } from '@/components/inbox/MessageCard';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useHeaderStore } from '@/store/useHeaderStore';
@@ -5,7 +8,11 @@ import { useInboxStore } from '@/store/useInboxStore';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Create Animated SectionList
+const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
 
 type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
 const MAX_FILTER_MESSAGES = 500;
@@ -34,15 +41,17 @@ export default function InboxScreen() {
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Set Global Header
+    // Disable Global Header (managed locally)
     useEffect(() => {
-        useHeaderStore.getState().setHeader('', '', null, 'large', {
-            visible: true,
-            onChangeText: setSearchQuery,
-            placeholder: 'Search messages...',
-            value: searchQuery
-        });
-    }, [searchQuery]);
+        useHeaderStore.getState().setHeader('', '', null, 'large', { visible: false });
+    }, []);
+
+    const searchConfig = {
+        visible: true,
+        onChangeText: setSearchQuery,
+        placeholder: 'Search messages...',
+        value: searchQuery
+    };
 
     useEffect(() => {
         fetchMessages();
@@ -158,37 +167,51 @@ export default function InboxScreen() {
     );
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-black">
-            {renderHeader()}
-            <SectionList
-                sections={sections}
-                initialNumToRender={10}
-                windowSize={5}
-                renderItem={({ item }) => (
-                    <MessageCard
-                        message={item}
-                        // Pass stable handler to enable React.memo optimization
-                        onPress={handlePress}
-                        onTogglePin={togglePin}
+        <CollapsibleScaffold
+            topBar={
+                <View className="bg-slate-50 dark:bg-black">
+                    <ScreenHeader
+                        title=""
+                        subtitle=""
+                        searchConfig={searchConfig}
                     />
-                )}
-                renderSectionHeader={({ section: { title } }) => (
-                    <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900/50">
-                        <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
-                    </View>
-                )}
-                keyExtractor={item => item.id}
-                stickySectionHeadersEnabled={false} // Sticky headers with sticky list header can be tricky, verifying without first
-                contentContainerStyle={{ paddingBottom: 24 }}
-                refreshing={isLoading}
-                onRefresh={handleRefresh}
-                ListEmptyComponent={
-                    <View className="p-8 items-center">
-                        <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>
-                    </View>
-                }
-            />
-        </View>
+                    {renderHeader()}
+                </View>
+            }
+            bottomBar={<GlobalTabBar />}
+        >
+            {({ onScroll, contentContainerStyle }) => (
+                <AnimatedSectionList
+                    sections={sections}
+                    initialNumToRender={10}
+                    windowSize={5}
+                    renderItem={({ item }) => (
+                        <MessageCard
+                            message={item}
+                            // Pass stable handler to enable React.memo optimization
+                            onPress={handlePress}
+                            onTogglePin={togglePin}
+                        />
+                    )}
+                    renderSectionHeader={({ section: { title } }) => (
+                        <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900/50">
+                            <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
+                        </View>
+                    )}
+                    keyExtractor={item => item.id}
+                    stickySectionHeadersEnabled={false} // Sticky headers with sticky list header can be tricky, verifying without first
+                    contentContainerStyle={[contentContainerStyle, { paddingBottom: 24 }]}
+                    refreshing={isLoading}
+                    onRefresh={handleRefresh}
+                    ListEmptyComponent={
+                        <View className="p-8 items-center">
+                            <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>
+                        </View>
+                    }
+                    onScroll={onScroll}
+                />
+            )}
+        </CollapsibleScaffold>
     );
 }
 

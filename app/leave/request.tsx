@@ -9,6 +9,7 @@ import { Step4Safety } from '@/components/wizard/steps/Step4Safety';
 import Colors from '@/constants/Colors';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
+import { useUserId } from '@/store/useUserStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { calculateLeave } from '@/utils/leaveLogic';
 import { BlurView } from 'expo-blur';
@@ -72,10 +73,11 @@ export default function LeaveRequestScreen() {
     const { draftId } = useLocalSearchParams();
     const fetchUserRequests = useLeaveStore((state) => state.fetchUserRequests);
     const fetchLeaveData = useLeaveStore((state) => state.fetchLeaveData);
-    const userId = "USER_0001"; // TODO: Auth
+    const userId = useUserId();
     const [isHydrated, setIsHydrated] = useState(false);
 
     React.useEffect(() => {
+        if (!userId) return;
         // Hydrate and then set ready
         const init = async () => {
             // Always fetch latest data to ensure balance is accurate
@@ -86,7 +88,7 @@ export default function LeaveRequestScreen() {
             setIsHydrated(true);
         };
         init();
-    }, []);
+    }, [userId]);
 
     React.useEffect(() => {
         if (!isHydrated) return; // Wait for hydration
@@ -201,9 +203,9 @@ export default function LeaveRequestScreen() {
             } else {
                 // Create New Draft if we have minimal viable data
                 // Only create if user has actually interacted (e.g. selected a date)
-                if (formData.startDate) {
+                if (formData.startDate && userId) {
                     console.log('Creating New Auto-Draft');
-                    const userId = "user-123"; // TODO: Get from Auth
+                    // Use authenticated user ID
                     const newDraft = generateQuickDraft('standard', userId);
                     // Override defaults with current form data
                     Object.assign(newDraft, formData);
@@ -214,7 +216,7 @@ export default function LeaveRequestScreen() {
         }, 800); // 800ms debounce
 
         return () => clearTimeout(timer);
-    }, [formData, currentDraftId, createDraft, updateDraft, generateQuickDraft]);
+    }, [formData, currentDraftId, createDraft, updateDraft, generateQuickDraft, userId]);
 
     // Enforce Time Rules: Departure = End of Day, Return = Start of Day
     React.useEffect(() => {
@@ -326,10 +328,13 @@ export default function LeaveRequestScreen() {
             return;
         }
 
+        if (!userId) {
+            Alert.alert("Error", "User not authenticated.");
+            return;
+        }
 
         try {
-            const currentUserId = "user-123";
-            await submitRequest(formData as CreateLeaveRequestPayload, currentUserId);
+            await submitRequest(formData as CreateLeaveRequestPayload, userId);
 
             // Cleanup: Remove the draft so it doesn't persist as a zombie
             if (currentDraftId) {

@@ -5,14 +5,14 @@ npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supporte
 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
 npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
 
-added 911 packages, and audited 912 packages in 37s
+> my_compass@1.0.0 postinstall
+> node scripts/patch-css-interop.js
 
-106 packages are looking for funding
+[patch-css-interop] patch applied
+
+added 882 packages, and audited 883 packages in 36s
+
+102 packages are looking for funding
   run `npm fund` for details
 
-1 high severity vulnerability
-
-To address all issues, run:
-  npm audit fix
-
-Run `npm audit` for details.
+found 0 vulnerabilities

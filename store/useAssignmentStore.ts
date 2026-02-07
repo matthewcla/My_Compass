@@ -862,19 +862,17 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     withdrawApplication: async (appId: string, userId: string) => {
-        // Remove from applications, remove from realDecisions (so it goes back to deck??)
-        // Or "Withdraw" might mean move to 'nope'? 
-        // Usually "Withdraw" means you are no longer interested in applying.
-        // Let's set decision to 'nope'.
-
+        // Remove from applications, remove from realDecisions so it returns to the Discovery deck.
         const { applications, userApplicationIds, realDecisions } = get();
         const app = applications[appId];
         if (!app) return;
 
-        // 1. Update Decisions to 'nope'
+        const billetIdToRemove = app.billetId;
+
+        // 1. Clear Decisions
         const updatedDecisions = { ...realDecisions };
-        if (app.billetId) {
-            updatedDecisions[app.billetId] = 'nope';
+        if (billetIdToRemove) {
+            delete updatedDecisions[billetIdToRemove];
         }
 
         // 2. Remove Application
@@ -899,9 +897,21 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             userApplicationIds: updatedUserIds
         });
 
-        // Persist
-        if (app.billetId) {
-            await storage.saveAssignmentDecision(userId, app.billetId, 'nope');
+        // 4. Persist & Clean up Write-behind Buffer
+        if (billetIdToRemove) {
+            // Check if it's in the pending queue
+            const pendingIndex = pendingSwipes.findIndex(p => p.billetId === billetIdToRemove && p.userId === userId);
+            if (pendingIndex !== -1) {
+                // It's pending, just remove from queue so it never gets saved
+                pendingSwipes.splice(pendingIndex, 1);
+                if (pendingSwipes.length === 0 && flushTimeout) {
+                    clearTimeout(flushTimeout as any);
+                    flushTimeout = null;
+                }
+            } else {
+                // It's already in DB, remove it
+                await storage.removeAssignmentDecision(userId, billetIdToRemove);
+            }
         }
         // Persist updated apps
         for (const app of remainingApps) {

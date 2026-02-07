@@ -7,7 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build": "expo export -p web"
+    "build": "expo export -p web",
+    "postinstall": "node scripts/patch-css-interop.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -20,7 +21,7 @@
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
-    "expo": "~54.0.32",
+    "expo": "~54.0.33",
     "expo-blur": "~15.0.8",
     "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
@@ -63,9 +64,9 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.1.0",
-    "module-alias": "^2.3.3",
+    "module-alias": "^2.3.4",
     "react-test-renderer": "19.1.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

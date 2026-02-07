@@ -1,6 +1,6 @@
 import { useHeaderStore } from '@/store/useHeaderStore';
-import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { NavigationContext } from '@react-navigation/native';
+import { useContext, useEffect, useRef } from 'react';
 
 import { SearchConfig } from '@/store/useHeaderStore';
 
@@ -11,15 +11,42 @@ export function useScreenHeader(
     searchConfig?: SearchConfig | null
 ) {
     const setHeader = useHeaderStore((state) => state.setHeader);
+    const navigation = useContext(NavigationContext);
+    const navigationRef = useRef(navigation);
+    navigationRef.current = navigation;
 
-    useFocusEffect(
-        useCallback(() => {
-            // When screen comes into focus, set the header
-            // Use requestAnimationFrame to avoid "update on unmounted component" or race conditions
-            // during initial mount if the screen is immediately focused.
-            requestAnimationFrame(() => {
+    useEffect(() => {
+        let frame: number | null = null;
+        let unsubscribeFocus: (() => void) | undefined;
+
+        const applyHeader = () => {
+            if (frame !== null) {
+                cancelAnimationFrame(frame);
+            }
+
+            frame = requestAnimationFrame(() => {
                 setHeader(title, subtitle, rightAction, 'large', searchConfig);
+                frame = null;
             });
-        }, [title, subtitle, rightAction, searchConfig, setHeader])
-    );
+        };
+
+        // Always apply once on mount/update.
+        applyHeader();
+
+        // Best-effort re-apply on focus when a navigation object is present.
+        if (navigationRef.current?.addListener) {
+            try {
+                unsubscribeFocus = navigationRef.current.addListener('focus', applyHeader);
+            } catch {
+                // Ignore navigation-context timing issues and keep non-focus behavior.
+            }
+        }
+
+        return () => {
+            unsubscribeFocus?.();
+            if (frame !== null) {
+                cancelAnimationFrame(frame);
+            }
+        };
+    }, [title, subtitle, rightAction, searchConfig, setHeader]);
 }

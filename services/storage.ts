@@ -112,6 +112,7 @@ class SQLiteStorage implements IStorageService {
     await db.runAsync('DELETE FROM leave_requests WHERE id = ?', requestId);
   }
   private dbInstance: SQLite.SQLiteDatabase | null = null;
+  private writeQueue: Promise<void> = Promise.resolve();
 
   private async getDB(): Promise<SQLite.SQLiteDatabase> {
     if (this.dbInstance) {
@@ -119,6 +120,31 @@ class SQLiteStorage implements IStorageService {
     }
     this.dbInstance = await SQLite.openDatabaseAsync(DB_NAME);
     return this.dbInstance;
+  }
+
+  private async enqueueWrite<T>(operation: () => Promise<T>): Promise<T> {
+    const queuedOperation = this.writeQueue.then(operation, operation);
+    this.writeQueue = queuedOperation.then(
+      () => undefined,
+      () => undefined
+    );
+    return queuedOperation;
+  }
+
+  private async withWriteTransaction(task: (runner: SQLite.SQLiteDatabase) => Promise<void>): Promise<void> {
+    const db = await this.getDB();
+    await this.enqueueWrite(async () => {
+      if (Platform.OS === 'web') {
+        await db.withTransactionAsync(async () => {
+          await task(db);
+        });
+        return;
+      }
+
+      await db.withExclusiveTransactionAsync(async (txn) => {
+        await task(txn);
+      });
+    });
   }
 
   async init(): Promise<void> {
@@ -264,6 +290,12 @@ class SQLiteStorage implements IStorageService {
     }
   }
 
+  async getBilletCount(): Promise<number> {
+    const db = await this.getDB();
+    const result = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) as count FROM billets');
+    return Number(result?.count ?? 0);
+  }
+
   async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
     const db = await this.getDB();
     try {
@@ -360,6 +392,40 @@ class SQLiteStorage implements IStorageService {
     );
   }
 
+  async saveApplications(apps: Application[]): Promise<void> {
+    await this.withWriteTransaction(async (runner) => {
+      for (const app of apps) {
+        await runner.runAsync(
+          `INSERT OR REPLACE INTO applications (
+            id, billet_id, user_id, status, status_history,
+            optimistic_lock_token, lock_requested_at, lock_expires_at,
+            personal_statement, preference_rank, submitted_at,
+            server_confirmed_at, server_rejection_reason,
+            created_at, updated_at, last_sync_timestamp, sync_status, local_modified_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+          app.id,
+          app.billetId,
+          app.userId,
+          app.status,
+          JSON.stringify(app.statusHistory),
+          null, // optimisticLockToken (Removed from schema)
+          null, // lockRequestedAt (Removed from schema)
+          null, // lockExpiresAt (Removed from schema)
+          app.personalStatement || null,
+          app.preferenceRank || null,
+          app.submittedAt || null,
+          app.serverConfirmedAt || null,
+          app.serverRejectionReason || null,
+          app.createdAt,
+          app.updatedAt,
+          app.lastSyncTimestamp,
+          app.syncStatus,
+          app.localModifiedAt || null
+        );
+      }
+    });
+  }
+
   async getApplication(id: string): Promise<Application | null> {
     const db = await this.getDB();
     try {
@@ -393,6 +459,11 @@ class SQLiteStorage implements IStorageService {
       if (error instanceof DataIntegrityError) throw error;
       throw new DataIntegrityError('Failed to fetch/parse Application records', error);
     }
+  }
+
+  async deleteApplication(appId: string): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync('DELETE FROM applications WHERE id = ?', appId);
   }
 
   private mapRowToApplication(row: any): Application {
@@ -673,11 +744,14 @@ class SQLiteStorage implements IStorageService {
   // ---------------------------------------------------------------------------
 
   async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
-    const db = await this.getDB();
-    // Using transaction for bulk insert
-    await db.withTransactionAsync(async () => {
+    await this.withWriteTransaction(async (runner) => {
+      if (messages.length === 0) {
+        await runner.runAsync('DELETE FROM inbox_messages;');
+        return;
+      }
+
       for (const msg of messages) {
-        await db.runAsync(
+        await runner.runAsync(
           `INSERT OR REPLACE INTO inbox_messages (
             id, type, subject, body, timestamp, is_read, is_pinned, metadata, last_sync_timestamp, sync_status
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
@@ -693,13 +767,21 @@ class SQLiteStorage implements IStorageService {
           'synced'
         );
       }
+
+      const placeholders = messages.map(() => '?').join(', ');
+      await runner.runAsync(
+        `DELETE FROM inbox_messages WHERE id NOT IN (${placeholders});`,
+        ...messages.map((msg) => msg.id)
+      );
     });
   }
 
   async getInboxMessages(): Promise<InboxMessage[]> {
     const db = await this.getDB();
     try {
-      const results = await db.getAllAsync<any>('SELECT * FROM inbox_messages');
+      const results = await db.getAllAsync<any>(
+        'SELECT * FROM inbox_messages ORDER BY timestamp DESC LIMIT 500'
+      );
       return results.map(row => ({
         id: row.id,
         type: row.type,
@@ -708,7 +790,7 @@ class SQLiteStorage implements IStorageService {
         timestamp: row.timestamp,
         isRead: Boolean(row.is_read),
         isPinned: Boolean(row.is_pinned),
-        metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
+        metadata: row.metadata ? safeJsonParse(row.metadata) : undefined,
       }));
     } catch (error) {
       console.error('Failed to fetch inbox messages', error);
@@ -716,15 +798,23 @@ class SQLiteStorage implements IStorageService {
     }
   }
 
+  async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync(
+      'UPDATE inbox_messages SET is_read = ? WHERE id = ?',
+      isRead ? 1 : 0,
+      id
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Career Events
   // ---------------------------------------------------------------------------
 
   async saveCareerEvents(events: CareerEvent[]): Promise<void> {
-    const db = await this.getDB();
-    await db.withTransactionAsync(async () => {
+    await this.withWriteTransaction(async (runner) => {
       for (const event of events) {
-        await db.runAsync(
+        await runner.runAsync(
           `INSERT OR REPLACE INTO career_events (
             event_id, event_type, title, date, location, attendance_status, priority, qr_token, last_sync_timestamp, sync_status
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
@@ -803,6 +893,10 @@ class MockStorage implements IStorageService {
     return Array.from(this.billets.values());
   }
 
+  async getBilletCount(): Promise<number> {
+    return this.billets.size;
+  }
+
   async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
     const all = Array.from(this.billets.values());
     return all.slice(offset, offset + limit);
@@ -812,11 +906,17 @@ class MockStorage implements IStorageService {
   async saveApplication(app: Application): Promise<void> {
     this.applications.set(app.id, app);
   }
+  async saveApplications(apps: Application[]): Promise<void> {
+    apps.forEach(app => this.applications.set(app.id, app));
+  }
   async getApplication(id: string): Promise<Application | null> {
     return this.applications.get(id) || null;
   }
   async getUserApplications(userId: string): Promise<Application[]> {
     return Array.from(this.applications.values()).filter(a => a.userId === userId);
+  }
+  async deleteApplication(appId: string): Promise<void> {
+    this.applications.delete(appId);
   }
 
   // Leave Requests
@@ -876,11 +976,19 @@ class MockStorage implements IStorageService {
 
   // Inbox
   async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
-    messages.forEach(msg => this.inboxMessages.set(msg.id, msg));
+    this.inboxMessages.clear();
+    messages.slice(0, 500).forEach(msg => this.inboxMessages.set(msg.id, msg));
   }
 
   async getInboxMessages(): Promise<InboxMessage[]> {
-    return Array.from(this.inboxMessages.values());
+    return Array.from(this.inboxMessages.values()).slice(0, 500);
+  }
+
+  async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
+    const msg = this.inboxMessages.get(id);
+    if (msg) {
+      this.inboxMessages.set(id, { ...msg, isRead });
+    }
   }
 
   // Career Events
@@ -942,9 +1050,16 @@ class WebStorage implements IStorageService {
       .map(k => this.getItem<Billet>(k)!);
   }
 
+  async getBilletCount(): Promise<number> {
+    return Object.keys(localStorage).filter(k => k.startsWith('billet_')).length;
+  }
+
   // --- Applications ---
   async saveApplication(app: Application): Promise<void> {
     this.setItem(`app_${app.id}`, app);
+  }
+  async saveApplications(apps: Application[]): Promise<void> {
+    apps.forEach(app => this.setItem(`app_${app.id}`, app));
   }
   async getApplication(id: string): Promise<Application | null> {
     return this.getItem<Application>(`app_${id}`);
@@ -954,6 +1069,9 @@ class WebStorage implements IStorageService {
     return keys.filter(k => k.startsWith('app_'))
       .map(k => this.getItem<Application>(k)!)
       .filter(a => a.userId === userId);
+  }
+  async deleteApplication(appId: string): Promise<void> {
+    localStorage.removeItem(`app_${appId}`);
   }
 
   // --- Leave Requests ---
@@ -1016,11 +1134,17 @@ class WebStorage implements IStorageService {
 
   // --- Inbox ---
   async saveInboxMessages(messages: InboxMessage[]): Promise<void> {
-    this.setItem('inbox_messages', messages);
+    this.setItem('inbox_messages', messages.slice(0, 500));
   }
 
   async getInboxMessages(): Promise<InboxMessage[]> {
-    return this.getItem<InboxMessage[]>('inbox_messages') || [];
+    return (this.getItem<InboxMessage[]>('inbox_messages') || []).slice(0, 500);
+  }
+
+  async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
+    const messages = await this.getInboxMessages();
+    const newMessages = messages.map(m => m.id === id ? { ...m, isRead } : m);
+    await this.saveInboxMessages(newMessages);
   }
 
   // --- Career Events ---

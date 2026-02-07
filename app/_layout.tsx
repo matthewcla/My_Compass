@@ -8,24 +8,16 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
+import '../ignoreWarnings';
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
+import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
-import { LogBox, View } from 'react-native';
-
-// Suppress known warnings from dependencies and Expo Go
-LogBox.ignoreLogs([
-  'SafeAreaView has been deprecated',
-  'WARN SafeAreaView has been deprecated',
-  'SafeAreaView has been deprecated and will be removed in a future release',
-  'SafeAreaView has been deprecated and will be removed in a future release. Please use \'react-native-safe-area-context\' instead.',
-  "SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context",
-  'expo-notifications',
-]);
+import { View } from 'react-native';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -67,13 +59,28 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    storage.init()
-      .then(() => setDbInitialized(true))
-      .catch((e) => {
+    let cancelled = false;
+
+    const initStorage = async () => {
+      try {
+        await storage.init();
+        if (!cancelled) {
+          setDbInitialized(true);
+        }
+      } catch (e) {
         console.error('Failed to initialize database:', e);
         // On web, or if DB fails, we still might want to show the UI for testing/audit purposes
-        setDbInitialized(true);
-      });
+        if (!cancelled) {
+          setDbInitialized(true);
+        }
+      }
+    };
+
+    void initStorage();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const hideSplash = useCallback(async () => {
@@ -133,6 +140,7 @@ export default function RootLayout() {
               <Stack.Screen name="(calendar)" />
               <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
             </Stack>
+            <SpotlightOverlay />
             <GlobalTabBar />
           </View>
         </SessionProvider>

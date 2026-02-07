@@ -6,6 +6,7 @@ import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
 import { useLeaveStore } from '@/store/useLeaveStore';
@@ -64,16 +65,10 @@ export default function HubDashboard() {
         return `Welcome, ${formattedRank} ${lastName}`.trim();
     };
 
-    // Hoist Header State
-    const [searchQuery, setSearchQuery] = useState('');
+    const globalSearchConfig = useGlobalSpotlightHeaderSearch();
 
     // Hoist Header State
-    useScreenHeader("", "", undefined, {
-        visible: true,
-        onChangeText: setSearchQuery,
-        placeholder: 'Search...',
-        value: searchQuery
-    });
+    useScreenHeader("", "", undefined, globalSearchConfig);
 
     // Navigation Handlers
     const handleStartExploring = () => {

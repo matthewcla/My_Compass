@@ -1,12 +1,14 @@
 import { MessageCard } from '@/components/inbox/MessageCard';
-import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useHeaderStore } from '@/store/useHeaderStore';
 import { useInboxStore } from '@/store/useInboxStore';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { SectionList, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
+const MAX_FILTER_MESSAGES = 500;
 
 const formatDTG = (dateString: string) => {
     try {
@@ -23,18 +25,24 @@ const formatDTG = (dateString: string) => {
 };
 
 export default function InboxScreen() {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
     const insets = useSafeAreaInsets();
     const { messages, fetchMessages, isLoading, togglePin } = useInboxStore();
     const router = useRouter();
+    const [, startTransition] = useTransition();
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [searchQuery, setSearchQuery] = useState('');
 
-    useScreenHeader("", "", undefined, {
-        visible: true,
-        onChangeText: setSearchQuery,
-        placeholder: 'Search messages (e.g. 041200Z)...',
-        value: searchQuery
-    });
+    // Set Global Header
+    useEffect(() => {
+        useHeaderStore.getState().setHeader('', '', null, 'large', {
+            visible: true,
+            onChangeText: setSearchQuery,
+            placeholder: 'Search messages...',
+            value: searchQuery
+        });
+    }, [searchQuery]);
 
     useEffect(() => {
         fetchMessages();
@@ -49,8 +57,13 @@ export default function InboxScreen() {
         router.push(`/inbox/${id}`);
     }, [router]);
 
+    const filterableMessages = useMemo(
+        () => messages.slice(0, MAX_FILTER_MESSAGES),
+        [messages]
+    );
+
     const filteredMessages = useMemo(() => {
-        return messages.filter(msg => {
+        return filterableMessages.filter(msg => {
             // Text Search
             if (searchQuery) {
                 const query = searchQuery.toUpperCase();
@@ -74,25 +87,30 @@ export default function InboxScreen() {
                     return true;
             }
         });
-    }, [messages, activeFilter, searchQuery]);
+    }, [filterableMessages, activeFilter, searchQuery]);
 
     const sections = useMemo(() => {
-        // Sort logic: Pinned (Quick Reference) -> Unread -> Read (by date desc)
+        // Optimized: Single pass categorization without redundant sorting.
+        // Relies on filteredMessages already being sorted by date (desc) from useInboxStore.
+        const pinned: typeof filteredMessages = [];
+        const unread: typeof filteredMessages = [];
+        const read: typeof filteredMessages = [];
 
-        const pinned = filteredMessages.filter(m => m.isPinned);
-        const unread = filteredMessages.filter(m => !m.isPinned && !m.isRead).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        const read = filteredMessages.filter(m => !m.isPinned && m.isRead).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        for (const m of filteredMessages) {
+            if (m.isPinned) {
+                pinned.push(m);
+            } else if (!m.isRead) {
+                unread.push(m);
+            } else {
+                read.push(m);
+            }
+        }
 
         const result = [];
 
         if (pinned.length > 0) {
             result.push({ title: 'Quick Reference', data: pinned });
         }
-
-        // Combine unread and read for the main list, or separate if desired. 
-        // Requirement said: Pinned -> Unread -> Rest.
-        // Let's make "Inbox" the title for the rest to keep it simple, or separate sections?
-        // "Unread" and "All Others" sections might be nice.
 
         if (unread.length > 0) {
             result.push({ title: 'Unread', data: unread });
@@ -106,18 +124,34 @@ export default function InboxScreen() {
     }, [filteredMessages]);
 
     const renderHeader = () => (
-        <View className="px-4 py-3 bg-slate-50 dark:bg-black border-b border-slate-200 dark:border-slate-800">
-            <View className="flex-row justify-between bg-slate-200 dark:bg-slate-800 p-1 rounded-lg">
+        <View
+            className="px-4 pb-3 bg-white dark:bg-black border-slate-200 dark:border-slate-800"
+        >
+            <View className="flex-row justify-between bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mt-2">
                 {(['All', 'Official', 'My Status', 'Pinned'] as FilterType[]).map((filter) => (
-                    <TouchableOpacity
+                    <Pressable
                         key={filter}
-                        onPress={() => setActiveFilter(filter)}
-                        className={`flex-1 items-center py-1.5 rounded-md ${activeFilter === filter ? 'bg-white dark:bg-slate-600 shadow-sm' : ''}`}
+                        onPress={() => startTransition(() => {
+                            setActiveFilter(prev => (prev === filter ? prev : filter));
+                        })}
+                        style={[
+                            styles.filterButton,
+                            activeFilter === filter
+                                ? (isDark ? styles.filterButtonActiveDark : styles.filterButtonActiveLight)
+                                : null,
+                        ]}
                     >
-                        <Text className={`text-xs font-semibold ${activeFilter === filter ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                        <Text
+                            style={[
+                                styles.filterText,
+                                activeFilter === filter
+                                    ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
+                                    : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
+                            ]}
+                        >
                             {filter}
                         </Text>
-                    </TouchableOpacity>
+                    </Pressable>
                 ))}
             </View>
         </View>
@@ -157,3 +191,34 @@ export default function InboxScreen() {
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    filterButton: {
+        flex: 1,
+        alignItems: 'center',
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    filterButtonActiveLight: {
+        backgroundColor: '#ffffff',
+    },
+    filterButtonActiveDark: {
+        backgroundColor: '#475569',
+    },
+    filterText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    filterTextActiveLight: {
+        color: '#0f172a',
+    },
+    filterTextActiveDark: {
+        color: '#ffffff',
+    },
+    filterTextInactiveLight: {
+        color: '#64748b',
+    },
+    filterTextInactiveDark: {
+        color: '#94a3b8',
+    },
+});

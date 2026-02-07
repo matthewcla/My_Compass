@@ -105,7 +105,7 @@ interface AssignmentActions {
     /**
      * Reorder application preference ranks based on the provided ID order.
      */
-    reorderApplications: (orderedAppIds: string[], userId: string) => void;
+    reorderApplications: (orderedAppIds: string[], userId: string) => Promise<void>;
 
     /**
      * Submit all DRAFT applications to the server.
@@ -198,6 +198,20 @@ const INITIAL_STATE: MyAssignmentState & {
 type PendingSwipe = { userId: string; billetId: string; decision: SwipeDecision };
 let pendingSwipes: PendingSwipe[] = [];
 let flushTimeout: NodeJS.Timeout | number | null = null;
+
+const purgePendingSwipes = (userId: string, billetId: string): boolean => {
+    const initialCount = pendingSwipes.length;
+    pendingSwipes = pendingSwipes.filter(
+        pending => !(pending.userId === userId && pending.billetId === billetId)
+    );
+
+    if (pendingSwipes.length === 0 && flushTimeout) {
+        clearTimeout(flushTimeout);
+        flushTimeout = null;
+    }
+
+    return pendingSwipes.length < initialCount;
+};
 
 const persistDecisions = async () => {
     if (pendingSwipes.length === 0) return;
@@ -561,8 +575,8 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         // Ensure storage has data (Mock Init)
         // In a real scenario, this step might be "Sync from API to DB"
-        const existing = await storage.getAllBillets();
-        if (existing.length === 0) {
+        const billetCount = await storage.getBilletCount();
+        if (billetCount === 0) {
             for (const b of MOCK_BILLETS) {
                 await storage.saveBillet(b);
             }
@@ -724,12 +738,17 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             const newDecisions = { ...realDecisions };
             delete newDecisions[billetIdToRemove];
 
-            // FIX: Remove orphaned application if last action was a 'promote'
-            const appToRemove = Object.values(applications).find(
-                app => app.billetId === billetIdToRemove && app.status === 'draft'
-            );
+            // Find app ID in userApplicationIds that matches billetId
+            // This ensures we only look at the user's active applications
+            const appIdToRemove = userApplicationIds.find(id => {
+                const app = applications[id];
+                return app && app.billetId === billetIdToRemove && app.userId === userId && app.status === 'draft';
+            });
+            const appToRemove = appIdToRemove ? applications[appIdToRemove] : undefined;
+
             let updatedApplications = applications;
             let updatedUserIds = userApplicationIds;
+
             if (appToRemove) {
                 updatedApplications = { ...applications };
                 delete updatedApplications[appToRemove.id];
@@ -743,23 +762,13 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 userApplicationIds: updatedUserIds
             });
 
-            // Persist
-            // Check if it's in the pending queue
-            const pendingIndex = pendingSwipes.findIndex(p => p.billetId === billetIdToRemove && p.userId === userId);
-            if (pendingIndex !== -1) {
-                // It's pending, just remove from queue so it never gets saved
-                pendingSwipes.splice(pendingIndex, 1);
-                // If queue is empty, maybe clear timeout?
-                if (pendingSwipes.length === 0 && flushTimeout) {
-                    clearTimeout(flushTimeout);
-                    flushTimeout = null;
-                }
-            } else {
-                // It's already in DB, remove it
-                storage.removeAssignmentDecision(userId, billetIdToRemove);
+            // Persist decision removal in both pending queue and durable storage.
+            purgePendingSwipes(userId, billetIdToRemove);
+            void storage.removeAssignmentDecision(userId, billetIdToRemove);
+
+            if (appToRemove) {
+                void storage.deleteApplication(appToRemove.id);
             }
-            // Note: Orphaned application deletion from storage not fully implemented yet 
-            // as per storage interface limitations.
         } else {
             const newDecisions = { ...sandboxDecisions };
             delete newDecisions[billetIdToRemove];
@@ -862,19 +871,15 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     withdrawApplication: async (appId: string, userId: string) => {
-        // Remove from applications, remove from realDecisions (so it goes back to deck??)
-        // Or "Withdraw" might mean move to 'nope'? 
-        // Usually "Withdraw" means you are no longer interested in applying.
-        // Let's set decision to 'nope'.
-
         const { applications, userApplicationIds, realDecisions } = get();
         const app = applications[appId];
         if (!app) return;
+        const billetIdToRemove = app.billetId;
 
-        // 1. Update Decisions to 'nope'
+        // 1. Remove decision so the billet returns to Discovery (not Manifest).
         const updatedDecisions = { ...realDecisions };
-        if (app.billetId) {
-            updatedDecisions[app.billetId] = 'nope';
+        if (billetIdToRemove) {
+            delete updatedDecisions[billetIdToRemove];
         }
 
         // 2. Remove Application
@@ -899,28 +904,33 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             userApplicationIds: updatedUserIds
         });
 
-        // Persist
-        if (app.billetId) {
-            await storage.saveAssignmentDecision(userId, app.billetId, 'nope');
+        // Remove any queued writes for this decision and then delete durable state.
+        if (billetIdToRemove) {
+            purgePendingSwipes(userId, billetIdToRemove);
+            await storage.removeAssignmentDecision(userId, billetIdToRemove);
         }
+
         // Persist updated apps
         for (const app of remainingApps) {
             await storage.saveApplication(updatedApplications[app.id]);
         }
     },
 
-    reorderApplications: (orderedAppIds: string[], userId: string) => {
+    reorderApplications: async (orderedAppIds: string[], userId: string) => {
         const { applications } = get();
         const updatedApplications = { ...applications };
+        const appsToSave: Application[] = [];
 
         orderedAppIds.forEach((id, index) => {
             if (updatedApplications[id]) {
-                updatedApplications[id] = {
+                const updatedApp = {
                     ...updatedApplications[id],
                     preferenceRank: index + 1,
                     updatedAt: new Date().toISOString(),
                     localModifiedAt: new Date().toISOString()
                 };
+                updatedApplications[id] = updatedApp;
+                appsToSave.push(updatedApp);
             }
         });
 
@@ -930,11 +940,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
 
         // Persist
-        orderedAppIds.forEach(id => {
-            if (updatedApplications[id]) {
-                storage.saveApplication(updatedApplications[id]);
-            }
-        });
+        await storage.saveApplications(appsToSave);
     },
 
     submitSlate: async () => {
@@ -944,28 +950,35 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         const { applications } = get();
         const updatedApps = { ...applications };
+        const appsToSave: Application[] = [];
 
         // Mark all draft as submitted
         Object.keys(updatedApps).forEach(key => {
             const app = updatedApps[key];
             if (app.status === 'draft') {
-                updatedApps[key] = {
+                const updatedApp = {
                     ...app,
-                    status: 'submitted',
+                    status: 'submitted' as const,
                     submittedAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                     lastSyncTimestamp: new Date().toISOString(),
-                    syncStatus: 'synced',
+                    syncStatus: 'synced' as const,
                 };
-                // In real app, persist these changes
-                storage.saveApplication(updatedApps[key]);
+                updatedApps[key] = updatedApp;
+                appsToSave.push(updatedApp);
             }
         });
 
-        set({
-            applications: updatedApps,
-            isSyncingApplications: false
-        });
+        try {
+            await storage.saveApplications(appsToSave);
+        } catch (e) {
+            console.error('[Store] Failed to persist submitted slate', e);
+        } finally {
+            set({
+                applications: updatedApps,
+                isSyncingApplications: false
+            });
+        }
     },
 
     getManifestItems: (filter: 'candidates' | 'favorites' | 'archived') => {

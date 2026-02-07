@@ -1,7 +1,10 @@
 import { MenuTile } from '@/components/menu/MenuTile';
+import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
+import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
+import { useSpotlightStore } from '@/store/useSpotlightStore';
 import * as Clipboard from 'expo-clipboard';
-import { useRouter } from 'expo-router';
+import { usePathname, useSegments } from 'expo-router';
 import {
   Briefcase,
   ChevronRight,
@@ -14,16 +17,26 @@ import {
   User
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React, { useRef, useState } from 'react';
-import { Pressable, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import React, { useState } from 'react';
+import { Platform, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+function HubMenuSearchHeader() {
+  const globalSearchConfig = useGlobalSpotlightHeaderSearch();
+  useScreenHeader('', '', undefined, globalSearchConfig);
+  return null;
+}
+
 export default function MenuHubScreen() {
-  const router = useRouter();
   const { signOut } = useSession();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const pathname = usePathname();
+  const segments = useSegments();
+  const segmentList = segments as string[];
   const isDark = colorScheme === 'dark';
+  const isMenuModalRoute = segmentList.includes('MenuHubModal') || pathname.includes('MenuHubModal');
+  const isHubMenuRoute = !isMenuModalRoute;
 
   // Dynamic Theme Colors
   const theme = {
@@ -37,7 +50,15 @@ export default function MenuHubScreen() {
   };
 
   const [toastVisible, setToastVisible] = useState(false);
-  const inputRef = useRef<TextInput>(null);
+  const openSpotlight = useSpotlightStore((state) => state.open);
+  const spotlightQuery = useSpotlightStore((state) => state.query);
+  const setSpotlightQuery = useSpotlightStore((state) => state.setQuery);
+
+  const ensureModalSpotlightOpen = React.useCallback(() => {
+    if (!useSpotlightStore.getState().isOpen) {
+      openSpotlight({ source: 'shortcut', preserveQuery: true });
+    }
+  }, [openSpotlight]);
 
   const handleTilePress = (route: string) => {
     // router.push(route);
@@ -52,55 +73,75 @@ export default function MenuHubScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
+      {isHubMenuRoute ? <HubMenuSearchHeader /> : null}
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-      {/* Sticky Header */}
-      <View
-        style={{
-          paddingTop: Math.max(insets.top, 20) + 16,
-          backgroundColor: theme.background,
-          zIndex: 10
-        }}
-        className="px-5 pb-4"
-      >
-
-
-        <MotiView
-          from={{ opacity: 0, translateY: -10 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 400 }}
+      {isMenuModalRoute && (
+        <View
           style={{
-            backgroundColor: theme.card,
-            borderColor: theme.border,
-            borderRadius: 24,
-            // Padding removed here and moved to Pressable
+            paddingTop: Math.max(insets.top, 20) + 16,
+            backgroundColor: theme.background,
+            zIndex: 10
           }}
-          className="rounded-3xl shadow-sm border"
+          className="px-5 pb-4"
         >
-          <Pressable
-            onPress={() => inputRef.current?.focus()}
+          <MotiView
+            from={{ opacity: 0, translateY: -10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400 }}
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 14,
-              paddingHorizontal: 16,
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+              borderRadius: 24,
             }}
+            className="rounded-3xl shadow-sm border"
           >
-            <Search size={22} color={theme.icon} strokeWidth={2.5} />
-            <TextInput
-              ref={inputRef}
-              placeholder="Search..."
-              placeholderTextColor={theme.icon}
-              style={{ color: theme.text }}
-              className="flex-1 ml-4 text-[17px] font-medium h-full"
-            />
-          </Pressable>
-        </MotiView>
-      </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+              }}
+            >
+              <Search size={22} color={theme.icon} strokeWidth={2.5} />
+              <TextInput
+                value={spotlightQuery}
+                onChangeText={(text) => {
+                  ensureModalSpotlightOpen();
+                  setSpotlightQuery(text);
+                }}
+                onFocus={ensureModalSpotlightOpen}
+                placeholder="Search all app functions..."
+                placeholderTextColor={theme.icon}
+                style={{ color: theme.text, marginLeft: 20 }}
+                className="flex-1 text-[17px] font-medium h-full"
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="search"
+                accessibilityLabel="Global search input"
+              />
+              {Platform.OS === 'web' && (
+                <View
+                  style={{
+                    borderColor: theme.border,
+                    backgroundColor: theme.inputBg
+                  }}
+                  className="border rounded-md px-2 py-1"
+                >
+                  <Text style={{ color: theme.subText }} className="text-[10px] font-bold uppercase tracking-wider">
+                    ⌘K
+                  </Text>
+                </View>
+              )}
+            </View>
+          </MotiView>
+        </View>
+      )}
 
       <ScrollView
         contentContainerStyle={{
-          paddingTop: 10, // Reduced top spacing for tighter layout
+          paddingTop: isMenuModalRoute ? 10 : 18,
           paddingBottom: insets.bottom + 120,
           paddingHorizontal: 24
         }}

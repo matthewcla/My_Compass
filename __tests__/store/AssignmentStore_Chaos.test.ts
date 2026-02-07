@@ -7,7 +7,8 @@
  * exposing logical vulnerabilities in the store's state management.
  */
 
-import { useAssignmentStore } from '@/store/useAssignmentStore';
+import { storage } from '@/services/storage';
+import { selectManifestItems, useAssignmentStore } from '@/store/useAssignmentStore';
 
 // Test User ID
 const TEST_USER_ID = 'test-user-001';
@@ -107,7 +108,7 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
 
         // Withdraw one of the original 7 to free a slot
         const firstAppId = stateAfter8.userApplicationIds[0];
-        useAssignmentStore.getState().withdrawApplication(firstAppId, TEST_USER_ID);
+        await useAssignmentStore.getState().withdrawApplication(firstAppId, TEST_USER_ID);
 
         // Now try to promote the 8th item
         const promotionResult = useAssignmentStore.getState().promoteToSlate(eighthBillet.id, TEST_USER_ID);
@@ -153,7 +154,7 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
         expect(stateAfterSwipe.realDecisions[targetBilletId]).toBe('super');
 
         // Withdraw (hard delete for draft)
-        useAssignmentStore.getState().withdrawApplication(appId, TEST_USER_ID);
+        await useAssignmentStore.getState().withdrawApplication(appId, TEST_USER_ID);
 
         const finalState = useAssignmentStore.getState();
 
@@ -163,6 +164,69 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
         // ASSERTION: realDecisions should also be cleared
         // BUG: This will likely FAIL because withdrawApplication doesn't touch realDecisions
         expect(finalState.realDecisions[targetBilletId]).toBeUndefined();
+    });
+
+    it('Buffered Swipe Purge: withdraw should delete decision from queue/storage and keep unrelated swipes', async () => {
+        const userId = `${TEST_USER_ID}-buffered-purge`;
+        const billetStack = useAssignmentStore.getState().billetStack;
+        const targetBilletId = billetStack[0];
+        const unrelatedBilletId = billetStack[1];
+
+        await useAssignmentStore.getState().swipe(targetBilletId, 'up', userId);
+        await useAssignmentStore.getState().swipe(unrelatedBilletId, 'right', userId);
+
+        const afterSwipes = useAssignmentStore.getState();
+        const appId = afterSwipes.userApplicationIds.find(id => afterSwipes.applications[id].billetId === targetBilletId);
+
+        expect(appId).toBeDefined();
+        expect(afterSwipes.realDecisions[targetBilletId]).toBe('super');
+        expect(afterSwipes.realDecisions[unrelatedBilletId]).toBe('like');
+
+        await useAssignmentStore.getState().withdrawApplication(appId!, userId);
+
+        const afterWithdraw = useAssignmentStore.getState();
+        expect(afterWithdraw.realDecisions[targetBilletId]).toBeUndefined();
+        expect(afterWithdraw.realDecisions[unrelatedBilletId]).toBe('like');
+
+        // Wait longer than the 2s debounce to ensure stale buffered writes do not resurrect.
+        await new Promise(resolve => setTimeout(resolve, 2200));
+
+        const persistedDecisions = (await storage.getAssignmentDecisions(userId)) || {};
+        expect(persistedDecisions[targetBilletId]).toBeUndefined();
+        expect(persistedDecisions[unrelatedBilletId]).toBe('like');
+
+        const stateAfterFlush = useAssignmentStore.getState();
+        const candidateIds = selectManifestItems(stateAfterFlush, 'candidates').map(item => item.billet.id);
+        const favoriteIds = selectManifestItems(stateAfterFlush, 'favorites').map(item => item.billet.id);
+
+        expect(candidateIds).not.toContain(targetBilletId);
+        expect(favoriteIds).not.toContain(targetBilletId);
+        expect(candidateIds).toContain(unrelatedBilletId);
+    });
+
+    it('Withdraw Re-rank: remaining applications should close rank gaps', async () => {
+        const userId = `${TEST_USER_ID}-rerank`;
+        const billetStack = useAssignmentStore.getState().billetStack;
+        const firstBilletId = billetStack[0];
+        const secondBilletId = billetStack[1];
+
+        await useAssignmentStore.getState().swipe(firstBilletId, 'up', userId);
+        await useAssignmentStore.getState().swipe(secondBilletId, 'up', userId);
+
+        const beforeWithdraw = useAssignmentStore.getState();
+        const firstAppId = beforeWithdraw.userApplicationIds.find(id => beforeWithdraw.applications[id].billetId === firstBilletId);
+        const secondAppId = beforeWithdraw.userApplicationIds.find(id => beforeWithdraw.applications[id].billetId === secondBilletId);
+
+        expect(firstAppId).toBeDefined();
+        expect(secondAppId).toBeDefined();
+        expect(beforeWithdraw.applications[firstAppId!].preferenceRank).toBe(1);
+        expect(beforeWithdraw.applications[secondAppId!].preferenceRank).toBe(2);
+
+        await useAssignmentStore.getState().withdrawApplication(firstAppId!, userId);
+
+        const afterWithdraw = useAssignmentStore.getState();
+        expect(afterWithdraw.applications[firstAppId!]).toBeUndefined();
+        expect(afterWithdraw.applications[secondAppId!].preferenceRank).toBe(1);
     });
 
     /**

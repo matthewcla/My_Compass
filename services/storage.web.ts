@@ -81,6 +81,11 @@ class WebStorage implements IStorageService {
     }
   }
 
+  async getBilletCount(): Promise<number> {
+    const billets = await this.getAllBillets();
+    return billets.length;
+  }
+
   async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
     const all = await this.getAllBillets();
     return all.slice(offset, offset + limit);
@@ -112,6 +117,12 @@ class WebStorage implements IStorageService {
   async getUserApplications(userId: string): Promise<Application[]> {
     const apps = await this._getAllApplications();
     return apps.filter((a) => a.userId === userId);
+  }
+
+  async deleteApplication(appId: string): Promise<void> {
+    const apps = await this._getAllApplications();
+    const newApps = apps.filter(a => a.id !== appId);
+    localStorage.setItem(this.APPLICATIONS_KEY, encryptData(JSON.stringify(newApps)));
   }
 
   private async _getAllApplications(): Promise<Application[]> {

@@ -199,6 +199,20 @@ type PendingSwipe = { userId: string; billetId: string; decision: SwipeDecision 
 let pendingSwipes: PendingSwipe[] = [];
 let flushTimeout: NodeJS.Timeout | number | null = null;
 
+const purgePendingSwipes = (userId: string, billetId: string): boolean => {
+    const initialCount = pendingSwipes.length;
+    pendingSwipes = pendingSwipes.filter(
+        pending => !(pending.userId === userId && pending.billetId === billetId)
+    );
+
+    if (pendingSwipes.length === 0 && flushTimeout) {
+        clearTimeout(flushTimeout);
+        flushTimeout = null;
+    }
+
+    return pendingSwipes.length < initialCount;
+};
+
 const persistDecisions = async () => {
     if (pendingSwipes.length === 0) return;
 
@@ -743,21 +757,9 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 userApplicationIds: updatedUserIds
             });
 
-            // Persist
-            // Check if it's in the pending queue
-            const pendingIndex = pendingSwipes.findIndex(p => p.billetId === billetIdToRemove && p.userId === userId);
-            if (pendingIndex !== -1) {
-                // It's pending, just remove from queue so it never gets saved
-                pendingSwipes.splice(pendingIndex, 1);
-                // If queue is empty, maybe clear timeout?
-                if (pendingSwipes.length === 0 && flushTimeout) {
-                    clearTimeout(flushTimeout);
-                    flushTimeout = null;
-                }
-            } else {
-                // It's already in DB, remove it
-                storage.removeAssignmentDecision(userId, billetIdToRemove);
-            }
+            // Persist decision removal in both pending queue and durable storage.
+            purgePendingSwipes(userId, billetIdToRemove);
+            void storage.removeAssignmentDecision(userId, billetIdToRemove);
             // Note: Orphaned application deletion from storage not fully implemented yet 
             // as per storage interface limitations.
         } else {
@@ -862,19 +864,15 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     withdrawApplication: async (appId: string, userId: string) => {
-        // Remove from applications, remove from realDecisions (so it goes back to deck??)
-        // Or "Withdraw" might mean move to 'nope'? 
-        // Usually "Withdraw" means you are no longer interested in applying.
-        // Let's set decision to 'nope'.
-
         const { applications, userApplicationIds, realDecisions } = get();
         const app = applications[appId];
         if (!app) return;
+        const billetIdToRemove = app.billetId;
 
-        // 1. Update Decisions to 'nope'
+        // 1. Remove decision so the billet returns to Discovery (not Manifest).
         const updatedDecisions = { ...realDecisions };
-        if (app.billetId) {
-            updatedDecisions[app.billetId] = 'nope';
+        if (billetIdToRemove) {
+            delete updatedDecisions[billetIdToRemove];
         }
 
         // 2. Remove Application
@@ -899,10 +897,12 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             userApplicationIds: updatedUserIds
         });
 
-        // Persist
-        if (app.billetId) {
-            await storage.saveAssignmentDecision(userId, app.billetId, 'nope');
+        // Remove any queued writes for this decision and then delete durable state.
+        if (billetIdToRemove) {
+            purgePendingSwipes(userId, billetIdToRemove);
+            await storage.removeAssignmentDecision(userId, billetIdToRemove);
         }
+
         // Persist updated apps
         for (const app of remainingApps) {
             await storage.saveApplication(updatedApplications[app.id]);

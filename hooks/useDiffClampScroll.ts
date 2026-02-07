@@ -131,17 +131,33 @@ export function useDiffClampScroll({
     };
 
     const onScroll = useAnimatedScrollHandler({
-        onScroll: (event, ctx: { prevY?: number }) => {
+        onScroll: (event, ctx: { prevX?: number, prevY?: number, isScrollingHorizontally?: boolean }) => {
             const currentY = event.contentOffset.y;
+            const currentX = event.contentOffset.x;
 
             if (ctx.prevY === undefined) {
                 ctx.prevY = currentY;
+                ctx.prevX = currentX;
+                ctx.isScrollingHorizontally = false;
             }
 
             const dy = currentY - ctx.prevY;
+            const dx = currentX - (ctx.prevX ?? 0);
+
             ctx.prevY = currentY;
+            ctx.prevX = currentX;
             scrollY.value = currentY;
             previousY.value = currentY;
+
+            // Scroll Lock: Ignore vertical updates if horizontal change is significantly larger
+            if (ctx.isScrollingHorizontally) {
+                return;
+            }
+
+            if (Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > 10) {
+                ctx.isScrollingHorizontally = true;
+                return;
+            }
 
             if (currentY <= 0) {
                 clampedScrollValue.value = 0;
@@ -153,8 +169,10 @@ export function useDiffClampScroll({
             const next = clampedScrollValue.value + dy;
             clampedScrollValue.value = Math.min(Math.max(next, 0), headerHeight);
         },
-        onBeginDrag: (event, ctx: { prevY?: number }) => {
+        onBeginDrag: (event, ctx: { prevX?: number, prevY?: number, isScrollingHorizontally?: boolean }) => {
             ctx.prevY = event.contentOffset.y;
+            ctx.prevX = event.contentOffset.x;
+            ctx.isScrollingHorizontally = false;
             previousY.value = ctx.prevY;
         },
         onEndDrag: (event) => {

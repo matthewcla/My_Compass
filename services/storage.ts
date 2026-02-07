@@ -290,6 +290,12 @@ class SQLiteStorage implements IStorageService {
     }
   }
 
+  async getBilletCount(): Promise<number> {
+    const db = await this.getDB();
+    const result = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) as count FROM billets');
+    return Number(result?.count ?? 0);
+  }
+
   async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
     const db = await this.getDB();
     try {
@@ -839,6 +845,10 @@ class MockStorage implements IStorageService {
     return Array.from(this.billets.values());
   }
 
+  async getBilletCount(): Promise<number> {
+    return this.billets.size;
+  }
+
   async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
     const all = Array.from(this.billets.values());
     return all.slice(offset, offset + limit);
@@ -977,6 +987,10 @@ class WebStorage implements IStorageService {
     const keys = Object.keys(localStorage);
     return keys.filter(k => k.startsWith('billet_'))
       .map(k => this.getItem<Billet>(k)!);
+  }
+
+  async getBilletCount(): Promise<number> {
+    return Object.keys(localStorage).filter(k => k.startsWith('billet_')).length;
   }
 
   // --- Applications ---

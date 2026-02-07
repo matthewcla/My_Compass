@@ -81,6 +81,11 @@ class WebStorage implements IStorageService {
     }
   }
 
+  async getBilletCount(): Promise<number> {
+    const billets = await this.getAllBillets();
+    return billets.length;
+  }
+
   async getPagedBillets(limit: number, offset: number): Promise<Billet[]> {
     const all = await this.getAllBillets();
     return all.slice(offset, offset + limit);

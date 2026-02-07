@@ -575,8 +575,8 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         // Ensure storage has data (Mock Init)
         // In a real scenario, this step might be "Sync from API to DB"
-        const existing = await storage.getAllBillets();
-        if (existing.length === 0) {
+        const billetCount = await storage.getBilletCount();
+        if (billetCount === 0) {
             for (const b of MOCK_BILLETS) {
                 await storage.saveBillet(b);
             }

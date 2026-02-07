@@ -28,6 +28,7 @@ export interface IStorageService {
   saveBillet(billet: Billet): Promise<void>;
   getBillet(id: string): Promise<Billet | null>;
   getAllBillets(): Promise<Billet[]>;
+  getBilletCount(): Promise<number>;
   getPagedBillets(limit: number, offset: number): Promise<Billet[]>;
 
   // Applications

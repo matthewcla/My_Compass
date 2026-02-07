@@ -81,7 +81,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     markAsRead: (id: string) => {
         const newMessages = clipMessages(get().messages.map(m => m.id === id ? { ...m, isRead: true } : m));
         set({ messages: newMessages });
-        storage.saveInboxMessages(newMessages).catch(e => console.error('Failed to save read status', e));
+        storage.updateInboxMessageReadStatus(id, true).catch(e => console.error('Failed to save read status', e));
     },
 
     togglePin: (id: string) => {

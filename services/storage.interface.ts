@@ -32,8 +32,10 @@ export interface IStorageService {
 
   // Applications
   saveApplication(app: Application): Promise<void>;
+  saveApplications(apps: Application[]): Promise<void>;
   getApplication(id: string): Promise<Application | null>;
   getUserApplications(userId: string): Promise<Application[]>;
+  deleteApplication(appId: string): Promise<void>;
 
   // Assignment Decisions
   saveAssignmentDecision(userId: string, billetId: string, decision: string): Promise<void>;
@@ -61,6 +63,7 @@ export interface IStorageService {
   // Inbox
   saveInboxMessages(messages: InboxMessage[]): Promise<void>;
   getInboxMessages(): Promise<InboxMessage[]>;
+  updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void>;
 
   // Career Events
   saveCareerEvents(events: CareerEvent[]): Promise<void>;

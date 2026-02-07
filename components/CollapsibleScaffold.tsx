@@ -1,4 +1,5 @@
 import { useDiffClampScroll } from '@/hooks/useDiffClampScroll';
+import { isMobileWeb } from '@/utils/platform';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     LayoutChangeEvent,
@@ -15,11 +16,15 @@ import Animated, {
     useAnimatedStyle,
     useDerivedValue
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ScrollEventHandler = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
 export interface CollapsibleScaffoldListProps {
     onScroll: ScrollEventHandler;
+    onLayout: (event: LayoutChangeEvent) => void;
+    onContentSizeChange: (width: number, height: number) => void;
+    scrollEnabled: boolean;
     scrollEventThrottle: number;
     clipToPadding: false;
     contentContainerStyle: StyleProp<ViewStyle>;
@@ -31,6 +36,7 @@ interface CollapsibleScaffoldProps {
     children: (props: CollapsibleScaffoldListProps) => React.ReactElement;
     containerStyle?: StyleProp<ViewStyle>;
     contentContainerStyle?: StyleProp<ViewStyle>;
+    statusBarShimBackgroundColor?: string;
     initialTopBarHeight?: number;
     initialBottomBarHeight?: number;
     testID?: string;
@@ -40,11 +46,22 @@ interface CollapsibleScaffoldProps {
  * Usage (event wiring):
  *
  * <CollapsibleScaffold topBar={<TopBar />} bottomBar={<BottomBar />}>
- *   {({ onScroll, scrollEventThrottle, clipToPadding, contentContainerStyle }) => (
+ *   {({
+ *     onScroll,
+ *     onLayout,
+ *     onContentSizeChange,
+ *     scrollEnabled,
+ *     scrollEventThrottle,
+ *     clipToPadding,
+ *     contentContainerStyle
+ *   }) => (
  *     <Animated.FlatList
  *       data={items}
  *       renderItem={renderItem}
  *       onScroll={onScroll}
+ *       onLayout={onLayout}
+ *       onContentSizeChange={onContentSizeChange}
+ *       scrollEnabled={scrollEnabled}
  *       scrollEventThrottle={scrollEventThrottle}
  *       clipToPadding={clipToPadding}
  *       contentContainerStyle={contentContainerStyle}
@@ -58,15 +75,30 @@ export function CollapsibleScaffold({
     children,
     containerStyle,
     contentContainerStyle,
+    statusBarShimBackgroundColor = '#ffffff',
     initialTopBarHeight = 0,
     initialBottomBarHeight = 0,
     testID,
 }: CollapsibleScaffoldProps) {
-    const [topBarHeight, setTopBarHeight] = useState(initialTopBarHeight);
-    const [bottomBarHeight, setBottomBarHeight] = useState(initialBottomBarHeight);
+    const insets = useSafeAreaInsets();
+    const statusBarShimHeight = Math.max(insets.top, 0);
+    const initialAnimatedHeaderHeight = Math.max(initialTopBarHeight - statusBarShimHeight, 0);
 
-    const clampRange = Math.max(topBarHeight, bottomBarHeight, 1);
-    const { clampedScrollValue, onScroll } = useDiffClampScroll({ headerHeight: clampRange });
+    const [animatedHeaderHeight, setAnimatedHeaderHeight] = useState(initialAnimatedHeaderHeight);
+    const [bottomBarHeight, setBottomBarHeight] = useState(initialBottomBarHeight);
+    const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+    const [contentHeight, setContentHeight] = useState<number | null>(null);
+
+    // Mobile Web Strategy: Disable DiffClamp animation and use position: sticky
+    const isMobileWebEnv = useMemo(() => isMobileWeb(), []);
+    const diffClampEnabled = !isMobileWebEnv;
+
+    const clampRange = Math.max(animatedHeaderHeight, bottomBarHeight, 1);
+    const { clampedScrollValue, onScroll } = useDiffClampScroll({
+        headerHeight: clampRange,
+        enabled: diffClampEnabled
+    });
+    const noopScrollHandler = useCallback<ScrollEventHandler>(() => { }, []);
 
     useEffect(() => {
         if (clampedScrollValue.value > clampRange) {
@@ -75,15 +107,17 @@ export function CollapsibleScaffold({
     }, [clampRange, clampedScrollValue]);
 
     const topTranslateY = useDerivedValue(() => {
+        if (!diffClampEnabled) return 0;
         return interpolate(
             clampedScrollValue.value,
             [0, clampRange],
-            [0, -topBarHeight],
+            [0, -animatedHeaderHeight],
             Extrapolation.CLAMP
         );
     });
 
     const bottomTranslateY = useDerivedValue(() => {
+        if (!diffClampEnabled) return 0;
         return interpolate(
             clampedScrollValue.value,
             [0, clampRange],
@@ -104,12 +138,12 @@ export function CollapsibleScaffold({
         };
     });
 
-    const handleTopBarLayout = useCallback((event: LayoutChangeEvent) => {
+    const handleAnimatedHeaderLayout = useCallback((event: LayoutChangeEvent) => {
         const nextHeight = Math.round(event.nativeEvent.layout.height);
-        if (nextHeight !== topBarHeight) {
-            setTopBarHeight(nextHeight);
+        if (nextHeight !== animatedHeaderHeight) {
+            setAnimatedHeaderHeight(nextHeight);
         }
-    }, [topBarHeight]);
+    }, [animatedHeaderHeight]);
 
     const handleBottomBarLayout = useCallback((event: LayoutChangeEvent) => {
         const nextHeight = Math.round(event.nativeEvent.layout.height);
@@ -118,34 +152,84 @@ export function CollapsibleScaffold({
         }
     }, [bottomBarHeight]);
 
+    const handleViewportLayout = useCallback((event: LayoutChangeEvent) => {
+        const nextHeight = Math.round(event.nativeEvent.layout.height);
+        setViewportHeight((prevHeight) => (prevHeight === nextHeight ? prevHeight : nextHeight));
+    }, []);
+
+    const handleContentSizeChange = useCallback((_width: number, height: number) => {
+        const nextHeight = Math.round(height);
+        setContentHeight((prevHeight) => (prevHeight === nextHeight ? prevHeight : nextHeight));
+    }, []);
+
+    const shouldDisableScrollListener = useMemo(() => {
+        if (viewportHeight === null || contentHeight === null) {
+            return false;
+        }
+
+        return contentHeight < viewportHeight;
+    }, [contentHeight, viewportHeight]);
+
+    useEffect(() => {
+        if (shouldDisableScrollListener && clampedScrollValue.value !== 0) {
+            clampedScrollValue.value = 0;
+        }
+    }, [clampedScrollValue, shouldDisableScrollListener]);
+
     const paddedContentContainerStyle = useMemo(() => {
+        const totalTopBarHeight = statusBarShimHeight + animatedHeaderHeight;
         return [
             {
-                paddingTop: topBarHeight,
+                paddingTop: totalTopBarHeight,
                 paddingBottom: bottomBarHeight,
             },
             contentContainerStyle,
         ];
-    }, [bottomBarHeight, contentContainerStyle, topBarHeight]);
+    }, [animatedHeaderHeight, bottomBarHeight, contentContainerStyle, statusBarShimHeight]);
 
     const listProps = useMemo<CollapsibleScaffoldListProps>(() => {
         return {
-            onScroll,
+            onScroll: shouldDisableScrollListener ? noopScrollHandler : onScroll,
+            onLayout: handleViewportLayout,
+            onContentSizeChange: handleContentSizeChange,
+            scrollEnabled: !shouldDisableScrollListener,
             scrollEventThrottle: 16,
             clipToPadding: false,
             contentContainerStyle: paddedContentContainerStyle,
         };
-    }, [onScroll, paddedContentContainerStyle]);
+    }, [
+        handleContentSizeChange,
+        handleViewportLayout,
+        noopScrollHandler,
+        onScroll,
+        paddedContentContainerStyle,
+        shouldDisableScrollListener
+    ]);
 
     return (
         <View style={[styles.container, containerStyle]} testID={testID}>
             {children(listProps)}
 
-            <Animated.View style={[styles.topBarContainer, topBarAnimatedStyle]}>
-                <View onLayout={handleTopBarLayout}>
-                    {topBar}
-                </View>
-            </Animated.View>
+            <View style={[
+                styles.topBarContainer,
+                isMobileWebEnv && { position: 'sticky', top: 0 } as any
+            ]}>
+                <View
+                    style={[
+                        styles.statusBarShim,
+                        {
+                            height: statusBarShimHeight,
+                            backgroundColor: statusBarShimBackgroundColor,
+                        }
+                    ]}
+                />
+
+                <Animated.View style={[styles.animatedHeader, topBarAnimatedStyle]}>
+                    <View onLayout={handleAnimatedHeaderLayout}>
+                        {topBar}
+                    </View>
+                </Animated.View>
+            </View>
 
             <Animated.View style={[styles.bottomBarContainer, bottomBarAnimatedStyle]}>
                 <View onLayout={handleBottomBarLayout}>
@@ -167,6 +251,12 @@ const styles = StyleSheet.create({
         right: 0,
         zIndex: 10,
         elevation: 10,
+    },
+    statusBarShim: {
+        width: '100%',
+    },
+    animatedHeader: {
+        width: '100%',
     },
     bottomBarContainer: {
         position: 'absolute',

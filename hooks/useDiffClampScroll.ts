@@ -1,13 +1,15 @@
 import { useCallback } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import {
+    Easing,
     Extrapolation,
     SharedValue,
     interpolate,
     useAnimatedScrollHandler,
     useAnimatedStyle,
     useDerivedValue,
-    useSharedValue
+    useSharedValue,
+    withTiming
 } from 'react-native-reanimated';
 
 interface UseDiffClampScrollProps {
@@ -48,19 +50,20 @@ interface UseDiffClampScrollResult {
 export function useDiffClampScroll({
     headerHeight,
     initialScrollY = 0,
-}: UseDiffClampScrollProps): UseDiffClampScrollResult {
+    enabled = true,
+}: UseDiffClampScrollProps & { enabled?: boolean }): UseDiffClampScrollResult {
     const scrollY = useSharedValue(initialScrollY);
     const previousY = useSharedValue(initialScrollY);
     const clampedScrollValue = useSharedValue(0);
 
     const clampAndApplyDelta = useCallback((deltaY: number) => {
-        if (!Number.isFinite(deltaY)) {
+        if (!enabled || !Number.isFinite(deltaY)) {
             return;
         }
 
         const next = clampedScrollValue.value + deltaY;
         clampedScrollValue.value = Math.min(Math.max(next, 0), headerHeight);
-    }, [clampedScrollValue, headerHeight]);
+    }, [clampedScrollValue, enabled, headerHeight]);
 
     const updateFromScrollY = useCallback((currentY: number) => {
         if (!Number.isFinite(currentY)) {
@@ -71,13 +74,17 @@ export function useDiffClampScroll({
         previousY.value = currentY;
         scrollY.value = currentY;
 
+        if (!enabled) {
+            return;
+        }
+
         if (currentY <= 0) {
             clampedScrollValue.value = 0;
             return;
         }
 
         clampAndApplyDelta(diff);
-    }, [clampAndApplyDelta, clampedScrollValue, previousY, scrollY]);
+    }, [clampAndApplyDelta, clampedScrollValue, enabled, previousY, scrollY]);
 
     const updateFromDeltaY = useCallback((deltaY: number) => {
         if (!Number.isFinite(deltaY) || deltaY === 0) {
@@ -88,13 +95,17 @@ export function useDiffClampScroll({
         scrollY.value = nextScrollY;
         previousY.value = nextScrollY;
 
+        if (!enabled) {
+            return;
+        }
+
         if (nextScrollY <= 0 && deltaY < 0) {
             clampedScrollValue.value = 0;
             return;
         }
 
         clampAndApplyDelta(deltaY);
-    }, [clampAndApplyDelta, clampedScrollValue, previousY, scrollY]);
+    }, [clampAndApplyDelta, clampedScrollValue, enabled, previousY, scrollY]);
 
     const update = useCallback((input: DiffClampInput) => {
         if ('scrollY' in input) {
@@ -110,6 +121,14 @@ export function useDiffClampScroll({
         previousY.value = 0;
         clampedScrollValue.value = 0;
     }, [clampedScrollValue, previousY, scrollY]);
+
+    const snapTo = (target: number) => {
+        'worklet';
+        clampedScrollValue.value = withTiming(target, {
+            duration: 250,
+            easing: Easing.out(Easing.cubic),
+        });
+    };
 
     const onScroll = useAnimatedScrollHandler({
         onScroll: (event, ctx: { prevY?: number }) => {
@@ -129,13 +148,36 @@ export function useDiffClampScroll({
                 return;
             }
 
+            if (!enabled) return;
+
             const next = clampedScrollValue.value + dy;
             clampedScrollValue.value = Math.min(Math.max(next, 0), headerHeight);
         },
         onBeginDrag: (event, ctx: { prevY?: number }) => {
             ctx.prevY = event.contentOffset.y;
             previousY.value = ctx.prevY;
-        }
+        },
+        onEndDrag: (event) => {
+            // Snapping Hysteresis & Velocity Override
+            const velocityY = event.velocity?.y ?? 0;
+            const currentHidden = clampedScrollValue.value;
+
+            // Velocity Override
+            if (velocityY > 500) {
+                // Fling Down -> Hide Header
+                snapTo(headerHeight);
+            } else if (velocityY < -500) {
+                // Fling Up -> Show Header
+                snapTo(0);
+            } else {
+                // Threshold Snapping
+                if (currentHidden > headerHeight / 2) {
+                    snapTo(headerHeight); // Snap Hidden
+                } else {
+                    snapTo(0); // Snap Visible
+                }
+            }
+        },
     });
 
     const headerTranslateY = useDerivedValue(() => {

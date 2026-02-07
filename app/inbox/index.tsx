@@ -9,7 +9,6 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Create Animated SectionList
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
@@ -34,7 +33,6 @@ const formatDTG = (dateString: string) => {
 export default function InboxScreen() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
-    const insets = useSafeAreaInsets();
     const { messages, fetchMessages, isLoading, togglePin } = useInboxStore();
     const router = useRouter();
     const [, startTransition] = useTransition();
@@ -168,11 +166,13 @@ export default function InboxScreen() {
 
     return (
         <CollapsibleScaffold
+            statusBarShimBackgroundColor={isDark ? '#000000' : '#f8fafc'}
             topBar={
                 <View className="bg-slate-50 dark:bg-black">
                     <ScreenHeader
                         title=""
                         subtitle=""
+                        withSafeArea={false}
                         searchConfig={searchConfig}
                     />
                     {renderHeader()}
@@ -180,7 +180,13 @@ export default function InboxScreen() {
             }
             bottomBar={<GlobalTabBar />}
         >
-            {({ onScroll, contentContainerStyle }) => (
+            {({
+                onScroll,
+                onLayout,
+                onContentSizeChange,
+                scrollEnabled,
+                contentContainerStyle,
+            }) => (
                 <AnimatedSectionList
                     sections={sections}
                     initialNumToRender={10}
@@ -203,6 +209,9 @@ export default function InboxScreen() {
                     contentContainerStyle={[contentContainerStyle, { paddingBottom: 24 }]}
                     refreshing={isLoading}
                     onRefresh={handleRefresh}
+                    onLayout={onLayout}
+                    onContentSizeChange={onContentSizeChange}
+                    scrollEnabled={scrollEnabled}
                     ListEmptyComponent={
                         <View className="p-8 items-center">
                             <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>

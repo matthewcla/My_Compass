@@ -7,7 +7,10 @@ import Animated from 'react-native-reanimated';
 
 const HEADER_HEIGHT = 120; // Approximation including safe area
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export default function DiffClampDemo() {
+    const insets = useSafeAreaInsets();
     const { onScroll, headerStyle } = useDiffClampScroll({ headerHeight: HEADER_HEIGHT });
 
     // Generate dummy list items
@@ -16,6 +19,19 @@ export default function DiffClampDemo() {
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
+
+            {/* Status Bar Shim */}
+            <View
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: insets.top,
+                    backgroundColor: '#f3f4f6', // Match container background
+                    zIndex: 99, // Below header (100), above content
+                }}
+            />
 
             {/* Animated Header Wrapper */}
             <Animated.View style={[styles.headerContainer, headerStyle]}>

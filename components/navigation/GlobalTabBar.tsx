@@ -185,7 +185,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
     const [barWidth, setBarWidth] = React.useState(0);
     const pillTranslateX = useSharedValue(0);
 
-    const currentSpoke = segments[0] as string;
+    const currentSpoke = (segments[0] === '(tabs)' ? segments[1] : segments[0]) as string;
     const { activeSpoke, setActiveSpoke } = useUIStore();
 
     React.useEffect(() => {
@@ -208,10 +208,6 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
         lastSegment === 'cycle' ||
         lastSegment === 'MenuHubModal' ||
         (segments as string[]).includes('MenuHubModal');
-
-    if (isHidden) {
-        return null;
-    }
 
     const targetSpoke = SPOKE_CONFIG[currentSpoke]
         ? currentSpoke
@@ -338,6 +334,10 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
         },
         [resetBar, router]
     );
+
+    if (isHidden) {
+        return null;
+    }
 
     return (
         <Animated.View

@@ -1,3 +1,4 @@
+import { TAB_BAR_HEIGHT, useScrollControl } from '@/components/navigation/ScrollControlContext';
 import type { SnapBehavior } from '@/hooks/useDiffClampScroll';
 import { useDiffClampScroll } from '@/hooks/useDiffClampScroll';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -24,6 +25,8 @@ type ScrollEventHandler = (event: NativeSyntheticEvent<NativeScrollEvent>) => vo
 
 export interface CollapsibleScaffoldListProps {
     onScroll: ScrollEventHandler | undefined;
+    onScrollBeginDrag: ScrollEventHandler | undefined;
+    onScrollEndDrag: ScrollEventHandler | undefined;
     onLayout: (event: LayoutChangeEvent) => void;
     onContentSizeChange: (width: number, height: number) => void;
     scrollEnabled: boolean;
@@ -34,13 +37,11 @@ export interface CollapsibleScaffoldListProps {
 
 interface CollapsibleScaffoldProps {
     topBar: React.ReactNode;
-    bottomBar: React.ReactNode;
     children: (props: CollapsibleScaffoldListProps) => React.ReactElement;
     containerStyle?: StyleProp<ViewStyle>;
     contentContainerStyle?: StyleProp<ViewStyle>;
     statusBarShimBackgroundColor?: string;
     initialTopBarHeight?: number;
-    initialBottomBarHeight?: number;
     snapBehavior?: SnapBehavior;
     testID?: string;
 }
@@ -48,9 +49,11 @@ interface CollapsibleScaffoldProps {
 /**
  * Usage (event wiring):
  *
- * <CollapsibleScaffold topBar={<TopBar />} bottomBar={<BottomBar />}>
+ * <CollapsibleScaffold topBar={<TopBar />}>
  *   {({
  *     onScroll,
+ *     onScrollBeginDrag,
+ *     onScrollEndDrag,
  *     onLayout,
  *     onContentSizeChange,
  *     scrollEnabled,
@@ -62,6 +65,8 @@ interface CollapsibleScaffoldProps {
  *       data={items}
  *       renderItem={renderItem}
  *       onScroll={onScroll}
+ *       onScrollBeginDrag={onScrollBeginDrag}
+ *       onScrollEndDrag={onScrollEndDrag}
  *       onLayout={onLayout}
  *       onContentSizeChange={onContentSizeChange}
  *       scrollEnabled={scrollEnabled}
@@ -74,13 +79,11 @@ interface CollapsibleScaffoldProps {
  */
 export function CollapsibleScaffold({
     topBar,
-    bottomBar,
     children,
     containerStyle,
     contentContainerStyle,
     statusBarShimBackgroundColor = '#ffffff',
     initialTopBarHeight = 0,
-    initialBottomBarHeight = 0,
     snapBehavior = 'threshold',
     minTopBarHeight = 0,
     testID,
@@ -100,7 +103,6 @@ export function CollapsibleScaffold({
     const initialAnimatedHeaderHeight = Math.max(initialTopBarHeight - statusBarShimHeight, 0);
 
     const [animatedHeaderHeight, setAnimatedHeaderHeight] = useState(initialAnimatedHeaderHeight);
-    const [bottomBarHeight, setBottomBarHeight] = useState(initialBottomBarHeight);
     const [viewportHeight, setViewportHeight] = useState<number | null>(null);
     const [contentHeight, setContentHeight] = useState<number | null>(null);
 
@@ -111,14 +113,22 @@ export function CollapsibleScaffold({
     // The scrollable distance is the total header height minus the part that should remain visible (sticky)
     // We max at 1 to avoid division by zero or invalid ranges if height is 0
     const scrollableHeaderHeight = Math.max(animatedHeaderHeight - minTopBarHeight, 0);
-    const clampRange = Math.max(scrollableHeaderHeight, bottomBarHeight, 1);
+    const clampRange = Math.max(scrollableHeaderHeight, 1); // Clamp range no longer depends on bottomBarHeight
 
-    const { clampedScrollValue, onScroll } = useDiffClampScroll({
+    const { clampedScrollValue, onScroll: diffClampOnScroll, updateFromScrollY } = useDiffClampScroll({
         headerHeight: clampRange,
         enabled: diffClampEnabled,
         snapBehavior
     });
-    const noopScrollHandler = useCallback<ScrollEventHandler>(() => { }, []);
+
+    const { onScroll: scrollControlHandler } = useScrollControl({
+        onScroll: (event) => {
+            const e = event as any;
+            if (e.nativeEvent?.contentOffset?.y !== undefined) {
+                updateFromScrollY(e.nativeEvent.contentOffset.y);
+            }
+        }
+    });
 
     useEffect(() => {
         if (clampedScrollValue.value > clampRange) {
@@ -136,25 +146,9 @@ export function CollapsibleScaffold({
         );
     });
 
-    const bottomTranslateY = useDerivedValue(() => {
-        if (!diffClampEnabled) return 0;
-        return interpolate(
-            clampedScrollValue.value,
-            [0, clampRange],
-            [0, bottomBarHeight],
-            Extrapolation.CLAMP
-        );
-    });
-
     const topBarAnimatedStyle = useAnimatedStyle(() => {
         return {
             transform: [{ translateY: topTranslateY.value }],
-        };
-    });
-
-    const bottomBarAnimatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ translateY: bottomTranslateY.value }],
         };
     });
 
@@ -166,13 +160,6 @@ export function CollapsibleScaffold({
 
         setAnimatedHeaderHeight(nextHeight);
     }, [animatedHeaderHeight]);
-
-    const handleBottomBarLayout = useCallback((event: LayoutChangeEvent) => {
-        const nextHeight = Math.round(event.nativeEvent.layout.height);
-        if (nextHeight !== bottomBarHeight) {
-            setBottomBarHeight(nextHeight);
-        }
-    }, [bottomBarHeight]);
 
     const handleViewportLayout = useCallback((event: LayoutChangeEvent) => {
         const nextHeight = Math.round(event.nativeEvent.layout.height);
@@ -199,10 +186,12 @@ export function CollapsibleScaffold({
     }, [clampedScrollValue, shouldDisableScrollListener]);
 
     const paddedContentContainerStyle = useMemo(() => {
+        const paddingBottom = TAB_BAR_HEIGHT + insets.bottom;
+
         if (isMobileWebEnv) {
             return [
                 {
-                    paddingBottom: bottomBarHeight,
+                    paddingBottom,
                 },
                 contentContainerStyle,
             ];
@@ -212,15 +201,17 @@ export function CollapsibleScaffold({
         return [
             {
                 paddingTop: totalTopBarHeight,
-                paddingBottom: bottomBarHeight,
+                paddingBottom,
             },
             contentContainerStyle,
         ];
-    }, [animatedHeaderHeight, bottomBarHeight, contentContainerStyle, isMobileWebEnv, statusBarShimHeight]);
+    }, [animatedHeaderHeight, contentContainerStyle, isMobileWebEnv, statusBarShimHeight, insets.bottom]);
 
     const listProps = useMemo<CollapsibleScaffoldListProps>(() => {
         return {
-            onScroll: (shouldDisableScrollListener || isMobileWebEnv) ? undefined : onScroll,
+            onScroll: (shouldDisableScrollListener || isMobileWebEnv) ? undefined : scrollControlHandler,
+            onScrollBeginDrag: (shouldDisableScrollListener || isMobileWebEnv) ? undefined : diffClampOnScroll,
+            onScrollEndDrag: (shouldDisableScrollListener || isMobileWebEnv) ? undefined : diffClampOnScroll,
             onLayout: handleViewportLayout,
             onContentSizeChange: handleContentSizeChange,
             scrollEnabled: !shouldDisableScrollListener,
@@ -232,7 +223,8 @@ export function CollapsibleScaffold({
         handleContentSizeChange,
         handleViewportLayout,
         isMobileWebEnv,
-        onScroll,
+        scrollControlHandler,
+        diffClampOnScroll,
         paddedContentContainerStyle,
         shouldDisableScrollListener
     ]);
@@ -294,15 +286,6 @@ export function CollapsibleScaffold({
                     />
                 </View>
             )}
-
-            <Animated.View style={[
-                styles.bottomBarContainer,
-                bottomBarAnimatedStyle
-            ]}>
-                <View onLayout={handleBottomBarLayout}>
-                    {bottomBar}
-                </View>
-            </Animated.View>
         </View>
     );
 }
@@ -333,13 +316,5 @@ const styles = StyleSheet.create({
         right: 0,
         zIndex: 2,
         elevation: 2,
-    },
-    bottomBarContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        elevation: 10,
     },
 });

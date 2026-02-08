@@ -180,7 +180,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
-    const { translateY, resetBar, setTabBarMetrics, reservedBottomInset } = useScrollContext();
+    const { translateY, resetBar, setTabBarMetrics } = useScrollContext();
 
     const [barWidth, setBarWidth] = React.useState(0);
     const pillTranslateX = useSharedValue(0);
@@ -217,7 +217,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
     const config = targetSpoke ? SPOKE_CONFIG[targetSpoke] : null;
     const isDark = colorScheme === 'dark';
     const shouldUseBlur = useBlur && Platform.OS !== 'web';
-    const isCollapsed = reservedBottomInset <= Math.max(insets.bottom, 0) + 1;
+
 
     const fixedActiveColor = colors.tint;
     const fixedInactiveColor = isDark ? '#64748B' : '#9CA3AF';
@@ -353,7 +353,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
 
     return (
         <Animated.View
-            pointerEvents={isCollapsed ? 'none' : 'auto'}
+            pointerEvents="auto"
             style={[
                 styles.root,
                 containerStyle,
@@ -422,8 +422,10 @@ export default AnimatedGlobalTabBar;
 
 const styles = StyleSheet.create({
     root: {
-        width: '100%',
-        // paddingHorizontal: 12, // Docked: no horizontal padding
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
     },
     tabBarShell: {
         width: '100%',

@@ -5,6 +5,7 @@ export const COLLAPSE_DELTA_SCALE = 0.12;
 export const MAX_COLLAPSE_DELTA_PER_FRAME = 4;
 export const COLLAPSE_SCROLL_MULTIPLIER = 0.28;
 export const clamp = (value: number, min: number, max: number): number => {
+    'worklet';
     if (!Number.isFinite(value)) {
         return min;
     }
@@ -21,6 +22,7 @@ export const clamp = (value: number, min: number, max: number): number => {
 };
 
 export const computeDiffClampValue = (currentValue: number, deltaY: number, maxValue: number): number => {
+    'worklet';
     if (!Number.isFinite(deltaY) || !Number.isFinite(maxValue) || maxValue <= 0) {
         return 0;
     }
@@ -29,6 +31,7 @@ export const computeDiffClampValue = (currentValue: number, deltaY: number, maxV
 };
 
 export const computeCollapseDelta = (deltaY: number): number => {
+    'worklet';
     if (!Number.isFinite(deltaY)) {
         return 0;
     }
@@ -46,6 +49,7 @@ export const computeCollapseDistanceFromScrollY = (args: {
     activationOffset?: number;
     multiplier?: number;
 }): number => {
+    'worklet';
     const {
         currentScrollY,
         maxDistance,
@@ -70,6 +74,7 @@ export const computeTabBarTranslateY = (args: {
     currentScrollY: number;
     maxHeight: number;
 }): number => {
+    'worklet';
     const { currentTranslateY, deltaY, currentScrollY, maxHeight } = args;
     if (!Number.isFinite(maxHeight) || maxHeight <= 0) {
         return 0;
@@ -87,6 +92,7 @@ export const isCollapsedAtThreshold = (
     maxHeight: number,
     epsilon: number = COLLAPSED_EPSILON
 ): boolean => {
+    'worklet';
     if (!Number.isFinite(maxHeight) || maxHeight <= 0) {
         return false;
     }
@@ -100,6 +106,7 @@ export const computeReservedBottomInset = (args: {
     collapsedInset: number;
     epsilon?: number;
 }): number => {
+    'worklet';
     const { translateY, maxHeight, collapsedInset, epsilon } = args;
     if (!Number.isFinite(maxHeight) || maxHeight <= 0) {
         return Math.max(collapsedInset, 0);
@@ -115,6 +122,7 @@ export const computeProgressiveReservedBottomInset = (args: {
     maxHeight: number;
     collapsedInset: number;
 }): number => {
+    'worklet';
     const { translateY, maxHeight, collapsedInset } = args;
     if (!Number.isFinite(maxHeight) || maxHeight <= 0) {
         return Math.max(collapsedInset, 0);
@@ -128,6 +136,7 @@ export const computeRequiredCollapseTravel = (args: {
     tabBarMaxHeight: number;
     tabBarCollapsedInset: number;
 }): number => {
+    'worklet';
     const { scrollableHeaderHeight, tabBarMaxHeight, tabBarCollapsedInset } = args;
     const headerTravel = Math.max(Number.isFinite(scrollableHeaderHeight) ? scrollableHeaderHeight : 0, 0);
     const tabTravel = Math.max((Number.isFinite(tabBarMaxHeight) ? tabBarMaxHeight : 0) - (Number.isFinite(tabBarCollapsedInset) ? tabBarCollapsedInset : 0), 0);
@@ -138,6 +147,7 @@ export const computeMinContentHeightForCollapse = (args: {
     viewportHeight: number | null;
     requiredCollapseTravel: number;
 }): number | null => {
+    'worklet';
     const { viewportHeight, requiredCollapseTravel } = args;
     if (viewportHeight === null || !Number.isFinite(viewportHeight) || viewportHeight <= 0) {
         return null;

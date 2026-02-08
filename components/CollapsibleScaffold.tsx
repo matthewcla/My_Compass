@@ -28,6 +28,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type ScrollEventHandler = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 type SnapBehavior = 'threshold' | 'velocity' | 'none';
 
+const DEFAULT_TAB_BAR_MAX_HEIGHT = 72;
+
 export interface CollapsibleScaffoldListProps {
     onScroll: ScrollEventHandler | undefined;
     onScrollBeginDrag: ScrollEventHandler | undefined;
@@ -109,7 +111,7 @@ export function CollapsibleScaffold({
 
     const [animatedHeaderHeight, setAnimatedHeaderHeight] = useState(initialAnimatedHeaderHeight);
     const [viewportHeight, setViewportHeight] = useState<number | null>(null);
-    const { reservedBottomInset, tabBarCollapsedInsetPx, tabBarMaxHeightPx } = useScrollContext();
+    useScrollContext(); // Ensure context is available; metrics read via constants
 
     // Mobile Web Strategy: Disable DiffClamp animation and use position: sticky
     const isMobileWebEnv = useMemo(() => Platform.OS === 'web', []);
@@ -193,23 +195,28 @@ export function CollapsibleScaffold({
         // available to list surfaces but does not gate listener attachment.
     }, []);
 
-    const requiredCollapseTravel = useMemo(() => {
-        return computeRequiredCollapseTravel({
-            scrollableHeaderHeight,
-            tabBarMaxHeight: tabBarMaxHeightPx,
-            tabBarCollapsedInset: tabBarCollapsedInsetPx,
-        });
-    }, [scrollableHeaderHeight, tabBarCollapsedInsetPx, tabBarMaxHeightPx]);
 
+
+    // Keep a JS-side min content height for the static style (only updates on header
+    // height / viewport changes, not on every scroll frame).
+    // Uses a constant estimate for tab bar metrics to avoid reading shared values during render.
     const minContentHeight = useMemo(() => {
         return computeMinContentHeightForCollapse({
             viewportHeight,
-            requiredCollapseTravel,
+            requiredCollapseTravel: computeRequiredCollapseTravel({
+                scrollableHeaderHeight,
+                tabBarMaxHeight: DEFAULT_TAB_BAR_MAX_HEIGHT,
+                tabBarCollapsedInset: 0,
+            }),
         });
-    }, [requiredCollapseTravel, viewportHeight]);
+    }, [scrollableHeaderHeight, viewportHeight]);
 
     const paddedContentContainerStyle = useMemo(() => {
-        const paddingBottom = Math.max(reservedBottomInset, insets.bottom);
+        // Use only the safe area inset for bottom padding. Content scrolls behind
+        // the semi-transparent tab bar (standard pattern for collapsible bottom bars).
+        // When the bar collapses, no empty gap remains because content already fills
+        // the space behind where the bar was.
+        const paddingBottom = insets.bottom;
 
         if (isMobileWebEnv) {
             return [
@@ -229,7 +236,7 @@ export function CollapsibleScaffold({
             },
             contentContainerStyle,
         ];
-    }, [animatedHeaderHeight, contentContainerStyle, isMobileWebEnv, minContentHeight, statusBarShimHeight, insets.bottom, reservedBottomInset]);
+    }, [animatedHeaderHeight, contentContainerStyle, isMobileWebEnv, minContentHeight, statusBarShimHeight, insets.bottom]);
 
     const listProps = useMemo<CollapsibleScaffoldListProps>(() => {
         return {

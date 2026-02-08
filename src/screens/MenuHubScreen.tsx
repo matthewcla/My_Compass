@@ -1,6 +1,5 @@
 import { MenuTile } from '@/components/menu/MenuTile';
-import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
-import { useScreenHeader } from '@/hooks/useScreenHeader';
+import OnboardingCard from '@/components/onboarding/OnboardingCard';
 import { useSession } from '@/lib/ctx';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
 import * as Clipboard from 'expo-clipboard';
@@ -12,20 +11,15 @@ import {
   FileText,
   LogOut,
   Map as MapIcon,
-  Search,
   Settings,
   User
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
-import { Platform, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function HubMenuSearchHeader() {
-  const globalSearchConfig = useGlobalSpotlightHeaderSearch();
-  useScreenHeader('', '', undefined, globalSearchConfig);
-  return null;
-}
+
 
 export default function MenuHubScreen() {
   const { signOut } = useSession();
@@ -36,7 +30,7 @@ export default function MenuHubScreen() {
   const segmentList = segments as string[];
   const isDark = colorScheme === 'dark';
   const isMenuModalRoute = segmentList.includes('MenuHubModal') || pathname.includes('MenuHubModal');
-  const isHubMenuRoute = !isMenuModalRoute;
+
 
   // Dynamic Theme Colors
   const theme = {
@@ -73,80 +67,16 @@ export default function MenuHubScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      {isHubMenuRoute ? <HubMenuSearchHeader /> : null}
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-
-      {isMenuModalRoute && (
-        <View
-          style={{
-            paddingTop: Math.max(insets.top, 20) + 16,
-            backgroundColor: theme.background,
-            zIndex: 10
-          }}
-          className="px-5 pb-4"
-        >
-          <MotiView
-            from={{ opacity: 0, translateY: -10 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 400 }}
-            style={{
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-              borderRadius: 24,
-            }}
-            className="rounded-3xl shadow-sm border"
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 14,
-                paddingHorizontal: 16,
-              }}
-            >
-              <Search size={22} color={theme.icon} strokeWidth={2.5} />
-              <TextInput
-                value={spotlightQuery}
-                onChangeText={(text) => {
-                  ensureModalSpotlightOpen();
-                  setSpotlightQuery(text);
-                }}
-                onFocus={ensureModalSpotlightOpen}
-                placeholder="Search all app functions..."
-                placeholderTextColor={theme.icon}
-                style={{ color: theme.text, marginLeft: 20 }}
-                className="flex-1 text-[17px] font-medium h-full"
-                autoCorrect={false}
-                autoCapitalize="none"
-                returnKeyType="search"
-                accessibilityLabel="Global search input"
-              />
-              {Platform.OS === 'web' && (
-                <View
-                  style={{
-                    borderColor: theme.border,
-                    backgroundColor: theme.inputBg
-                  }}
-                  className="border rounded-md px-2 py-1"
-                >
-                  <Text style={{ color: theme.subText }} className="text-[10px] font-bold uppercase tracking-wider">
-                    ⌘K
-                  </Text>
-                </View>
-              )}
-            </View>
-          </MotiView>
-        </View>
-      )}
-
+      <View style={{ height: insets.top, backgroundColor: theme.background }} />
       <ScrollView
         contentContainerStyle={{
-          paddingTop: isMenuModalRoute ? 10 : 18,
+          paddingTop: isMenuModalRoute ? 20 : 18,
           paddingBottom: insets.bottom + 120,
           paddingHorizontal: 24
         }}
         showsVerticalScrollIndicator={false}
       >
+        <OnboardingCard />
         {/* Grid - Standard Tiles */}
         {/* Grid - Standard Tiles */}
         <View className="mb-6">

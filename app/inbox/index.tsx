@@ -168,6 +168,7 @@ export default function InboxScreen() {
     return (
         <CollapsibleScaffold
             statusBarShimBackgroundColor={isDark ? '#000000' : '#f8fafc'}
+            containerStyle={{ backgroundColor: isDark ? '#000000' : '#f8fafc' }}
             topBar={
                 <View className="bg-slate-50 dark:bg-black">
                     <ScreenHeader
@@ -207,7 +208,7 @@ export default function InboxScreen() {
                         />
                     )}
                     renderSectionHeader={({ section: { title } }) => (
-                        <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900/50">
+                        <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900">
                             <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
                         </View>
                     )}

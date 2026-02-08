@@ -169,7 +169,7 @@ export function useDiffClampScroll({
                 return;
             }
 
-            if (Math.abs(dx) > Math.abs(dy) * 2 && Math.abs(dx) > 10) {
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
                 ctx.isScrollingHorizontally = true;
                 return;
             }

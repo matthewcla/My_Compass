@@ -130,7 +130,10 @@ export default function RootLayout() {
   const hideRootTabBar =
     pathname === '/inbox' ||
     pathname === '/sign-in' ||
-    pathname === '/modal';
+    pathname === '/modal' ||
+    pathname === '/' ||
+    pathname === '/(hub)' ||
+    pathname.startsWith('/calendar');
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

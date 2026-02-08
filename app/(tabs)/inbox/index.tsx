@@ -180,12 +180,13 @@ export default function InboxScreen() {
                     {renderHeader()}
                 </View>
             }
-            bottomBar={<GlobalTabBar activeRoute="inbox" />}
             snapBehavior="velocity"
             minTopBarHeight={filterHeight}
         >
             {({
                 onScroll,
+                onScrollBeginDrag,
+                onScrollEndDrag,
                 onLayout,
                 onContentSizeChange,
                 scrollEnabled,
@@ -214,7 +215,7 @@ export default function InboxScreen() {
                     )}
                     keyExtractor={item => item.id}
                     stickySectionHeadersEnabled={false} // Sticky headers with sticky list header can be tricky, verifying without first
-                    contentContainerStyle={[contentContainerStyle, { paddingBottom: 24 }]}
+                    contentContainerStyle={contentContainerStyle}
                     refreshing={isLoading}
                     onRefresh={handleRefresh}
                     onLayout={onLayout}
@@ -226,6 +227,8 @@ export default function InboxScreen() {
                         </View>
                     }
                     onScroll={onScroll}
+                    onScrollBeginDrag={onScrollBeginDrag}
+                    onScrollEndDrag={onScrollEndDrag}
                 />
             )}
         </CollapsibleScaffold>

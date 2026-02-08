@@ -13,7 +13,7 @@ import {
 // Define the height of the tab bar that we want to potentially hide.
 // This should match the visual height of your TabBar component including safe area/bottom inset.
 // You might want to make this dynamic or pass it in via props if it varies.
-const TAB_BAR_HEIGHT = 100; // Adjust: e.g. 60 + bottom inset
+export const TAB_BAR_HEIGHT = 100; // Adjust: e.g. 60 + bottom inset
 
 // --- Types ---
 

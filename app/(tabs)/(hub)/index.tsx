@@ -203,10 +203,9 @@ export default function HubDashboard() {
                         />
                     </View>
                 }
-                bottomBar={<GlobalTabBar activeRoute="home" />}
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             >
-                {({ onScroll, contentContainerStyle }) => (
+                {({ onScroll, onScrollBeginDrag, onScrollEndDrag, contentContainerStyle }) => (
                     <AnimatedFlashList
                         ref={listRef}
                         data={sections}
@@ -217,6 +216,8 @@ export default function HubDashboard() {
                         estimatedItemSize={150}
                         style={{ flex: 1 }}
                         onScroll={onScroll}
+                        onScrollBeginDrag={onScrollBeginDrag}
+                        onScrollEndDrag={onScrollEndDrag}
                         contentContainerStyle={contentContainerStyle}
                     />
                 )}

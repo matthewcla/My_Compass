@@ -146,9 +146,8 @@ export default function CalendarScreen() {
                             searchConfig={searchConfig}
                         />
                     }
-                    bottomBar={<GlobalTabBar activeRoute="calendar" />}
                 >
-                    {({ onScroll, contentContainerStyle }) => (
+                    {({ onScroll, onScrollBeginDrag, onScrollEndDrag, contentContainerStyle }) => (
                         loading && groupedEvents.length === 0 ? (
                             <View className="flex-1 items-center justify-center">
                                 <ActivityIndicator size="large" />
@@ -178,6 +177,8 @@ export default function CalendarScreen() {
                                 onRefresh={refresh}
                                 showsVerticalScrollIndicator={false}
                                 onScroll={onScroll}
+                                onScrollBeginDrag={onScrollBeginDrag}
+                                onScrollEndDrag={onScrollEndDrag}
                             />
                         )
                     )}

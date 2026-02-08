@@ -117,24 +117,20 @@ export default function RootLayout() {
 
   const colorScheme = useColorScheme();
   const pathname = usePathname();
-<<<<<<< HEAD
-  const hideRootTabBar = pathname === '/inbox';
+  const segments = useSegments();
+  const currentSegment = segments[0];
+
   const activeRoute =
     pathname.startsWith('/calendar')
       ? 'calendar'
       : pathname.startsWith('/inbox')
         ? 'inbox'
         : 'home';
-=======
-  const segments = useSegments();
-  const currentSegment = segments[0];
 
   const hideRootTabBar =
     pathname === '/inbox' ||
-    currentSegment === 'inbox' ||
-    currentSegment === '(hub)' ||
-    currentSegment === '(calendar)';
->>>>>>> dd962872c84ea5bc5587d95369e5eeb0e48f4837
+    pathname === '/sign-in' ||
+    pathname === '/modal';
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

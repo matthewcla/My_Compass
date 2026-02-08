@@ -83,8 +83,9 @@ export function CollapsibleScaffold({
     initialTopBarHeight = 0,
     initialBottomBarHeight = 0,
     snapBehavior = 'threshold',
+    minTopBarHeight = 0,
     testID,
-}: CollapsibleScaffoldProps) {
+}: CollapsibleScaffoldProps & { minTopBarHeight?: number }) {
     const insets = useSafeAreaInsets();
     const statusBarShimHeight = useMemo(() => {
         if (insets.top > 0) {
@@ -108,7 +109,11 @@ export function CollapsibleScaffold({
     const isMobileWebEnv = useMemo(() => isMobileWeb(), []);
     const diffClampEnabled = !isMobileWebEnv;
 
-    const clampRange = Math.max(animatedHeaderHeight, bottomBarHeight, 1);
+    // The scrollable distance is the total header height minus the part that should remain visible (sticky)
+    // We max at 1 to avoid division by zero or invalid ranges if height is 0
+    const scrollableHeaderHeight = Math.max(animatedHeaderHeight - minTopBarHeight, 0);
+    const clampRange = Math.max(scrollableHeaderHeight, bottomBarHeight, 1);
+
     const { clampedScrollValue, onScroll } = useDiffClampScroll({
         headerHeight: clampRange,
         enabled: diffClampEnabled,
@@ -127,7 +132,7 @@ export function CollapsibleScaffold({
         return interpolate(
             clampedScrollValue.value,
             [0, clampRange],
-            [0, -animatedHeaderHeight],
+            [0, -scrollableHeaderHeight],
             Extrapolation.CLAMP
         );
     });

@@ -1,7 +1,7 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
+import { MessageCard } from '@/components/inbox/MessageCard';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { MessageCard } from '@/components/inbox/MessageCard';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useInboxStore } from '@/store/useInboxStore';
 import type { InboxMessage } from '@/types/inbox';
@@ -42,6 +42,7 @@ export default function InboxScreen() {
     const [, startTransition] = useTransition();
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterHeight, setFilterHeight] = useState(0);
 
     const searchConfig = {
         visible: true,
@@ -132,6 +133,7 @@ export default function InboxScreen() {
     const renderHeader = () => (
         <View
             className="px-4 pb-3 bg-white dark:bg-black border-slate-200 dark:border-slate-800"
+            onLayout={(e) => setFilterHeight(e.nativeEvent.layout.height)}
         >
             <View className="flex-row justify-between bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mt-2">
                 {(['All', 'Official', 'My Status', 'Pinned'] as FilterType[]).map((filter) => (
@@ -179,6 +181,7 @@ export default function InboxScreen() {
             }
             bottomBar={<GlobalTabBar activeRoute="inbox" />}
             snapBehavior="velocity"
+            minTopBarHeight={filterHeight}
         >
             {({
                 onScroll,

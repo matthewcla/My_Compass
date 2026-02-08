@@ -186,6 +186,7 @@ export default function HubDashboard() {
             style={{ flex: 1 }}
         >
             <CollapsibleScaffold
+                statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
                 topBar={
                     <View className="bg-slate-50 dark:bg-slate-950 pb-2">
                         <View className="px-4 pt-2">

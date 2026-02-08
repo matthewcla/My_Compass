@@ -137,6 +137,7 @@ export default function CalendarScreen() {
                 className="flex-1 bg-slate-50 dark:bg-black"
             >
                 <CollapsibleScaffold
+                    statusBarShimBackgroundColor={isDark ? '#000000' : '#f8fafc'}
                     topBar={
                         <ScreenHeader
                             title=""

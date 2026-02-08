@@ -67,6 +67,7 @@ export default function MenuHubScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <View style={{ height: insets.top, backgroundColor: theme.background }} />
       <ScrollView
         contentContainerStyle={{
           paddingTop: isMenuModalRoute ? 20 : 18,

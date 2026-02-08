@@ -18,12 +18,14 @@ import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
-const AnimatedFlashList = Animated.createAnimatedComponent(FlashList) as React.ComponentType<any>;
+const AnimatedFlashList = (Platform.OS === 'web'
+    ? FlashList
+    : Animated.createAnimatedComponent(FlashList)) as React.ComponentType<any>;
 
 export default function HubDashboard() {
     const router = useRouter();

@@ -1,6 +1,5 @@
 import type { SnapBehavior } from '@/hooks/useDiffClampScroll';
 import { useDiffClampScroll } from '@/hooks/useDiffClampScroll';
-import { isMobileWeb } from '@/utils/platform';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     LayoutChangeEvent,
@@ -24,7 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type ScrollEventHandler = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 
 export interface CollapsibleScaffoldListProps {
-    onScroll: ScrollEventHandler;
+    onScroll: ScrollEventHandler | undefined;
     onLayout: (event: LayoutChangeEvent) => void;
     onContentSizeChange: (width: number, height: number) => void;
     scrollEnabled: boolean;
@@ -106,7 +105,7 @@ export function CollapsibleScaffold({
     const [contentHeight, setContentHeight] = useState<number | null>(null);
 
     // Mobile Web Strategy: Disable DiffClamp animation and use position: sticky
-    const isMobileWebEnv = useMemo(() => isMobileWeb(), []);
+    const isMobileWebEnv = useMemo(() => Platform.OS === 'web', []);
     const diffClampEnabled = !isMobileWebEnv;
 
     // The scrollable distance is the total header height minus the part that should remain visible (sticky)
@@ -200,6 +199,15 @@ export function CollapsibleScaffold({
     }, [clampedScrollValue, shouldDisableScrollListener]);
 
     const paddedContentContainerStyle = useMemo(() => {
+        if (isMobileWebEnv) {
+            return [
+                {
+                    paddingBottom: bottomBarHeight,
+                },
+                contentContainerStyle,
+            ];
+        }
+
         const totalTopBarHeight = statusBarShimHeight + animatedHeaderHeight;
         return [
             {
@@ -208,11 +216,11 @@ export function CollapsibleScaffold({
             },
             contentContainerStyle,
         ];
-    }, [animatedHeaderHeight, bottomBarHeight, contentContainerStyle, statusBarShimHeight]);
+    }, [animatedHeaderHeight, bottomBarHeight, contentContainerStyle, isMobileWebEnv, statusBarShimHeight]);
 
     const listProps = useMemo<CollapsibleScaffoldListProps>(() => {
         return {
-            onScroll: shouldDisableScrollListener ? noopScrollHandler : onScroll,
+            onScroll: (shouldDisableScrollListener || isMobileWebEnv) ? undefined : onScroll,
             onLayout: handleViewportLayout,
             onContentSizeChange: handleContentSizeChange,
             scrollEnabled: !shouldDisableScrollListener,
@@ -223,7 +231,7 @@ export function CollapsibleScaffold({
     }, [
         handleContentSizeChange,
         handleViewportLayout,
-        noopScrollHandler,
+        isMobileWebEnv,
         onScroll,
         paddedContentContainerStyle,
         shouldDisableScrollListener
@@ -231,39 +239,61 @@ export function CollapsibleScaffold({
 
     return (
         <View style={[styles.container, containerStyle]} testID={testID}>
-            {children(listProps)}
+            {isMobileWebEnv && (
+                <View style={[
+                    styles.topBarContainer,
+                    { position: 'sticky', top: 0, zIndex: 100 } as any
+                ]}>
+                    <View
+                        style={[
+                            styles.statusBarShim,
+                            {
+                                height: statusBarShimHeight,
+                                backgroundColor: statusBarShimBackgroundColor,
+                            }
+                        ]}
+                    />
 
-            <View style={[
-                styles.topBarContainer,
-                isMobileWebEnv && { position: 'sticky', top: 0 } as any
-            ]}>
-                <View
-                    style={[
-                        styles.statusBarShim,
-                        {
-                            height: statusBarShimHeight,
-                            backgroundColor: statusBarShimBackgroundColor,
-                        }
-                    ]}
-                />
-
-                <Animated.View style={[styles.animatedHeader, topBarAnimatedStyle]}>
-                    <View onLayout={handleAnimatedHeaderLayout}>
+                    <View style={styles.animatedHeader}>
                         {topBar}
                     </View>
-                </Animated.View>
+                </View>
+            )}
 
-                <View
-                    pointerEvents="none"
-                    style={[
-                        styles.topSafeAreaMask,
-                        {
-                            height: statusBarShimHeight,
-                            backgroundColor: statusBarShimBackgroundColor,
-                        }
-                    ]}
-                />
-            </View>
+            {children(listProps)}
+
+            {!isMobileWebEnv && (
+                <View style={[
+                    styles.topBarContainer,
+                ]}>
+                    <View
+                        style={[
+                            styles.statusBarShim,
+                            {
+                                height: statusBarShimHeight,
+                                backgroundColor: statusBarShimBackgroundColor,
+                            }
+                        ]}
+                    />
+
+                    <Animated.View style={[styles.animatedHeader, topBarAnimatedStyle]}>
+                        <View onLayout={handleAnimatedHeaderLayout}>
+                            {topBar}
+                        </View>
+                    </Animated.View>
+
+                    <View
+                        pointerEvents="none"
+                        style={[
+                            styles.topSafeAreaMask,
+                            {
+                                height: statusBarShimHeight,
+                                backgroundColor: statusBarShimBackgroundColor,
+                            }
+                        ]}
+                    />
+                </View>
+            )}
 
             <Animated.View style={[
                 styles.bottomBarContainer,

@@ -139,8 +139,8 @@ export default function CalendarScreen() {
                 <CollapsibleScaffold
                     topBar={
                         <ScreenHeader
-                            title="CALENDAR"
-                            subtitle="Events & Deadlines"
+                            title=""
+                            subtitle=""
                             withSafeArea={false}
                             searchConfig={searchConfig}
                         />
@@ -163,7 +163,7 @@ export default function CalendarScreen() {
                                         <EventCard event={item} />
                                     </View>
                                 )}
-                                renderSectionHeader={({ section: { title } }: { section: { title: string } }) => (
+                                renderSectionHeader={({ section: { title } }: { section: { title: string } | any }) => (
                                     <View className="bg-slate-50/95 dark:bg-black/95 px-5 py-2 z-10">
                                         <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                                             {title}

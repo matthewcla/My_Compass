@@ -265,7 +265,10 @@ export function CollapsibleScaffold({
                 />
             </View>
 
-            <Animated.View style={[styles.bottomBarContainer, bottomBarAnimatedStyle]}>
+            <Animated.View style={[
+                styles.bottomBarContainer,
+                bottomBarAnimatedStyle
+            ]}>
                 <View onLayout={handleBottomBarLayout}>
                     {bottomBar}
                 </View>

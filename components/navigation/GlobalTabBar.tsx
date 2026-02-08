@@ -125,7 +125,7 @@ export default function GlobalTabBar({ activeRoute }: GlobalTabBarProps) {
     const inactiveColor = colorScheme === 'dark' ? '#64748B' : '#9CA3AF';
     const dynamicActiveColor = isDark ? '#FFFFFF' : '#0F172A';
     const dynamicInactiveColor = isDark ? '#64748B' : '#94A3B8';
-    const HEIGHT = Platform.select({ web: 60, default: 56 });
+    const HEIGHT = Platform.select({ web: 60, default: 49 });
 
     const renderFixedTab = (item: TabItem) => {
         const isActive =

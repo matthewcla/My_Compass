@@ -99,55 +99,59 @@ export function ScreenHeader({
         });
     }, [globalSearchBottomY, isGlobalSearch, setGlobalSearchBottomY]);
 
+    const hasHeaderContent = Boolean(title || subtitle || rightAction);
+
     return (
         <View className="z-50 bg-gray-100 dark:bg-black">
-            <View
-                style={{
-                    paddingTop: (withSafeArea ? Math.max(insets.top, 20) : 0) + (isInline ? 8 : 12),
-                    paddingHorizontal: 16,
-                    paddingBottom: isInline ? 8 : 12
-                }}
-                className={`flex-row justify-between items-center relative z-50`}
-            >
-                <View className="flex-row items-center flex-1 mr-4">
-                    <View className={isInline ? "flex-row items-baseline gap-2" : ""}>
-                        {title ? (
-                            <Text className={`${isInline ? 'text-lg' : 'text-2xl'} font-black text-slate-900 dark:text-white uppercase tracking-tight`}>
-                                {title}
-                            </Text>
-                        ) : null}
-                        {subtitle ? (
-                            <Text className={`text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest ${isInline ? 'text-[10px]' : 'text-sm mt-1'}`}>
-                                {subtitle}
-                            </Text>
-                        ) : null}
+            {hasHeaderContent && (
+                <View
+                    style={{
+                        paddingTop: (withSafeArea ? Math.max(insets.top, 20) : 0) + (isInline ? 8 : 12),
+                        paddingHorizontal: 16,
+                        paddingBottom: isInline ? 8 : 12
+                    }}
+                    className={`flex-row justify-between items-center relative z-50`}
+                >
+                    <View className="flex-row items-center flex-1 mr-4">
+                        <View className={isInline ? "flex-row items-baseline gap-2" : ""}>
+                            {title ? (
+                                <Text className={`${isInline ? 'text-lg' : 'text-2xl'} font-black text-slate-900 dark:text-white uppercase tracking-tight`}>
+                                    {title}
+                                </Text>
+                            ) : null}
+                            {subtitle ? (
+                                <Text className={`text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest ${isInline ? 'text-[10px]' : 'text-sm mt-1'}`}>
+                                    {subtitle}
+                                </Text>
+                            ) : null}
+                        </View>
+                    </View>
+
+                    <View className="flex-row items-center gap-4">
+                        {rightAction && (
+                            <Pressable
+                                onPress={rightAction.onPress}
+                                hitSlop={12}
+                            >
+                                {({ pressed }) => {
+                                    const Icon = rightAction.icon;
+                                    return (
+                                        <Icon
+                                            color={colors.text}
+                                            size={isInline ? 20 : 24}
+                                            strokeWidth={2}
+                                            style={{ opacity: pressed ? 0.7 : 1 }}
+                                        />
+                                    );
+                                }}
+                            </Pressable>
+                        )}
                     </View>
                 </View>
-
-                <View className="flex-row items-center gap-4">
-                    {rightAction && (
-                        <Pressable
-                            onPress={rightAction.onPress}
-                            hitSlop={12}
-                        >
-                            {({ pressed }) => {
-                                const Icon = rightAction.icon;
-                                return (
-                                    <Icon
-                                        color={colors.text}
-                                        size={isInline ? 20 : 24}
-                                        strokeWidth={2}
-                                        style={{ opacity: pressed ? 0.7 : 1 }}
-                                    />
-                                );
-                            }}
-                        </Pressable>
-                    )}
-                </View>
-            </View>
+            )}
 
             {searchConfig && searchConfig.visible && (
-                <View className="px-5 pb-4">
+                <View className={`px-5 pb-4 ${!hasHeaderContent ? 'pt-4' : ''}`}>
                     {isGlobalSearch ? (
                         <View
                             ref={globalSearchRowRef}

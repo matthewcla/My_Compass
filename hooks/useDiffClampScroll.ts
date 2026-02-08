@@ -1,4 +1,9 @@
 import { useCallback, useEffect } from 'react';
+import {
+    COLLAPSE_ACTIVATION_OFFSET,
+    computeCollapseDelta,
+    computeCollapseDistanceFromScrollY,
+} from '@/components/navigation/collapseMath';
 import { NativeScrollEvent, NativeSyntheticEvent, useWindowDimensions } from 'react-native';
 import {
     Easing,
@@ -19,6 +24,8 @@ interface UseDiffClampScrollProps {
 }
 
 export type SnapBehavior = 'threshold' | 'velocity' | 'none';
+const SNAP_VELOCITY_THRESHOLD = 1400;
+const MIN_HIDE_SNAP_DISTANCE = 24;
 
 type DiffClampInput = { scrollY: number } | { deltaY: number };
 
@@ -31,6 +38,8 @@ interface UseDiffClampScrollResult {
     headerStyle: { transform: { translateY: number }[] };
     footerStyle: { transform: { translateY: number }[] };
     onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    onScrollBeginDrag: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    onScrollEndDrag: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     updateFromScrollY: (currentY: number) => void;
     updateFromDeltaY: (deltaY: number) => void;
     update: (input: DiffClampInput) => void;
@@ -59,10 +68,22 @@ export function useDiffClampScroll({
     const scrollY = useSharedValue(initialScrollY);
     const previousY = useSharedValue(initialScrollY);
     const clampedScrollValue = useSharedValue(0);
+    const headerHeightSV = useSharedValue(Math.max(Number.isFinite(headerHeight) ? headerHeight : 0, 0));
+    const enabledSV = useSharedValue(enabled);
+    const scrollOriginY = useSharedValue(0);
+    const hasCapturedScrollOrigin = useSharedValue(false);
 
     const { width } = useWindowDimensions();
     const isMobileBreakpoint = width <= 768;
     const isMobileSV = useSharedValue(isMobileBreakpoint);
+
+    useEffect(() => {
+        headerHeightSV.value = Math.max(Number.isFinite(headerHeight) ? headerHeight : 0, 0);
+    }, [headerHeight, headerHeightSV]);
+
+    useEffect(() => {
+        enabledSV.value = enabled;
+    }, [enabled, enabledSV]);
 
     useEffect(() => {
         isMobileSV.value = isMobileBreakpoint;
@@ -71,35 +92,74 @@ export function useDiffClampScroll({
         }
     }, [clampedScrollValue, isMobileBreakpoint, isMobileSV]);
 
+    const resolveHeaderHeight = useCallback(() => {
+        const nextHeaderHeight = headerHeightSV.value;
+        if (!Number.isFinite(nextHeaderHeight) || nextHeaderHeight <= 0) {
+            return 0;
+        }
+
+        return nextHeaderHeight;
+    }, [headerHeightSV]);
+
     const clampAndApplyDelta = useCallback((deltaY: number) => {
-        if (!enabled || !Number.isFinite(deltaY)) {
+        if (!enabledSV.value || !Number.isFinite(deltaY)) {
             return;
         }
 
-        const next = clampedScrollValue.value + deltaY;
-        clampedScrollValue.value = Math.min(Math.max(next, 0), headerHeight);
-    }, [clampedScrollValue, enabled, headerHeight]);
+        const maxHeaderHeight = resolveHeaderHeight();
+        if (maxHeaderHeight <= 0) {
+            clampedScrollValue.value = 0;
+            return;
+        }
+
+        const boundedDeltaY = computeCollapseDelta(deltaY);
+        const next = clampedScrollValue.value + boundedDeltaY;
+        if (next < 0) {
+            clampedScrollValue.value = 0;
+            return;
+        }
+
+        if (next > maxHeaderHeight) {
+            clampedScrollValue.value = maxHeaderHeight;
+            return;
+        }
+
+        clampedScrollValue.value = next;
+    }, [clampedScrollValue, enabledSV, resolveHeaderHeight]);
 
     const updateFromScrollY = useCallback((currentY: number) => {
         if (!Number.isFinite(currentY)) {
             return;
         }
 
-        const diff = currentY - previousY.value;
         previousY.value = currentY;
         scrollY.value = currentY;
 
-        if (!enabled) {
+        if (!enabledSV.value) {
             return;
         }
 
         if (currentY <= 0) {
+            hasCapturedScrollOrigin.value = false;
+            scrollOriginY.value = 0;
             clampedScrollValue.value = 0;
             return;
         }
 
-        clampAndApplyDelta(diff);
-    }, [clampAndApplyDelta, clampedScrollValue, enabled, previousY, scrollY]);
+        if (!hasCapturedScrollOrigin.value) {
+            scrollOriginY.value = currentY;
+            hasCapturedScrollOrigin.value = true;
+        }
+
+        const relativeScrollY = Math.max(0, currentY - scrollOriginY.value);
+
+        const maxHeaderHeight = resolveHeaderHeight();
+        const collapseTarget = computeCollapseDistanceFromScrollY({
+            currentScrollY: relativeScrollY,
+            maxDistance: maxHeaderHeight,
+        });
+        clampedScrollValue.value = collapseTarget;
+    }, [clampedScrollValue, enabledSV, hasCapturedScrollOrigin, previousY, resolveHeaderHeight, scrollOriginY, scrollY]);
 
     const updateFromDeltaY = useCallback((deltaY: number) => {
         if (!Number.isFinite(deltaY) || deltaY === 0) {
@@ -110,7 +170,7 @@ export function useDiffClampScroll({
         scrollY.value = nextScrollY;
         previousY.value = nextScrollY;
 
-        if (!enabled) {
+        if (!enabledSV.value) {
             return;
         }
 
@@ -120,7 +180,7 @@ export function useDiffClampScroll({
         }
 
         clampAndApplyDelta(deltaY);
-    }, [clampAndApplyDelta, clampedScrollValue, enabled, previousY, scrollY]);
+    }, [clampAndApplyDelta, clampedScrollValue, enabledSV, previousY, scrollY]);
 
     const update = useCallback((input: DiffClampInput) => {
         if ('scrollY' in input) {
@@ -144,6 +204,78 @@ export function useDiffClampScroll({
             easing: Easing.out(Easing.cubic),
         });
     };
+
+    const onScrollBeginDrag = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+        if (!Number.isFinite(currentY)) {
+            return;
+        }
+
+        previousY.value = currentY;
+        scrollY.value = currentY;
+    }, [previousY, scrollY]);
+
+    const onScrollEndDrag = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        if (!enabledSV.value || !isMobileSV.value || snapBehavior === 'none') {
+            return;
+        }
+
+        const maxHeaderHeight = resolveHeaderHeight();
+        if (maxHeaderHeight <= 0) {
+            clampedScrollValue.value = 0;
+            return;
+        }
+
+        const velocityY = event.nativeEvent.velocity?.y ?? 0;
+        const currentHidden = clampedScrollValue.value;
+        const hideSnapMin = Math.min(
+            Math.max(maxHeaderHeight * 0.15, MIN_HIDE_SNAP_DISTANCE),
+            maxHeaderHeight
+        );
+        const showSnapMax = Math.max(maxHeaderHeight - hideSnapMin, 0);
+
+        if (snapBehavior === 'velocity') {
+            if (velocityY > SNAP_VELOCITY_THRESHOLD && currentHidden >= hideSnapMin) {
+                clampedScrollValue.value = withTiming(maxHeaderHeight, {
+                    duration: 250,
+                    easing: Easing.out(Easing.cubic),
+                });
+                return;
+            }
+
+            if (velocityY < -SNAP_VELOCITY_THRESHOLD && currentHidden <= showSnapMax) {
+                clampedScrollValue.value = withTiming(0, {
+                    duration: 250,
+                    easing: Easing.out(Easing.cubic),
+                });
+            }
+            return;
+        }
+
+        if (velocityY > SNAP_VELOCITY_THRESHOLD && currentHidden >= hideSnapMin) {
+            clampedScrollValue.value = withTiming(maxHeaderHeight, {
+                duration: 250,
+                easing: Easing.out(Easing.cubic),
+            });
+            return;
+        }
+
+        if (velocityY < -SNAP_VELOCITY_THRESHOLD && currentHidden <= showSnapMax) {
+            clampedScrollValue.value = withTiming(0, {
+                duration: 250,
+                easing: Easing.out(Easing.cubic),
+            });
+            return;
+        }
+
+        clampedScrollValue.value = withTiming(
+            currentHidden > maxHeaderHeight / 2 ? maxHeaderHeight : 0,
+            {
+                duration: 250,
+                easing: Easing.out(Easing.cubic),
+            }
+        );
+    }, [clampedScrollValue, enabledSV, isMobileSV, resolveHeaderHeight, snapBehavior]);
 
     const onScroll = useAnimatedScrollHandler({
         onScroll: (event, ctx: { prevX?: number, prevY?: number, isScrollingHorizontally?: boolean }) => {
@@ -174,15 +306,35 @@ export function useDiffClampScroll({
                 return;
             }
 
-            if (currentY <= 0) {
+            if (currentY <= COLLAPSE_ACTIVATION_OFFSET) {
+                hasCapturedScrollOrigin.value = false;
+                scrollOriginY.value = 0;
                 clampedScrollValue.value = 0;
                 return;
             }
 
-            if (!enabled || !isMobileSV.value) return;
+            if (!enabledSV.value || !isMobileSV.value) {
+                return;
+            }
 
-            const next = clampedScrollValue.value + dy;
-            clampedScrollValue.value = Math.min(Math.max(next, 0), headerHeight);
+            const maxHeaderHeight = headerHeightSV.value;
+            if (!Number.isFinite(maxHeaderHeight) || maxHeaderHeight <= 0) {
+                clampedScrollValue.value = 0;
+                return;
+            }
+
+            if (!hasCapturedScrollOrigin.value) {
+                scrollOriginY.value = currentY;
+                hasCapturedScrollOrigin.value = true;
+            }
+
+            const relativeScrollY = Math.max(0, currentY - scrollOriginY.value);
+
+            const collapseTarget = computeCollapseDistanceFromScrollY({
+                currentScrollY: relativeScrollY,
+                maxDistance: maxHeaderHeight,
+            });
+            clampedScrollValue.value = collapseTarget;
         },
         onBeginDrag: (event, ctx: { prevX?: number, prevY?: number, isScrollingHorizontally?: boolean }) => {
             ctx.prevY = event.contentOffset.y;
@@ -195,48 +347,78 @@ export function useDiffClampScroll({
                 return;
             }
 
-            const velocityY = event.velocity?.y ?? 0;
-            if (velocityY > 500) {
-                snapTo(headerHeight);
+            const maxHeaderHeight = headerHeightSV.value;
+            if (!Number.isFinite(maxHeaderHeight) || maxHeaderHeight <= 0) {
+                clampedScrollValue.value = 0;
                 return;
             }
 
-            if (velocityY < -500) {
+            const velocityY = event.velocity?.y ?? 0;
+            const currentHidden = clampedScrollValue.value;
+            const hideSnapMin = Math.min(
+                Math.max(maxHeaderHeight * 0.15, MIN_HIDE_SNAP_DISTANCE),
+                maxHeaderHeight
+            );
+            const showSnapMax = Math.max(maxHeaderHeight - hideSnapMin, 0);
+
+            if (snapBehavior === 'velocity') {
+                if (velocityY > SNAP_VELOCITY_THRESHOLD && currentHidden >= hideSnapMin) {
+                    snapTo(maxHeaderHeight);
+                    return;
+                }
+
+                if (velocityY < -SNAP_VELOCITY_THRESHOLD && currentHidden <= showSnapMax) {
+                    snapTo(0);
+                }
+                return;
+            }
+
+            if (velocityY > SNAP_VELOCITY_THRESHOLD && currentHidden >= hideSnapMin) {
+                snapTo(maxHeaderHeight);
+                return;
+            }
+
+            if (velocityY < -SNAP_VELOCITY_THRESHOLD && currentHidden <= showSnapMax) {
                 snapTo(0);
                 return;
             }
 
-            if (snapBehavior === 'threshold') {
-                const currentHidden = clampedScrollValue.value;
-                if (currentHidden > headerHeight / 2) {
-                    snapTo(headerHeight);
-                } else {
-                    snapTo(0);
-                }
+            if (currentHidden > maxHeaderHeight / 2) {
+                snapTo(maxHeaderHeight);
+            } else {
+                snapTo(0);
             }
         },
-    });
+    }, [clampedScrollValue, enabledSV, hasCapturedScrollOrigin, headerHeightSV, isMobileSV, previousY, scrollOriginY, scrollY, snapBehavior]);
 
     const headerTranslateY = useDerivedValue(() => {
         if (!isMobileSV.value) {
             return 0;
         }
+        const maxHeaderHeight = headerHeightSV.value;
+        if (!Number.isFinite(maxHeaderHeight) || maxHeaderHeight <= 0) {
+            return 0;
+        }
         return interpolate(
             clampedScrollValue.value,
-            [0, headerHeight],
-            [0, -headerHeight],
+            [0, maxHeaderHeight],
+            [0, -maxHeaderHeight],
             Extrapolation.CLAMP
         );
-    });
+    }, [clampedScrollValue, headerHeightSV, isMobileSV]);
 
     const footerTranslateY = useDerivedValue(() => {
+        const maxHeaderHeight = headerHeightSV.value;
+        if (!Number.isFinite(maxHeaderHeight) || maxHeaderHeight <= 0) {
+            return 0;
+        }
         return interpolate(
             clampedScrollValue.value,
-            [0, headerHeight],
-            [0, headerHeight],
+            [0, maxHeaderHeight],
+            [0, maxHeaderHeight],
             Extrapolation.CLAMP
         );
-    });
+    }, [clampedScrollValue, headerHeightSV]);
 
     const headerStyle = useAnimatedStyle(() => {
         return {
@@ -267,6 +449,8 @@ export function useDiffClampScroll({
         headerStyle,
         footerStyle,
         onScroll,
+        onScrollBeginDrag,
+        onScrollEndDrag,
         updateFromScrollY,
         updateFromDeltaY,
         update,

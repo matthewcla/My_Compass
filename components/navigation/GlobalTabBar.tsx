@@ -18,7 +18,7 @@ import {
     Target,
 } from 'lucide-react-native';
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { LayoutChangeEvent, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -180,7 +180,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
-    const { translateY, resetBar } = useScrollContext();
+    const { translateY, resetBar, setTabBarMetrics, reservedBottomInset } = useScrollContext();
 
     const [barWidth, setBarWidth] = React.useState(0);
     const pillTranslateX = useSharedValue(0);
@@ -217,6 +217,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
     const config = targetSpoke ? SPOKE_CONFIG[targetSpoke] : null;
     const isDark = colorScheme === 'dark';
     const shouldUseBlur = useBlur && Platform.OS !== 'web';
+    const isCollapsed = reservedBottomInset <= Math.max(insets.bottom, 0) + 1;
 
     const fixedActiveColor = colors.tint;
     const fixedInactiveColor = isDark ? '#64748B' : '#9CA3AF';
@@ -340,68 +341,79 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
         [resetBar, router]
     );
 
+    const handleTabBarLayout = React.useCallback((event: LayoutChangeEvent) => {
+        const { width, height } = event.nativeEvent.layout;
+        setBarWidth(width);
+        setTabBarMetrics(height, insets.bottom);
+    }, [insets.bottom, setTabBarMetrics]);
+
     if (isHidden) {
         return null;
     }
 
     return (
         <Animated.View
+            pointerEvents={isCollapsed ? 'none' : 'auto'}
             style={[
                 styles.root,
                 containerStyle,
-                {
-                    paddingTop: 8,
-                    paddingBottom: insets.bottom + 8,
-                    ...getShadow({
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: -2 },
-                        shadowOpacity: 0.08,
-                        shadowRadius: 8,
-                        elevation: 8,
-                    }),
-                },
             ]}
         >
-            <View
-                onLayout={(event) => {
-                    setBarWidth(event.nativeEvent.layout.width);
-                }}
+            <Animated.View
                 style={[
-                    styles.tabBarShell,
+                    styles.shadowContainer,
                     {
-                        height: BAR_HEIGHT,
-                        borderColor: isDark ? '#1E293B' : '#E2E8F0',
-                        backgroundColor: isDark ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.9)',
-                    },
+                        backgroundColor: 'transparent',
+                        ...getShadow({
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: -2 },
+                            shadowOpacity: isDark ? 0.3 : 0.1,
+                            shadowRadius: 8,
+                            elevation: 8,
+                        }),
+                    }
                 ]}
             >
-                {shouldUseBlur && (
-                    <BlurView
-                        pointerEvents="none"
-                        intensity={35}
-                        tint={isDark ? 'dark' : 'light'}
-                        style={StyleSheet.absoluteFillObject}
-                    />
-                )}
-
-                <Animated.View
-                    pointerEvents="none"
+                <View
+                    onLayout={handleTabBarLayout}
                     style={[
-                        styles.pill,
-                        pillStyle,
+                        styles.tabBarShell,
                         {
-                            width: pillWidth,
-                            top: PILL_VERTICAL_INSET,
-                            bottom: PILL_VERTICAL_INSET,
-                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.08)',
+                            height: BAR_HEIGHT + insets.bottom,
+                            paddingBottom: insets.bottom,
+                            borderColor: isDark ? '#334155' : '#E2E8F0', // Slate-700 : Slate-200
+                            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                         },
                     ]}
-                />
+                >
+                    {shouldUseBlur && (
+                        <BlurView
+                            pointerEvents="none"
+                            intensity={35}
+                            tint={isDark ? 'dark' : 'light'}
+                            style={StyleSheet.absoluteFillObject}
+                        />
+                    )}
 
-                {tabItems.map((item) => (
-                    <AnimatedTabButton key={item.key} item={item} onPress={handleTabPress} />
-                ))}
-            </View>
+                    <Animated.View
+                        pointerEvents="none"
+                        style={[
+                            styles.pill,
+                            pillStyle,
+                            {
+                                width: pillWidth,
+                                top: PILL_VERTICAL_INSET,
+                                height: BAR_HEIGHT - (PILL_VERTICAL_INSET * 2),
+                                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(15, 23, 42, 0.08)',
+                            },
+                        ]}
+                    />
+
+                    {tabItems.map((item) => (
+                        <AnimatedTabButton key={item.key} item={item} onPress={handleTabPress} />
+                    ))}
+                </View>
+            </Animated.View>
         </Animated.View>
     );
 }
@@ -411,21 +423,25 @@ export default AnimatedGlobalTabBar;
 const styles = StyleSheet.create({
     root: {
         width: '100%',
-        paddingHorizontal: 12,
+        // paddingHorizontal: 12, // Docked: no horizontal padding
     },
     tabBarShell: {
         width: '100%',
-        borderWidth: 1,
-        borderRadius: 18,
+        borderTopWidth: 1, // Docked: Top border only
+        // borderRadius: 18, // Docked: No radius (or top only if desired, but sticking to flat for now)
         overflow: 'hidden',
         flexDirection: 'row',
         alignItems: 'stretch',
         position: 'relative',
     },
+    shadowContainer: {
+        width: '100%',
+        backgroundColor: 'transparent',
+    },
     pill: {
         position: 'absolute',
-        left: 0,
-        borderRadius: 14,
+        top: 0, // Re-align pill if needed? logic uses INSET constants.
+        borderRadius: 14, // Keep pill rounded
     },
     tabButton: {
         flex: 1,

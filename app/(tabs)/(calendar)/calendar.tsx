@@ -147,7 +147,16 @@ export default function CalendarScreen() {
                         />
                     }
                 >
-                    {({ onScroll, onScrollBeginDrag, onScrollEndDrag, contentContainerStyle }) => (
+                    {({
+                        onScroll,
+                        onScrollBeginDrag,
+                        onScrollEndDrag,
+                        onLayout,
+                        onContentSizeChange,
+                        scrollEnabled,
+                        scrollEventThrottle,
+                        contentContainerStyle
+                    }) => (
                         loading && groupedEvents.length === 0 ? (
                             <View className="flex-1 items-center justify-center">
                                 <ActivityIndicator size="large" />
@@ -179,6 +188,10 @@ export default function CalendarScreen() {
                                 onScroll={onScroll}
                                 onScrollBeginDrag={onScrollBeginDrag}
                                 onScrollEndDrag={onScrollEndDrag}
+                                onLayout={onLayout}
+                                onContentSizeChange={onContentSizeChange}
+                                scrollEnabled={scrollEnabled}
+                                scrollEventThrottle={scrollEventThrottle}
                             />
                         )
                     )}

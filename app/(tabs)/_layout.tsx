@@ -11,7 +11,12 @@ export default function TabLayout() {
           headerShown: false,
           tabBarStyle: {
             position: 'absolute',
+            backgroundColor: 'transparent',
+            borderTopWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
           },
+          tabBarBackground: () => null,
         }}
         tabBar={(props) => {
           const routeName = props.state.routes[props.state.index].name;

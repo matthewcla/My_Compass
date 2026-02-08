@@ -205,7 +205,16 @@ export default function HubDashboard() {
                 }
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             >
-                {({ onScroll, onScrollBeginDrag, onScrollEndDrag, contentContainerStyle }) => (
+                {({
+                    onScroll,
+                    onScrollBeginDrag,
+                    onScrollEndDrag,
+                    onLayout,
+                    onContentSizeChange,
+                    scrollEnabled,
+                    scrollEventThrottle,
+                    contentContainerStyle
+                }) => (
                     <AnimatedFlashList
                         ref={listRef}
                         data={sections}
@@ -215,9 +224,13 @@ export default function HubDashboard() {
 
                         estimatedItemSize={150}
                         style={{ flex: 1 }}
+                        scrollEventThrottle={scrollEventThrottle}
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
                         onScrollEndDrag={onScrollEndDrag}
+                        onLayout={onLayout}
+                        onContentSizeChange={onContentSizeChange}
+                        scrollEnabled={scrollEnabled}
                         contentContainerStyle={contentContainerStyle}
                     />
                 )}

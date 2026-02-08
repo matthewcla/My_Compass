@@ -1,12 +1,11 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { MessageCard } from '@/components/inbox/MessageCard';
-import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useInboxStore } from '@/store/useInboxStore';
 import type { InboxMessage } from '@/types/inbox';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -19,6 +18,7 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 
 type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
 const MAX_FILTER_MESSAGES = 500;
+const MIN_FILTER_PINNED_HEIGHT = 52;
 
 const formatDTG = (dateString: string) => {
     try {
@@ -43,6 +43,7 @@ export default function InboxScreen() {
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterHeight, setFilterHeight] = useState(0);
+    const lastNonZeroFilterHeight = useRef(0);
 
     const searchConfig = {
         visible: true,
@@ -133,7 +134,17 @@ export default function InboxScreen() {
     const renderHeader = () => (
         <View
             className="px-4 pb-3 bg-white dark:bg-black border-slate-200 dark:border-slate-800"
-            onLayout={(e) => setFilterHeight(e.nativeEvent.layout.height)}
+            onLayout={(e) => {
+                const measuredHeight = Math.round(e.nativeEvent.layout.height);
+                if (measuredHeight <= 0) {
+                    return;
+                }
+
+                lastNonZeroFilterHeight.current = measuredHeight;
+                setFilterHeight((previousHeight) =>
+                    previousHeight === measuredHeight ? previousHeight : measuredHeight
+                );
+            }}
         >
             <View className="flex-row justify-between bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mt-2">
                 {(['All', 'Official', 'My Status', 'Pinned'] as FilterType[]).map((filter) => (
@@ -180,8 +191,8 @@ export default function InboxScreen() {
                     {renderHeader()}
                 </View>
             }
-            snapBehavior="velocity"
-            minTopBarHeight={filterHeight}
+            snapBehavior="none"
+            minTopBarHeight={Math.max(filterHeight || lastNonZeroFilterHeight.current, MIN_FILTER_PINNED_HEIGHT)}
         >
             {({
                 onScroll,
@@ -200,6 +211,9 @@ export default function InboxScreen() {
                     scrollEventThrottle={scrollEventThrottle}
                     contentInsetAdjustmentBehavior="never"
                     automaticallyAdjustContentInsets={false}
+                    bounces={true}
+                    alwaysBounceVertical={true}
+                    overScrollMode="always"
                     renderItem={({ item }) => (
                         <MessageCard
                             message={item}

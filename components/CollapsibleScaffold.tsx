@@ -1,7 +1,11 @@
-import { TAB_BAR_HEIGHT, useScrollControl } from '@/components/navigation/ScrollControlContext';
-import type { SnapBehavior } from '@/hooks/useDiffClampScroll';
-import { useDiffClampScroll } from '@/hooks/useDiffClampScroll';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    COLLAPSE_ACTIVATION_OFFSET,
+    computeCollapseDistanceFromScrollY,
+    computeMinContentHeightForCollapse,
+    computeRequiredCollapseTravel,
+} from '@/components/navigation/collapseMath';
+import { useScrollContext, useScrollControl } from '@/components/navigation/ScrollControlContext';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     LayoutChangeEvent,
     NativeScrollEvent,
@@ -14,14 +18,15 @@ import {
     ViewStyle
 } from 'react-native';
 import Animated, {
-    Extrapolation,
-    interpolate,
+    useAnimatedScrollHandler,
     useAnimatedStyle,
-    useDerivedValue
+    useComposedEventHandler,
+    useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ScrollEventHandler = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+type SnapBehavior = 'threshold' | 'velocity' | 'none';
 
 export interface CollapsibleScaffoldListProps {
     onScroll: ScrollEventHandler | undefined;
@@ -84,7 +89,7 @@ export function CollapsibleScaffold({
     contentContainerStyle,
     statusBarShimBackgroundColor = '#ffffff',
     initialTopBarHeight = 0,
-    snapBehavior = 'threshold',
+    snapBehavior: _snapBehavior = 'threshold',
     minTopBarHeight = 0,
     testID,
 }: CollapsibleScaffoldProps & { minTopBarHeight?: number }) {
@@ -104,89 +109,107 @@ export function CollapsibleScaffold({
 
     const [animatedHeaderHeight, setAnimatedHeaderHeight] = useState(initialAnimatedHeaderHeight);
     const [viewportHeight, setViewportHeight] = useState<number | null>(null);
-    const [contentHeight, setContentHeight] = useState<number | null>(null);
+    const { reservedBottomInset, tabBarCollapsedInsetPx, tabBarMaxHeightPx } = useScrollContext();
 
     // Mobile Web Strategy: Disable DiffClamp animation and use position: sticky
     const isMobileWebEnv = useMemo(() => Platform.OS === 'web', []);
     const diffClampEnabled = !isMobileWebEnv;
 
     // The scrollable distance is the total header height minus the part that should remain visible (sticky)
-    // We max at 1 to avoid division by zero or invalid ranges if height is 0
-    const scrollableHeaderHeight = Math.max(animatedHeaderHeight - minTopBarHeight, 0);
-    const clampRange = Math.max(scrollableHeaderHeight, 1); // Clamp range no longer depends on bottomBarHeight
+    // We clamp minTopBarHeight against measured height to avoid impossible ranges.
+    const clampedMinTopBarHeight = Math.min(Math.max(minTopBarHeight, 0), animatedHeaderHeight);
+    const scrollableHeaderHeight = Math.max(animatedHeaderHeight - clampedMinTopBarHeight, 0);
+    const headerCollapseDistance = useSharedValue(0);
 
-    const { clampedScrollValue, onScroll: diffClampOnScroll, updateFromScrollY } = useDiffClampScroll({
-        headerHeight: clampRange,
-        enabled: diffClampEnabled,
-        snapBehavior
-    });
-
-    const { onScroll: scrollControlHandler } = useScrollControl({
+    const { onScroll: scrollControlHandler } = useScrollControl();
+    const headerScrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
-            const e = event as any;
-            if (e.nativeEvent?.contentOffset?.y !== undefined) {
-                updateFromScrollY(e.nativeEvent.contentOffset.y);
+            if (!diffClampEnabled) {
+                return;
             }
-        }
-    });
 
-    useEffect(() => {
-        if (clampedScrollValue.value > clampRange) {
-            clampedScrollValue.value = clampRange;
-        }
-    }, [clampRange, clampedScrollValue]);
+            const currentY = event.contentOffset.y;
+            if (!Number.isFinite(currentY) || currentY <= 0) {
+                headerCollapseDistance.value = 0;
+                return;
+            }
 
-    const topTranslateY = useDerivedValue(() => {
-        if (!diffClampEnabled) return 0;
-        return interpolate(
-            clampedScrollValue.value,
-            [0, clampRange],
-            [0, -scrollableHeaderHeight],
-            Extrapolation.CLAMP
-        );
-    });
+            headerCollapseDistance.value = computeCollapseDistanceFromScrollY({
+                currentScrollY: currentY,
+                maxDistance: scrollableHeaderHeight,
+                activationOffset: COLLAPSE_ACTIVATION_OFFSET,
+            });
+        },
+    }, [diffClampEnabled, headerCollapseDistance, scrollableHeaderHeight]);
+
+    const composedOnScrollHandler = useComposedEventHandler(
+        [headerScrollHandler as any, scrollControlHandler as any]
+    ) as unknown as ScrollEventHandler;
 
     const topBarAnimatedStyle = useAnimatedStyle(() => {
+        if (!diffClampEnabled) {
+            return {
+                transform: [{ translateY: 0 }],
+            };
+        }
+
+        const clampedDistance = Math.min(
+            Math.max(headerCollapseDistance.value, 0),
+            scrollableHeaderHeight
+        );
         return {
-            transform: [{ translateY: topTranslateY.value }],
+            transform: [{ translateY: -clampedDistance }],
         };
-    });
+    }, [diffClampEnabled, headerCollapseDistance, scrollableHeaderHeight]);
 
     const handleAnimatedHeaderLayout = useCallback((event: LayoutChangeEvent) => {
         const nextHeight = Math.round(event.nativeEvent.layout.height);
-        if (nextHeight <= 0 || nextHeight === animatedHeaderHeight) {
+        if (nextHeight <= 0) {
             return;
         }
 
-        setAnimatedHeaderHeight(nextHeight);
-    }, [animatedHeaderHeight]);
+        setAnimatedHeaderHeight((previousHeight) => {
+            if (nextHeight === previousHeight) {
+                return previousHeight;
+            }
+
+            // Prevent transient layout shrink reports during drag from collapsing
+            // the range abruptly. We accept growth and first measurement.
+            if (previousHeight <= 0) {
+                return nextHeight;
+            }
+
+            return Math.max(previousHeight, nextHeight);
+        });
+    }, []);
 
     const handleViewportLayout = useCallback((event: LayoutChangeEvent) => {
         const nextHeight = Math.round(event.nativeEvent.layout.height);
         setViewportHeight((prevHeight) => (prevHeight === nextHeight ? prevHeight : nextHeight));
     }, []);
 
-    const handleContentSizeChange = useCallback((_width: number, height: number) => {
-        const nextHeight = Math.round(height);
-        setContentHeight((prevHeight) => (prevHeight === nextHeight ? prevHeight : nextHeight));
+    const handleContentSizeChange = useCallback((_width: number, _height: number) => {
+        // The scaffold keeps handlers wired even for short lists; this callback remains
+        // available to list surfaces but does not gate listener attachment.
     }, []);
 
-    const shouldDisableScrollListener = useMemo(() => {
-        if (viewportHeight === null || contentHeight === null) {
-            return false;
-        }
+    const requiredCollapseTravel = useMemo(() => {
+        return computeRequiredCollapseTravel({
+            scrollableHeaderHeight,
+            tabBarMaxHeight: tabBarMaxHeightPx,
+            tabBarCollapsedInset: tabBarCollapsedInsetPx,
+        });
+    }, [scrollableHeaderHeight, tabBarCollapsedInsetPx, tabBarMaxHeightPx]);
 
-        return contentHeight < viewportHeight;
-    }, [contentHeight, viewportHeight]);
-
-    useEffect(() => {
-        if (shouldDisableScrollListener && clampedScrollValue.value !== 0) {
-            clampedScrollValue.value = 0;
-        }
-    }, [clampedScrollValue, shouldDisableScrollListener]);
+    const minContentHeight = useMemo(() => {
+        return computeMinContentHeightForCollapse({
+            viewportHeight,
+            requiredCollapseTravel,
+        });
+    }, [requiredCollapseTravel, viewportHeight]);
 
     const paddedContentContainerStyle = useMemo(() => {
-        const paddingBottom = TAB_BAR_HEIGHT + insets.bottom;
+        const paddingBottom = Math.max(reservedBottomInset, insets.bottom);
 
         if (isMobileWebEnv) {
             return [
@@ -202,19 +225,20 @@ export function CollapsibleScaffold({
             {
                 paddingTop: totalTopBarHeight,
                 paddingBottom,
+                minHeight: minContentHeight ?? undefined,
             },
             contentContainerStyle,
         ];
-    }, [animatedHeaderHeight, contentContainerStyle, isMobileWebEnv, statusBarShimHeight, insets.bottom]);
+    }, [animatedHeaderHeight, contentContainerStyle, isMobileWebEnv, minContentHeight, statusBarShimHeight, insets.bottom, reservedBottomInset]);
 
     const listProps = useMemo<CollapsibleScaffoldListProps>(() => {
         return {
-            onScroll: (shouldDisableScrollListener || isMobileWebEnv) ? undefined : scrollControlHandler,
-            onScrollBeginDrag: (shouldDisableScrollListener || isMobileWebEnv) ? undefined : diffClampOnScroll,
-            onScrollEndDrag: (shouldDisableScrollListener || isMobileWebEnv) ? undefined : diffClampOnScroll,
+            onScroll: isMobileWebEnv ? undefined : composedOnScrollHandler,
+            onScrollBeginDrag: undefined,
+            onScrollEndDrag: undefined,
             onLayout: handleViewportLayout,
             onContentSizeChange: handleContentSizeChange,
-            scrollEnabled: !shouldDisableScrollListener,
+            scrollEnabled: true,
             scrollEventThrottle: 16,
             clipToPadding: false,
             contentContainerStyle: paddedContentContainerStyle,
@@ -223,10 +247,8 @@ export function CollapsibleScaffold({
         handleContentSizeChange,
         handleViewportLayout,
         isMobileWebEnv,
-        scrollControlHandler,
-        diffClampOnScroll,
+        composedOnScrollHandler,
         paddedContentContainerStyle,
-        shouldDisableScrollListener
     ]);
 
     return (

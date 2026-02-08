@@ -1,5 +1,14 @@
-import React, { createContext, ReactNode, useContext } from 'react';
-import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import {
+    clamp,
+    COLLAPSE_ACTIVATION_OFFSET,
+    COLLAPSE_SCROLL_MULTIPLIER,
+    COLLAPSED_EPSILON,
+    computeCollapseDistanceFromScrollY,
+    computeProgressiveReservedBottomInset,
+    INSET_UPDATE_THRESHOLD,
+    isCollapsedAtThreshold,
+} from '@/components/navigation/collapseMath';
+import React, { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import {
     Easing,
     runOnJS,
@@ -9,134 +18,232 @@ import {
     withTiming,
 } from 'react-native-reanimated';
 
-// --- Constants ---
-// Define the height of the tab bar that we want to potentially hide.
-// This should match the visual height of your TabBar component including safe area/bottom inset.
-// You might want to make this dynamic or pass it in via props if it varies.
-export const TAB_BAR_HEIGHT = 100; // Adjust: e.g. 60 + bottom inset
-
-// --- Types ---
+const DEFAULT_TAB_BAR_HEIGHT = 72;
 
 interface ScrollControlContextType {
-    /**
-     * The shared value driven by scroll events.
-     * Ranges from 0 (fully visible) to TAB_BAR_HEIGHT (fully hidden, translated down).
-     */
     translateY: SharedValue<number>;
-
-    /**
-     * Function to force the tab bar to become visible.
-     * Useful when navigating between tabs to ensure the user lands on a screen with the bar shown.
-     */
+    tabBarMaxHeight: SharedValue<number>;
+    tabBarCollapsedInset: SharedValue<number>;
+    tabBarMaxHeightPx: number;
+    tabBarCollapsedInsetPx: number;
+    isTabBarCollapsed: SharedValue<boolean>;
+    reservedBottomInset: number;
+    setTabBarMetrics: (maxHeight: number, collapsedInset: number) => void;
+    setReservedBottomInset: (value: number) => void;
     resetBar: () => void;
 }
 
-// --- Context ---
-
 const ScrollControlContext = createContext<ScrollControlContextType | undefined>(undefined);
-
-// --- Provider ---
 
 interface ScrollControlProviderProps {
     children: ReactNode;
 }
 
+const normalizeHeight = (value: number): number => {
+    if (!Number.isFinite(value) || value < 0) {
+        return 0;
+    }
+
+    return Math.round(value);
+};
+
 export function ScrollControlProvider({ children }: ScrollControlProviderProps) {
     const translateY = useSharedValue(0);
+    const tabBarMaxHeight = useSharedValue(DEFAULT_TAB_BAR_HEIGHT);
+    const tabBarCollapsedInset = useSharedValue(0);
+    const isTabBarCollapsed = useSharedValue(false);
 
-    const resetBar = () => {
-        'worklet';
+    const [tabBarMaxHeightPx, setTabBarMaxHeightPx] = useState(DEFAULT_TAB_BAR_HEIGHT);
+    const [tabBarCollapsedInsetPx, setTabBarCollapsedInsetPx] = useState(0);
+    const [reservedBottomInset, setReservedBottomInsetState] = useState(DEFAULT_TAB_BAR_HEIGHT);
+
+    const setReservedBottomInset = useCallback((value: number) => {
+        const nextValue = normalizeHeight(value);
+        setReservedBottomInsetState((previousValue) => {
+            if (Math.abs(previousValue - nextValue) < 1) {
+                return previousValue;
+            }
+
+            return nextValue;
+        });
+    }, []);
+
+    const setTabBarMetrics = useCallback((maxHeight: number, collapsedInset: number) => {
+        const normalizedMaxHeight = normalizeHeight(maxHeight);
+        const normalizedCollapsedInset = clamp(normalizeHeight(collapsedInset), 0, normalizedMaxHeight);
+
+        setTabBarMaxHeightPx((previousValue) =>
+            previousValue === normalizedMaxHeight ? previousValue : normalizedMaxHeight
+        );
+        setTabBarCollapsedInsetPx((previousValue) =>
+            previousValue === normalizedCollapsedInset ? previousValue : normalizedCollapsedInset
+        );
+
+        tabBarMaxHeight.value = normalizedMaxHeight;
+        tabBarCollapsedInset.value = normalizedCollapsedInset;
+        translateY.value = clamp(translateY.value, 0, normalizedMaxHeight);
+
+        const collapsed = isCollapsedAtThreshold(translateY.value, normalizedMaxHeight);
+        isTabBarCollapsed.value = collapsed;
+        setReservedBottomInset(
+            computeProgressiveReservedBottomInset({
+                translateY: translateY.value,
+                maxHeight: normalizedMaxHeight,
+                collapsedInset: normalizedCollapsedInset,
+            })
+        );
+    }, [isTabBarCollapsed, setReservedBottomInset, tabBarCollapsedInset, tabBarMaxHeight, translateY]);
+
+    const resetBar = useCallback(() => {
         translateY.value = withTiming(0, {
             duration: 300,
             easing: Easing.out(Easing.quad),
         });
-    };
 
-    // JS-friendly wrapper for resetBar
-    const resetBarJS = () => {
-        translateY.value = withTiming(0, {
-            duration: 300,
-            easing: Easing.out(Easing.quad),
-        });
-    };
+        isTabBarCollapsed.value = false;
+        setReservedBottomInset(tabBarMaxHeight.value);
+    }, [isTabBarCollapsed, setReservedBottomInset, tabBarMaxHeight, translateY]);
+
+    const contextValue = useMemo<ScrollControlContextType>(() => {
+        return {
+            translateY,
+            tabBarMaxHeight,
+            tabBarCollapsedInset,
+            tabBarMaxHeightPx,
+            tabBarCollapsedInsetPx,
+            isTabBarCollapsed,
+            reservedBottomInset,
+            setTabBarMetrics,
+            setReservedBottomInset,
+            resetBar,
+        };
+    }, [
+        isTabBarCollapsed,
+        reservedBottomInset,
+        resetBar,
+        setReservedBottomInset,
+        setTabBarMetrics,
+        tabBarCollapsedInset,
+        tabBarCollapsedInsetPx,
+        tabBarMaxHeight,
+        tabBarMaxHeightPx,
+        translateY,
+    ]);
 
     return (
-        <ScrollControlContext.Provider value={{ translateY, resetBar: resetBarJS }}>
+        <ScrollControlContext.Provider value={contextValue}>
             {children}
         </ScrollControlContext.Provider>
     );
 }
 
-// --- Hook: useScrollControl ---
-
-/**
- * Hook to be used in ScrollViews / FlatLists to drive the collapsible tab bar.
- */
-export function useScrollControl(args?: {
-    onScroll?: (event: unknown) => void;
-}) {
+export function useScrollControl() {
     const context = useContext(ScrollControlContext);
 
     if (!context) {
         throw new Error('useScrollControl must be used within a ScrollControlProvider');
     }
 
-    const { translateY } = context;
+    const {
+        translateY,
+        tabBarCollapsedInset,
+        tabBarMaxHeight,
+        isTabBarCollapsed,
+        setReservedBottomInset,
+    } = context;
+    const lastNotifiedReservedInset = useSharedValue(DEFAULT_TAB_BAR_HEIGHT);
+    const scrollOriginY = useSharedValue(0);
+    const hasCapturedScrollOrigin = useSharedValue(false);
 
-    // track the *previous* scroll offset
-    const lastScrollY = useSharedValue(0);
-
-    const scrollHandler = useAnimatedScrollHandler({
+    const onScroll = useAnimatedScrollHandler({
+        onBeginDrag: (event) => {
+            const currentY = event.contentOffset.y;
+            if (!Number.isFinite(currentY) || currentY <= 0) {
+                return;
+            }
+            // Reverse-compute origin that would produce the current translateY,
+            // so the tab bar continues smoothly from its current visual state.
+            const currentCollapse = translateY.value;
+            const maxHeight = tabBarMaxHeight.value;
+            if (currentCollapse > 0 && maxHeight > 0) {
+                const effectiveScroll = currentCollapse / COLLAPSE_SCROLL_MULTIPLIER + COLLAPSE_ACTIVATION_OFFSET;
+                scrollOriginY.value = currentY - effectiveScroll;
+            } else {
+                scrollOriginY.value = currentY;
+            }
+            hasCapturedScrollOrigin.value = true;
+        },
         onScroll: (event) => {
-            // 1. Calculate the diff
             const currentScrollY = event.contentOffset.y;
-            const diff = currentScrollY - lastScrollY.value;
 
-            // 2. Diff-Clamp Logic (for Bottom Bar)
-            // Scroll Down (diff > 0) -> Hide (increase translateY)
-            // Scroll Up (diff < 0) -> Show (decrease translateY)
-            let nextValue = translateY.value + diff;
-
-            // Clamp between 0 (Visible) and TAB_BAR_HEIGHT (Hidden)
-            if (nextValue < 0) {
-                nextValue = 0;
-            } else if (nextValue > TAB_BAR_HEIGHT) {
-                nextValue = TAB_BAR_HEIGHT;
+            const maxHeight = tabBarMaxHeight.value;
+            const collapsedInset = clamp(tabBarCollapsedInset.value, 0, maxHeight);
+            if (!Number.isFinite(maxHeight) || maxHeight <= 0) {
+                translateY.value = 0;
+                isTabBarCollapsed.value = false;
+                const roundedCollapsedInset = Math.round(Math.max(collapsedInset, 0));
+                if (Math.abs(lastNotifiedReservedInset.value - roundedCollapsedInset) >= INSET_UPDATE_THRESHOLD) {
+                    lastNotifiedReservedInset.value = roundedCollapsedInset;
+                    runOnJS(setReservedBottomInset)(roundedCollapsedInset);
+                }
+                return;
             }
 
-            // 3. Overscroll at Top Logic
-            // If we are at the very top (scrollY < 0 on iOS), force visible.
-            if (currentScrollY < 0) {
-                nextValue = 0;
+            if (currentScrollY <= COLLAPSE_ACTIVATION_OFFSET) {
+                hasCapturedScrollOrigin.value = false;
+                scrollOriginY.value = 0;
+                translateY.value = 0;
+                if (isTabBarCollapsed.value) {
+                    isTabBarCollapsed.value = false;
+                }
             }
 
-            // Update shared value
-            translateY.value = nextValue;
+            if (!hasCapturedScrollOrigin.value) {
+                scrollOriginY.value = currentScrollY;
+                hasCapturedScrollOrigin.value = true;
+            }
 
-            // Update legacy tracker
-            lastScrollY.value = currentScrollY;
+            const relativeScrollY = Math.max(0, currentScrollY - scrollOriginY.value);
+            const collapseTarget = computeCollapseDistanceFromScrollY({
+                currentScrollY: relativeScrollY,
+                maxDistance: maxHeight,
+                activationOffset: COLLAPSE_ACTIVATION_OFFSET,
+            });
 
-            // 4. Call external onScroll
-            if (args?.onScroll) {
-                runOnJS(args.onScroll)(event);
+            translateY.value = collapseTarget;
+
+            const collapsed = collapseTarget >= maxHeight - COLLAPSED_EPSILON;
+            if (collapsed !== isTabBarCollapsed.value) {
+                isTabBarCollapsed.value = collapsed;
+            }
+
+            const nextReservedInset = computeProgressiveReservedBottomInset({
+                translateY: collapseTarget,
+                maxHeight,
+                collapsedInset,
+            });
+            const roundedReservedInset = Math.round(nextReservedInset);
+            const roundedCollapsedInset = Math.round(collapsedInset);
+            const roundedMaxHeight = Math.round(maxHeight);
+            const reachedBoundary =
+                roundedReservedInset === roundedCollapsedInset ||
+                roundedReservedInset === roundedMaxHeight;
+            const shouldNotifyInset =
+                Math.abs(roundedReservedInset - lastNotifiedReservedInset.value) >= INSET_UPDATE_THRESHOLD ||
+                (reachedBoundary && roundedReservedInset !== lastNotifiedReservedInset.value);
+
+            if (shouldNotifyInset) {
+                lastNotifiedReservedInset.value = roundedReservedInset;
+                runOnJS(setReservedBottomInset)(roundedReservedInset);
             }
         },
-    });
+    }, [hasCapturedScrollOrigin, isTabBarCollapsed, lastNotifiedReservedInset, scrollOriginY, setReservedBottomInset, tabBarCollapsedInset, tabBarMaxHeight, translateY]);
 
     return {
-        /**
-         * Pass this to your ScrollView / FlatList `onScroll` prop.
-         * IMPORTANT: Ensure `scrollEventThrottle={16}` is set on the ScrollView.
-         */
-        onScroll: scrollHandler,
+        onScroll,
     };
 }
 
-// --- Hook: useScrollContext ---
-
-/**
- * Helper to access the raw context values (e.g. for the TabBar component itself).
- */
 export function useScrollContext() {
     const context = useContext(ScrollControlContext);
     if (!context) {

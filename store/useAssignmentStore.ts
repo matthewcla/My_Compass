@@ -103,6 +103,11 @@ interface AssignmentActions {
     withdrawApplication: (appId: string, userId: string) => Promise<void>;
 
     /**
+     * Move application up or down in the slate.
+     */
+    moveApplication: (fromIndex: number, direction: 'up' | 'down', userId: string) => Promise<void>;
+
+    /**
      * Reorder application preference ranks based on the provided ID order.
      */
     reorderApplications: (orderedAppIds: string[], userId: string) => Promise<void>;
@@ -916,21 +921,40 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         }
     },
 
+    moveApplication: async (fromIndex: number, direction: 'up' | 'down', userId: string) => {
+        const { userApplicationIds, reorderApplications } = get();
+        if (direction === 'up' && fromIndex === 0) return;
+        if (direction === 'down' && fromIndex === userApplicationIds.length - 1) return;
+
+        const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+        const newOrder = [...userApplicationIds];
+        // Swap
+        [newOrder[fromIndex], newOrder[toIndex]] = [newOrder[toIndex], newOrder[fromIndex]];
+
+        await reorderApplications(newOrder, userId);
+    },
+
     reorderApplications: async (orderedAppIds: string[], userId: string) => {
         const { applications } = get();
         const updatedApplications = { ...applications };
         const appsToSave: Application[] = [];
 
         orderedAppIds.forEach((id, index) => {
-            if (updatedApplications[id]) {
-                const updatedApp = {
-                    ...updatedApplications[id],
-                    preferenceRank: index + 1,
-                    updatedAt: new Date().toISOString(),
-                    localModifiedAt: new Date().toISOString()
-                };
-                updatedApplications[id] = updatedApp;
-                appsToSave.push(updatedApp);
+            const currentRank = index + 1;
+            const app = updatedApplications[id];
+
+            if (app) {
+                // Optimize: Only update if rank changed
+                if (app.preferenceRank !== currentRank) {
+                    const updatedApp = {
+                        ...app,
+                        preferenceRank: currentRank,
+                        updatedAt: new Date().toISOString(),
+                        localModifiedAt: new Date().toISOString()
+                    };
+                    updatedApplications[id] = updatedApp;
+                    appsToSave.push(updatedApp);
+                }
             }
         });
 
@@ -939,8 +963,10 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             userApplicationIds: orderedAppIds // Ensure sorting matches
         });
 
-        // Persist
-        await storage.saveApplications(appsToSave);
+        // Persist only changed apps
+        if (appsToSave.length > 0) {
+            await storage.saveApplications(appsToSave);
+        }
     },
 
     submitSlate: async () => {

@@ -209,10 +209,6 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
         lastSegment === 'MenuHubModal' ||
         (segments as string[]).includes('MenuHubModal');
 
-    if (isHidden) {
-        return null;
-    }
-
     const targetSpoke = SPOKE_CONFIG[currentSpoke]
         ? currentSpoke
         : activeSpoke && SPOKE_CONFIG[activeSpoke]
@@ -338,6 +334,10 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
         },
         [resetBar, router]
     );
+
+    if (isHidden) {
+        return null;
+    }
 
     return (
         <Animated.View

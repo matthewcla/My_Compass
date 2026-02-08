@@ -321,6 +321,11 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
         });
     }, [activeIndex, pillTranslateX, tabWidth]);
 
+    // Ensure bar is visible when switching tabs
+    React.useEffect(() => {
+        resetBar();
+    }, [activeIndex, resetBar]);
+
     const containerStyle = useAnimatedStyle(() => ({
         transform: [{ translateY: translateY.value }],
     }));

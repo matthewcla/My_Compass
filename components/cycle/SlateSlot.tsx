@@ -8,16 +8,20 @@ interface SlateSlotProps {
     rank: number;
     application?: Application | null;
     billet?: Billet | null;
-    onRemove?: () => void;
-    onLock?: () => void;
-    onMoveUp?: () => void;
-    onMoveDown?: () => void;
+    isFirst?: boolean;
+    isLast?: boolean;
+    onRemove?: (appId: string) => void;
+    onLock?: (appId: string) => void;
+    onMoveUp?: (rank: number) => void;
+    onMoveDown?: (rank: number) => void;
 }
 
-export const SlateSlot: React.FC<SlateSlotProps> = ({
+export const SlateSlot = React.memo<SlateSlotProps>(({
     rank,
     application,
     billet,
+    isFirst,
+    isLast,
     onRemove,
     onLock,
     onMoveUp,
@@ -58,17 +62,17 @@ export const SlateSlot: React.FC<SlateSlotProps> = ({
                     {/* Reorder Controls */}
                     {!isLocked && (
                         <View className="flex-col mr-2">
-                            {onMoveUp && (
+                            {onMoveUp && !isFirst && (
                                 <TouchableOpacity
-                                    onPress={onMoveUp}
+                                    onPress={() => onMoveUp(rank)}
                                     className="p-1 active:bg-slate-100 dark:active:bg-slate-700 rounded"
                                 >
                                     <ChevronUp size={16} color={Colors.light.systemGray} />
                                 </TouchableOpacity>
                             )}
-                            {onMoveDown && (
+                            {onMoveDown && !isLast && (
                                 <TouchableOpacity
-                                    onPress={onMoveDown}
+                                    onPress={() => onMoveDown(rank)}
                                     className="p-1 active:bg-slate-100 dark:active:bg-slate-700 rounded"
                                 >
                                     <ChevronDown size={16} color={Colors.light.systemGray} />
@@ -77,9 +81,9 @@ export const SlateSlot: React.FC<SlateSlotProps> = ({
                         </View>
                     )}
 
-                    {onLock && (
+                    {onLock && application && (
                         <TouchableOpacity
-                            onPress={onLock}
+                            onPress={() => onLock(application.id)}
                             disabled={isLocked}
                             className={`p-2 rounded-full ${isLocked ? 'opacity-50' : 'active:bg-slate-100 dark:active:bg-slate-700'}`}
                         >
@@ -91,9 +95,9 @@ export const SlateSlot: React.FC<SlateSlotProps> = ({
                         </TouchableOpacity>
                     )}
 
-                    {onRemove && !isLocked && (
+                    {onRemove && !isLocked && application && (
                         <TouchableOpacity
-                            onPress={onRemove}
+                            onPress={() => onRemove(application.id)}
                             className="p-2 rounded-full active:bg-red-50 dark:active:bg-red-900/20"
                         >
                             <X size={18} color={Colors.light.status.error} />
@@ -103,4 +107,4 @@ export const SlateSlot: React.FC<SlateSlotProps> = ({
             )}
         </View>
     );
-};
+});

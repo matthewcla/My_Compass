@@ -147,15 +147,16 @@ export default function RootLayout() {
             style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
           >
             <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(hub)" />
+              <Stack.Screen name="(hub)" options={{ animation: 'fade' }} />
               <Stack.Screen name="(assignment)" />
               <Stack.Screen name="(pcs)" />
               <Stack.Screen name="(admin)" />
               <Stack.Screen name="(profile)" />
               <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
               <Stack.Screen name="leave" />
+              <Stack.Screen name="inbox" options={{ animation: 'fade' }} />
               <Stack.Screen name="(career)" />
-              <Stack.Screen name="(calendar)" />
+              <Stack.Screen name="(calendar)" options={{ animation: 'fade' }} />
               <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
             </Stack>
             <SpotlightOverlay />

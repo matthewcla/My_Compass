@@ -1,6 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack, useSegments } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -116,9 +116,8 @@ export default function RootLayout() {
   }, []);
 
   const colorScheme = useColorScheme();
-  const segments = useSegments();
-  const currentSpoke = segments[0] as string;
-  const shouldHideTabBar = currentSpoke === 'inbox' || currentSpoke === '(calendar)' || currentSpoke === '(hub)';
+  const pathname = usePathname();
+  const hideRootTabBar = pathname === '/inbox';
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -144,7 +143,7 @@ export default function RootLayout() {
               <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
             </Stack>
             <SpotlightOverlay />
-            {!shouldHideTabBar && <GlobalTabBar />}
+            {!hideRootTabBar && <GlobalTabBar />}
           </View>
         </SessionProvider>
       </SafeAreaProvider>

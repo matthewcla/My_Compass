@@ -1,3 +1,4 @@
+import type { SnapBehavior } from '@/hooks/useDiffClampScroll';
 import { useDiffClampScroll } from '@/hooks/useDiffClampScroll';
 import { isMobileWeb } from '@/utils/platform';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -5,6 +6,8 @@ import {
     LayoutChangeEvent,
     NativeScrollEvent,
     NativeSyntheticEvent,
+    Platform,
+    StatusBar as RNStatusBar,
     StyleProp,
     StyleSheet,
     View,
@@ -39,6 +42,7 @@ interface CollapsibleScaffoldProps {
     statusBarShimBackgroundColor?: string;
     initialTopBarHeight?: number;
     initialBottomBarHeight?: number;
+    snapBehavior?: SnapBehavior;
     testID?: string;
 }
 
@@ -78,10 +82,21 @@ export function CollapsibleScaffold({
     statusBarShimBackgroundColor = '#ffffff',
     initialTopBarHeight = 0,
     initialBottomBarHeight = 0,
+    snapBehavior = 'threshold',
     testID,
 }: CollapsibleScaffoldProps) {
     const insets = useSafeAreaInsets();
-    const statusBarShimHeight = Math.max(insets.top, 0);
+    const statusBarShimHeight = useMemo(() => {
+        if (insets.top > 0) {
+            return insets.top;
+        }
+
+        if (Platform.OS === 'android') {
+            return RNStatusBar.currentHeight ?? 0;
+        }
+
+        return 0;
+    }, [insets.top]);
     const initialAnimatedHeaderHeight = Math.max(initialTopBarHeight - statusBarShimHeight, 0);
 
     const [animatedHeaderHeight, setAnimatedHeaderHeight] = useState(initialAnimatedHeaderHeight);
@@ -96,7 +111,8 @@ export function CollapsibleScaffold({
     const clampRange = Math.max(animatedHeaderHeight, bottomBarHeight, 1);
     const { clampedScrollValue, onScroll } = useDiffClampScroll({
         headerHeight: clampRange,
-        enabled: diffClampEnabled
+        enabled: diffClampEnabled,
+        snapBehavior
     });
     const noopScrollHandler = useCallback<ScrollEventHandler>(() => { }, []);
 
@@ -140,9 +156,11 @@ export function CollapsibleScaffold({
 
     const handleAnimatedHeaderLayout = useCallback((event: LayoutChangeEvent) => {
         const nextHeight = Math.round(event.nativeEvent.layout.height);
-        if (nextHeight !== animatedHeaderHeight) {
-            setAnimatedHeaderHeight(nextHeight);
+        if (nextHeight <= 0 || nextHeight === animatedHeaderHeight) {
+            return;
         }
+
+        setAnimatedHeaderHeight(nextHeight);
     }, [animatedHeaderHeight]);
 
     const handleBottomBarLayout = useCallback((event: LayoutChangeEvent) => {
@@ -229,6 +247,17 @@ export function CollapsibleScaffold({
                         {topBar}
                     </View>
                 </Animated.View>
+
+                <View
+                    pointerEvents="none"
+                    style={[
+                        styles.topSafeAreaMask,
+                        {
+                            height: statusBarShimHeight,
+                            backgroundColor: statusBarShimBackgroundColor,
+                        }
+                    ]}
+                />
             </View>
 
             <Animated.View style={[styles.bottomBarContainer, bottomBarAnimatedStyle]}>
@@ -249,6 +278,7 @@ const styles = StyleSheet.create({
         top: 0,
         left: 0,
         right: 0,
+        overflow: 'hidden',
         zIndex: 10,
         elevation: 10,
     },
@@ -257,6 +287,14 @@ const styles = StyleSheet.create({
     },
     animatedHeader: {
         width: '100%',
+    },
+    topSafeAreaMask: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 2,
+        elevation: 2,
     },
     bottomBarContainer: {
         position: 'absolute',

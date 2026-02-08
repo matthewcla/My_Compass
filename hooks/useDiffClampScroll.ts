@@ -15,7 +15,10 @@ import {
 interface UseDiffClampScrollProps {
     headerHeight: number;
     initialScrollY?: number;
+    snapBehavior?: SnapBehavior;
 }
+
+export type SnapBehavior = 'threshold' | 'velocity' | 'none';
 
 type DiffClampInput = { scrollY: number } | { deltaY: number };
 
@@ -51,6 +54,7 @@ export function useDiffClampScroll({
     headerHeight,
     initialScrollY = 0,
     enabled = true,
+    snapBehavior = 'threshold',
 }: UseDiffClampScrollProps & { enabled?: boolean }): UseDiffClampScrollResult {
     const scrollY = useSharedValue(initialScrollY);
     const previousY = useSharedValue(initialScrollY);
@@ -187,23 +191,27 @@ export function useDiffClampScroll({
             previousY.value = ctx.prevY;
         },
         onEndDrag: (event) => {
-            // Snapping Hysteresis & Velocity Override
-            const velocityY = event.velocity?.y ?? 0;
-            const currentHidden = clampedScrollValue.value;
+            if (snapBehavior === 'none') {
+                return;
+            }
 
-            // Velocity Override
+            const velocityY = event.velocity?.y ?? 0;
             if (velocityY > 500) {
-                // Fling Down -> Hide Header
                 snapTo(headerHeight);
-            } else if (velocityY < -500) {
-                // Fling Up -> Show Header
+                return;
+            }
+
+            if (velocityY < -500) {
                 snapTo(0);
-            } else {
-                // Threshold Snapping
+                return;
+            }
+
+            if (snapBehavior === 'threshold') {
+                const currentHidden = clampedScrollValue.value;
                 if (currentHidden > headerHeight / 2) {
-                    snapTo(headerHeight); // Snap Hidden
+                    snapTo(headerHeight);
                 } else {
-                    snapTo(0); // Snap Visible
+                    snapTo(0);
                 }
             }
         },

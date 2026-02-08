@@ -140,6 +140,9 @@ export default function InboxScreen() {
                                 ? (isDark ? styles.filterButtonActiveDark : styles.filterButtonActiveLight)
                                 : null,
                         ]}
+                        accessibilityRole="tab"
+                        accessibilityLabel={`Filter by ${filter}`}
+                        accessibilityState={{ selected: activeFilter === filter }}
                     >
                         <Text
                             style={[

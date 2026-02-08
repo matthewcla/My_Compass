@@ -32,11 +32,12 @@ export const MessageCard: React.FC<MessageCardProps> = React.memo(({ message, on
         <TouchableOpacity
             onPress={() => onPress?.(message.id)}
             className={`mb-3 mx-4 p-4 rounded-lg shadow-sm ${accentColor} ${accentBorder}`}
+            accessibilityHint="Double tap to open message details"
         >
             <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-row items-center gap-2">
                     {isUnread && (
-                        <View className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                        <View className="w-2.5 h-2.5 rounded-full bg-blue-500" accessibilityLabel="Unread" />
                     )}
                     <View className={`px-2 py-1 rounded-full ${isNavAdmin ? 'bg-blue-100 dark:bg-blue-900' : isStatusReport ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-slate-200 dark:bg-slate-700'}`}>
                         <Text className={`text-xs font-bold ${isNavAdmin ? 'text-blue-800 dark:text-blue-200' : isStatusReport ? 'text-yellow-800 dark:text-yellow-200' : 'text-slate-700 dark:text-slate-300'}`}>
@@ -49,7 +50,13 @@ export const MessageCard: React.FC<MessageCardProps> = React.memo(({ message, on
                     <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                         {formattedDate}
                     </Text>
-                    <TouchableOpacity onPress={() => onTogglePin?.(message.id)} hitSlop={10}>
+                    <TouchableOpacity
+                        onPress={() => onTogglePin?.(message.id)}
+                        hitSlop={10}
+                        accessibilityRole="button"
+                        accessibilityLabel={message.isPinned ? "Unpin message" : "Pin message"}
+                        accessibilityState={{ selected: message.isPinned }}
+                    >
                         <Pin
                             size={16}
                             color={message.isPinned ? '#0f172a' : '#94a3b8'}

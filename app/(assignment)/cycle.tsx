@@ -4,7 +4,7 @@ import { selectManifestItems, useAssignmentStore } from '@/store/useAssignmentSt
 import { Application } from '@/types/schema';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Send } from 'lucide-react-native';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Alert, ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
@@ -20,7 +20,8 @@ export default function CycleScreen() {
         realDecisions,
         demoteToManifest,
         promoteToSlate,
-        reorderApplications
+        reorderApplications,
+        moveApplication
     } = useAssignmentStore(
         useShallow(state => ({
             applications: state.applications,
@@ -28,7 +29,8 @@ export default function CycleScreen() {
             realDecisions: state.realDecisions,
             demoteToManifest: state.demoteToManifest,
             promoteToSlate: state.promoteToSlate,
-            reorderApplications: state.reorderApplications
+            reorderApplications: state.reorderApplications,
+            moveApplication: state.moveApplication
         }))
     );
 
@@ -59,28 +61,17 @@ export default function CycleScreen() {
     });
 
     // 3. Handlers
-    const handleSlotPress = (rank: number, app?: Application) => {
-        if (app) {
-            demoteToManifest(app.id);
-        }
-    };
+    const handleRemove = useCallback((appId: string) => {
+        demoteToManifest(appId);
+    }, [demoteToManifest]);
 
-    const handleReorder = (fromIndex: number, direction: 'up' | 'down') => {
-        if (direction === 'up' && fromIndex === 0) return;
-        if (direction === 'down' && fromIndex === activeApps.length - 1) return;
+    const handleMoveUp = useCallback((rank: number) => {
+        moveApplication(rank - 1, 'up', 'user-123');
+    }, [moveApplication]);
 
-        const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
-        const newOrder = [...activeApps];
-        // Swap
-        [newOrder[fromIndex], newOrder[toIndex]] = [newOrder[toIndex], newOrder[fromIndex]];
-
-        // Extract IDs in new order
-        const orderedIds = newOrder.map(a => a.id);
-
-        // Call store action
-        // We need to define reorderApplications in the destructuring first
-        reorderApplications(orderedIds, 'user-123');
-    };
+    const handleMoveDown = useCallback((rank: number) => {
+        moveApplication(rank - 1, 'down', 'user-123');
+    }, [moveApplication]);
 
     const handleRailItemPress = (billetId: string) => {
         const existingApp = Object.values(applications).find(
@@ -142,10 +133,11 @@ export default function CycleScreen() {
                                     rank={slot.rank}
                                     application={slot.app}
                                     billet={slot.billet}
-                                    onRemove={() => handleSlotPress(slot.rank, slot.app)}
-                                    // Pass undefined if no app, effectively hiding arrows via component logic or just check index
-                                    onMoveUp={slot.app && index > 0 ? () => handleReorder(index, 'up') : undefined}
-                                    onMoveDown={slot.app && index < activeApps.length - 1 ? () => handleReorder(index, 'down') : undefined}
+                                    isFirst={index === 0}
+                                    isLast={index === activeApps.length - 1}
+                                    onRemove={handleRemove}
+                                    onMoveUp={handleMoveUp}
+                                    onMoveDown={handleMoveDown}
                                 />
                             ))}
                         </View>

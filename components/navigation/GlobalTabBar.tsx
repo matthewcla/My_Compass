@@ -186,8 +186,9 @@ export default function GlobalTabBar({ activeRoute }: GlobalTabBarProps) {
     return (
         <View
             style={{
+                paddingTop: 8,
                 paddingBottom: insets.bottom,
-                height: HEIGHT + insets.bottom,
+                height: HEIGHT + insets.bottom + 8,
                 ...getShadow({
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: -2 },

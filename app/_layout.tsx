@@ -1,6 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack, usePathname } from 'expo-router';
+import { Stack, usePathname, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -117,6 +117,7 @@ export default function RootLayout() {
 
   const colorScheme = useColorScheme();
   const pathname = usePathname();
+<<<<<<< HEAD
   const hideRootTabBar = pathname === '/inbox';
   const activeRoute =
     pathname.startsWith('/calendar')
@@ -124,6 +125,16 @@ export default function RootLayout() {
       : pathname.startsWith('/inbox')
         ? 'inbox'
         : 'home';
+=======
+  const segments = useSegments();
+  const currentSegment = segments[0];
+
+  const hideRootTabBar =
+    pathname === '/inbox' ||
+    currentSegment === 'inbox' ||
+    currentSegment === '(hub)' ||
+    currentSegment === '(calendar)';
+>>>>>>> dd962872c84ea5bc5587d95369e5eeb0e48f4837
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

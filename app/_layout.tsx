@@ -1,6 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
-import { Stack, usePathname, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -11,8 +11,6 @@ import '../global.css';
 import '../ignoreWarnings';
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
-import GlobalTabBar from '@/components/navigation/GlobalTabBar';
-import { ScrollControlProvider } from '@/components/navigation/ScrollControlContext';
 import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
@@ -27,7 +25,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(hub)',
+  initialRouteName: '(tabs)',
 };
 
 const safeSplashHide = async () => {
@@ -117,27 +115,11 @@ export default function RootLayout() {
   }, []);
 
   const colorScheme = useColorScheme();
-  const pathname = usePathname();
-  const segments = useSegments();
-  const currentSegment = segments[0];
-
-  const activeRoute =
-    pathname.startsWith('/calendar')
-      ? 'calendar'
-      : pathname.startsWith('/inbox')
-        ? 'inbox'
-        : 'home';
-
-  const hideRootTabBar =
-    pathname === '/sign-in' ||
-    pathname === '/modal' ||
-    (pathname.startsWith('/calendar') && pathname !== '/calendar');
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SessionProvider>
-          <ScrollControlProvider>
             <AuthGuard />
             <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
             <View
@@ -146,22 +128,13 @@ export default function RootLayout() {
               style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
             >
               <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(hub)" options={{ animation: 'fade' }} />
-                <Stack.Screen name="(assignment)" />
-                <Stack.Screen name="(pcs)" />
-                <Stack.Screen name="(admin)" />
-                <Stack.Screen name="(profile)" />
+                <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
                 <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
                 <Stack.Screen name="leave" />
-                <Stack.Screen name="inbox" options={{ animation: 'fade' }} />
-                <Stack.Screen name="(career)" />
-                <Stack.Screen name="(calendar)" options={{ animation: 'fade' }} />
                 <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
               </Stack>
               <SpotlightOverlay />
-              {!hideRootTabBar && <GlobalTabBar activeRoute={activeRoute} />}
             </View>
-          </ScrollControlProvider>
         </SessionProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

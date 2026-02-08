@@ -12,6 +12,7 @@ import '../ignoreWarnings';
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
+import { ScrollControlProvider } from '@/components/navigation/ScrollControlContext';
 import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
@@ -139,29 +140,31 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SessionProvider>
-          <AuthGuard />
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
-          <View
-            className="flex-1 bg-white dark:bg-black"
-            onLayout={onLayoutRootView}
-            style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
-          >
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(hub)" options={{ animation: 'fade' }} />
-              <Stack.Screen name="(assignment)" />
-              <Stack.Screen name="(pcs)" />
-              <Stack.Screen name="(admin)" />
-              <Stack.Screen name="(profile)" />
-              <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
-              <Stack.Screen name="leave" />
-              <Stack.Screen name="inbox" options={{ animation: 'fade' }} />
-              <Stack.Screen name="(career)" />
-              <Stack.Screen name="(calendar)" options={{ animation: 'fade' }} />
-              <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
-            </Stack>
-            <SpotlightOverlay />
-            {!hideRootTabBar && <GlobalTabBar activeRoute={activeRoute} />}
-          </View>
+          <ScrollControlProvider>
+            <AuthGuard />
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
+            <View
+              className="flex-1 bg-white dark:bg-black"
+              onLayout={onLayoutRootView}
+              style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
+            >
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(hub)" options={{ animation: 'fade' }} />
+                <Stack.Screen name="(assignment)" />
+                <Stack.Screen name="(pcs)" />
+                <Stack.Screen name="(admin)" />
+                <Stack.Screen name="(profile)" />
+                <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+                <Stack.Screen name="leave" />
+                <Stack.Screen name="inbox" options={{ animation: 'fade' }} />
+                <Stack.Screen name="(career)" />
+                <Stack.Screen name="(calendar)" options={{ animation: 'fade' }} />
+                <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
+              </Stack>
+              <SpotlightOverlay />
+              {!hideRootTabBar && <GlobalTabBar activeRoute={activeRoute} />}
+            </View>
+          </ScrollControlProvider>
         </SessionProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

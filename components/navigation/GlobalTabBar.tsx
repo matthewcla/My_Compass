@@ -1,8 +1,11 @@
+import { useScrollContext } from '@/components/navigation/ScrollControlContext';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useUIStore } from '@/store/useUIStore';
 import { getShadow } from '@/utils/getShadow';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
     ClipboardList,
@@ -12,16 +15,24 @@ import {
     Map as MapIcon,
     Settings,
     Shield,
-    Target
+    Target,
 } from 'lucide-react-native';
 import React from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSequence,
+    withSpring,
+    withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type GlobalTabRoute = 'home' | 'calendar' | 'inbox';
 
 type GlobalTabBarProps = {
     activeRoute: GlobalTabRoute;
+    useBlur?: boolean;
 };
 
 type TabItem = {
@@ -30,6 +41,39 @@ type TabItem = {
     href: '/(hub)' | '/calendar' | '/inbox';
     solidIcon: React.ComponentProps<typeof Ionicons>['name'];
     outlineIcon: React.ComponentProps<typeof Ionicons>['name'];
+};
+
+type LucideIcon = React.ComponentType<{
+    size?: number;
+    color?: string;
+    strokeWidth?: number;
+}>;
+
+type SpokeConfig = {
+    primary: { label: string; route: string; icon: LucideIcon };
+    secondary: { label: string; route: string; icon: LucideIcon };
+};
+
+type TabDescriptor = {
+    key: string;
+    label: string;
+    href: string;
+    isActive: boolean;
+    activeColor: string;
+    inactiveColor: string;
+    icon:
+    | {
+        kind: 'ion';
+        name: React.ComponentProps<typeof Ionicons>['name'];
+        size: number;
+    }
+    | {
+        kind: 'lucide';
+        Component: LucideIcon;
+        size: number;
+        activeStrokeWidth: number;
+        inactiveStrokeWidth: number;
+    };
 };
 
 const TABS: TabItem[] = [
@@ -56,11 +100,6 @@ const TABS: TabItem[] = [
     },
 ];
 
-type SpokeConfig = {
-    primary: { label: string; route: string; icon: any };
-    secondary: { label: string; route: string; icon: any };
-};
-
 const SPOKE_CONFIG: Record<string, SpokeConfig> = {
     '(career)': {
         primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
@@ -80,13 +119,71 @@ const SPOKE_CONFIG: Record<string, SpokeConfig> = {
     },
 };
 
-export default function GlobalTabBar({ activeRoute }: GlobalTabBarProps) {
+const BAR_HEIGHT = Platform.select({ web: 60, default: 56 });
+const PILL_HORIZONTAL_INSET = 6;
+const PILL_VERTICAL_INSET = 6;
+
+type AnimatedTabButtonProps = {
+    item: TabDescriptor;
+    onPress: (item: TabDescriptor) => void;
+};
+
+const AnimatedTabButton = React.memo(function AnimatedTabButton({
+    item,
+    onPress,
+}: AnimatedTabButtonProps) {
+    const iconScale = useSharedValue(1);
+
+    const iconStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: iconScale.value }],
+    }));
+
+    const handlePress = React.useCallback(() => {
+        iconScale.value = withSequence(
+            withTiming(0.9, { duration: 80 }),
+            withSpring(1, { damping: 15, stiffness: 260, mass: 0.35 })
+        );
+        onPress(item);
+    }, [iconScale, item, onPress]);
+
+    const iconColor = item.isActive ? item.activeColor : item.inactiveColor;
+
+    return (
+        <Pressable
+            onPress={handlePress}
+            accessibilityRole="button"
+            accessibilityState={{ selected: item.isActive }}
+            style={styles.tabButton}
+        >
+            <Animated.View style={iconStyle}>
+                {item.icon.kind === 'ion' ? (
+                    <Ionicons name={item.icon.name} size={item.icon.size} color={iconColor} />
+                ) : (
+                    <item.icon.Component
+                        size={item.icon.size}
+                        color={iconColor}
+                        strokeWidth={item.isActive ? item.icon.activeStrokeWidth : item.icon.inactiveStrokeWidth}
+                    />
+                )}
+            </Animated.View>
+            <Text style={[styles.tabLabel, { color: iconColor, fontWeight: item.isActive ? '600' : '500' }]}>
+                {item.label}
+            </Text>
+        </Pressable>
+    );
+});
+
+export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'ios' }: GlobalTabBarProps) {
     const router = useRouter();
     const segments = useSegments();
     const pathname = usePathname();
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
+    const { translateY, resetBar } = useScrollContext();
+
+    const [barWidth, setBarWidth] = React.useState(0);
+    const pillTranslateX = useSharedValue(0);
 
     const currentSpoke = segments[0] as string;
     const { activeSpoke, setActiveSpoke } = useUIStore();
@@ -112,99 +209,228 @@ export default function GlobalTabBar({ activeRoute }: GlobalTabBarProps) {
         lastSegment === 'MenuHubModal' ||
         (segments as string[]).includes('MenuHubModal');
 
-    if (isHidden) return null;
+    if (isHidden) {
+        return null;
+    }
 
     const targetSpoke = SPOKE_CONFIG[currentSpoke]
         ? currentSpoke
-        : (activeSpoke && SPOKE_CONFIG[activeSpoke] ? activeSpoke : null);
+        : activeSpoke && SPOKE_CONFIG[activeSpoke]
+            ? activeSpoke
+            : null;
     const config = targetSpoke ? SPOKE_CONFIG[targetSpoke] : null;
-    const isHubMode = !config;
     const isDark = colorScheme === 'dark';
+    const shouldUseBlur = useBlur && Platform.OS !== 'web';
 
-    const primaryColor = colors.tint;
-    const inactiveColor = colorScheme === 'dark' ? '#64748B' : '#9CA3AF';
+    const fixedActiveColor = colors.tint;
+    const fixedInactiveColor = isDark ? '#64748B' : '#9CA3AF';
     const dynamicActiveColor = isDark ? '#FFFFFF' : '#0F172A';
     const dynamicInactiveColor = isDark ? '#64748B' : '#94A3B8';
-    const HEIGHT = Platform.select({ web: 60, default: 49 });
 
-    const renderFixedTab = (item: TabItem) => {
-        const isActive =
-            item.route === 'home'
-                ? activeRoute === 'home' && currentSpoke === '(hub)' && !pathname.includes('inbox') && !pathname.includes('menu')
-                : activeRoute === item.route;
+    const buildFixedTab = React.useCallback(
+        (item: TabItem): TabDescriptor => {
+            const isActive =
+                item.route === 'home'
+                    ? activeRoute === 'home' &&
+                    currentSpoke === '(hub)' &&
+                    !pathname.includes('inbox') &&
+                    !pathname.includes('menu')
+                    : activeRoute === item.route;
 
-        const iconName = isActive ? item.solidIcon : item.outlineIcon;
-        const iconColor = isActive ? primaryColor : inactiveColor;
+            return {
+                key: item.route,
+                label: item.label,
+                href: item.href,
+                isActive,
+                activeColor: fixedActiveColor,
+                inactiveColor: fixedInactiveColor,
+                icon: {
+                    kind: 'ion',
+                    name: isActive ? item.solidIcon : item.outlineIcon,
+                    size: 22,
+                },
+            };
+        },
+        [activeRoute, currentSpoke, fixedActiveColor, fixedInactiveColor, pathname]
+    );
 
-        return (
-            <Pressable
-                key={item.route}
-                onPress={() => router.push(item.href as any)}
-                className={`${isHubMode ? 'w-24' : 'flex-1'} h-full items-center justify-center gap-1 ${isActive ? 'bg-slate-50 dark:bg-slate-800' : ''}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isActive }}
-            >
-                <Ionicons name={iconName} size={22} color={iconColor} />
-                <Text style={{ color: iconColor, fontSize: 11, fontWeight: isActive ? '600' : '400' }}>
-                    {item.label}
-                </Text>
-            </Pressable>
-        );
-    };
+    const buildDynamicTab = React.useCallback(
+        (label: string, route: string, Icon: LucideIcon, isActiveOverride?: boolean): TabDescriptor => {
+            const isActive =
+                isActiveOverride !== undefined
+                    ? isActiveOverride
+                    : pathname === route || pathname.includes(route.replace(/\/\([^)]+\)/g, ''));
 
-    const renderDynamicTab = (
-        label: string,
-        route: string,
-        Icon: any,
-        isActiveOverride?: boolean
-    ) => {
-        const isActive = isActiveOverride !== undefined
-            ? isActiveOverride
-            : (
-                pathname === route ||
-                pathname.includes(route.replace(/\/\([^)]+\)/g, ''))
-            );
+            return {
+                key: route,
+                label,
+                href: route,
+                isActive,
+                activeColor: dynamicActiveColor,
+                inactiveColor: dynamicInactiveColor,
+                icon: {
+                    kind: 'lucide',
+                    Component: Icon,
+                    size: 22,
+                    activeStrokeWidth: 2.5,
+                    inactiveStrokeWidth: 2,
+                },
+            };
+        },
+        [dynamicActiveColor, dynamicInactiveColor, pathname]
+    );
 
-        const color = isActive ? dynamicActiveColor : dynamicInactiveColor;
+    const tabItems = React.useMemo(() => {
+        const nextTabs: TabDescriptor[] = [];
+        nextTabs.push(buildFixedTab(TABS[0]));
+        nextTabs.push(buildFixedTab(TABS[1]));
 
-        return (
-            <Pressable
-                key={route}
-                onPress={() => router.push(route as any)}
-                className={`${isHubMode ? 'w-24' : 'flex-1'} items-center justify-center gap-1 h-full ${isActive ? 'bg-slate-50 dark:bg-slate-800' : ''}`}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isActive }}
-            >
-                <Icon size={24} color={color} strokeWidth={isActive ? 2.5 : 2} />
-                <Text style={{ color, fontSize: 11, fontWeight: isActive ? '600' : '400' }}>
-                    {label}
-                </Text>
-            </Pressable>
-        );
-    };
+        if (config) {
+            nextTabs.push(buildDynamicTab(config.primary.label, config.primary.route, config.primary.icon));
+        }
+
+        nextTabs.push(buildFixedTab(TABS[2]));
+
+        if (config) {
+            nextTabs.push(buildDynamicTab(config.secondary.label, config.secondary.route, config.secondary.icon));
+        }
+
+        nextTabs.push(buildDynamicTab('Menu', '/menu', LayoutGrid, pathname.includes('menu')));
+        return nextTabs;
+    }, [buildDynamicTab, buildFixedTab, config, pathname]);
+
+    const activeIndex = React.useMemo(
+        () => tabItems.findIndex((item) => item.isActive),
+        [tabItems]
+    );
+
+    const tabWidth = tabItems.length > 0 ? barWidth / tabItems.length : 0;
+    const pillWidth = Math.max(tabWidth - PILL_HORIZONTAL_INSET * 2, 0);
+    const hasActiveTab = activeIndex >= 0 && tabWidth > 0;
+
+    React.useEffect(() => {
+        if (tabWidth <= 0) {
+            return;
+        }
+
+        const clampedIndex = Math.max(activeIndex, 0);
+        pillTranslateX.value = withSpring(clampedIndex * tabWidth + PILL_HORIZONTAL_INSET, {
+            damping: 20,
+            stiffness: 240,
+            mass: 0.55,
+        });
+    }, [activeIndex, pillTranslateX, tabWidth]);
+
+    const containerStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: translateY.value }],
+    }));
+
+    const pillStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: pillTranslateX.value }],
+        opacity: hasActiveTab ? 1 : 0,
+    }));
+
+    const handleTabPress = React.useCallback(
+        (item: TabDescriptor) => {
+            void Haptics.selectionAsync().catch(() => undefined);
+            resetBar();
+            router.push(item.href as any);
+        },
+        [resetBar, router]
+    );
 
     return (
-        <View
-            style={{
-                paddingTop: 8,
-                paddingBottom: insets.bottom,
-                height: HEIGHT + insets.bottom + 8,
-                ...getShadow({
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: -2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 3,
-                    elevation: 5,
-                }),
-            }}
-            className={`flex-row w-full border-t border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 ${isHubMode ? 'justify-around' : ''}`}
+        <Animated.View
+            style={[
+                styles.root,
+                containerStyle,
+                {
+                    paddingTop: 8,
+                    paddingBottom: insets.bottom + 8,
+                    ...getShadow({
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: -2 },
+                        shadowOpacity: 0.08,
+                        shadowRadius: 8,
+                        elevation: 8,
+                    }),
+                },
+            ]}
         >
-            {renderFixedTab(TABS[0])}
-            {renderFixedTab(TABS[1])}
-            {config && renderDynamicTab(config.primary.label, config.primary.route, config.primary.icon)}
-            {renderFixedTab(TABS[2])}
-            {config && renderDynamicTab(config.secondary.label, config.secondary.route, config.secondary.icon)}
-            {renderDynamicTab('Menu', '/menu', LayoutGrid, pathname.includes('menu'))}
-        </View>
+            <View
+                onLayout={(event) => {
+                    setBarWidth(event.nativeEvent.layout.width);
+                }}
+                style={[
+                    styles.tabBarShell,
+                    {
+                        height: BAR_HEIGHT,
+                        borderColor: isDark ? '#1E293B' : '#E2E8F0',
+                        backgroundColor: isDark ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.9)',
+                    },
+                ]}
+            >
+                {shouldUseBlur && (
+                    <BlurView
+                        pointerEvents="none"
+                        intensity={35}
+                        tint={isDark ? 'dark' : 'light'}
+                        style={StyleSheet.absoluteFillObject}
+                    />
+                )}
+
+                <Animated.View
+                    pointerEvents="none"
+                    style={[
+                        styles.pill,
+                        pillStyle,
+                        {
+                            width: pillWidth,
+                            top: PILL_VERTICAL_INSET,
+                            bottom: PILL_VERTICAL_INSET,
+                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.08)',
+                        },
+                    ]}
+                />
+
+                {tabItems.map((item) => (
+                    <AnimatedTabButton key={item.key} item={item} onPress={handleTabPress} />
+                ))}
+            </View>
+        </Animated.View>
     );
 }
+
+export default AnimatedGlobalTabBar;
+
+const styles = StyleSheet.create({
+    root: {
+        width: '100%',
+        paddingHorizontal: 12,
+    },
+    tabBarShell: {
+        width: '100%',
+        borderWidth: 1,
+        borderRadius: 18,
+        overflow: 'hidden',
+        flexDirection: 'row',
+        alignItems: 'stretch',
+        position: 'relative',
+    },
+    pill: {
+        position: 'absolute',
+        left: 0,
+        borderRadius: 14,
+    },
+    tabButton: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        zIndex: 1,
+    },
+    tabLabel: {
+        fontSize: 11,
+        letterSpacing: 0.2,
+    },
+});

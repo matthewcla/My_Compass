@@ -118,6 +118,12 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const pathname = usePathname();
   const hideRootTabBar = pathname === '/inbox';
+  const activeRoute =
+    pathname.startsWith('/calendar')
+      ? 'calendar'
+      : pathname.startsWith('/inbox')
+        ? 'inbox'
+        : 'home';
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -143,7 +149,7 @@ export default function RootLayout() {
               <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
             </Stack>
             <SpotlightOverlay />
-            {!hideRootTabBar && <GlobalTabBar />}
+            {!hideRootTabBar && <GlobalTabBar activeRoute={activeRoute} />}
           </View>
         </SessionProvider>
       </SafeAreaProvider>

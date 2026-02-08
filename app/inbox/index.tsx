@@ -177,7 +177,7 @@ export default function InboxScreen() {
                     {renderHeader()}
                 </View>
             }
-            bottomBar={<GlobalTabBar />}
+            bottomBar={<GlobalTabBar activeRoute="inbox" />}
             snapBehavior="velocity"
         >
             {({

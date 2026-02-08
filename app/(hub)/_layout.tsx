@@ -1,8 +1,6 @@
-import GlobalHeader from '@/components/navigation/GlobalHeader';
 import { useSession } from '@/lib/ctx';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
 
 export default function HubLayout() {
   const { session, isLoading } = useSession();
@@ -23,11 +21,8 @@ export default function HubLayout() {
   }, [session, isLoading, segments]);
 
   return (
-    <View style={{ flex: 1 }}>
-      <GlobalHeader />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-      </Stack>
-    </View>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+    </Stack>
   );
 }

@@ -1,17 +1,22 @@
+import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
+import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { ScalePressable } from '@/components/ScalePressable';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { ScannerModal } from '@/components/ui/ScannerModal';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useCareerEvents } from '@/hooks/useCareerEvents';
-import { useHeaderStore } from '@/store/useHeaderStore';
 import { CareerEvent } from '@/types/career';
 import { getShadow } from '@/utils/getShadow';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { Stack } from 'expo-router';
 import { Clock, MapPin, QrCode } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Alert, SectionList, Text, TouchableOpacity, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
 
 // =============================================================================
 // HELPER COMPONENTS
@@ -117,56 +122,68 @@ export default function CalendarScreen() {
 
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Set Global Header
-    useEffect(() => {
-        useHeaderStore.getState().setHeader('', '', null, 'large', {
-            visible: true,
-            onChangeText: setSearchQuery,
-            placeholder: 'Search events...',
-            value: searchQuery
-        });
-    }, [searchQuery]); // Re-run when query changes to update the value in store
+    const searchConfig = {
+        visible: true,
+        onChangeText: setSearchQuery,
+        placeholder: 'Search events...',
+        value: searchQuery
+    };
 
     return (
         <>
             <Stack.Screen options={{ headerShown: false }} />
 
-
             <View
                 className="flex-1 bg-slate-50 dark:bg-black"
             >
-                {loading && groupedEvents.length === 0 ? (
-                    <View className="flex-1 items-center justify-center">
-                        <ActivityIndicator size="large" />
-                    </View>
-                ) : (
-                    <SectionList
-                        sections={groupedEvents}
-                        initialNumToRender={10}
-                        windowSize={5}
-                        keyExtractor={(item) => item.eventId}
-                        renderItem={({ item }) => (
-                            <View className="px-5">
-                                <EventCard event={item} />
+                <CollapsibleScaffold
+                    topBar={
+                        <ScreenHeader
+                            title="CALENDAR"
+                            subtitle="Events & Deadlines"
+                            withSafeArea={false}
+                            searchConfig={searchConfig}
+                        />
+                    }
+                    bottomBar={<GlobalTabBar activeRoute="calendar" />}
+                >
+                    {({ onScroll, contentContainerStyle }) => (
+                        loading && groupedEvents.length === 0 ? (
+                            <View className="flex-1 items-center justify-center">
+                                <ActivityIndicator size="large" />
                             </View>
-                        )}
-                        renderSectionHeader={({ section: { title } }) => (
-                            <View className="bg-slate-50/95 dark:bg-black/95 px-5 py-2 z-10">
-                                <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                                    {title}
-                                </Text>
-                            </View>
-                        )}
-                        contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }} // Reduced spacing for tighter layout
-                        stickySectionHeadersEnabled={true}
-                        refreshing={loading}
-                        onRefresh={refresh}
-                        showsVerticalScrollIndicator={false}
-                    />
-                )}
+                        ) : (
+                            <AnimatedSectionList
+                                sections={groupedEvents}
+                                initialNumToRender={10}
+                                windowSize={5}
+                                keyExtractor={(item: any) => item.eventId}
+                                renderItem={({ item }: { item: any }) => (
+                                    <View className="px-5">
+                                        <EventCard event={item} />
+                                    </View>
+                                )}
+                                renderSectionHeader={({ section: { title } }: { section: { title: string } }) => (
+                                    <View className="bg-slate-50/95 dark:bg-black/95 px-5 py-2 z-10">
+                                        <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                                            {title}
+                                        </Text>
+                                    </View>
+                                )}
+                                contentContainerStyle={contentContainerStyle}
+                                ListHeaderComponent={<View style={{ height: 8 }} />}
+                                stickySectionHeadersEnabled={true}
+                                refreshing={loading}
+                                onRefresh={refresh}
+                                showsVerticalScrollIndicator={false}
+                                onScroll={onScroll}
+                            />
+                        )
+                    )}
+                </CollapsibleScaffold>
 
                 {/* FAB: Scan QR Code */}
-                <View className="absolute bottom-8 right-6">
+                <View className="absolute bottom-28 right-6">
                     <TouchableOpacity
                         activeOpacity={0.8}
                         onPress={() => setIsScannerOpen(true)}

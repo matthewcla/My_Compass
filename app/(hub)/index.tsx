@@ -1,13 +1,15 @@
+import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { DiscoveryCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
+import { GlobalTabBar } from '@/components/navigation/GlobalTabBar';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
-import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useSession } from '@/lib/ctx';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { useUserStore } from '@/store/useUserStore';
@@ -18,8 +20,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
+
+const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
 
 export default function HubDashboard() {
     const router = useRouter();
@@ -67,9 +72,6 @@ export default function HubDashboard() {
 
     const globalSearchConfig = useGlobalSpotlightHeaderSearch();
 
-    // Hoist Header State
-    useScreenHeader("", "", undefined, globalSearchConfig);
-
     // Navigation Handlers
     const handleStartExploring = () => {
         router.push('/(career)/discovery' as any);
@@ -114,6 +116,9 @@ export default function HubDashboard() {
             >
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <HubSkeleton />
+                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+                    <GlobalTabBar activeRoute="home" />
+                </View>
             </LinearGradient>
         );
     }
@@ -129,13 +134,12 @@ export default function HubDashboard() {
                 <View className="flex-1 items-center justify-center px-8">
                     <Text className="text-slate-400 text-center">{error}</Text>
                 </View>
+                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+                    <GlobalTabBar activeRoute="home" />
+                </View>
             </LinearGradient>
         );
     }
-
-
-
-
 
     const sections = ['status', 'discovery', 'stats', 'leave'];
 
@@ -197,20 +201,33 @@ export default function HubDashboard() {
             colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
             style={{ flex: 1 }}
         >
-            <FlashList
-                ref={listRef}
-                data={sections}
-                renderItem={renderItem}
-                ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
-                // @ts-expect-error: estimatedItemSize is missing in the type definition of @shopify/flash-list v2.2.0 despite being mandatory
-                estimatedItemSize={150}
-                style={{ flex: 1 }}
-                contentContainerStyle={{
-                    padding: 16,
-                    paddingTop: 16,
-                    paddingBottom: 100 + insets.bottom,
-                }}
-            />
+            <CollapsibleScaffold
+                topBar={
+                    <ScreenHeader
+                        title="HUB"
+                        subtitle={renderGreeting()}
+                        withSafeArea={false}
+                        searchConfig={globalSearchConfig}
+                    />
+                }
+                bottomBar={<GlobalTabBar activeRoute="home" />}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+            >
+                {({ onScroll, contentContainerStyle }) => (
+                    <AnimatedFlashList
+                        ref={listRef}
+                        data={sections}
+                        renderItem={renderItem}
+                        ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
+                        ListHeaderComponent={<View style={{ height: 16 }} />}
+                        // @ts-expect-error: estimatedItemSize is missing in the type definition of @shopify/flash-list v2.2.0 despite being mandatory
+                        estimatedItemSize={150}
+                        style={{ flex: 1 }}
+                        onScroll={onScroll}
+                        contentContainerStyle={contentContainerStyle}
+                    />
+                )}
+            </CollapsibleScaffold>
 
             {/* Quick Leave Overlay (Replaces Native Modal to fix Navigation Context loss) */}
             {quickDraft && (

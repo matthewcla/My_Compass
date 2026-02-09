@@ -202,7 +202,7 @@ const INITIAL_STATE: MyAssignmentState & {
 
 type PendingSwipe = { userId: string; billetId: string; decision: SwipeDecision };
 let pendingSwipes: PendingSwipe[] = [];
-let flushTimeout: NodeJS.Timeout | number | null = null;
+let flushTimeout: ReturnType<typeof setTimeout> | number | null = null;
 
 const purgePendingSwipes = (userId: string, billetId: string): boolean => {
     const initialCount = pendingSwipes.length;
@@ -699,7 +699,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
                 // Check threshold
                 if (pendingSwipes.length >= 5) {
-                    await persistDecisions();
+                    persistDecisions();
                 } else {
                     // Debounce
                     if (flushTimeout) clearTimeout(flushTimeout);
@@ -827,7 +827,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
 
         // 5. Persist
-        await storage.saveApplication(newApp);
+        storage.saveApplication(newApp).catch(console.error);
 
         return true;
     },

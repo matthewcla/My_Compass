@@ -1,4 +1,5 @@
 import { useColorScheme } from '@/components/useColorScheme';
+import { useSpotlightAnimations } from '@/hooks/useSpotlightAnimations';
 import { useSession } from '@/lib/ctx';
 import { useCareerStore } from '@/store/useCareerStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
@@ -22,9 +23,7 @@ import {
 } from 'lucide-react-native';
 import React from 'react';
 import {
-    Animated,
     BackHandler,
-    Easing,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -34,6 +33,7 @@ import {
     View,
     useWindowDimensions
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SECTION_ORDER: SpotlightSection[] = ['Actions', 'Navigation', 'Settings', 'Calendar', 'Inbox'];
@@ -253,7 +253,6 @@ const HighlightedLabel = ({
 };
 
 export function SpotlightOverlay() {
-    const BODY_EXPAND_DURATION = 200;
     const TARGET_SCOPE_HEIGHT = 56;
 
     const { session } = useSession();
@@ -286,10 +285,29 @@ export function SpotlightOverlay() {
     const updateUser = useUserStore((state) => state.updateUser);
 
     const rankedItemsRef = React.useRef<RankedSpotlightItem[]>([]);
-    const isClosingRef = React.useRef(false);
-    const pendingDismissRef = React.useRef<Promise<void> | null>(null);
-    const bodyProgress = React.useRef(new Animated.Value(0)).current;
-    const backdropProgress = React.useRef(new Animated.Value(0)).current;
+    const [keyboardHeight, setKeyboardHeight] = React.useState(0);
+
+    // Track keyboard height so the panel stops at the keyboard edge
+    React.useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const onShow = Keyboard.addListener(showEvent, (e) => setKeyboardHeight(e.endCoordinates.height));
+        const onHide = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+
+        return () => { onShow.remove(); onHide.remove(); };
+    }, []);
+
+    // ── Spring Animation Engine (UI-thread, interruptible) ──────────
+    const {
+        panelProgress,
+        animatedBackdropStyle,
+        animatedPanelStyle,
+        animatedContentStyle,
+        setExpandedHeight,
+        openPanel,
+        closePanel,
+    } = useSpotlightAnimations();
 
     const isCompactViewport = width < COMPACT_BREAKPOINT;
 
@@ -500,55 +518,29 @@ export function SpotlightOverlay() {
         return result;
     }, [groupedSections]);
 
-    const dismissSpotlight = React.useCallback((): Promise<void> => {
-        if (pendingDismissRef.current) {
-            return pendingDismissRef.current;
-        }
-
+    const dismissSpotlight = React.useCallback(() => {
         blurGlobalSearchInput();
         Keyboard.dismiss();
-        bodyProgress.stopAnimation();
-        backdropProgress.stopAnimation();
 
         if (!isOpen) {
             close();
-            return Promise.resolve();
+            return;
         }
 
-        isClosingRef.current = true;
-
-        pendingDismissRef.current = new Promise((resolve) => {
-            Animated.parallel([
-                Animated.timing(bodyProgress, {
-                    toValue: 0,
-                    duration: 140,
-                    easing: Easing.out(Easing.cubic),
-                    useNativeDriver: false,
-                }),
-                Animated.timing(backdropProgress, {
-                    toValue: 0,
-                    duration: 120,
-                    easing: Easing.out(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-            ]).start(() => {
-                isClosingRef.current = false;
-                pendingDismissRef.current = null;
-                close();
-                resolve();
-            });
+        closePanel(() => {
+            close();
         });
-
-        return pendingDismissRef.current;
-    }, [backdropProgress, blurGlobalSearchInput, bodyProgress, close, isOpen]);
+    }, [blurGlobalSearchInput, close, closePanel, isOpen]);
 
     const executeItem = React.useCallback(
-        async (item: RankedSpotlightItem) => {
+        (item: RankedSpotlightItem) => {
             registerRecent(item.id);
-            await dismissSpotlight();
-            await Promise.resolve(item.run());
+            closePanel(() => {
+                close();
+                Promise.resolve(item.run()).catch(() => undefined);
+            });
         },
-        [dismissSpotlight, registerRecent]
+        [close, closePanel, registerRecent]
     );
 
     // Fetch data when spotlight opens
@@ -558,42 +550,12 @@ export function SpotlightOverlay() {
         fetchEvents().catch(() => undefined);
     }, [fetchEvents, fetchMessages, isOpen, session]);
 
-    // Open / close animation
+    // Open / close spring animation
     React.useEffect(() => {
-        if (!isOpen) {
-            bodyProgress.setValue(0);
-            backdropProgress.setValue(0);
-            isClosingRef.current = false;
-            pendingDismissRef.current = null;
-            return;
+        if (isOpen) {
+            openPanel();
         }
-
-        isClosingRef.current = false;
-        pendingDismissRef.current = null;
-        bodyProgress.setValue(0);
-        backdropProgress.setValue(0);
-
-        const openAnimation = Animated.parallel([
-            Animated.timing(backdropProgress, {
-                toValue: 1,
-                duration: 180,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            }),
-            Animated.timing(bodyProgress, {
-                toValue: 1,
-                duration: BODY_EXPAND_DURATION,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: false,
-            }),
-        ]);
-
-        openAnimation.start();
-
-        return () => {
-            openAnimation.stop();
-        };
-    }, [BODY_EXPAND_DURATION, backdropProgress, bodyProgress, isOpen]);
+    }, [isOpen, openPanel]);
 
     // Register submit handler
     React.useEffect(() => {
@@ -615,7 +577,7 @@ export function SpotlightOverlay() {
             return;
         }
         registerGlobalSearchDismiss(() => {
-            void dismissSpotlight();
+            dismissSpotlight();
         });
         return () => registerGlobalSearchDismiss(null);
     }, [isOpen, dismissSpotlight, registerGlobalSearchDismiss]);
@@ -625,7 +587,7 @@ export function SpotlightOverlay() {
         if (Platform.OS !== 'android' || !isOpen) return;
 
         const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-            void dismissSpotlight();
+            dismissSpotlight();
             return true;
         });
 
@@ -666,7 +628,7 @@ export function SpotlightOverlay() {
                 if (!globalSearchFrame) return; // No search bar visible
                 const spotlight = useSpotlightStore.getState();
                 if (spotlight.isOpen) {
-                    void dismissSpotlight();
+                    dismissSpotlight();
                 } else {
                     spotlight.open();
                 }
@@ -678,7 +640,7 @@ export function SpotlightOverlay() {
 
             if (event.key === 'Escape') {
                 event.preventDefault();
-                void dismissSpotlight();
+                dismissSpotlight();
                 return;
             }
 
@@ -710,32 +672,40 @@ export function SpotlightOverlay() {
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [dismissSpotlight, executeItem, globalSearchFrame, session]);
 
-    if (!session || !isOpen) return null;
-
-    // Layout calculations
+    // Layout calculations (must be above early return so hook count is stable)
     const dropdownTop = globalSearchFrame ? globalSearchFrame.bottom : insets.top + 100;
     const dropdownLeft = globalSearchFrame ? globalSearchFrame.x : Math.max((width - (isCompactViewport ? width * 0.94 : Math.min(width - 24, 600))) / 2, 12);
     const dropdownWidth = globalSearchFrame ? globalSearchFrame.width : (isCompactViewport ? width * 0.94 : Math.min(width - 24, 600));
-    const bodyMaxHeight = Math.max(0, Math.min(height * 0.6, height - dropdownTop - insets.bottom - 16));
-    const expandedBodyHeight = TARGET_SCOPE_HEIGHT + bodyMaxHeight;
+    const kbOffset = keyboardHeight > 0 ? keyboardHeight : insets.bottom;
+    const bodyMaxHeight = Math.max(0, Math.min(height * 0.6, height - dropdownTop - kbOffset - 16));
+    const maxPanelHeight = TARGET_SCOPE_HEIGHT + bodyMaxHeight;
 
-    const panelBodyHeight = bodyProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, expandedBodyHeight],
-    });
-    const backdropOpacity = backdropProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 1],
-    });
-    const bodyOpacity = bodyProgress.interpolate({
-        inputRange: [0, 0.3],
-        outputRange: [0, 1],
-        extrapolate: 'clamp',
-    });
+    // Estimate actual content height so the panel shrinks to fit short lists
+    const SECTION_HEADER_HEIGHT = 40;
+    const ITEM_ROW_HEIGHT = 58;
+    const EMPTY_STATE_HEIGHT = 120;
+    const PADDING_BOTTOM = 16;
+    const estimatedContentHeight = TARGET_SCOPE_HEIGHT + (
+        rows.length === 0
+            ? EMPTY_STATE_HEIGHT
+            : rows.reduce((sum, row) => sum + (row.type === 'section' ? SECTION_HEADER_HEIGHT : ITEM_ROW_HEIGHT), 0) + PADDING_BOTTOM
+    );
+    const expandedBodyHeight = Math.min(estimatedContentHeight, maxPanelHeight);
 
-    const runQuickRoute = async (route: string) => {
-        await dismissSpotlight();
-        router.push(route as any);
+    // Update shared value in an effect to avoid Reanimated's render-time write warning
+    React.useEffect(() => {
+        setExpandedHeight(expandedBodyHeight);
+    }, [expandedBodyHeight, setExpandedHeight]);
+
+    if (!session || !isOpen) return null;
+
+    const runQuickRoute = (route: string) => {
+        blurGlobalSearchInput();
+        Keyboard.dismiss();
+        closePanel(() => {
+            close();
+            router.push(route as any);
+        });
     };
 
     const renderEmptyState = (
@@ -863,6 +833,7 @@ export function SpotlightOverlay() {
         <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
             contentContainerStyle={{ gap: 8 }}
             style={{ flexGrow: 0 }}
         >
@@ -909,19 +880,21 @@ export function SpotlightOverlay() {
         >
             {/* Backdrop — dims below search bar */}
             <Animated.View
-                style={{
-                    position: 'absolute',
-                    top: dropdownTop,
-                    right: 0,
-                    bottom: 0,
-                    left: 0,
-                    opacity: backdropOpacity,
-                    backgroundColor: 'rgba(2, 6, 23, 0.58)',
-                }}
+                style={[
+                    {
+                        position: 'absolute',
+                        top: dropdownTop,
+                        right: 0,
+                        bottom: 0,
+                        left: 0,
+                        backgroundColor: 'rgba(2, 6, 23, 0.58)',
+                    },
+                    animatedBackdropStyle,
+                ]}
             >
                 <Pressable
                     onPress={() => {
-                        void dismissSpotlight();
+                        dismissSpotlight();
                     }}
                     accessibilityRole="button"
                     accessibilityLabel="Dismiss search"
@@ -957,29 +930,31 @@ export function SpotlightOverlay() {
                 }}
             >
                 <Animated.View
-                    style={{
-                        position: 'absolute',
-                        top: dropdownTop,
-                        left: dropdownLeft,
-                        width: dropdownWidth,
-                        height: panelBodyHeight,
-                        borderBottomLeftRadius: 24,
-                        borderBottomRightRadius: 24,
-                        borderWidth: 1,
-                        borderTopWidth: 0,
-                        borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                        backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.15,
-                        shadowRadius: 12,
-                        elevation: 10,
-                        overflow: 'hidden',
-                    }}
+                    style={[
+                        {
+                            position: 'absolute',
+                            top: dropdownTop,
+                            left: dropdownLeft,
+                            width: dropdownWidth,
+                            borderBottomLeftRadius: 24,
+                            borderBottomRightRadius: 24,
+                            borderWidth: 1,
+                            borderTopWidth: 0,
+                            borderColor: isDark ? '#1e293b' : '#e2e8f0',
+                            backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 12,
+                            elevation: 10,
+                            overflow: 'hidden',
+                        },
+                        animatedPanelStyle,
+                    ]}
                 >
-                    <Animated.View style={{ opacity: bodyOpacity, flex: 1 }}>
+                    <Animated.View style={[{ flex: 1 }, animatedContentStyle]}>
                         {renderScopeRow}
-                        <View style={{ maxHeight: bodyMaxHeight, flex: 1 }}>
+                        <View style={{ flex: 1 }}>
                             {renderResultRows}
                         </View>
                     </Animated.View>

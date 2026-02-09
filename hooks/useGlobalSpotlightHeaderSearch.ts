@@ -24,7 +24,7 @@ export function useGlobalSpotlightHeaderSearch(
 
     const ensureSpotlightOpen = useCallback(() => {
         const state = useSpotlightStore.getState();
-        if (!state.isOpen && Date.now() - state.closedAt > 400) {
+        if (!state.isOpen) {
             openSpotlight({ source, preserveQuery: true });
         }
     }, [openSpotlight, source]);

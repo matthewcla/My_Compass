@@ -42,13 +42,15 @@ export const MenuTile: React.FC<MenuTileProps> = ({
             </View>
 
             <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                style={{ color: isDark ? (locked ? '#94A3B8' : '#FFFFFF') : (locked ? '#94A3B8' : '#0F172A') }}
-                className="font-bold text-lg leading-6"
+                style={{
+                    color: isDark ? (locked ? '#94A3B8' : '#FFFFFF') : (locked ? '#94A3B8' : '#0F172A'),
+                    lineHeight: 22
+                }}
+                className="font-bold text-[17px] mt-2"
+                numberOfLines={2}
             >
                 {label}
             </Text>
-        </TouchableOpacity>
+        </TouchableOpacity >
     );
 };

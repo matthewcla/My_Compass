@@ -90,7 +90,7 @@ export default function MenuHubScreen() {
               style={{ width: '47%', aspectRatio: 1 }}
             >
               <MenuTile
-                label="Assignment"
+                label="My Assignment"
                 icon={Briefcase}
                 onPress={() => handleTilePress('/(career)/assignment')}
               />
@@ -120,10 +120,9 @@ export default function MenuHubScreen() {
               style={{ width: '47%', aspectRatio: 1 }}
             >
               <MenuTile
-                label="My Admin"
+                label={"My Leave\n& Admin"}
                 icon={FileText}
                 onPress={() => handleTilePress('/(admin)')}
-                locked
               />
             </MotiView>
 
@@ -137,6 +136,7 @@ export default function MenuHubScreen() {
                 label="My Profile"
                 icon={User}
                 onPress={() => handleTilePress('/(profile)')}
+                locked
               />
             </MotiView>
           </View>

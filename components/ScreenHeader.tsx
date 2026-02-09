@@ -90,9 +90,8 @@ export function ScreenHeader({
             });
         });
 
-        requestAnimationFrame(() => {
-            globalSearchOnPress?.();
-        });
+        // Fire immediately — no requestAnimationFrame delay
+        globalSearchOnPress?.();
     }, [globalSearchOnPress, isGlobalSearch, setGlobalSearchFrame]);
 
     const focusGlobalSearchInput = React.useCallback(() => {

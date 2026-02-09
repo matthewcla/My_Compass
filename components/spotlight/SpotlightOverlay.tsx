@@ -12,6 +12,7 @@ import {
     SpotlightScope,
     SpotlightSection
 } from '@/types/spotlight';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import {
     CalendarDays,
@@ -33,6 +34,7 @@ import {
     View,
     useWindowDimensions
 } from 'react-native';
+import { GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -298,16 +300,25 @@ export function SpotlightOverlay() {
         return () => { onShow.remove(); onHide.remove(); };
     }, []);
 
+    // ── Gesture-close handler (stable ref, called when pan gesture snaps to 0) ──
+    const handleGestureClose = React.useCallback(() => {
+        blurGlobalSearchInput();
+        Keyboard.dismiss();
+        close();
+    }, [blurGlobalSearchInput, close]);
+
     // ── Spring Animation Engine (UI-thread, interruptible) ──────────
     const {
         panelProgress,
         animatedBackdropStyle,
+        animatedClipStyle,
         animatedPanelStyle,
         animatedContentStyle,
         setExpandedHeight,
+        panGesture,
         openPanel,
         closePanel,
-    } = useSpotlightAnimations();
+    } = useSpotlightAnimations(handleGestureClose);
 
     const isCompactViewport = width < COMPACT_BREAKPOINT;
 
@@ -518,6 +529,12 @@ export function SpotlightOverlay() {
         return result;
     }, [groupedSections]);
 
+    // ── Haptic helper for filter/selection feedback ──────────────────
+    const fireSelectionHaptic = React.useCallback(() => {
+        if (Platform.OS === 'web') return;
+        Haptics.selectionAsync().catch(() => undefined);
+    }, []);
+
     const dismissSpotlight = React.useCallback(() => {
         blurGlobalSearchInput();
         Keyboard.dismiss();
@@ -534,13 +551,14 @@ export function SpotlightOverlay() {
 
     const executeItem = React.useCallback(
         (item: RankedSpotlightItem) => {
+            fireSelectionHaptic();
             registerRecent(item.id);
             closePanel(() => {
                 close();
                 Promise.resolve(item.run()).catch(() => undefined);
             });
         },
-        [close, closePanel, registerRecent]
+        [close, closePanel, fireSelectionHaptic, registerRecent]
     );
 
     // Fetch data when spotlight opens
@@ -843,7 +861,10 @@ export function SpotlightOverlay() {
                 return (
                     <Pressable
                         key={option.value}
-                        onPress={() => setScope(option.value)}
+                        onPress={() => {
+                            fireSelectionHaptic();
+                            setScope(option.value);
+                        }}
                         className={`px-3 py-1.5 rounded-full border ${isSelected
                             ? 'bg-blue-600 border-blue-600'
                             : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700'
@@ -930,6 +951,8 @@ export function SpotlightOverlay() {
                     left: 0,
                 }}
             >
+                {/* Clip container: animated height + overflow hidden.
+                    The inner panel uses translateY (GPU-composited) to slide into view. */}
                 <Animated.View
                     style={[
                         {
@@ -937,28 +960,39 @@ export function SpotlightOverlay() {
                             top: dropdownTop,
                             left: dropdownLeft,
                             width: dropdownWidth,
+                            overflow: 'hidden',
                             borderBottomLeftRadius: 24,
                             borderBottomRightRadius: 24,
-                            borderWidth: 1,
-                            borderTopWidth: 0,
-                            borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                            backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.15,
-                            shadowRadius: 12,
-                            elevation: 10,
-                            overflow: 'hidden',
                         },
-                        animatedPanelStyle,
+                        animatedClipStyle,
                     ]}
                 >
-                    <Animated.View style={[{ flex: 1 }, animatedContentStyle]}>
-                        {renderScopeRow}
-                        <View style={{ flex: 1 }}>
-                            {renderResultRows}
-                        </View>
-                    </Animated.View>
+                    <GestureDetector gesture={panGesture}>
+                        <Animated.View
+                            style={[
+                                {
+                                    width: dropdownWidth,
+                                    height: expandedBodyHeight,
+                                    borderBottomLeftRadius: 24,
+                                    borderBottomRightRadius: 24,
+                                    borderWidth: 1,
+                                    borderTopWidth: 0,
+                                    borderColor: isDark ? '#1e293b' : '#e2e8f0',
+                                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                                    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+                                    elevation: 10,
+                                },
+                                animatedPanelStyle,
+                            ]}
+                        >
+                            <Animated.View style={[{ flex: 1 }, animatedContentStyle]}>
+                                {renderScopeRow}
+                                <View style={{ flex: 1 }}>
+                                    {renderResultRows}
+                                </View>
+                            </Animated.View>
+                        </Animated.View>
+                    </GestureDetector>
                 </Animated.View>
             </KeyboardAvoidingView>
         </View>

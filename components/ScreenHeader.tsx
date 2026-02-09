@@ -1,6 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { SearchConfig, useHeaderStore } from '@/store/useHeaderStore';
+import { useSpotlightStore } from '@/store/useSpotlightStore';
 import { Search } from 'lucide-react-native';
 import React from 'react';
 import { Platform, Pressable, Text, TextInput, View } from 'react-native';
@@ -23,6 +24,8 @@ export function ScreenHeader({
     variant = 'large',
     searchConfig
 }: ScreenHeaderProps) {
+    const GLOBAL_SEARCH_RADIUS = 24;
+
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
@@ -31,9 +34,11 @@ export function ScreenHeader({
     const isGlobalSearch = searchConfig?.mode === 'global';
     const searchInputRef = React.useRef<TextInput>(null);
     const globalSearchRowRef = React.useRef<View>(null);
+    const spotlightIsOpen = useSpotlightStore((state) => state.isOpen);
     const registerGlobalSearchBlur = useHeaderStore((state) => state.registerGlobalSearchBlur);
     const setGlobalSearchBottomY = useHeaderStore((state) => state.setGlobalSearchBottomY);
-    const globalSearchBottomY = useHeaderStore((state) => state.globalSearchBottomY);
+    const globalSearchFrame = useHeaderStore((state) => state.globalSearchFrame);
+    const setGlobalSearchFrame = useHeaderStore((state) => state.setGlobalSearchFrame);
 
     // Local state to prevent race conditions/flickering with async store updates
     const [localSearchValue, setLocalSearchValue] = React.useState(searchConfig?.value || '');
@@ -59,18 +64,65 @@ export function ScreenHeader({
 
     const handleGlobalSearchFocus = React.useCallback(() => {
         if (!isGlobalSearch) return;
+
+        globalSearchRowRef.current?.measureInWindow((x, y, width, height) => {
+            const nextBottom = y + height;
+            if (
+                !Number.isFinite(x) ||
+                !Number.isFinite(y) ||
+                !Number.isFinite(width) ||
+                !Number.isFinite(height) ||
+                !Number.isFinite(nextBottom)
+            ) {
+                return;
+            }
+
+            setGlobalSearchFrame({
+                x,
+                y,
+                width,
+                height,
+                bottom: nextBottom,
+                borderRadius: GLOBAL_SEARCH_RADIUS,
+                measuredAt: Date.now(),
+            });
+        });
+
         requestAnimationFrame(() => {
             globalSearchOnPress?.();
         });
-    }, [globalSearchOnPress, isGlobalSearch]);
+    }, [globalSearchOnPress, isGlobalSearch, setGlobalSearchFrame]);
 
     const focusGlobalSearchInput = React.useCallback(() => {
+        globalSearchRowRef.current?.measureInWindow((x, y, width, height) => {
+            const nextBottom = y + height;
+            if (
+                !Number.isFinite(x) ||
+                !Number.isFinite(y) ||
+                !Number.isFinite(width) ||
+                !Number.isFinite(height) ||
+                !Number.isFinite(nextBottom)
+            ) {
+                return;
+            }
+
+            setGlobalSearchFrame({
+                x,
+                y,
+                width,
+                height,
+                bottom: nextBottom,
+                borderRadius: GLOBAL_SEARCH_RADIUS,
+                measuredAt: Date.now(),
+            });
+        });
         searchInputRef.current?.focus();
-    }, []);
+    }, [setGlobalSearchFrame]);
 
     React.useEffect(() => {
         if (!isGlobalSearch) {
             registerGlobalSearchBlur(null);
+            setGlobalSearchFrame(null);
             setGlobalSearchBottomY(null);
             return;
         }
@@ -82,22 +134,47 @@ export function ScreenHeader({
         registerGlobalSearchBlur(blurInput);
         return () => {
             registerGlobalSearchBlur(null);
+            setGlobalSearchFrame(null);
             setGlobalSearchBottomY(null);
         };
-    }, [isGlobalSearch, registerGlobalSearchBlur, setGlobalSearchBottomY]);
+    }, [isGlobalSearch, registerGlobalSearchBlur, setGlobalSearchBottomY, setGlobalSearchFrame]);
 
     const handleGlobalSearchLayout = React.useCallback(() => {
         if (!isGlobalSearch || !globalSearchRowRef.current) return;
 
-        globalSearchRowRef.current.measureInWindow((_x, y, _width, height) => {
+        globalSearchRowRef.current.measureInWindow((x, y, width, height) => {
             const nextBottom = y + height;
-            if (!Number.isFinite(nextBottom)) return;
-
-            if (globalSearchBottomY === null || Math.abs(globalSearchBottomY - nextBottom) >= 1) {
-                setGlobalSearchBottomY(nextBottom);
+            if (
+                !Number.isFinite(x) ||
+                !Number.isFinite(y) ||
+                !Number.isFinite(width) ||
+                !Number.isFinite(height) ||
+                !Number.isFinite(nextBottom)
+            ) {
+                return;
             }
+
+            const hasChanged =
+                !globalSearchFrame ||
+                Math.abs(globalSearchFrame.x - x) >= 1 ||
+                Math.abs(globalSearchFrame.y - y) >= 1 ||
+                Math.abs(globalSearchFrame.width - width) >= 1 ||
+                Math.abs(globalSearchFrame.height - height) >= 1 ||
+                Math.abs(globalSearchFrame.bottom - nextBottom) >= 1;
+
+            if (!hasChanged) return;
+
+            setGlobalSearchFrame({
+                x,
+                y,
+                width,
+                height,
+                bottom: nextBottom,
+                borderRadius: GLOBAL_SEARCH_RADIUS,
+                measuredAt: Date.now(),
+            });
         });
-    }, [globalSearchBottomY, isGlobalSearch, setGlobalSearchBottomY]);
+    }, [globalSearchFrame, isGlobalSearch, setGlobalSearchFrame]);
 
     const hasHeaderContent = Boolean(title || subtitle || rightAction);
 
@@ -156,11 +233,13 @@ export function ScreenHeader({
                         <View
                             ref={globalSearchRowRef}
                             onLayout={handleGlobalSearchLayout}
+                            pointerEvents={spotlightIsOpen ? 'none' : 'auto'}
                             className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 border border-slate-200 dark:border-slate-800 shadow-sm"
+                            style={{ opacity: spotlightIsOpen ? 0 : 1 }}
                             accessibilityRole="search"
                             accessibilityLabel={searchConfig.placeholder || 'Global search'}
                         >
-                            <Pressable onPress={focusGlobalSearchInput} hitSlop={10}>
+                            <Pressable onPress={focusGlobalSearchInput} onPressIn={handleGlobalSearchLayout} hitSlop={10}>
                                 <Search
                                     size={22}
                                     color={colors.text}

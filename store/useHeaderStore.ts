@@ -20,6 +20,16 @@ export interface GlobalSearchConfig {
 
 export type SearchConfig = LocalSearchConfig | GlobalSearchConfig;
 
+export interface GlobalSearchFrame {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    bottom: number;
+    borderRadius: number;
+    measuredAt: number;
+}
+
 let globalSearchBlurHandler: (() => void) | null = null;
 
 interface HeaderState {
@@ -28,6 +38,7 @@ interface HeaderState {
     rightAction?: { icon: any; onPress: () => void } | null;
     searchConfig?: SearchConfig | null;
     globalSearchBottomY: number | null;
+    globalSearchFrame: GlobalSearchFrame | null;
     isVisible: boolean;
     variant: 'large' | 'inline';
     setHeader: (
@@ -39,6 +50,7 @@ interface HeaderState {
     ) => void;
     setSearchConfig: (config: SearchConfig | null) => void;
     setGlobalSearchBottomY: (value: number | null) => void;
+    setGlobalSearchFrame: (frame: GlobalSearchFrame | null) => void;
     setVisible: (visible: boolean) => void;
     registerGlobalSearchBlur: (fn: (() => void) | null) => void;
     blurGlobalSearchInput: () => void;
@@ -51,6 +63,7 @@ export const useHeaderStore = create<HeaderState>((set) => ({
     rightAction: null,
     searchConfig: null,
     globalSearchBottomY: null,
+    globalSearchFrame: null,
     isVisible: true,
     variant: 'large',
     setHeader: (title, subtitle, rightAction = null, variant = 'large', searchConfig = null) =>
@@ -71,6 +84,11 @@ export const useHeaderStore = create<HeaderState>((set) => ({
         }),
     setSearchConfig: (searchConfig) => set({ searchConfig }),
     setGlobalSearchBottomY: (globalSearchBottomY) => set({ globalSearchBottomY }),
+    setGlobalSearchFrame: (globalSearchFrame) =>
+        set({
+            globalSearchFrame,
+            globalSearchBottomY: globalSearchFrame?.bottom ?? null,
+        }),
     setVisible: (visible) => set({ isVisible: visible }),
     registerGlobalSearchBlur: (fn) => {
         globalSearchBlurHandler = fn;
@@ -87,5 +105,6 @@ export const useHeaderStore = create<HeaderState>((set) => ({
             variant: 'large',
             searchConfig: null,
             globalSearchBottomY: null,
+            globalSearchFrame: null,
         }),
 }));

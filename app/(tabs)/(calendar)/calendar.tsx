@@ -120,15 +120,6 @@ export default function CalendarScreen() {
         }
     };
 
-    const [searchQuery, setSearchQuery] = useState('');
-
-    const searchConfig = {
-        visible: true,
-        onChangeText: setSearchQuery,
-        placeholder: 'Search events...',
-        value: searchQuery
-    };
-
     return (
         <>
             <Stack.Screen options={{ headerShown: false }} />
@@ -141,7 +132,6 @@ export default function CalendarScreen() {
                             title=""
                             subtitle=""
                             withSafeArea={false}
-                            searchConfig={searchConfig}
                         />
                     }
                 >

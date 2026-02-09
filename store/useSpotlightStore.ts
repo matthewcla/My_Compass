@@ -16,6 +16,7 @@ interface SpotlightState {
     source: SpotlightOpenSource;
     activeIndex: number;
     recentItemIds: string[];
+    closedAt: number;
     open: (options?: SpotlightOpenOptions) => void;
     close: () => void;
     setQuery: (value: string) => void;
@@ -31,6 +32,7 @@ export const useSpotlightStore = create<SpotlightState>((set) => ({
     source: 'shortcut',
     activeIndex: 0,
     recentItemIds: [],
+    closedAt: 0,
 
     open: (options = {}) =>
         set((state) => ({
@@ -48,6 +50,7 @@ export const useSpotlightStore = create<SpotlightState>((set) => ({
             scope: 'all',
             source: 'shortcut',
             activeIndex: 0,
+            closedAt: Date.now(),
         }),
 
     setQuery: (query) => set({ query }),

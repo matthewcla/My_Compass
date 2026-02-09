@@ -26,6 +26,7 @@ import React from 'react';
 import {
     Animated,
     BackHandler,
+    Easing,
     InteractionManager,
     Keyboard,
     KeyboardAvoidingView,
@@ -256,6 +257,14 @@ const HighlightedLabel = ({
 };
 
 export function SpotlightOverlay() {
+    const MORPH_DURATION = 180;
+    const BODY_EXPAND_DURATION = 140;
+    const SOURCE_FRAME_STALE_MS = 2600;
+    const TARGET_RADIUS = 12;
+    const TARGET_HEADER_HEIGHT = 76;
+    const TARGET_SCOPE_HEIGHT = 56;
+    const DEFAULT_SOURCE_HEIGHT = 56;
+
     const { session } = useSession();
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -276,6 +285,7 @@ export function SpotlightOverlay() {
     const registerRecent = useSpotlightStore((state) => state.registerRecent);
     const blurGlobalSearchInput = useHeaderStore((state) => state.blurGlobalSearchInput);
     const globalSearchBottomY = useHeaderStore((state) => state.globalSearchBottomY);
+    const globalSearchFrame = useHeaderStore((state) => state.globalSearchFrame);
 
     const messages = useInboxStore((state) => state.messages);
     const fetchMessages = useInboxStore((state) => state.fetchMessages);
@@ -287,13 +297,17 @@ export function SpotlightOverlay() {
     const inputRef = React.useRef<TextInput>(null);
     const rankedItemsRef = React.useRef<RankedSpotlightItem[]>([]);
     const simulatorKeyboardHintShownRef = React.useRef(false);
+    const openInteractionRef = React.useRef<ReturnType<typeof InteractionManager.runAfterInteractions> | null>(null);
+    const focusTimersRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([]);
+    const isClosingRef = React.useRef(false);
+    const pendingDismissRef = React.useRef<Promise<void> | null>(null);
     const [keyboardVisible, setKeyboardVisible] = React.useState(false);
-    const sheetTranslateY = React.useRef(new Animated.Value(0)).current;
+    const morphProgress = React.useRef(new Animated.Value(0)).current;
+    const bodyProgress = React.useRef(new Animated.Value(0)).current;
+    const backdropProgress = React.useRef(new Animated.Value(0)).current;
 
     const isCompactViewport = width < COMPACT_BREAKPOINT;
-    const useBottomSheetLayout = Platform.OS !== 'web' || isCompactViewport;
     const isPrimaryFlow = openSource === 'primary';
-    const showInlineSheetInput = !isPrimaryFlow;
 
     const navigationItems = React.useMemo<SpotlightItem[]>(
         () => [
@@ -502,18 +516,96 @@ export function SpotlightOverlay() {
         return result;
     }, [groupedSections]);
 
-    const dismissSpotlight = React.useCallback(() => {
+    const clearFocusRetries = React.useCallback(() => {
+        if (openInteractionRef.current) {
+            openInteractionRef.current.cancel();
+            openInteractionRef.current = null;
+        }
+        focusTimersRef.current.forEach((timer) => clearTimeout(timer));
+        focusTimersRef.current = [];
+    }, []);
+
+    const queueInputFocus = React.useCallback(() => {
+        clearFocusRetries();
+
+        const focusInput = () => {
+            inputRef.current?.focus();
+        };
+
+        openInteractionRef.current = InteractionManager.runAfterInteractions(focusInput);
+        focusTimersRef.current.push(setTimeout(focusInput, 70));
+        focusTimersRef.current.push(setTimeout(focusInput, 180));
+        focusTimersRef.current.push(setTimeout(focusInput, 340));
+    }, [clearFocusRetries]);
+
+    const dismissSpotlight = React.useCallback((): Promise<void> => {
+        if (pendingDismissRef.current) {
+            return pendingDismissRef.current;
+        }
+
+        clearFocusRetries();
         blurGlobalSearchInput();
         inputRef.current?.blur();
         Keyboard.dismiss();
         setKeyboardVisible(false);
-        close();
-    }, [blurGlobalSearchInput, close]);
+        morphProgress.stopAnimation();
+        bodyProgress.stopAnimation();
+        backdropProgress.stopAnimation();
+
+        if (!isOpen) {
+            close();
+            return Promise.resolve();
+        }
+
+        isClosingRef.current = true;
+
+        pendingDismissRef.current = new Promise((resolve) => {
+            Animated.sequence([
+                Animated.timing(bodyProgress, {
+                    toValue: 0,
+                    duration: BODY_EXPAND_DURATION,
+                    easing: Easing.out(Easing.cubic),
+                    useNativeDriver: false,
+                }),
+                Animated.parallel([
+                    Animated.timing(morphProgress, {
+                        toValue: 0,
+                        duration: MORPH_DURATION,
+                        easing: Easing.bezier(0.22, 1, 0.36, 1),
+                        useNativeDriver: false,
+                    }),
+                    Animated.timing(backdropProgress, {
+                        toValue: 0,
+                        duration: 120,
+                        easing: Easing.out(Easing.cubic),
+                        useNativeDriver: true,
+                    }),
+                ]),
+            ]).start(() => {
+                isClosingRef.current = false;
+                pendingDismissRef.current = null;
+                close();
+                resolve();
+            });
+        });
+
+        return pendingDismissRef.current;
+    }, [
+        BODY_EXPAND_DURATION,
+        MORPH_DURATION,
+        backdropProgress,
+        blurGlobalSearchInput,
+        bodyProgress,
+        clearFocusRetries,
+        close,
+        isOpen,
+        morphProgress,
+    ]);
 
     const executeItem = React.useCallback(
         async (item: RankedSpotlightItem) => {
             registerRecent(item.id);
-            dismissSpotlight();
+            await dismissSpotlight();
             await Promise.resolve(item.run());
         },
         [dismissSpotlight, registerRecent]
@@ -526,41 +618,61 @@ export function SpotlightOverlay() {
     }, [fetchEvents, fetchMessages, isOpen, session]);
 
     React.useEffect(() => {
-        if (!isOpen || !showInlineSheetInput) return;
+        if (!isOpen) {
+            morphProgress.setValue(0);
+            bodyProgress.setValue(0);
+            backdropProgress.setValue(0);
+            clearFocusRetries();
+            isClosingRef.current = false;
+            pendingDismissRef.current = null;
+            return;
+        }
 
-        const focusInput = () => {
-            inputRef.current?.focus();
-        };
+        isClosingRef.current = false;
+        pendingDismissRef.current = null;
+        morphProgress.setValue(0);
+        bodyProgress.setValue(0);
+        backdropProgress.setValue(0);
 
-        const interaction = InteractionManager.runAfterInteractions(focusInput);
-        const frameId = requestAnimationFrame(focusInput);
-        // Mobile can miss the first focus while the sheet animates in; retry a few times.
-        const retry1 = setTimeout(focusInput, 90);
-        const retry2 = setTimeout(focusInput, 220);
-        const retry3 = setTimeout(focusInput, 420);
-        const retry4 = setTimeout(focusInput, 700);
+        const openAnimation = Animated.parallel([
+            Animated.timing(morphProgress, {
+                toValue: 1,
+                duration: MORPH_DURATION,
+                easing: Easing.bezier(0.22, 1, 0.36, 1),
+                useNativeDriver: false,
+            }),
+            Animated.timing(backdropProgress, {
+                toValue: 1,
+                duration: MORPH_DURATION,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            }),
+        ]);
+
+        openAnimation.start(({ finished }) => {
+            if (!finished || isClosingRef.current) return;
+            queueInputFocus();
+            Animated.timing(bodyProgress, {
+                toValue: 1,
+                duration: BODY_EXPAND_DURATION,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: false,
+            }).start();
+        });
 
         return () => {
-            interaction.cancel();
-            cancelAnimationFrame(frameId);
-            clearTimeout(retry1);
-            clearTimeout(retry2);
-            clearTimeout(retry3);
-            clearTimeout(retry4);
+            openAnimation.stop();
         };
-    }, [isOpen, showInlineSheetInput]);
-
-    React.useEffect(() => {
-        if (!isOpen || !useBottomSheetLayout) return;
-
-        sheetTranslateY.setValue(isPrimaryFlow ? -18 : 36);
-        Animated.spring(sheetTranslateY, {
-            toValue: 0,
-            useNativeDriver: true,
-            speed: 24,
-            bounciness: 0,
-        }).start();
-    }, [isOpen, isPrimaryFlow, sheetTranslateY, useBottomSheetLayout]);
+    }, [
+        BODY_EXPAND_DURATION,
+        MORPH_DURATION,
+        backdropProgress,
+        bodyProgress,
+        clearFocusRetries,
+        isOpen,
+        morphProgress,
+        queueInputFocus,
+    ]);
 
     React.useEffect(() => {
         if (Platform.OS === 'web') return;
@@ -592,7 +704,7 @@ export function SpotlightOverlay() {
         if (Platform.OS !== 'android' || !isOpen) return;
 
         const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-            dismissSpotlight();
+            void dismissSpotlight();
             return true;
         });
 
@@ -602,11 +714,16 @@ export function SpotlightOverlay() {
     React.useEffect(() => {
         if (isOpen) return;
 
+        clearFocusRetries();
         blurGlobalSearchInput();
         inputRef.current?.blur();
         setKeyboardVisible(false);
         Keyboard.dismiss();
-    }, [blurGlobalSearchInput, isOpen]);
+    }, [blurGlobalSearchInput, clearFocusRetries, isOpen]);
+
+    React.useEffect(() => {
+        return () => clearFocusRetries();
+    }, [clearFocusRetries]);
 
     React.useEffect(() => {
         if (!isOpen) return;
@@ -632,7 +749,7 @@ export function SpotlightOverlay() {
                 if (!session) return;
                 const spotlight = useSpotlightStore.getState();
                 if (spotlight.isOpen) {
-                    dismissSpotlight();
+                    void dismissSpotlight();
                 } else {
                     spotlight.open();
                 }
@@ -644,7 +761,7 @@ export function SpotlightOverlay() {
 
             if (event.key === 'Escape') {
                 event.preventDefault();
-                dismissSpotlight();
+                void dismissSpotlight();
                 return;
             }
 
@@ -679,15 +796,93 @@ export function SpotlightOverlay() {
     if (!session || !isOpen) return null;
 
     const inputBackgroundClass = isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200';
-    // Web needs significantly more clearance due to lack of safe area inset and different header height behavior
     const webTopOffset = Platform.OS === 'web' ? (isCompactViewport ? 90 : 20) : 0;
-    const fallbackTopPassthrough = Math.max(insets.top + 122, 134) + webTopOffset;
-    const primaryTop = globalSearchBottomY ?? fallbackTopPassthrough;
-    const mobileSheetHeight = Math.min(height * 0.62, height - Math.max(insets.top, 10) - 84);
-    const desktopPanelHeight = Math.min(height * 0.82, height - Math.max(insets.top, 12) - 18);
+    const fallbackTop = Math.max(insets.top + 122, 134) + webTopOffset;
+    const fallbackTopFromBottom = globalSearchBottomY !== null ? globalSearchBottomY - DEFAULT_SOURCE_HEIGHT : null;
+    const targetTop = globalSearchFrame?.y ?? fallbackTopFromBottom ?? fallbackTop;
+    const targetWidth = isCompactViewport ? width * 0.94 : Math.min(width - 24, 600);
+    const targetLeft = Math.max((width - targetWidth) / 2, 12);
+    const chromeHeight = TARGET_HEADER_HEIGHT + TARGET_SCOPE_HEIGHT;
+    const bodyMaxHeight = Math.max(
+        0,
+        Math.min(height * 0.6, height - targetTop - insets.bottom - chromeHeight - 16)
+    );
+    const expandedBodyHeight = TARGET_SCOPE_HEIGHT + bodyMaxHeight;
 
-    const runQuickRoute = (route: string) => {
-        dismissSpotlight();
+    const frameAgeMs = globalSearchFrame ? Date.now() - globalSearchFrame.measuredAt : Number.POSITIVE_INFINITY;
+    const hasValidSourceFrame =
+        !!globalSearchFrame &&
+        (openSource === 'primary' || (openSource === 'shortcut' && frameAgeMs <= SOURCE_FRAME_STALE_MS));
+
+    const sourceX = hasValidSourceFrame ? globalSearchFrame!.x : targetLeft + targetWidth * 0.03;
+    const sourceY = hasValidSourceFrame ? globalSearchFrame!.y : targetTop;
+    const sourceWidth = hasValidSourceFrame ? globalSearchFrame!.width : targetWidth * 0.94;
+    const sourceHeight = hasValidSourceFrame ? globalSearchFrame!.height : DEFAULT_SOURCE_HEIGHT;
+    const sourceRadius = hasValidSourceFrame ? globalSearchFrame!.borderRadius : 24;
+
+    const panelTop = morphProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [sourceY, targetTop],
+    });
+    const panelLeft = morphProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [sourceX, targetLeft],
+    });
+    const panelWidth = morphProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [sourceWidth, targetWidth],
+    });
+    const panelHeaderHeight = morphProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [sourceHeight, TARGET_HEADER_HEIGHT],
+    });
+    const panelBodyHeight = bodyProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, expandedBodyHeight],
+    });
+    const panelHeight = Animated.add(panelHeaderHeight, panelBodyHeight);
+    const panelRadius = morphProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [sourceRadius, TARGET_RADIUS],
+    });
+    const panelShadowOpacity = morphProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [hasValidSourceFrame ? 0.08 : 0.14, 0.2],
+    });
+    const panelShadowRadius = morphProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [hasValidSourceFrame ? 6 : 8, 12],
+    });
+    const panelElevation = morphProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [4, 10],
+    });
+    const backdropOpacity = backdropProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+    });
+    const bodyOpacity = bodyProgress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+    });
+    const mimicOpacity = morphProgress.interpolate({
+        inputRange: [0, 0.4],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+    });
+    const headerContentOpacity = morphProgress.interpolate({
+        inputRange: [0.3, 0.7],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
+    const closeButtonOpacity = morphProgress.interpolate({
+        inputRange: [0.5, 1],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
+
+    const runQuickRoute = async (route: string) => {
+        await dismissSpotlight();
         router.push(route as any);
     };
 
@@ -703,7 +898,9 @@ export function SpotlightOverlay() {
             {query ? (
                 <View className="flex-row flex-wrap justify-center gap-2">
                     <Pressable
-                        onPress={() => runQuickRoute('/calendar')}
+                        onPress={() => {
+                            void runQuickRoute('/calendar');
+                        }}
                         className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
                         <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
@@ -711,7 +908,9 @@ export function SpotlightOverlay() {
                         </Text>
                     </Pressable>
                     <Pressable
-                        onPress={() => runQuickRoute('/inbox')}
+                        onPress={() => {
+                            void runQuickRoute('/inbox');
+                        }}
                         className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
                         <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
@@ -719,7 +918,9 @@ export function SpotlightOverlay() {
                         </Text>
                     </Pressable>
                     <Pressable
-                        onPress={() => runQuickRoute('/(profile)/preferences')}
+                        onPress={() => {
+                            void runQuickRoute('/(profile)/preferences');
+                        }}
                         className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
                         <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
@@ -735,6 +936,7 @@ export function SpotlightOverlay() {
         <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            style={{ flex: 1 }}
             contentContainerStyle={{ paddingBottom: 24 }}
         >
             {rows.length === 0
@@ -830,75 +1032,65 @@ export function SpotlightOverlay() {
         </View>
     );
 
-    const renderSearchHeader = (showEscHint: boolean, showInput: boolean) => (
+    const renderSearchHeader = (showEscHint: boolean) => (
         <View className="px-4 pt-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-            {showInput ? (
-                <View className="flex-row items-center gap-2">
-                    <View className={`flex-1 flex-row items-center rounded-2xl border px-3 py-2.5 ${inputBackgroundClass}`}>
-                        <Search
-                            size={18}
-                            color={isDark ? '#94a3b8' : '#64748b'}
-                            strokeWidth={2.4}
-                            style={{ marginRight: 10 }}
-                        />
+            <View className="flex-row items-center gap-2">
+                <View className={`flex-1 flex-row items-center rounded-2xl border px-3 py-2.5 ${inputBackgroundClass}`}>
+                    <Search
+                        size={18}
+                        color={isDark ? '#94a3b8' : '#64748b'}
+                        strokeWidth={2.4}
+                        style={{ marginRight: 10 }}
+                    />
 
-                        <TextInput
-                            ref={inputRef}
-                            value={query}
-                            onChangeText={(value) => {
-                                setQuery(value);
-                                setActiveIndex(0);
-                            }}
-                            onFocus={() => setKeyboardVisible(true)}
-                            placeholder="Type here to search commands, settings, calendar, and inbox..."
-                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-                            autoCorrect={false}
-                            autoCapitalize="none"
-                            returnKeyType="search"
-                            autoFocus={Platform.OS !== 'web'}
-                            showSoftInputOnFocus={true}
-                            className="flex-1 text-slate-900 dark:text-white text-base"
-                            style={{ outline: 'none' } as any}
-                            accessibilityLabel="Global search input"
-                            onSubmitEditing={() => {
-                                const selected = rankedItems[activeIndex] || rankedItems[0];
-                                if (selected) {
-                                    void executeItem(selected);
-                                }
-                            }}
-                        />
+                    <TextInput
+                        ref={inputRef}
+                        value={query}
+                        onChangeText={(value) => {
+                            setQuery(value);
+                            setActiveIndex(0);
+                        }}
+                        onFocus={() => setKeyboardVisible(true)}
+                        placeholder="Type here to search commands, settings, calendar, and inbox..."
+                        placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                        autoCorrect={false}
+                        autoCapitalize="none"
+                        returnKeyType="search"
+                        autoFocus={false}
+                        showSoftInputOnFocus={true}
+                        className="flex-1 text-slate-900 dark:text-white text-base"
+                        style={{ outline: 'none' } as any}
+                        accessibilityLabel="Global search input"
+                        onSubmitEditing={() => {
+                            const selected = rankedItems[activeIndex] || rankedItems[0];
+                            if (selected) {
+                                void executeItem(selected);
+                            }
+                        }}
+                    />
 
-                        {showEscHint && Platform.OS === 'web' && (
-                            <View className="ml-2 px-2 py-1 rounded-md border border-slate-300 dark:border-slate-700">
-                                <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                    Esc
-                                </Text>
-                            </View>
-                        )}
-                    </View>
+                    {showEscHint && Platform.OS === 'web' && (
+                        <View className="ml-2 px-2 py-1 rounded-md border border-slate-300 dark:border-slate-700">
+                            <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                Esc
+                            </Text>
+                        </View>
+                    )}
+                </View>
 
+                <Animated.View style={{ opacity: closeButtonOpacity }}>
                     <Pressable
-                        onPress={dismissSpotlight}
+                        onPress={() => {
+                            void dismissSpotlight();
+                        }}
                         accessibilityRole="button"
                         accessibilityLabel="Close Spotlight search"
                         className="w-10 h-10 rounded-xl items-center justify-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
                         <X size={18} color={isDark ? '#cbd5e1' : '#334155'} strokeWidth={2.5} />
                     </Pressable>
-                </View>
-            ) : (
-                <View className="flex-row items-center gap-3">
-                    {renderFilterChips}
-                    <Pressable
-                        onPress={dismissSpotlight}
-                        accessibilityRole="button"
-                        accessibilityLabel="Close Spotlight search"
-                        className="w-10 h-10 rounded-xl items-center justify-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
-                    >
-                        <X size={18} color={isDark ? '#cbd5e1' : '#334155'} strokeWidth={2.5} />
-                    </Pressable>
-                </View>
-            )}
+                </Animated.View>
+            </View>
         </View>
     );
 
@@ -908,7 +1100,57 @@ export function SpotlightOverlay() {
         </View>
     );
 
-    const topPassthroughHeight = isPrimaryFlow ? primaryTop : 0;
+    const renderBarMimic = (
+        <View
+            style={{
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 16,
+            }}
+        >
+            <Search
+                size={22}
+                color={isDark ? '#cbd5e1' : '#334155'}
+                strokeWidth={2.5}
+                style={{ marginRight: 20, opacity: 0.7 }}
+            />
+            <Text
+                numberOfLines={1}
+                style={{
+                    flex: 1,
+                    fontSize: 17,
+                    fontWeight: '500',
+                    color: isDark ? '#64748b' : '#94a3b8',
+                }}
+            >
+                Search all app functions...
+            </Text>
+            {Platform.OS === 'web' ? (
+                <View
+                    style={{
+                        marginLeft: 8,
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        borderWidth: 1,
+                        borderColor: isDark ? '#334155' : '#cbd5e1',
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: 10,
+                            textTransform: 'uppercase',
+                            letterSpacing: 1.5,
+                            color: isDark ? '#64748b' : '#94a3b8',
+                        }}
+                    >
+                        ⌘K
+                    </Text>
+                </View>
+            ) : null}
+        </View>
+    );
 
     return (
         <View
@@ -922,100 +1164,102 @@ export function SpotlightOverlay() {
                 zIndex: 200,
             }}
         >
-            <Pressable
-                onPress={dismissSpotlight}
-                accessibilityRole="button"
-                accessibilityLabel="Dismiss search"
+            <Animated.View
                 style={{
                     position: 'absolute',
-                    top: topPassthroughHeight,
+                    top: targetTop,
                     right: 0,
                     bottom: 0,
                     left: 0,
+                    opacity: backdropOpacity,
                     backgroundColor: 'rgba(2, 6, 23, 0.58)',
                 }}
-            />
+            >
+                <Pressable
+                    onPress={() => {
+                        void dismissSpotlight();
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Dismiss search"
+                    style={{ flex: 1 }}
+                />
+            </Animated.View>
 
-            {useBottomSheetLayout ? (
-                isPrimaryFlow ? (
-                    <KeyboardAvoidingView
-                        pointerEvents="box-none"
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                        style={{
-                            position: 'absolute',
-                            top: primaryTop,
-                            right: 0,
-                            bottom: 0,
-                            left: 0,
-                        }}
-                    >
-                        <Animated.View
-                            style={{
-                                flex: 1,
-                                transform: [{ translateY: sheetTranslateY }],
-                                borderTopLeftRadius: 28,
-                                borderTopRightRadius: 28,
-                                borderTopWidth: 1,
-                                borderRightWidth: 1,
-                                borderLeftWidth: 1,
-                                borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                                backgroundColor: isDark ? '#020617' : '#ffffff',
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {renderSearchHeader(false, false)}
-                            {/* renderScopeRow merged into header for primary flow */}
-                            {renderResultRows}
-                        </Animated.View>
-                    </KeyboardAvoidingView>
-                ) : (
-                    <KeyboardAvoidingView
-                        pointerEvents="box-none"
-                        style={{ flex: 1 }}
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                    >
-                        <Animated.View
-                            style={{
-                                marginTop: 'auto',
-                                height: mobileSheetHeight,
-                                transform: [{ translateY: sheetTranslateY }],
-                                borderTopLeftRadius: 28,
-                                borderTopRightRadius: 28,
-                                borderWidth: 1,
-                                borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                                backgroundColor: isDark ? '#020617' : '#ffffff',
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {renderSearchHeader(false, showInlineSheetInput)}
-                            {renderScopeRow}
-                            {renderResultRows}
-                        </Animated.View>
-                    </KeyboardAvoidingView>
-                )
-            ) : (
-                <View
+            <KeyboardAvoidingView
+                pointerEvents="box-none"
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                }}
+            >
+                <Animated.View
                     style={{
-                        flex: 1,
-                        paddingTop: isPrimaryFlow ? primaryTop : Math.max(insets.top, 12) + 12,
-                        paddingHorizontal: 12,
+                        position: 'absolute',
+                        top: panelTop,
+                        left: panelLeft,
+                        width: panelWidth,
+                        height: panelHeight,
+                        borderRadius: panelRadius,
+                        borderWidth: 1,
+                        borderColor: isDark ? '#1e293b' : '#e2e8f0',
+                        backgroundColor: morphProgress.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: isDark ? ['#0f172a', '#020617'] : ['#ffffff', '#ffffff'],
+                        }),
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: panelShadowOpacity,
+                        shadowRadius: panelShadowRadius,
+                        elevation: panelElevation,
+                        overflow: 'hidden',
                     }}
                 >
-                    <View
-                        className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+                    <Animated.View style={{ height: panelHeaderHeight, overflow: 'hidden' }}>
+                        <Animated.View
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                opacity: mimicOpacity,
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {renderBarMimic}
+                        </Animated.View>
+                        <Animated.View
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                opacity: headerContentOpacity,
+                            }}
+                        >
+                            {renderSearchHeader(Platform.OS === 'web')}
+                        </Animated.View>
+                    </Animated.View>
+
+                    <Animated.View
                         style={{
-                            alignSelf: 'center',
-                            width: '100%',
-                            maxWidth: 760,
-                            maxHeight: desktopPanelHeight,
+                            height: panelBodyHeight,
+                            opacity: bodyOpacity,
+                            overflow: 'hidden',
                         }}
                     >
-                        {renderSearchHeader(true, showInlineSheetInput)}
-                        {showInlineSheetInput && renderScopeRow}
-                        {renderResultRows}
-                    </View>
-                </View>
-            )}
+                        {renderScopeRow}
+                        <View style={{ maxHeight: bodyMaxHeight, flex: 1 }}>
+                            {renderResultRows}
+                        </View>
+                    </Animated.View>
+                </Animated.View>
+            </KeyboardAvoidingView>
         </View>
     );
 }

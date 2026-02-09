@@ -692,8 +692,9 @@ export function SpotlightOverlay() {
     );
     const expandedBodyHeight = Math.min(estimatedContentHeight, maxPanelHeight);
 
-    // Update shared value in an effect to avoid Reanimated's render-time write warning
-    React.useEffect(() => {
+    // useLayoutEffect (not useEffect) so the shared value is set synchronously
+    // before the first animation frame — prevents height: progress * 0 on open
+    React.useLayoutEffect(() => {
         setExpandedHeight(expandedBodyHeight);
     }, [expandedBodyHeight, setExpandedHeight]);
 

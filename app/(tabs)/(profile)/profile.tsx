@@ -1,3 +1,4 @@
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useUserStore } from '@/store/useUserStore';
 import { DUTY_TYPES, PREFERENCE_REGIONS } from '@/types/user';
@@ -66,14 +67,14 @@ export default function ProfileScreen() {
 
     if (!user) {
         return (
-            <View className="flex-1 bg-slate-50 dark:bg-black justify-center items-center">
+            <ScreenGradient>
                 <Text className="text-slate-500 dark:text-gray-400">Please sign in to view your profile.</Text>
-            </View>
+            </ScreenGradient>
         );
     }
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-black">
+        <ScreenGradient>
             <ScrollView
                 className="flex-1"
             >
@@ -180,6 +181,6 @@ export default function ProfileScreen() {
                     </View>
                 </View>
             </ScrollView>
-        </View>
+        </ScreenGradient>
     );
 }

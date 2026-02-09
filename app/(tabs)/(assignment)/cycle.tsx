@@ -1,7 +1,7 @@
 import { ManifestRail } from '@/components/cycle/ManifestRail';
 import { SlateSlot } from '@/components/cycle/SlateSlot';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { selectManifestItems, useAssignmentStore } from '@/store/useAssignmentStore';
-import { Application } from '@/types/schema';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Send } from 'lucide-react-native';
 import React, { useCallback, useMemo } from 'react';
@@ -98,7 +98,7 @@ export default function CycleScreen() {
     };
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+        <ScreenGradient>
             <SafeAreaView className="flex-1" edges={['top']}>
                 {/* Header */}
                 <View className="px-4 py-4 flex-row items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-10">
@@ -187,6 +187,6 @@ export default function CycleScreen() {
                 </View>
 
             </SafeAreaView>
-        </View>
+        </ScreenGradient>
     );
 }

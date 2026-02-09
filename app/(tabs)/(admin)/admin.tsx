@@ -1,4 +1,5 @@
 import { LeaveBalanceCard } from '@/components/LeaveBalanceCard';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { SyncStatus } from '@/components/SyncStatusBadge';
 import Colors from '@/constants/Colors';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
@@ -135,7 +136,7 @@ export default function AdminScreen() {
 
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-black">
+        <ScreenGradient>
             {/* <ScreenHeader
                 title="MY ADMIN"
                 subtitle="Leave & Actions"
@@ -153,6 +154,6 @@ export default function AdminScreen() {
                 ListHeaderComponent={renderHeader}
                 ListEmptyComponent={renderEmpty}
             />
-        </View>
+        </ScreenGradient>
     );
 }

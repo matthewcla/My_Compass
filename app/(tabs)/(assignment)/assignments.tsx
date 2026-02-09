@@ -1,4 +1,5 @@
 import { BilletSwipeCard } from '@/components/BilletSwipeCard';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { SwipeDirection, useAssignmentStore } from '@/store/useAssignmentStore';
 import { RotateCcw } from 'lucide-react-native';
@@ -84,7 +85,7 @@ export default function AssignmentsScreen() {
     const cardHeight = height - HEADER_HEIGHT - FOOTER_HEIGHT - TAB_BAR_HEIGHT;
 
     return (
-      <View className="flex-1 justify-center items-center relative pt-8">
+      <View className="flex-1 justify-center items-center relative pt-8" style={{ overflow: 'hidden' }}>
         {/* Changed pb-8 to pt-8 to push card DOWN away from header, balancing the top-heavy feel */}
         {/* Maximum Width Constraint for iPad/Web */}
         <View style={{ width: Math.min(width - 32, 400), height: Math.max(cardHeight, 400) }}>
@@ -123,14 +124,14 @@ export default function AssignmentsScreen() {
   return (
     <>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View className="flex-1 bg-gray-100 dark:bg-black">
+        <ScreenGradient>
           {/* Header Hoisted */}
 
 
           {renderDeck()}
 
           {/* Temporary Footer / Controls hint - Removed */}
-        </View>
+        </ScreenGradient>
       </GestureHandlerRootView>
     </>
   );

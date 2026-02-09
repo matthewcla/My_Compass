@@ -5,6 +5,7 @@ import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -15,7 +16,6 @@ import { useLeaveStore } from '@/store/useLeaveStore';
 import { useUserStore } from '@/store/useUserStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, Text, View } from 'react-native';
@@ -101,26 +101,20 @@ export default function HubDashboard() {
     // Loading state
     if (loading && !data) {
         return (
-            <LinearGradient
-                colors={['#0f172a', '#1e293b']} // Slate-900 to Slate-800
-                style={{ flex: 1 }}
-            >
+            <ScreenGradient>
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <HubSkeleton />
                 <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
                     <GlobalTabBar activeRoute="home" />
                 </View>
-            </LinearGradient>
+            </ScreenGradient>
         );
     }
 
     // Error state with fallback
     if (error && !data) {
         return (
-            <LinearGradient
-                colors={['#0f172a', '#1e293b']}
-                style={{ flex: 1 }}
-            >
+            <ScreenGradient>
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <View className="flex-1 items-center justify-center px-8">
                     <Text className="text-slate-400 text-center">{error}</Text>
@@ -128,7 +122,7 @@ export default function HubDashboard() {
                 <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
                     <GlobalTabBar activeRoute="home" />
                 </View>
-            </LinearGradient>
+            </ScreenGradient>
         );
     }
 
@@ -181,10 +175,7 @@ export default function HubDashboard() {
     };
 
     return (
-        <LinearGradient
-            colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
-            style={{ flex: 1 }}
-        >
+        <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
                 topBar={
@@ -250,6 +241,6 @@ export default function HubDashboard() {
                     />
                 </View>
             )}
-        </LinearGradient>
+        </ScreenGradient>
     );
 }

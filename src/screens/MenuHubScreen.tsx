@@ -1,5 +1,6 @@
 import { MenuTile } from '@/components/menu/MenuTile';
 import OnboardingCard from '@/components/onboarding/OnboardingCard';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { useSession } from '@/lib/ctx';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
 import * as Clipboard from 'expo-clipboard';
@@ -66,8 +67,8 @@ export default function MenuHubScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={{ height: insets.top, backgroundColor: theme.background }} />
+    <ScreenGradient>
+      <View style={{ height: insets.top }} />
       <ScrollView
         contentContainerStyle={{
           paddingTop: isMenuModalRoute ? 20 : 18,
@@ -238,6 +239,6 @@ export default function MenuHubScreen() {
           </Text>
         </MotiView>
       )}
-    </View>
+    </ScreenGradient>
   );
 }

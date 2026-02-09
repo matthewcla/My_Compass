@@ -1,3 +1,4 @@
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useUserStore } from '@/store/useUserStore';
@@ -74,66 +75,68 @@ export default function ProfilePreferences() {
     );
 
     return (
-        <ScrollView
-            className="flex-1 bg-slate-50 dark:bg-black"
-            contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
-        >
-            {/* Privacy Section */}
-            <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">
-                <View className="flex-row items-center justify-between">
-                    <View className="flex-1 mr-4">
-                        <View className="flex-row items-center gap-2 mb-1">
-                            <Shield size={18} color={isDark ? "#60A5FA" : "#2563EB"} />
-                            <Text className="text-slate-900 dark:text-white font-bold text-base">Privacy Mode</Text>
+        <ScreenGradient>
+            <ScrollView
+                className="flex-1"
+                contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+            >
+                {/* Privacy Section */}
+                <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">
+                    <View className="flex-row items-center justify-between">
+                        <View className="flex-1 mr-4">
+                            <View className="flex-row items-center gap-2 mb-1">
+                                <Shield size={18} color={isDark ? "#60A5FA" : "#2563EB"} />
+                                <Text className="text-slate-900 dark:text-white font-bold text-base">Privacy Mode</Text>
+                            </View>
+                            <Text className="text-slate-500 dark:text-slate-400 text-sm leading-5">
+                                Hide your specific rank and name from the home dashboard greeting.
+                            </Text>
                         </View>
-                        <Text className="text-slate-500 dark:text-slate-400 text-sm leading-5">
-                            Hide your specific rank and name from the home dashboard greeting.
+                        <Switch
+                            value={privacyMode}
+                            onValueChange={togglePrivacyMode}
+                            trackColor={{ true: '#2563EB', false: '#CBD5E1' }}
+                            thumbColor={'white'}
+                        />
+                    </View>
+                </View>
+
+                <View className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 mb-2">
+                    <View className="flex-row items-start gap-3">
+                        <Info size={20} color={isDark ? "#60A5FA" : "#2563EB"} className="mt-0.5" />
+                        <Text className="text-blue-800 dark:text-blue-200 text-sm flex-1 leading-5">
+                            These preferences help Compass recommend the most relevant billets for your next assignment.
                         </Text>
                     </View>
-                    <Switch
-                        value={privacyMode}
-                        onValueChange={togglePrivacyMode}
-                        trackColor={{ true: '#2563EB', false: '#CBD5E1' }}
-                        thumbColor={'white'}
-                    />
                 </View>
-            </View>
 
-            <View className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 mb-2">
-                <View className="flex-row items-start gap-3">
-                    <Info size={20} color={isDark ? "#60A5FA" : "#2563EB"} className="mt-0.5" />
-                    <Text className="text-blue-800 dark:text-blue-200 text-sm flex-1 leading-5">
-                        These preferences help Compass recommend the most relevant billets for your next assignment.
-                    </Text>
+                {/* Duty Types */}
+                {renderSectionHeader("Duty Preference", <Ship size={20} color={isDark ? "#94A3B8" : "#475569"} />)}
+                <View>
+                    {DUTY_TYPES.map((type) => (
+                        renderOption(
+                            type, // key
+                            type,
+                            preferences.dutyTypes?.includes(type) ?? false,
+                            () => toggleDutyType(type)
+                        )
+                    ))}
                 </View>
-            </View>
 
-            {/* Duty Types */}
-            {renderSectionHeader("Duty Preference", <Ship size={20} color={isDark ? "#94A3B8" : "#475569"} />)}
-            <View>
-                {DUTY_TYPES.map((type) => (
-                    renderOption(
-                        type, // key
-                        type,
-                        preferences.dutyTypes?.includes(type) ?? false,
-                        () => toggleDutyType(type)
-                    )
-                ))}
-            </View>
+                {/* Regions */}
+                {renderSectionHeader("Preferred Regions", <MapPin size={20} color={isDark ? "#94A3B8" : "#475569"} />)}
+                <View>
+                    {PREFERENCE_REGIONS.map((region) => (
+                        renderOption(
+                            region, // key
+                            region,
+                            preferences.regions?.includes(region) ?? false,
+                            () => toggleRegion(region)
+                        )
+                    ))}
+                </View>
 
-            {/* Regions */}
-            {renderSectionHeader("Preferred Regions", <MapPin size={20} color={isDark ? "#94A3B8" : "#475569"} />)}
-            <View>
-                {PREFERENCE_REGIONS.map((region) => (
-                    renderOption(
-                        region, // key
-                        region,
-                        preferences.regions?.includes(region) ?? false,
-                        () => toggleRegion(region)
-                    )
-                ))}
-            </View>
-
-        </ScrollView>
+            </ScrollView>
+        </ScreenGradient>
     );
 }

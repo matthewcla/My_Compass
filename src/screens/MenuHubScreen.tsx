@@ -2,16 +2,15 @@ import OnboardingCard from '@/components/onboarding/OnboardingCard';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { useSession } from '@/lib/ctx';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
-import * as Clipboard from 'expo-clipboard';
+
 import { usePathname, useSegments } from 'expo-router';
 import {
   ChevronRight,
-  Copy,
   LogOut,
   Settings
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React, { useState } from 'react';
+import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -39,7 +38,7 @@ export default function MenuHubScreen() {
     icon: isDark ? '#94A3B8' : '#94A3B8',
   };
 
-  const [toastVisible, setToastVisible] = useState(false);
+
   const openSpotlight = useSpotlightStore((state) => state.open);
   const spotlightQuery = useSpotlightStore((state) => state.query);
   const setSpotlightQuery = useSpotlightStore((state) => state.setQuery);
@@ -50,11 +49,7 @@ export default function MenuHubScreen() {
     }
   }, [openSpotlight]);
 
-  const handleCopyDODID = async () => {
-    await Clipboard.setStringAsync('1234567890');
-    setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 2000);
-  };
+
 
   return (
     <ScreenGradient>
@@ -115,57 +110,11 @@ export default function MenuHubScreen() {
           </TouchableOpacity>
         </MotiView>
 
-        {/* DOD ID Footer */}
-        <MotiView
-          from={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 500, delay: 400 }}
-          className="mt-8 items-center"
-        >
-          <TouchableOpacity
-            onPress={handleCopyDODID}
-            activeOpacity={0.6}
-            className="flex-row items-center py-2 px-3 rounded-full"
-            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent' }}
-          >
-            <Text style={{ color: theme.subText }} className="text-xs font-medium mr-2">
-              DOD ID: 1234567890
-            </Text>
-            {/* Tiny copy icon for affordance, optional but good */}
-            <View style={{ opacity: 0.5 }}>
-              <Copy size={10} color={theme.subText} />
-            </View>
-          </TouchableOpacity>
-        </MotiView>
+
 
       </ScrollView>
 
-      {/* Toast Notification */}
-      {toastVisible && (
-        <MotiView
-          from={{ opacity: 0, translateY: 10, scale: 0.9 }}
-          animate={{ opacity: 1, translateY: 0, scale: 1 }}
-          exit={{ opacity: 0, translateY: 10, scale: 0.9 }}
-          style={{
-            position: 'absolute',
-            bottom: insets.bottom + 30,
-            alignSelf: 'center',
-            backgroundColor: isDark ? '#FFFFFF' : '#334155',
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            borderRadius: 20,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}
-        >
-          <Text style={{ color: isDark ? '#000000' : '#FFFFFF', fontWeight: '600' }}>
-            Copied to clipboard
-          </Text>
-        </MotiView>
-      )}
+
     </ScreenGradient>
   );
 }

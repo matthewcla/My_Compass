@@ -499,6 +499,7 @@ export default function LeaveRequestScreen() {
                                     onPress={handleExit}
                                     className="h-14 w-14 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 border border-slate-200 dark:border-slate-700"
                                     accessibilityLabel="Exit Wizard"
+                                    accessibilityRole="button"
                                 >
                                     <X size={24} color={themeColors.labelSecondary} strokeWidth={2} />
                                 </Pressable>
@@ -519,7 +520,10 @@ export default function LeaveRequestScreen() {
             {/* Exit Confirmation Overlay */}
             {
                 showExitModal && (
-                    <View className="absolute inset-0 z-50 items-center justify-center p-4">
+                    <View
+                        className="absolute inset-0 z-50 items-center justify-center p-4"
+                        accessibilityViewIsModal={true}
+                    >
                         {/* Backdrop */}
                         <Animated.View entering={FadeIn} className="absolute inset-0 bg-black/60">
                             <Pressable className="flex-1" onPress={() => setShowExitModal(false)} />
@@ -540,6 +544,8 @@ export default function LeaveRequestScreen() {
                                     <Pressable
                                         onPress={() => confirmExit('save')}
                                         className="w-full py-3 bg-blue-600 rounded-xl items-center active:bg-blue-700"
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Save draft and exit wizard"
                                     >
                                         <Text className="text-white font-semibold">Save & Exit</Text>
                                     </Pressable>
@@ -548,6 +554,9 @@ export default function LeaveRequestScreen() {
                                     <Pressable
                                         onPress={() => confirmExit('discard')}
                                         className="w-full py-3 bg-red-50 dark:bg-red-900/20 rounded-xl items-center active:bg-red-100 dark:active:bg-red-900/30"
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Discard draft and exit wizard"
+                                        accessibilityHint="Permanently deletes this draft"
                                     >
                                         <Text className="text-red-600 dark:text-red-400 font-semibold">Discard</Text>
                                     </Pressable>
@@ -556,6 +565,8 @@ export default function LeaveRequestScreen() {
                                     <Pressable
                                         onPress={() => setShowExitModal(false)}
                                         className="w-full py-3 mt-2 items-center"
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Cancel exit"
                                     >
                                         <Text className="text-slate-500 dark:text-slate-400 font-medium">Cancel</Text>
                                     </Pressable>

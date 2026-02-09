@@ -929,6 +929,21 @@ export function SpotlightOverlay() {
                 />
             </Animated.View>
 
+            {/* Seam cover: prevents morph flicker while panel height animates from 0 */}
+            <View
+                style={{
+                    position: 'absolute',
+                    top: dropdownTop,
+                    left: dropdownLeft,
+                    width: dropdownWidth,
+                    height: 4,
+                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    borderLeftWidth: 1,
+                    borderRightWidth: 1,
+                    borderColor: isDark ? '#1e293b' : '#e2e8f0',
+                }}
+            />
+
             {/* Results dropdown — positioned below search bar */}
             <KeyboardAvoidingView
                 pointerEvents="box-none"

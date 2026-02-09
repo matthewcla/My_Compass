@@ -99,6 +99,15 @@ export default function CalendarScreen() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const searchConfig = {
+        visible: true,
+        onChangeText: setSearchQuery,
+        placeholder: 'Search events...',
+        value: searchQuery
+    };
+
     // Scanner State
     const [isScannerOpen, setIsScannerOpen] = useState(false);
 
@@ -132,6 +141,7 @@ export default function CalendarScreen() {
                             title=""
                             subtitle=""
                             withSafeArea={false}
+                            searchConfig={searchConfig}
                         />
                     }
                 >

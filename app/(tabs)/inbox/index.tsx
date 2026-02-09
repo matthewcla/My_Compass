@@ -1,6 +1,7 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { MessageCard } from '@/components/inbox/MessageCard';
 import { ScreenGradient } from '@/components/ScreenGradient';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useInboxStore } from '@/store/useInboxStore';
 import type { InboxMessage } from '@/types/inbox';
@@ -20,6 +21,20 @@ type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
 const MAX_FILTER_MESSAGES = 500;
 const MIN_FILTER_PINNED_HEIGHT = 52;
 
+const formatDTG = (dateString: string) => {
+    try {
+        const date = new Date(dateString);
+        const dd = date.getUTCDate().toString().padStart(2, '0');
+        const hh = date.getUTCHours().toString().padStart(2, '0');
+        const mm = date.getUTCMinutes().toString().padStart(2, '0');
+        const mon = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
+        const yy = date.getUTCFullYear().toString().slice(-2);
+        return `${dd}${hh}${mm}Z ${mon} ${yy}`;
+    } catch (e) {
+        return '';
+    }
+};
+
 export default function InboxScreen() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -27,8 +42,16 @@ export default function InboxScreen() {
     const router = useRouter();
     const [, startTransition] = useTransition();
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
+    const [searchQuery, setSearchQuery] = useState('');
     const [filterHeight, setFilterHeight] = useState(0);
     const lastNonZeroFilterHeight = useRef(0);
+
+    const searchConfig = {
+        visible: true,
+        onChangeText: setSearchQuery,
+        placeholder: 'Search messages...',
+        value: searchQuery
+    };
 
     useEffect(() => {
         fetchMessages();
@@ -50,6 +73,18 @@ export default function InboxScreen() {
 
     const filteredMessages = useMemo(() => {
         return filterableMessages.filter(msg => {
+            // Text Search
+            if (searchQuery) {
+                const query = searchQuery.toUpperCase();
+                const dtg = formatDTG(msg.timestamp);
+                const matchesText =
+                    msg.subject.toUpperCase().includes(query) ||
+                    msg.body.toUpperCase().includes(query) ||
+                    dtg.includes(query);
+
+                if (!matchesText) return false;
+            }
+
             switch (activeFilter) {
                 case 'Official':
                     return msg.type === 'NAVADMIN' || msg.type === 'ALNAV';
@@ -61,7 +96,7 @@ export default function InboxScreen() {
                     return true;
             }
         });
-    }, [filterableMessages, activeFilter]);
+    }, [filterableMessages, activeFilter, searchQuery]);
 
     const sections = useMemo<InboxSection[]>(() => {
         // Optimized: Single pass categorization without redundant sorting.
@@ -148,6 +183,12 @@ export default function InboxScreen() {
                 statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
                 topBar={
                     <View className="bg-slate-50 dark:bg-black">
+                        <ScreenHeader
+                            title=""
+                            subtitle=""
+                            withSafeArea={false}
+                            searchConfig={searchConfig}
+                        />
                         {renderHeader()}
                     </View>
                 }

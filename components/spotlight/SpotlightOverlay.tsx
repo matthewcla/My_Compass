@@ -682,7 +682,7 @@ export function SpotlightOverlay() {
     // Web needs significantly more clearance due to lack of safe area inset and different header height behavior
     const webTopOffset = Platform.OS === 'web' ? (isCompactViewport ? 90 : 20) : 0;
     const fallbackTopPassthrough = Math.max(insets.top + 122, 134) + webTopOffset;
-    const primaryTop = (globalSearchBottomY ?? fallbackTopPassthrough) + webTopOffset;
+    const primaryTop = globalSearchBottomY ?? fallbackTopPassthrough;
     const mobileSheetHeight = Math.min(height * 0.62, height - Math.max(insets.top, 10) - 84);
     const desktopPanelHeight = Math.min(height * 0.82, height - Math.max(insets.top, 12) - 18);
 
@@ -908,7 +908,7 @@ export function SpotlightOverlay() {
         </View>
     );
 
-    const topPassthroughHeight = isPrimaryFlow && useBottomSheetLayout ? primaryTop : 0;
+    const topPassthroughHeight = isPrimaryFlow ? primaryTop : 0;
 
     return (
         <View
@@ -997,7 +997,7 @@ export function SpotlightOverlay() {
                 <View
                     style={{
                         flex: 1,
-                        paddingTop: Math.max(insets.top, 12) + 12,
+                        paddingTop: isPrimaryFlow ? primaryTop : Math.max(insets.top, 12) + 12,
                         paddingHorizontal: 12,
                     }}
                 >
@@ -1011,7 +1011,7 @@ export function SpotlightOverlay() {
                         }}
                     >
                         {renderSearchHeader(true, showInlineSheetInput)}
-                        {renderScopeRow}
+                        {showInlineSheetInput && renderScopeRow}
                         {renderResultRows}
                     </View>
                 </View>

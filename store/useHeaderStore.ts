@@ -31,6 +31,8 @@ export interface GlobalSearchFrame {
 }
 
 let globalSearchBlurHandler: (() => void) | null = null;
+let globalSearchSubmitHandler: (() => void) | null = null;
+let globalSearchDismissHandler: (() => void) | null = null;
 
 interface HeaderState {
     title: string;
@@ -54,6 +56,10 @@ interface HeaderState {
     setVisible: (visible: boolean) => void;
     registerGlobalSearchBlur: (fn: (() => void) | null) => void;
     blurGlobalSearchInput: () => void;
+    registerGlobalSearchSubmit: (fn: (() => void) | null) => void;
+    triggerGlobalSearchSubmit: () => void;
+    registerGlobalSearchDismiss: (fn: (() => void) | null) => void;
+    triggerGlobalSearchDismiss: () => void;
     resetHeader: () => void;
 }
 
@@ -95,6 +101,18 @@ export const useHeaderStore = create<HeaderState>((set) => ({
     },
     blurGlobalSearchInput: () => {
         globalSearchBlurHandler?.();
+    },
+    registerGlobalSearchSubmit: (fn) => {
+        globalSearchSubmitHandler = fn;
+    },
+    triggerGlobalSearchSubmit: () => {
+        globalSearchSubmitHandler?.();
+    },
+    registerGlobalSearchDismiss: (fn) => {
+        globalSearchDismissHandler = fn;
+    },
+    triggerGlobalSearchDismiss: () => {
+        globalSearchDismissHandler?.();
     },
     resetHeader: () =>
         set({

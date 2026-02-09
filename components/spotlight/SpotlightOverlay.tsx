@@ -17,24 +17,20 @@ import {
     ChevronRight,
     Compass,
     Inbox as InboxIcon,
-    Search,
     Settings,
-    Sparkles,
-    X
+    Sparkles
 } from 'lucide-react-native';
 import React from 'react';
 import {
     Animated,
     BackHandler,
     Easing,
-    InteractionManager,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
     Pressable,
     ScrollView,
     Text,
-    TextInput,
     View,
     useWindowDimensions
 } from 'react-native';
@@ -257,13 +253,8 @@ const HighlightedLabel = ({
 };
 
 export function SpotlightOverlay() {
-    const MORPH_DURATION = 180;
-    const BODY_EXPAND_DURATION = 140;
-    const SOURCE_FRAME_STALE_MS = 2600;
-    const TARGET_RADIUS = 12;
-    const TARGET_HEADER_HEIGHT = 76;
+    const BODY_EXPAND_DURATION = 200;
     const TARGET_SCOPE_HEIGHT = 56;
-    const DEFAULT_SOURCE_HEIGHT = 56;
 
     const { session } = useSession();
     const router = useRouter();
@@ -277,15 +268,15 @@ export function SpotlightOverlay() {
     const scope = useSpotlightStore((state) => state.scope);
     const activeIndex = useSpotlightStore((state) => state.activeIndex);
     const recentItemIds = useSpotlightStore((state) => state.recentItemIds);
-    const openSource = useSpotlightStore((state) => state.source);
     const close = useSpotlightStore((state) => state.close);
     const setQuery = useSpotlightStore((state) => state.setQuery);
     const setScope = useSpotlightStore((state) => state.setScope);
     const setActiveIndex = useSpotlightStore((state) => state.setActiveIndex);
     const registerRecent = useSpotlightStore((state) => state.registerRecent);
     const blurGlobalSearchInput = useHeaderStore((state) => state.blurGlobalSearchInput);
-    const globalSearchBottomY = useHeaderStore((state) => state.globalSearchBottomY);
     const globalSearchFrame = useHeaderStore((state) => state.globalSearchFrame);
+    const registerGlobalSearchSubmit = useHeaderStore((state) => state.registerGlobalSearchSubmit);
+    const registerGlobalSearchDismiss = useHeaderStore((state) => state.registerGlobalSearchDismiss);
 
     const messages = useInboxStore((state) => state.messages);
     const fetchMessages = useInboxStore((state) => state.fetchMessages);
@@ -294,20 +285,13 @@ export function SpotlightOverlay() {
     const user = useUserStore((state) => state.user);
     const updateUser = useUserStore((state) => state.updateUser);
 
-    const inputRef = React.useRef<TextInput>(null);
     const rankedItemsRef = React.useRef<RankedSpotlightItem[]>([]);
-    const simulatorKeyboardHintShownRef = React.useRef(false);
-    const openInteractionRef = React.useRef<ReturnType<typeof InteractionManager.runAfterInteractions> | null>(null);
-    const focusTimersRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([]);
     const isClosingRef = React.useRef(false);
     const pendingDismissRef = React.useRef<Promise<void> | null>(null);
-    const [keyboardVisible, setKeyboardVisible] = React.useState(false);
-    const morphProgress = React.useRef(new Animated.Value(0)).current;
     const bodyProgress = React.useRef(new Animated.Value(0)).current;
     const backdropProgress = React.useRef(new Animated.Value(0)).current;
 
     const isCompactViewport = width < COMPACT_BREAKPOINT;
-    const isPrimaryFlow = openSource === 'primary';
 
     const navigationItems = React.useMemo<SpotlightItem[]>(
         () => [
@@ -516,39 +500,13 @@ export function SpotlightOverlay() {
         return result;
     }, [groupedSections]);
 
-    const clearFocusRetries = React.useCallback(() => {
-        if (openInteractionRef.current) {
-            openInteractionRef.current.cancel();
-            openInteractionRef.current = null;
-        }
-        focusTimersRef.current.forEach((timer) => clearTimeout(timer));
-        focusTimersRef.current = [];
-    }, []);
-
-    const queueInputFocus = React.useCallback(() => {
-        clearFocusRetries();
-
-        const focusInput = () => {
-            inputRef.current?.focus();
-        };
-
-        openInteractionRef.current = InteractionManager.runAfterInteractions(focusInput);
-        focusTimersRef.current.push(setTimeout(focusInput, 70));
-        focusTimersRef.current.push(setTimeout(focusInput, 180));
-        focusTimersRef.current.push(setTimeout(focusInput, 340));
-    }, [clearFocusRetries]);
-
     const dismissSpotlight = React.useCallback((): Promise<void> => {
         if (pendingDismissRef.current) {
             return pendingDismissRef.current;
         }
 
-        clearFocusRetries();
         blurGlobalSearchInput();
-        inputRef.current?.blur();
         Keyboard.dismiss();
-        setKeyboardVisible(false);
-        morphProgress.stopAnimation();
         bodyProgress.stopAnimation();
         backdropProgress.stopAnimation();
 
@@ -560,27 +518,19 @@ export function SpotlightOverlay() {
         isClosingRef.current = true;
 
         pendingDismissRef.current = new Promise((resolve) => {
-            Animated.sequence([
+            Animated.parallel([
                 Animated.timing(bodyProgress, {
                     toValue: 0,
-                    duration: BODY_EXPAND_DURATION,
+                    duration: 140,
                     easing: Easing.out(Easing.cubic),
                     useNativeDriver: false,
                 }),
-                Animated.parallel([
-                    Animated.timing(morphProgress, {
-                        toValue: 0,
-                        duration: MORPH_DURATION,
-                        easing: Easing.bezier(0.22, 1, 0.36, 1),
-                        useNativeDriver: false,
-                    }),
-                    Animated.timing(backdropProgress, {
-                        toValue: 0,
-                        duration: 120,
-                        easing: Easing.out(Easing.cubic),
-                        useNativeDriver: true,
-                    }),
-                ]),
+                Animated.timing(backdropProgress, {
+                    toValue: 0,
+                    duration: 120,
+                    easing: Easing.out(Easing.cubic),
+                    useNativeDriver: true,
+                }),
             ]).start(() => {
                 isClosingRef.current = false;
                 pendingDismissRef.current = null;
@@ -590,17 +540,7 @@ export function SpotlightOverlay() {
         });
 
         return pendingDismissRef.current;
-    }, [
-        BODY_EXPAND_DURATION,
-        MORPH_DURATION,
-        backdropProgress,
-        blurGlobalSearchInput,
-        bodyProgress,
-        clearFocusRetries,
-        close,
-        isOpen,
-        morphProgress,
-    ]);
+    }, [backdropProgress, blurGlobalSearchInput, bodyProgress, close, isOpen]);
 
     const executeItem = React.useCallback(
         async (item: RankedSpotlightItem) => {
@@ -611,18 +551,18 @@ export function SpotlightOverlay() {
         [dismissSpotlight, registerRecent]
     );
 
+    // Fetch data when spotlight opens
     React.useEffect(() => {
         if (!isOpen || !session) return;
         fetchMessages().catch(() => undefined);
         fetchEvents().catch(() => undefined);
     }, [fetchEvents, fetchMessages, isOpen, session]);
 
+    // Open / close animation
     React.useEffect(() => {
         if (!isOpen) {
-            morphProgress.setValue(0);
             bodyProgress.setValue(0);
             backdropProgress.setValue(0);
-            clearFocusRetries();
             isClosingRef.current = false;
             pendingDismissRef.current = null;
             return;
@@ -630,76 +570,57 @@ export function SpotlightOverlay() {
 
         isClosingRef.current = false;
         pendingDismissRef.current = null;
-        morphProgress.setValue(0);
         bodyProgress.setValue(0);
         backdropProgress.setValue(0);
 
         const openAnimation = Animated.parallel([
-            Animated.timing(morphProgress, {
-                toValue: 1,
-                duration: MORPH_DURATION,
-                easing: Easing.bezier(0.22, 1, 0.36, 1),
-                useNativeDriver: false,
-            }),
             Animated.timing(backdropProgress, {
                 toValue: 1,
-                duration: MORPH_DURATION,
+                duration: 180,
                 easing: Easing.out(Easing.cubic),
                 useNativeDriver: true,
             }),
-        ]);
-
-        openAnimation.start(({ finished }) => {
-            if (!finished || isClosingRef.current) return;
-            queueInputFocus();
             Animated.timing(bodyProgress, {
                 toValue: 1,
                 duration: BODY_EXPAND_DURATION,
                 easing: Easing.out(Easing.cubic),
                 useNativeDriver: false,
-            }).start();
-        });
+            }),
+        ]);
+
+        openAnimation.start();
 
         return () => {
             openAnimation.stop();
         };
-    }, [
-        BODY_EXPAND_DURATION,
-        MORPH_DURATION,
-        backdropProgress,
-        bodyProgress,
-        clearFocusRetries,
-        isOpen,
-        morphProgress,
-        queueInputFocus,
-    ]);
+    }, [BODY_EXPAND_DURATION, backdropProgress, bodyProgress, isOpen]);
 
+    // Register submit handler
     React.useEffect(() => {
-        if (Platform.OS === 'web') return;
+        if (!isOpen) {
+            registerGlobalSearchSubmit(null);
+            return;
+        }
+        registerGlobalSearchSubmit(() => {
+            const selected = rankedItemsRef.current[activeIndex] || rankedItemsRef.current[0];
+            if (selected) void executeItem(selected);
+        });
+        return () => registerGlobalSearchSubmit(null);
+    }, [isOpen, activeIndex, executeItem, registerGlobalSearchSubmit]);
 
-        const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-        const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
-
-        return () => {
-            showSub.remove();
-            hideSub.remove();
-        };
-    }, []);
-
+    // Register dismiss handler
     React.useEffect(() => {
-        if (!__DEV__ || Platform.OS !== 'ios' || !isOpen || !isPrimaryFlow) return;
+        if (!isOpen) {
+            registerGlobalSearchDismiss(null);
+            return;
+        }
+        registerGlobalSearchDismiss(() => {
+            void dismissSpotlight();
+        });
+        return () => registerGlobalSearchDismiss(null);
+    }, [isOpen, dismissSpotlight, registerGlobalSearchDismiss]);
 
-        const timeout = setTimeout(() => {
-            if (keyboardVisible || simulatorKeyboardHintShownRef.current) return;
-            simulatorKeyboardHintShownRef.current = true;
-            console.info(
-                '[Spotlight] If the iOS Simulator software keyboard is hidden, disable I/O > Keyboard > Connect Hardware Keyboard.'
-            );
-        }, 1200);
-
-        return () => clearTimeout(timeout);
-    }, [isOpen, isPrimaryFlow, keyboardVisible]);
-
+    // Android back button
     React.useEffect(() => {
         if (Platform.OS !== 'android' || !isOpen) return;
 
@@ -711,20 +632,14 @@ export function SpotlightOverlay() {
         return () => sub.remove();
     }, [dismissSpotlight, isOpen]);
 
+    // Cleanup when closed
     React.useEffect(() => {
         if (isOpen) return;
-
-        clearFocusRetries();
         blurGlobalSearchInput();
-        inputRef.current?.blur();
-        setKeyboardVisible(false);
         Keyboard.dismiss();
-    }, [blurGlobalSearchInput, clearFocusRetries, isOpen]);
+    }, [blurGlobalSearchInput, isOpen]);
 
-    React.useEffect(() => {
-        return () => clearFocusRetries();
-    }, [clearFocusRetries]);
-
+    // Active index bounds check
     React.useEffect(() => {
         if (!isOpen) return;
 
@@ -738,6 +653,7 @@ export function SpotlightOverlay() {
         }
     }, [activeIndex, isOpen, rankedItems.length, setActiveIndex]);
 
+    // Web keyboard shortcuts
     React.useEffect(() => {
         if (Platform.OS !== 'web') return;
 
@@ -747,6 +663,7 @@ export function SpotlightOverlay() {
             if (pressedSearchShortcut) {
                 event.preventDefault();
                 if (!session) return;
+                if (!globalSearchFrame) return; // No search bar visible
                 const spotlight = useSpotlightStore.getState();
                 if (spotlight.isOpen) {
                     void dismissSpotlight();
@@ -791,92 +708,27 @@ export function SpotlightOverlay() {
 
         window.addEventListener('keydown', onKeyDown);
         return () => window.removeEventListener('keydown', onKeyDown);
-    }, [dismissSpotlight, executeItem, session]);
+    }, [dismissSpotlight, executeItem, globalSearchFrame, session]);
 
     if (!session || !isOpen) return null;
 
-    const inputBackgroundClass = isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200';
-    const webTopOffset = Platform.OS === 'web' ? (isCompactViewport ? 90 : 20) : 0;
-    const fallbackTop = Math.max(insets.top + 122, 134) + webTopOffset;
-    const fallbackTopFromBottom = globalSearchBottomY !== null ? globalSearchBottomY - DEFAULT_SOURCE_HEIGHT : null;
-    const targetTop = globalSearchFrame?.y ?? fallbackTopFromBottom ?? fallbackTop;
-    const targetWidth = isCompactViewport ? width * 0.94 : Math.min(width - 24, 600);
-    const targetLeft = Math.max((width - targetWidth) / 2, 12);
-    const chromeHeight = TARGET_HEADER_HEIGHT + TARGET_SCOPE_HEIGHT;
-    const bodyMaxHeight = Math.max(
-        0,
-        Math.min(height * 0.6, height - targetTop - insets.bottom - chromeHeight - 16)
-    );
+    // Layout calculations
+    const dropdownTop = globalSearchFrame ? globalSearchFrame.bottom : insets.top + 100;
+    const dropdownLeft = globalSearchFrame ? globalSearchFrame.x : Math.max((width - (isCompactViewport ? width * 0.94 : Math.min(width - 24, 600))) / 2, 12);
+    const dropdownWidth = globalSearchFrame ? globalSearchFrame.width : (isCompactViewport ? width * 0.94 : Math.min(width - 24, 600));
+    const bodyMaxHeight = Math.max(0, Math.min(height * 0.6, height - dropdownTop - insets.bottom - 16));
     const expandedBodyHeight = TARGET_SCOPE_HEIGHT + bodyMaxHeight;
 
-    const frameAgeMs = globalSearchFrame ? Date.now() - globalSearchFrame.measuredAt : Number.POSITIVE_INFINITY;
-    const hasValidSourceFrame =
-        !!globalSearchFrame &&
-        (openSource === 'primary' || (openSource === 'shortcut' && frameAgeMs <= SOURCE_FRAME_STALE_MS));
-
-    const sourceX = hasValidSourceFrame ? globalSearchFrame!.x : targetLeft + targetWidth * 0.03;
-    const sourceY = hasValidSourceFrame ? globalSearchFrame!.y : targetTop;
-    const sourceWidth = hasValidSourceFrame ? globalSearchFrame!.width : targetWidth * 0.94;
-    const sourceHeight = hasValidSourceFrame ? globalSearchFrame!.height : DEFAULT_SOURCE_HEIGHT;
-    const sourceRadius = hasValidSourceFrame ? globalSearchFrame!.borderRadius : 24;
-
-    const panelTop = morphProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [sourceY, targetTop],
-    });
-    const panelLeft = morphProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [sourceX, targetLeft],
-    });
-    const panelWidth = morphProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [sourceWidth, targetWidth],
-    });
-    const panelHeaderHeight = morphProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [sourceHeight, TARGET_HEADER_HEIGHT],
-    });
     const panelBodyHeight = bodyProgress.interpolate({
         inputRange: [0, 1],
         outputRange: [0, expandedBodyHeight],
-    });
-    const panelHeight = Animated.add(panelHeaderHeight, panelBodyHeight);
-    const panelRadius = morphProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [sourceRadius, TARGET_RADIUS],
-    });
-    const panelShadowOpacity = morphProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [hasValidSourceFrame ? 0.08 : 0.14, 0.2],
-    });
-    const panelShadowRadius = morphProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [hasValidSourceFrame ? 6 : 8, 12],
-    });
-    const panelElevation = morphProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [4, 10],
     });
     const backdropOpacity = backdropProgress.interpolate({
         inputRange: [0, 1],
         outputRange: [0, 1],
     });
     const bodyOpacity = bodyProgress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 1],
-    });
-    const mimicOpacity = morphProgress.interpolate({
-        inputRange: [0, 0.4],
-        outputRange: [1, 0],
-        extrapolate: 'clamp',
-    });
-    const headerContentOpacity = morphProgress.interpolate({
-        inputRange: [0.3, 0.7],
-        outputRange: [0, 1],
-        extrapolate: 'clamp',
-    });
-    const closeButtonOpacity = morphProgress.interpolate({
-        inputRange: [0.5, 1],
+        inputRange: [0, 0.3],
         outputRange: [0, 1],
         extrapolate: 'clamp',
     });
@@ -1008,7 +860,12 @@ export function SpotlightOverlay() {
     );
 
     const renderFilterChips = (
-        <View className="flex-1 flex-row flex-wrap gap-2">
+        <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+            style={{ flexGrow: 0 }}
+        >
             {SCOPE_OPTIONS.map((option) => {
                 const isSelected = scope === option.value;
                 return (
@@ -1029,126 +886,12 @@ export function SpotlightOverlay() {
                     </Pressable>
                 );
             })}
-        </View>
-    );
-
-    const renderSearchHeader = (showEscHint: boolean) => (
-        <View className="px-4 pt-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-            <View className="flex-row items-center gap-2">
-                <View className={`flex-1 flex-row items-center rounded-2xl border px-3 py-2.5 ${inputBackgroundClass}`}>
-                    <Search
-                        size={18}
-                        color={isDark ? '#94a3b8' : '#64748b'}
-                        strokeWidth={2.4}
-                        style={{ marginRight: 10 }}
-                    />
-
-                    <TextInput
-                        ref={inputRef}
-                        value={query}
-                        onChangeText={(value) => {
-                            setQuery(value);
-                            setActiveIndex(0);
-                        }}
-                        onFocus={() => setKeyboardVisible(true)}
-                        placeholder="Type here to search commands, settings, calendar, and inbox..."
-                        placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-                        autoCorrect={false}
-                        autoCapitalize="none"
-                        returnKeyType="search"
-                        autoFocus={false}
-                        showSoftInputOnFocus={true}
-                        className="flex-1 text-slate-900 dark:text-white text-base"
-                        style={{ outline: 'none' } as any}
-                        accessibilityLabel="Global search input"
-                        onSubmitEditing={() => {
-                            const selected = rankedItems[activeIndex] || rankedItems[0];
-                            if (selected) {
-                                void executeItem(selected);
-                            }
-                        }}
-                    />
-
-                    {showEscHint && Platform.OS === 'web' && (
-                        <View className="ml-2 px-2 py-1 rounded-md border border-slate-300 dark:border-slate-700">
-                            <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                Esc
-                            </Text>
-                        </View>
-                    )}
-                </View>
-
-                <Animated.View style={{ opacity: closeButtonOpacity }}>
-                    <Pressable
-                        onPress={() => {
-                            void dismissSpotlight();
-                        }}
-                        accessibilityRole="button"
-                        accessibilityLabel="Close Spotlight search"
-                        className="w-10 h-10 rounded-xl items-center justify-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
-                    >
-                        <X size={18} color={isDark ? '#cbd5e1' : '#334155'} strokeWidth={2.5} />
-                    </Pressable>
-                </Animated.View>
-            </View>
-        </View>
+        </ScrollView>
     );
 
     const renderScopeRow = (
-        <View className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex-row items-center gap-3">
+        <View className="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex-row items-center gap-3">
             {renderFilterChips}
-        </View>
-    );
-
-    const renderBarMimic = (
-        <View
-            style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingHorizontal: 16,
-            }}
-        >
-            <Search
-                size={22}
-                color={isDark ? '#cbd5e1' : '#334155'}
-                strokeWidth={2.5}
-                style={{ marginRight: 20, opacity: 0.7 }}
-            />
-            <Text
-                numberOfLines={1}
-                style={{
-                    flex: 1,
-                    fontSize: 17,
-                    fontWeight: '500',
-                    color: isDark ? '#64748b' : '#94a3b8',
-                }}
-            >
-                Search all app functions...
-            </Text>
-            {Platform.OS === 'web' ? (
-                <View
-                    style={{
-                        marginLeft: 8,
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderRadius: 6,
-                        borderWidth: 1,
-                        borderColor: isDark ? '#334155' : '#cbd5e1',
-                    }}
-                >
-                    <Text
-                        style={{
-                            fontSize: 10,
-                            textTransform: 'uppercase',
-                            letterSpacing: 1.5,
-                            color: isDark ? '#64748b' : '#94a3b8',
-                        }}
-                    >
-                        ⌘K
-                    </Text>
-                </View>
-            ) : null}
         </View>
     );
 
@@ -1164,10 +907,11 @@ export function SpotlightOverlay() {
                 zIndex: 200,
             }}
         >
+            {/* Backdrop — dims below search bar */}
             <Animated.View
                 style={{
                     position: 'absolute',
-                    top: targetTop,
+                    top: dropdownTop,
                     right: 0,
                     bottom: 0,
                     left: 0,
@@ -1185,6 +929,7 @@ export function SpotlightOverlay() {
                 />
             </Animated.View>
 
+            {/* Results dropdown — positioned below search bar */}
             <KeyboardAvoidingView
                 pointerEvents="box-none"
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -1199,60 +944,25 @@ export function SpotlightOverlay() {
                 <Animated.View
                     style={{
                         position: 'absolute',
-                        top: panelTop,
-                        left: panelLeft,
-                        width: panelWidth,
-                        height: panelHeight,
-                        borderRadius: panelRadius,
+                        top: dropdownTop,
+                        left: dropdownLeft,
+                        width: dropdownWidth,
+                        height: panelBodyHeight,
+                        borderBottomLeftRadius: 24,
+                        borderBottomRightRadius: 24,
                         borderWidth: 1,
+                        borderTopWidth: 0,
                         borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                        backgroundColor: morphProgress.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: isDark ? ['#0f172a', '#020617'] : ['#ffffff', '#ffffff'],
-                        }),
+                        backgroundColor: isDark ? '#0f172a' : '#ffffff',
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: panelShadowOpacity,
-                        shadowRadius: panelShadowRadius,
-                        elevation: panelElevation,
+                        shadowOpacity: 0.15,
+                        shadowRadius: 12,
+                        elevation: 10,
                         overflow: 'hidden',
                     }}
                 >
-                    <Animated.View style={{ height: panelHeaderHeight, overflow: 'hidden' }}>
-                        <Animated.View
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                opacity: mimicOpacity,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            {renderBarMimic}
-                        </Animated.View>
-                        <Animated.View
-                            style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                opacity: headerContentOpacity,
-                            }}
-                        >
-                            {renderSearchHeader(Platform.OS === 'web')}
-                        </Animated.View>
-                    </Animated.View>
-
-                    <Animated.View
-                        style={{
-                            height: panelBodyHeight,
-                            opacity: bodyOpacity,
-                            overflow: 'hidden',
-                        }}
-                    >
+                    <Animated.View style={{ opacity: bodyOpacity, flex: 1 }}>
                         {renderScopeRow}
                         <View style={{ maxHeight: bodyMaxHeight, flex: 1 }}>
                             {renderResultRows}

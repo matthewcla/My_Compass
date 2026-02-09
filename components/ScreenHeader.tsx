@@ -2,7 +2,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { SearchConfig, useHeaderStore } from '@/store/useHeaderStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
-import { Search } from 'lucide-react-native';
+import { Search, X } from 'lucide-react-native';
 import React from 'react';
 import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -39,6 +39,8 @@ export function ScreenHeader({
     const setGlobalSearchBottomY = useHeaderStore((state) => state.setGlobalSearchBottomY);
     const globalSearchFrame = useHeaderStore((state) => state.globalSearchFrame);
     const setGlobalSearchFrame = useHeaderStore((state) => state.setGlobalSearchFrame);
+    const triggerGlobalSearchDismiss = useHeaderStore((state) => state.triggerGlobalSearchDismiss);
+    const triggerGlobalSearchSubmit = useHeaderStore((state) => state.triggerGlobalSearchSubmit);
 
     // Local state to prevent race conditions/flickering with async store updates
     const [localSearchValue, setLocalSearchValue] = React.useState(searchConfig?.value || '');
@@ -139,6 +141,13 @@ export function ScreenHeader({
         };
     }, [isGlobalSearch, registerGlobalSearchBlur, setGlobalSearchBottomY, setGlobalSearchFrame]);
 
+    // Auto-focus the search input when spotlight opens (e.g. via ⌘K)
+    React.useEffect(() => {
+        if (spotlightIsOpen && isGlobalSearch) {
+            searchInputRef.current?.focus();
+        }
+    }, [spotlightIsOpen, isGlobalSearch]);
+
     const handleGlobalSearchLayout = React.useCallback(() => {
         if (!isGlobalSearch || !globalSearchRowRef.current) return;
 
@@ -233,21 +242,36 @@ export function ScreenHeader({
                         <View
                             ref={globalSearchRowRef}
                             onLayout={handleGlobalSearchLayout}
-                            pointerEvents={spotlightIsOpen ? 'none' : 'auto'}
-                            className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 border border-slate-200 dark:border-slate-800 shadow-sm"
-                            style={{ opacity: spotlightIsOpen ? 0 : 1 }}
+                            className={`flex-row items-center bg-white dark:bg-slate-900 px-4 border border-slate-200 dark:border-slate-800 ${spotlightIsOpen ? 'rounded-t-3xl' : 'rounded-3xl shadow-sm'}`}
+                            style={spotlightIsOpen ? { borderBottomWidth: 0 } : undefined}
                             accessibilityRole="search"
                             accessibilityLabel={searchConfig.placeholder || 'Global search'}
                         >
-                            <Pressable onPress={focusGlobalSearchInput} onPressIn={handleGlobalSearchLayout} hitSlop={10}>
-                                <Search
-                                    size={22}
-                                    color={colors.text}
-                                    strokeWidth={2.5}
-                                    style={{ marginRight: 20 }}
-                                    className="opacity-70"
-                                />
-                            </Pressable>
+                            {spotlightIsOpen ? (
+                                <Pressable
+                                    onPress={() => triggerGlobalSearchDismiss()}
+                                    hitSlop={10}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Close search"
+                                >
+                                    <X
+                                        size={20}
+                                        color={colorScheme === 'dark' ? '#94a3b8' : '#64748b'}
+                                        strokeWidth={2.5}
+                                        style={{ marginRight: 20 }}
+                                    />
+                                </Pressable>
+                            ) : (
+                                <Pressable onPress={focusGlobalSearchInput} onPressIn={handleGlobalSearchLayout} hitSlop={10}>
+                                    <Search
+                                        size={22}
+                                        color={colors.text}
+                                        strokeWidth={2.5}
+                                        style={{ marginRight: 20 }}
+                                        className="opacity-70"
+                                    />
+                                </Pressable>
+                            )}
 
                             <TextInput
                                 ref={searchInputRef}
@@ -263,9 +287,12 @@ export function ScreenHeader({
                                 returnKeyType="search"
                                 showSoftInputOnFocus={true}
                                 accessibilityLabel={searchConfig.placeholder || 'Global search input'}
+                                onSubmitEditing={() => {
+                                    if (spotlightIsOpen) triggerGlobalSearchSubmit();
+                                }}
                             />
 
-                            {Platform.OS === 'web' && (
+                            {!spotlightIsOpen && Platform.OS === 'web' && (
                                 <View className="px-2 py-1 rounded-md border border-slate-300 dark:border-slate-700">
                                     <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                         ⌘K

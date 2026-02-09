@@ -694,7 +694,8 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
                 // Check threshold
                 if (pendingSwipes.length >= 5) {
-                    await persistDecisions();
+                    // Fire and forget - do not await
+                    persistDecisions().catch(err => console.error('[Store] Failed to persist decisions batch', err));
                 } else {
                     // Debounce
                     if (flushTimeout) clearTimeout(flushTimeout);
@@ -822,7 +823,8 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
 
         // 5. Persist
-        await storage.saveApplication(newApp);
+        // Fire and forget - do not await
+        storage.saveApplication(newApp).catch(err => console.error('[Store] Failed to persist new application', err));
 
         return true;
     },

@@ -25,10 +25,13 @@ class BenchmarkStorage implements IStorageService {
   async saveBillet(): Promise<void> { }
   async getBillet(): Promise<null> { return null; }
   async getAllBillets(): Promise<any[]> { return []; }
+  async getBilletCount(): Promise<number> { return 0; }
   async getPagedBillets(): Promise<any[]> { return []; }
 
   // Applications
   async saveApplication(): Promise<void> { }
+  async saveApplications(): Promise<void> { }
+  async deleteApplication(): Promise<void> { }
   async getApplication(): Promise<null> { return null; }
   async getUserApplications(): Promise<any[]> { return []; }
 

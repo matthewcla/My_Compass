@@ -9,7 +9,7 @@ console.log("MOCK STORAGE LOADED");
 
 class MockStorage implements IStorageService {
     getBilletCount(): Promise<number> {
-        throw new Error('Method not implemented.');
+        return Promise.resolve(this.billets.size);
     }
     // In-memory data structures
     private users = new Map<string, User>();

@@ -1,4 +1,3 @@
-import { MenuTile } from '@/components/menu/MenuTile';
 import OnboardingCard from '@/components/onboarding/OnboardingCard';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { useSession } from '@/lib/ctx';
@@ -6,14 +5,10 @@ import { useSpotlightStore } from '@/store/useSpotlightStore';
 import * as Clipboard from 'expo-clipboard';
 import { usePathname, useSegments } from 'expo-router';
 import {
-  Briefcase,
   ChevronRight,
   Copy,
-  FileText,
   LogOut,
-  Map as MapIcon,
-  Settings,
-  User
+  Settings
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React, { useState } from 'react';
@@ -55,11 +50,6 @@ export default function MenuHubScreen() {
     }
   }, [openSpotlight]);
 
-  const handleTilePress = (route: string) => {
-    // router.push(route);
-    console.log('Navigate to:', route);
-  };
-
   const handleCopyDODID = async () => {
     await Clipboard.setStringAsync('1234567890');
     setToastVisible(true);
@@ -78,69 +68,6 @@ export default function MenuHubScreen() {
         showsVerticalScrollIndicator={false}
       >
         <OnboardingCard />
-        {/* Grid - Standard Tiles */}
-        {/* Grid - Standard Tiles */}
-        <View className="mb-6">
-          {/* Row 1 */}
-          <View className="flex-row justify-between mb-4">
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 50 }}
-              style={{ width: '47%', aspectRatio: 1 }}
-            >
-              <MenuTile
-                label="My Assignment"
-                icon={Briefcase}
-                onPress={() => handleTilePress('/(career)/assignment')}
-              />
-            </MotiView>
-
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 100 }}
-              style={{ width: '47%', aspectRatio: 1 }}
-            >
-              <MenuTile
-                label="My PCS"
-                icon={MapIcon}
-                onPress={() => handleTilePress('/(pcs)')}
-                locked
-              />
-            </MotiView>
-          </View>
-
-          {/* Row 2 */}
-          <View className="flex-row justify-between">
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 150 }}
-              style={{ width: '47%', aspectRatio: 1 }}
-            >
-              <MenuTile
-                label={"My Leave\n& Admin"}
-                icon={FileText}
-                onPress={() => handleTilePress('/(admin)')}
-              />
-            </MotiView>
-
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 200 }}
-              style={{ width: '47%', aspectRatio: 1 }}
-            >
-              <MenuTile
-                label="My Profile"
-                icon={User}
-                onPress={() => handleTilePress('/(profile)')}
-                locked
-              />
-            </MotiView>
-          </View>
-        </View>
 
         {/* Distinct Settings Tile (Full Width) */}
         <MotiView
@@ -154,7 +81,7 @@ export default function MenuHubScreen() {
               borderColor: theme.border
             }}
             className="rounded-3xl p-5 flex-row items-center justify-between shadow-sm border mb-8"
-            onPress={() => handleTilePress('/(profile)/settings')}
+            onPress={() => console.log('Navigate to: /(profile)/settings')}
             activeOpacity={0.7}
           >
             <View className="flex-row items-center">

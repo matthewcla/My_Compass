@@ -1,9 +1,8 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
-import { DiscoveryCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
-import { StatsCard } from '@/components/dashboard/StatsCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
+import { MenuTile } from '@/components/menu/MenuTile';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -17,6 +16,12 @@ import { useUserStore } from '@/store/useUserStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
+import {
+    Briefcase,
+    FileText,
+    Map as MapIcon,
+    User
+} from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Alert, Platform, Pressable, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -64,12 +69,8 @@ export default function HubDashboard() {
     const globalSearchConfig = useGlobalSpotlightHeaderSearch();
 
     // Navigation Handlers
-    const handleStartExploring = () => {
-        router.push('/(career)/discovery' as any);
-    };
-
-    const handleJobPreferencesPress = () => {
-        router.push('/(profile)/preferences' as any);
+    const handleTilePress = (route: string) => {
+        router.push(route as any);
     };
 
     const handleLeavePress = () => {
@@ -92,11 +93,6 @@ export default function HubDashboard() {
         // Ideally pass draft params to wizard, but for now just navigate to leave root
         router.push('/leave' as any);
     };
-
-    const handleSuperLikedPress = React.useCallback(() => {
-        // Navigate to saved billets filtered by super-liked
-        router.push('/(assignment)' as any);
-    }, [router]);
 
     // Loading state
     if (loading && !data) {
@@ -126,26 +122,50 @@ export default function HubDashboard() {
         );
     }
 
-    const sections = ['discovery', 'stats', 'leave'];
+    const sections = ['menu', 'leave'];
 
     const renderItem = ({ item }: { item: any }) => {
         switch (item) {
-            case 'discovery':
+            case 'menu':
                 return (
-                    <DiscoveryCard
-                        matchingBillets={data?.cycle?.matchingBillets ?? 0}
-                        onStartExploring={handleStartExploring}
-                        onJobPreferencesPress={handleJobPreferencesPress}
-                    />
-                );
-            case 'stats':
-                return (
-                    <StatsCard
-                        liked={data?.stats?.liked ?? 0}
-                        superLiked={data?.stats?.superLiked ?? 0}
-                        passed={data?.stats?.passed ?? 0}
-                        onPressSuperLiked={handleSuperLikedPress}
-                    />
+                    <View className="mb-2">
+                        {/* Row 1 */}
+                        <View className="flex-row justify-between mb-4">
+                            <View style={{ width: '47%', aspectRatio: 1 }}>
+                                <MenuTile
+                                    label="My Assignment"
+                                    icon={Briefcase}
+                                    onPress={() => handleTilePress('/(career)/assignment')}
+                                />
+                            </View>
+                            <View style={{ width: '47%', aspectRatio: 1 }}>
+                                <MenuTile
+                                    label="My PCS"
+                                    icon={MapIcon}
+                                    onPress={() => handleTilePress('/(pcs)')}
+                                    locked
+                                />
+                            </View>
+                        </View>
+                        {/* Row 2 */}
+                        <View className="flex-row justify-between">
+                            <View style={{ width: '47%', aspectRatio: 1 }}>
+                                <MenuTile
+                                    label={"My Leave\n& Admin"}
+                                    icon={FileText}
+                                    onPress={() => handleTilePress('/(admin)')}
+                                />
+                            </View>
+                            <View style={{ width: '47%', aspectRatio: 1 }}>
+                                <MenuTile
+                                    label="My Profile"
+                                    icon={User}
+                                    onPress={() => handleTilePress('/(profile)')}
+                                    locked
+                                />
+                            </View>
+                        </View>
+                    </View>
                 );
             case 'leave':
                 return (

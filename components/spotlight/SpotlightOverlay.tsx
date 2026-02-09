@@ -26,7 +26,6 @@ import React from 'react';
 import {
     BackHandler,
     Keyboard,
-    KeyboardAvoidingView,
     Platform,
     Pressable,
     ScrollView,
@@ -940,61 +939,49 @@ export function SpotlightOverlay() {
             />
 
             {/* Results dropdown — positioned below search bar */}
-            <KeyboardAvoidingView
-                pointerEvents="box-none"
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
-                    left: 0,
-                }}
-            >
-                {/* Clip container: animated height + overflow hidden.
+            {/* Clip container: animated height + overflow hidden.
                     The inner panel uses translateY (GPU-composited) to slide into view. */}
-                <Animated.View
-                    style={[
-                        {
-                            position: 'absolute',
-                            top: dropdownTop,
-                            left: dropdownLeft,
-                            width: dropdownWidth,
-                            overflow: 'hidden',
-                            borderBottomLeftRadius: 24,
-                            borderBottomRightRadius: 24,
-                        },
-                        animatedClipStyle,
-                    ]}
-                >
-                    <GestureDetector gesture={panGesture}>
-                        <Animated.View
-                            style={[
-                                {
-                                    width: dropdownWidth,
-                                    height: expandedBodyHeight,
-                                    borderBottomLeftRadius: 24,
-                                    borderBottomRightRadius: 24,
-                                    borderWidth: 1,
-                                    borderTopWidth: 0,
-                                    borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                                    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-                                    elevation: 10,
-                                },
-                                animatedPanelStyle,
-                            ]}
-                        >
-                            <Animated.View style={[{ flex: 1 }, animatedContentStyle]}>
-                                {renderScopeRow}
-                                <View style={{ flex: 1 }}>
-                                    {renderResultRows}
-                                </View>
-                            </Animated.View>
+            <Animated.View
+                style={[
+                    {
+                        position: 'absolute',
+                        top: dropdownTop,
+                        left: dropdownLeft,
+                        width: dropdownWidth,
+                        overflow: 'hidden',
+                        borderBottomLeftRadius: 24,
+                        borderBottomRightRadius: 24,
+                    },
+                    animatedClipStyle,
+                ]}
+            >
+                <GestureDetector gesture={panGesture}>
+                    <Animated.View
+                        style={[
+                            {
+                                width: dropdownWidth,
+                                height: expandedBodyHeight,
+                                borderBottomLeftRadius: 24,
+                                borderBottomRightRadius: 24,
+                                borderWidth: 1,
+                                borderTopWidth: 0,
+                                borderColor: isDark ? '#1e293b' : '#e2e8f0',
+                                backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                                boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+                                elevation: 10,
+                            },
+                            animatedPanelStyle,
+                        ]}
+                    >
+                        <Animated.View style={[{ flex: 1 }, animatedContentStyle]}>
+                            {renderScopeRow}
+                            <View style={{ flex: 1 }}>
+                                {renderResultRows}
+                            </View>
                         </Animated.View>
-                    </GestureDetector>
-                </Animated.View>
-            </KeyboardAvoidingView>
+                    </Animated.View>
+                </GestureDetector>
+            </Animated.View>
         </View>
     );
 }

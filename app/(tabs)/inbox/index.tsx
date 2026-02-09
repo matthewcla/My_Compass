@@ -1,5 +1,6 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { MessageCard } from '@/components/inbox/MessageCard';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useInboxStore } from '@/store/useInboxStore';
@@ -177,75 +178,76 @@ export default function InboxScreen() {
     );
 
     return (
-        <CollapsibleScaffold
-            statusBarShimBackgroundColor={isDark ? '#000000' : '#f8fafc'}
-            containerStyle={{ backgroundColor: isDark ? '#000000' : '#f8fafc' }}
-            topBar={
-                <View className="bg-slate-50 dark:bg-black">
-                    <ScreenHeader
-                        title=""
-                        subtitle=""
-                        withSafeArea={false}
-                        searchConfig={searchConfig}
-                    />
-                    {renderHeader()}
-                </View>
-            }
-            snapBehavior="none"
-            minTopBarHeight={Math.max(filterHeight || lastNonZeroFilterHeight.current, MIN_FILTER_PINNED_HEIGHT)}
-        >
-            {({
-                onScroll,
-                onScrollBeginDrag,
-                onScrollEndDrag,
-                onLayout,
-                onContentSizeChange,
-                scrollEnabled,
-                scrollEventThrottle,
-                contentContainerStyle,
-            }) => (
-                <AnimatedSectionList
-                    sections={sections}
-                    initialNumToRender={10}
-                    windowSize={5}
-                    scrollEventThrottle={scrollEventThrottle}
-                    contentInsetAdjustmentBehavior="never"
-                    automaticallyAdjustContentInsets={false}
-                    bounces={true}
-                    alwaysBounceVertical={true}
-                    overScrollMode="always"
-                    renderItem={({ item }) => (
-                        <MessageCard
-                            message={item}
-                            // Pass stable handler to enable React.memo optimization
-                            onPress={handlePress}
-                            onTogglePin={togglePin}
+        <ScreenGradient>
+            <CollapsibleScaffold
+                statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
+                topBar={
+                    <View className="bg-slate-50 dark:bg-black">
+                        <ScreenHeader
+                            title=""
+                            subtitle=""
+                            withSafeArea={false}
+                            searchConfig={searchConfig}
                         />
-                    )}
-                    renderSectionHeader={({ section: { title } }) => (
-                        <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900">
-                            <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
-                        </View>
-                    )}
-                    keyExtractor={item => item.id}
-                    stickySectionHeadersEnabled={false} // Sticky headers with sticky list header can be tricky, verifying without first
-                    contentContainerStyle={contentContainerStyle}
-                    refreshing={isLoading}
-                    onRefresh={handleRefresh}
-                    onLayout={onLayout}
-                    onContentSizeChange={onContentSizeChange}
-                    scrollEnabled={scrollEnabled}
-                    ListEmptyComponent={
-                        <View className="p-8 items-center">
-                            <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>
-                        </View>
-                    }
-                    onScroll={onScroll}
-                    onScrollBeginDrag={onScrollBeginDrag}
-                    onScrollEndDrag={onScrollEndDrag}
-                />
-            )}
-        </CollapsibleScaffold>
+                        {renderHeader()}
+                    </View>
+                }
+                snapBehavior="none"
+                minTopBarHeight={Math.max(filterHeight || lastNonZeroFilterHeight.current, MIN_FILTER_PINNED_HEIGHT)}
+            >
+                {({
+                    onScroll,
+                    onScrollBeginDrag,
+                    onScrollEndDrag,
+                    onLayout,
+                    onContentSizeChange,
+                    scrollEnabled,
+                    scrollEventThrottle,
+                    contentContainerStyle,
+                }) => (
+                    <AnimatedSectionList
+                        sections={sections}
+                        initialNumToRender={10}
+                        windowSize={5}
+                        scrollEventThrottle={scrollEventThrottle}
+                        contentInsetAdjustmentBehavior="never"
+                        automaticallyAdjustContentInsets={false}
+                        bounces={true}
+                        alwaysBounceVertical={true}
+                        overScrollMode="always"
+                        renderItem={({ item }) => (
+                            <MessageCard
+                                message={item}
+                                // Pass stable handler to enable React.memo optimization
+                                onPress={handlePress}
+                                onTogglePin={togglePin}
+                            />
+                        )}
+                        renderSectionHeader={({ section: { title } }) => (
+                            <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900">
+                                <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
+                            </View>
+                        )}
+                        keyExtractor={item => item.id}
+                        stickySectionHeadersEnabled={false} // Sticky headers with sticky list header can be tricky, verifying without first
+                        contentContainerStyle={contentContainerStyle}
+                        refreshing={isLoading}
+                        onRefresh={handleRefresh}
+                        onLayout={onLayout}
+                        onContentSizeChange={onContentSizeChange}
+                        scrollEnabled={scrollEnabled}
+                        ListEmptyComponent={
+                            <View className="p-8 items-center">
+                                <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>
+                            </View>
+                        }
+                        onScroll={onScroll}
+                        onScrollBeginDrag={onScrollBeginDrag}
+                        onScrollEndDrag={onScrollEndDrag}
+                    />
+                )}
+            </CollapsibleScaffold>
+        </ScreenGradient>
     );
 }
 

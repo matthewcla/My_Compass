@@ -1,6 +1,6 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
-import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { ScalePressable } from '@/components/ScalePressable';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ScannerModal } from '@/components/ui/ScannerModal';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -133,11 +133,9 @@ export default function CalendarScreen() {
         <>
             <Stack.Screen options={{ headerShown: false }} />
 
-            <View
-                className="flex-1 bg-slate-50 dark:bg-black"
-            >
+            <ScreenGradient>
                 <CollapsibleScaffold
-                    statusBarShimBackgroundColor={isDark ? '#000000' : '#f8fafc'}
+                    statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
                     topBar={
                         <ScreenHeader
                             title=""
@@ -217,7 +215,7 @@ export default function CalendarScreen() {
                     onClose={() => setIsScannerOpen(false)}
                     onScan={handleScan}
                 />
-            </View>
+            </ScreenGradient>
         </>
     );
 }

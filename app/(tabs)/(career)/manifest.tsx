@@ -1,4 +1,5 @@
 import { JobCard } from '@/components/JobCard';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { useFeedback } from '@/hooks/useFeedback';
 import { SmartBenchItem, selectManifestItems, useAssignmentStore } from '@/store/useAssignmentStore';
 import { FlashList } from '@shopify/flash-list';
@@ -68,7 +69,7 @@ export default function ManifestScreen() {
     }, [isDark, handleRecover]);
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+        <ScreenGradient>
             {/* Feedback Component */}
             <FeedbackComponent />
 
@@ -105,6 +106,6 @@ export default function ManifestScreen() {
                     />
                 )}
             </SafeAreaView>
-        </View>
+        </ScreenGradient>
     );
 }

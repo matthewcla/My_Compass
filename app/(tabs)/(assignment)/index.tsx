@@ -1,10 +1,10 @@
 import DiscoveryEntryWidget from '@/components/assignment/DiscoveryEntryWidget';
 import SlateSummaryWidget from '@/components/assignment/SlateSummaryWidget';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useUserStore } from '@/store/useUserStore';
 import { formatRate } from '@/utils/format';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
@@ -31,10 +31,7 @@ export default function AssignmentDashboard() {
     useScreenHeader("MY ASSIGNMENT", renderGreeting());
 
     return (
-        <LinearGradient
-            colors={isDark ? ['#0f172a', '#020617'] : ['#f8fafc', '#e2e8f0']} // Dark: Slate-900 -> Slate-950, Light: Slate-50 -> Slate-200
-            style={{ flex: 1 }}
-        >
+        <ScreenGradient>
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{
@@ -57,6 +54,6 @@ export default function AssignmentDashboard() {
                 </View>
 
             </ScrollView>
-        </LinearGradient>
+        </ScreenGradient>
     );
 }

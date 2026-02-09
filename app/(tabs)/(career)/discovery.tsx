@@ -2,6 +2,7 @@ import { BilletSwipeCard } from '@/components/BilletSwipeCard';
 import { BilletControlBar } from '@/components/discovery/BilletControlBar';
 import { DiscoveryFilters } from '@/components/discovery/DiscoveryFilters';
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useFeedback } from '@/hooks/useFeedback';
@@ -143,7 +144,7 @@ export default function DiscoveryScreen() {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+            <ScreenGradient>
                 <Stack.Screen options={{ headerShown: false }} />
 
                 {/* Feedback Overlay */}
@@ -160,7 +161,7 @@ export default function DiscoveryScreen() {
                     />
 
                     {/* Main Content Area - Centered Vertically */}
-                    <View className="flex-1 justify-center w-full">
+                    <View className="flex-1 justify-center w-full" style={{ overflow: 'hidden' }}>
                         {/* Deck Area */}
                         <View className="h-[85%] items-center relative w-full">
                             <View className="w-full flex-1 max-w-md px-4 pb-12">
@@ -249,7 +250,7 @@ export default function DiscoveryScreen() {
                     showProjected={showProjected}
                     onToggleProjected={toggleShowProjected}
                 />
-            </View>
+            </ScreenGradient>
         </GestureHandlerRootView>
     );
 }

@@ -1,4 +1,5 @@
 import { LeaveBalanceCard } from '@/components/LeaveBalanceCard';
+import { ScreenGradient } from '@/components/ScreenGradient';
 import { SyncStatus } from '@/components/SyncStatusBadge';
 import Colors from '@/constants/Colors';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
@@ -130,7 +131,7 @@ export default function AdminRequests() {
     };
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-black">
+        <ScreenGradient>
             <FlatList
                 className="flex-1"
                 contentContainerStyle={{
@@ -144,6 +145,6 @@ export default function AdminRequests() {
                 ListHeaderComponent={renderHeader}
                 ListEmptyComponent={renderEmpty}
             />
-        </View>
+        </ScreenGradient>
     );
 }

@@ -135,7 +135,7 @@ export default function HubDashboard() {
                                 <MenuTile
                                     label="My Assignment"
                                     icon={Briefcase}
-                                    onPress={() => handleTilePress('/(career)/assignment')}
+                                    onPress={() => handleTilePress('/(career)/discovery')}
                                 />
                             </View>
                             <View style={{ width: '47%', aspectRatio: 1 }}>

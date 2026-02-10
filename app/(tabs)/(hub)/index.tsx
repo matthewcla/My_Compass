@@ -180,6 +180,7 @@ export default function HubDashboard() {
                             }
                         }}
                         onQuickRequest={handleQuickLeavePress}
+                        onFullRequest={() => router.push('/leave/request' as any)}
                         onExpand={(expanded) => {
                             if (expanded) {
                                 setTimeout(() => {

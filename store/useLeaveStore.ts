@@ -2,6 +2,7 @@ import * as api from '@/services/api/mockLeaveService';
 import { storage } from '@/services/storage';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import {
+    LeaveBalance,
     LeaveRequest,
     LeaveRequestDefaults,
     MyAdminState,
@@ -111,7 +112,33 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
         try {
             // 1. Fetch from API
-            const result = await api.fetchLeaveBalance(userId);
+            let result;
+            const { isDemoMode, selectedUser } = require('@/store/useDemoStore').useDemoStore.getState();
+
+            if (isDemoMode) {
+                const now = new Date().toISOString();
+                const balance = selectedUser.leaveBalance ?? 30.0; // Fallback for stale persisted store
+                const demoBalance: LeaveBalance = {
+                    id: `lb-${selectedUser.id}`,
+                    userId: selectedUser.id,
+                    currentBalance: balance,
+                    useOrLoseDays: 0,
+                    useOrLoseExpirationDate: new Date(new Date().getFullYear(), 8, 30).toISOString(), // Sep 30
+                    earnedThisFiscalYear: 0,
+                    usedThisFiscalYear: 0,
+                    projectedEndOfYearBalance: balance,
+                    maxCarryOver: 60,
+                    balanceAsOfDate: now,
+                    lastSyncTimestamp: now,
+                    syncStatus: 'synced',
+                };
+                console.log('[Store] Using Demo Balance:', demoBalance);
+                // Simulate API delay/result structure
+                result = { success: true, data: demoBalance };
+            } else {
+                result = await api.fetchLeaveBalance(userId);
+            }
+
             console.log('[Store] fetchLeaveBalance result:', result);
 
             if (result.success) {
@@ -169,6 +196,17 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     fetchUserRequests: async (userId: string) => {
         set({ isSyncingRequests: true });
         try {
+            // In demo mode, don't read stale SQLite data from previous sessions
+            const { isDemoMode } = require('@/store/useDemoStore').useDemoStore.getState();
+            if (isDemoMode) {
+                set({
+                    leaveRequests: {},
+                    userLeaveRequestIds: [],
+                    isSyncingRequests: false,
+                });
+                return;
+            }
+
             const requests = await storage.getUserLeaveRequests(userId);
             const requestMap = requests.reduce((acc, req) => {
                 acc[req.id] = req;

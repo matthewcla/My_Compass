@@ -669,7 +669,7 @@ export const LeaveRequestSchema = z.object({
     leaveInConus: z.boolean().default(true),
 
     // Remarks
-    memberRemarks: z.string().optional(),
+    memberRemarks: z.string().nullable().optional(),
 
     // Checklist
     preReviewChecks: PreReviewChecksSchema.optional(),
@@ -685,23 +685,23 @@ export const LeaveRequestSchema = z.object({
 
     // Approval chain
     approvalChain: z.array(ApproverSchema),
-    currentApproverId: z.string().optional(), // Who needs to act next
+    currentApproverId: z.string().nullable().optional(), // Who needs to act next
 
     // Return reason (if status = returned)
-    returnReason: z.string().optional(),
+    returnReason: z.string().nullable().optional(),
 
     // Denial reason (if status = denied)
-    denialReason: z.string().optional(),
+    denialReason: z.string().nullable().optional(),
 
     // Timestamps
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
-    submittedAt: z.string().datetime().optional(),
+    submittedAt: z.string().datetime().nullable().optional(),
 
     // Sync metadata
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
-    localModifiedAt: z.string().datetime().optional(),
+    localModifiedAt: z.string().datetime().nullable().optional(),
 });
 export type LeaveRequest = z.infer<typeof LeaveRequestSchema>;
 

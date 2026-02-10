@@ -8,6 +8,7 @@ export default function GlobalHeader() {
     const segmentList = segments as string[];
     const title = useHeaderStore((state) => state.title);
     const subtitle = useHeaderStore((state) => state.subtitle);
+    const leftAction = useHeaderStore((state) => state.leftAction);
     const rightAction = useHeaderStore((state) => state.rightAction);
     const isVisible = useHeaderStore((state) => state.isVisible);
     const variant = useHeaderStore((state) => state.variant);
@@ -31,6 +32,7 @@ export default function GlobalHeader() {
         <ScreenHeader
             title={title}
             subtitle={subtitle}
+            leftAction={leftAction}
             rightAction={rightAction}
             withSafeArea={true}
             variant={variant}

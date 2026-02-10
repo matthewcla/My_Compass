@@ -14,8 +14,7 @@ import {
     LayoutGrid,
     Map as MapIcon,
     Settings,
-    Shield,
-    Target,
+    Target
 } from 'lucide-react-native';
 import React from 'react';
 import { LayoutChangeEvent, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -108,10 +107,6 @@ const SPOKE_CONFIG: Record<string, SpokeConfig> = {
     '(pcs)': {
         primary: { label: 'Orders', route: '/(pcs)/orders', icon: FileText },
         secondary: { label: 'Move', route: '/(pcs)/move', icon: MapIcon },
-    },
-    '(admin)': {
-        primary: { label: 'Leave', route: '/(admin)/requests', icon: FileText },
-        secondary: { label: 'Admin', route: '/(admin)/pay-status', icon: Shield },
     },
     '(profile)': {
         primary: { label: 'Preferences', route: '/(profile)/preferences', icon: Settings },

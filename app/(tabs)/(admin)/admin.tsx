@@ -7,7 +7,7 @@ import { useCurrentProfile } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { LeaveRequest } from '@/types/schema';
 import { Link, useRouter } from 'expo-router';
-import { Calendar, ChevronRight, Plus } from 'lucide-react-native';
+import { Calendar, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
 import React, { useEffect, useMemo } from 'react';
 import { FlatList, Pressable, Text, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,7 +26,10 @@ export default function AdminScreen() {
         isSyncingRequests
     } = useLeaveStore();
 
-    useScreenHeader("MY ADMIN", "Leave & Actions");
+    useScreenHeader("MY ADMIN", "Leave & Actions", undefined, null, {
+        icon: ChevronLeft,
+        onPress: () => router.back()
+    });
 
     useEffect(() => {
         fetchLeaveData(userId);

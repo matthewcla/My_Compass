@@ -37,6 +37,7 @@ let globalSearchDismissHandler: (() => void) | null = null;
 interface HeaderState {
     title: string;
     subtitle: string | React.ReactNode;
+    leftAction?: { icon: any; onPress: () => void } | null;
     rightAction?: { icon: any; onPress: () => void } | null;
     searchConfig?: SearchConfig | null;
     globalSearchBottomY: number | null;
@@ -48,7 +49,8 @@ interface HeaderState {
         subtitle: string | React.ReactNode,
         rightAction?: { icon: any; onPress: () => void } | null,
         variant?: 'large' | 'inline',
-        searchConfig?: SearchConfig | null
+        searchConfig?: SearchConfig | null,
+        leftAction?: { icon: any; onPress: () => void } | null
     ) => void;
     setSearchConfig: (config: SearchConfig | null) => void;
     setGlobalSearchBottomY: (value: number | null) => void;
@@ -66,17 +68,19 @@ interface HeaderState {
 export const useHeaderStore = create<HeaderState>((set) => ({
     title: '',
     subtitle: '',
+    leftAction: null,
     rightAction: null,
     searchConfig: null,
     globalSearchBottomY: null,
     globalSearchFrame: null,
     isVisible: true,
     variant: 'large',
-    setHeader: (title, subtitle, rightAction = null, variant = 'large', searchConfig = null) =>
+    setHeader: (title, subtitle, rightAction = null, variant = 'large', searchConfig = null, leftAction = null) =>
         set((state) => {
             const isSame =
                 state.title === title &&
                 state.subtitle === subtitle &&
+                state.leftAction === leftAction &&
                 state.rightAction === rightAction &&
                 state.variant === variant &&
                 state.searchConfig === searchConfig &&
@@ -86,7 +90,7 @@ export const useHeaderStore = create<HeaderState>((set) => ({
                 return state;
             }
 
-            return { title, subtitle, rightAction, isVisible: true, variant, searchConfig };
+            return { title, subtitle, leftAction, rightAction, isVisible: true, variant, searchConfig };
         }),
     setSearchConfig: (searchConfig) => set({ searchConfig }),
     setGlobalSearchBottomY: (globalSearchBottomY) => set({ globalSearchBottomY }),
@@ -118,6 +122,7 @@ export const useHeaderStore = create<HeaderState>((set) => ({
         set({
             title: '',
             subtitle: '',
+            leftAction: null,
             rightAction: null,
             isVisible: true,
             variant: 'large',

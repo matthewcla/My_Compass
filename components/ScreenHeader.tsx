@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface ScreenHeaderProps {
     title: string;
     subtitle: string | React.ReactNode;
+    leftAction?: { icon: any; onPress: () => void } | null;
     rightAction?: { icon: any; onPress: () => void } | null;
     withSafeArea?: boolean;
     variant?: 'large' | 'inline';
@@ -19,6 +20,7 @@ interface ScreenHeaderProps {
 export function ScreenHeader({
     title,
     subtitle,
+    leftAction,
     rightAction,
     withSafeArea = true,
     variant = 'large',
@@ -198,6 +200,25 @@ export function ScreenHeader({
                     className={`flex-row justify-between items-center relative z-50`}
                 >
                     <View className="flex-row items-center flex-1 mr-4">
+                        {leftAction && (
+                            <Pressable
+                                onPress={leftAction.onPress}
+                                hitSlop={12}
+                                className="mr-2"
+                            >
+                                {({ pressed }) => {
+                                    const LeftIcon = leftAction.icon;
+                                    return (
+                                        <LeftIcon
+                                            color={colors.text}
+                                            size={isInline ? 20 : 24}
+                                            strokeWidth={2.5}
+                                            style={{ opacity: pressed ? 0.7 : 1 }}
+                                        />
+                                    );
+                                }}
+                            </Pressable>
+                        )}
                         <View className={isInline ? "flex-row items-baseline gap-2" : ""}>
                             {title ? (
                                 <Text className={`${isInline ? 'text-lg' : 'text-2xl'} font-black text-slate-900 dark:text-white uppercase tracking-tight`}>

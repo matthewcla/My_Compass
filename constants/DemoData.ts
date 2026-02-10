@@ -14,7 +14,7 @@ export interface DemoUser extends User {
 export const DEMO_USERS: DemoUser[] = [
   {
     id: 'demo-user-1',
-    displayName: 'Jeffery Czerewko',
+    displayName: 'Marcus Trent',
     rating: 'AT',
     rank: 'E-4',
     title: 'AT3',
@@ -26,7 +26,7 @@ export const DEMO_USERS: DemoUser[] = [
   },
   {
     id: 'demo-user-2',
-    displayName: 'James Kilby',
+    displayName: 'Angela Navarro',
     rating: 'FCA',
     rank: 'E-5',
     title: 'FCA2',
@@ -38,7 +38,7 @@ export const DEMO_USERS: DemoUser[] = [
   },
   {
     id: 'demo-user-3',
-    displayName: 'Daryl Caudle',
+    displayName: 'Devon Hargrove',
     rating: 'ETN',
     rank: 'E-6',
     title: 'ETN1',

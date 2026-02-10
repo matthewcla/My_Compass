@@ -2,7 +2,7 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useRouter } from 'expo-router';
-import { Calendar } from 'lucide-react-native';
+import { Calendar, Timer } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -22,29 +22,31 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
     if (isDemoMode) {
         const lastName = selectedUser.displayName.split(' ').pop();
-        const headline = `Cycle Prep: ${selectedUser.title} ${lastName}`;
+        // const headline = `Cycle Prep: ${selectedUser.title} ${lastName}`; // OLD
+        const headline = "MNA Negotiation Window";
 
         return (
             <View className="flex flex-col gap-2 my-2">
                 <GlassView
                     intensity={80}
                     tint={isDark ? 'dark' : 'light'}
-                    className="border-l-4 border-blue-600 dark:border-blue-400 pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-row items-center justify-between shadow-sm"
+                    className="border-l-4 border-amber-500 dark:border-amber-400 pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-row items-center justify-between shadow-sm"
                 >
                     <View className="flex-row items-center gap-4 flex-1">
-                        <View className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full">
-                            <Calendar size={24} color={iconColor} />
+                        <View className="bg-amber-100 dark:bg-amber-900/50 p-3 rounded-full">
+                            {/* Changed to Timer for urgency/excitement */}
+                            <Timer size={24} color={isDark ? '#fbbf24' : '#d97706'} />
                         </View>
                         <View className="flex-1">
-                            <Text className="text-blue-900 dark:text-blue-100 text-base font-bold leading-none mb-1">
+                            <Text className="text-amber-900 dark:text-amber-100 text-base font-bold leading-none mb-1">
                                 {headline}
                             </Text>
-                            <View className="flex-row items-baseline gap-1">
-                                <Text className="text-blue-950 dark:text-white text-2xl font-black">
+                            <View className="flex-row items-baseline gap-1.5">
+                                <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">
                                     {daysUntilOpen}
                                 </Text>
-                                <Text className="text-blue-700 dark:text-blue-300 text-sm font-medium">
-                                    days until open
+                                <Text className="text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wide">
+                                    Days Until Open
                                 </Text>
                             </View>
                         </View>
@@ -52,9 +54,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                     <TouchableOpacity
                         onPress={() => router.push('/(tabs)/(profile)/preferences')}
-                        className="bg-blue-100 dark:bg-blue-900 px-3 py-1.5 rounded-full ml-1"
+                        className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg ml-1 border border-amber-200 dark:border-amber-700/50"
                     >
-                        <Text className="text-[10px] font-bold text-blue-700 dark:text-blue-300 text-center">
+                        <Text className="text-[10px] font-bold text-amber-800 dark:text-amber-200 text-center uppercase tracking-wide">
                             Update{'\n'}Prefs
                         </Text>
                     </TouchableOpacity>

@@ -1,7 +1,7 @@
 import OnboardingCard from '@/components/onboarding/OnboardingCard';
 import { ScreenGradient } from '@/components/ScreenGradient';
-import { useSession } from '@/lib/ctx';
 import { DEMO_USERS, DemoPhase } from '@/constants/DemoData';
+import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
 
@@ -165,7 +165,7 @@ export default function MenuHubScreen() {
                           style={{ color: selectedUser.id === u.id ? '#FFFFFF' : theme.subText }}
                           className="text-xs font-semibold"
                         >
-                          {u.displayName}
+                          {u.title} {u.displayName}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -195,7 +195,7 @@ export default function MenuHubScreen() {
                 </View>
 
                 <Text style={{ color: theme.subText }} className="text-center text-xs mt-2">
-                  Simulating: <Text style={{ color: theme.text }} className="font-bold">{selectedUser.displayName} ({selectedUser.rank})</Text>
+                  Simulating: <Text style={{ color: theme.text }} className="font-bold">{selectedUser.title} {selectedUser.displayName} ({selectedUser.rank})</Text>
                 </Text>
               </View>
             )}

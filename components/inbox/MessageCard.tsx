@@ -32,6 +32,9 @@ export const MessageCard: React.FC<MessageCardProps> = React.memo(({ message, on
         <TouchableOpacity
             onPress={() => onPress?.(message.id)}
             className={`mb-3 mx-4 p-4 rounded-lg shadow-sm ${accentColor} ${accentBorder}`}
+            accessibilityRole="button"
+            accessibilityLabel={`${isUnread ? 'Unread ' : ''}Message: ${message.subject}`}
+            accessibilityHint="Double tap to read full message"
         >
             <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-row items-center gap-2">
@@ -49,7 +52,13 @@ export const MessageCard: React.FC<MessageCardProps> = React.memo(({ message, on
                     <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                         {formattedDate}
                     </Text>
-                    <TouchableOpacity onPress={() => onTogglePin?.(message.id)} hitSlop={10}>
+                    <TouchableOpacity
+                        onPress={() => onTogglePin?.(message.id)}
+                        hitSlop={10}
+                        accessibilityRole="button"
+                        accessibilityLabel={message.isPinned ? 'Unpin message' : 'Pin message'}
+                        accessibilityState={{ checked: message.isPinned }}
+                    >
                         <Pin
                             size={16}
                             color={message.isPinned ? '#0f172a' : '#94a3b8'}

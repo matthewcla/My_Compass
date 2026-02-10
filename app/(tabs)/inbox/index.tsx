@@ -166,13 +166,19 @@ export default function InboxScreen() {
                 );
             }}
         >
-            <View className="flex-row justify-between bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mt-2">
+            <View
+                className="flex-row justify-between bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mt-2"
+                accessibilityRole="tablist"
+            >
                 {(['All', 'Official', 'My Status', 'Pinned'] as FilterType[]).map((filter) => (
                     <Pressable
                         key={filter}
                         onPress={() => startTransition(() => {
                             setActiveFilter(prev => (prev === filter ? prev : filter));
                         })}
+                        accessibilityRole="tab"
+                        accessibilityLabel={filter}
+                        accessibilityState={{ selected: activeFilter === filter }}
                         style={[
                             styles.filterButton,
                             activeFilter === filter

@@ -196,6 +196,17 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     fetchUserRequests: async (userId: string) => {
         set({ isSyncingRequests: true });
         try {
+            // In demo mode, don't read stale SQLite data from previous sessions
+            const { isDemoMode } = require('@/store/useDemoStore').useDemoStore.getState();
+            if (isDemoMode) {
+                set({
+                    leaveRequests: {},
+                    userLeaveRequestIds: [],
+                    isSyncingRequests: false,
+                });
+                return;
+            }
+
             const requests = await storage.getUserLeaveRequests(userId);
             const requestMap = requests.reduce((acc, req) => {
                 acc[req.id] = req;

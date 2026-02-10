@@ -139,8 +139,8 @@ export function useDashboardData() {
           passed: 45,
         },
         leave: {
-          currentBalance: isDemoMode ? selectedUser.leaveBalance : 15.5,
-          pendingRequestsCount: 1,
+          currentBalance: isDemoMode ? (selectedUser.leaveBalance ?? 30.0) : 15.5,
+          pendingRequestsCount: isDemoMode ? 0 : 1,
           useOrLose: 0,
         },
       };

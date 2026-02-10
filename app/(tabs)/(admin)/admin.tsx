@@ -3,6 +3,7 @@ import { ScreenGradient } from '@/components/ScreenGradient';
 import { SyncStatus } from '@/components/SyncStatusBadge';
 import Colors from '@/constants/Colors';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { LeaveRequest } from '@/types/schema';
 import { Link, useRouter } from 'expo-router';
@@ -16,6 +17,8 @@ export default function AdminScreen() {
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];
     const router = useRouter();
+    const currentUser = useCurrentProfile();
+    const userId = currentUser?.id ?? 'user-123';
     const {
         leaveBalance,
         leaveRequests,
@@ -25,12 +28,9 @@ export default function AdminScreen() {
 
     useScreenHeader("MY ADMIN", "Leave & Actions");
 
-    // Mock User ID for Phase 1
-    const MOCK_USER_ID = 'user-123';
-
     useEffect(() => {
-        fetchLeaveData(MOCK_USER_ID);
-    }, []);
+        fetchLeaveData(userId);
+    }, [userId]);
 
     const requestsList = useMemo(() => Object.values(leaveRequests).sort((a, b) =>
         b.createdAt.localeCompare(a.createdAt)

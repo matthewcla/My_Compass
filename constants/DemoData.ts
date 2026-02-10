@@ -8,6 +8,7 @@ export enum DemoPhase {
 
 export interface DemoUser extends User {
   pins: string[];
+  leaveBalance: number;
 }
 
 export const DEMO_USERS: DemoUser[] = [
@@ -21,6 +22,7 @@ export const DEMO_USERS: DemoUser[] = [
     lastSyncTimestamp: new Date().toISOString(),
     syncStatus: 'synced',
     preferences: {},
+    leaveBalance: 30.0,
   },
   {
     id: 'demo-user-2',
@@ -32,6 +34,7 @@ export const DEMO_USERS: DemoUser[] = [
     lastSyncTimestamp: new Date().toISOString(),
     syncStatus: 'synced',
     preferences: {},
+    leaveBalance: 15.5,
   },
   {
     id: 'demo-user-3',
@@ -43,5 +46,6 @@ export const DEMO_USERS: DemoUser[] = [
     lastSyncTimestamp: new Date().toISOString(),
     syncStatus: 'synced',
     preferences: {},
+    leaveBalance: 60.0,
   },
 ];

@@ -115,6 +115,12 @@ export function useDashboardData() {
       // -----------------------------------------------------------------------
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      const demoStore = require('@/store/useDemoStore').useDemoStore; // Inline require to avoid circular dependency issues if any, though explicit import is better. 
+      // Actually, let's just use the store instance we already imported or can import.
+      // Better to stick to the top level import if possible, but let's check imports first.
+
+      const { selectedUser, isDemoMode } = require('@/store/useDemoStore').useDemoStore.getState();
+
       const mockData: DashboardData = {
         cycle: {
           cycleId: '24-02',
@@ -133,7 +139,7 @@ export function useDashboardData() {
           passed: 45,
         },
         leave: {
-          currentBalance: 15.5,
+          currentBalance: isDemoMode ? selectedUser.leaveBalance : 15.5,
           pendingRequestsCount: 1,
           useOrLose: 0,
         },

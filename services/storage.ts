@@ -100,7 +100,20 @@ class SQLiteStorage implements IStorageService {
     const db = await this.getDB();
     try {
       const results = await db.getAllAsync<any>('SELECT * FROM leave_requests WHERE user_id = ?', userId);
-      return results.map(row => this.mapRowToLeaveRequest(row));
+      const validRequests: LeaveRequest[] = [];
+
+      for (const row of results) {
+        try {
+          validRequests.push(this.mapRowToLeaveRequest(row));
+        } catch (e) {
+          console.warn(`[Storage] Corrupted LeaveRequest detected (ID: ${row.id}). Self-healing by deleting record.`, e);
+          await db.runAsync('DELETE FROM leave_requests WHERE id = ?', row.id).catch(err =>
+            console.error(`[Storage] Failed to delete corrupted leave request ${row.id}`, err)
+          );
+        }
+      }
+
+      return validRequests;
     } catch (error) {
       if (error instanceof DataIntegrityError) throw error;
       throw new DataIntegrityError('Failed to parse LeaveRequest records', error);
@@ -534,7 +547,7 @@ class SQLiteStorage implements IStorageService {
         leaveAddress: row.leave_address,
         leavePhoneNumber: row.leave_phone_number,
         emergencyContact: emergencyContact,
-        dutySection: row.duty_section || undefined,
+        dutySection: row.duty_section ?? undefined,
         rationStatus: ['commuted', 'in_kind', 'not_applicable'].includes(row.ration_status) ? row.ration_status : undefined,
         preReviewChecks: (() => {
           const raw = safeJsonParse(row.pre_review_checks);
@@ -545,23 +558,23 @@ class SQLiteStorage implements IStorageService {
             isReadyToSubmit: !!raw.isReadyToSubmit,
           };
         })(),
-        modeOfTravel: row.mode_of_travel,
-        destinationCountry: row.destination_country,
-        normalWorkingHours: row.normal_working_hours,
+        modeOfTravel: row.mode_of_travel ?? undefined,
+        destinationCountry: row.destination_country ?? undefined,
+        normalWorkingHours: row.normal_working_hours ?? undefined,
         leaveInConus: Boolean(row.leave_in_conus),
-        memberRemarks: row.member_remarks,
+        memberRemarks: row.member_remarks ?? undefined,
         status: row.status,
         statusHistory: Array.isArray(safeJsonParse(row.status_history)) ? safeJsonParse(row.status_history) : [],
         approvalChain: Array.isArray(safeJsonParse(row.approval_chain)) ? safeJsonParse(row.approval_chain) : [],
-        currentApproverId: row.current_approver_id,
-        returnReason: row.return_reason,
-        denialReason: row.denial_reason,
+        currentApproverId: row.current_approver_id ?? undefined,
+        returnReason: row.return_reason ?? undefined,
+        denialReason: row.denial_reason ?? undefined,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
-        submittedAt: row.submitted_at,
+        submittedAt: row.submitted_at ?? undefined,
         lastSyncTimestamp: row.last_sync_timestamp,
         syncStatus: row.sync_status,
-        localModifiedAt: row.local_modified_at,
+        localModifiedAt: row.local_modified_at ?? undefined,
       });
     } catch (error: any) {
       if (error && error.format) {

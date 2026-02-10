@@ -21,13 +21,17 @@ type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
 const MAX_FILTER_MESSAGES = 500;
 const MIN_FILTER_PINNED_HEIGHT = 52;
 
+const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
 const formatDTG = (dateString: string) => {
     try {
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+
         const dd = date.getUTCDate().toString().padStart(2, '0');
         const hh = date.getUTCHours().toString().padStart(2, '0');
         const mm = date.getUTCMinutes().toString().padStart(2, '0');
-        const mon = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
+        const mon = MONTHS[date.getUTCMonth()];
         const yy = date.getUTCFullYear().toString().slice(-2);
         return `${dd}${hh}${mm}Z ${mon} ${yy}`;
     } catch (e) {
@@ -46,12 +50,12 @@ export default function InboxScreen() {
     const [filterHeight, setFilterHeight] = useState(0);
     const lastNonZeroFilterHeight = useRef(0);
 
-    const searchConfig = {
+    const searchConfig = useMemo(() => ({
         visible: true,
         onChangeText: setSearchQuery,
         placeholder: 'Search messages...',
         value: searchQuery
-    };
+    }), [searchQuery]);
 
     useEffect(() => {
         fetchMessages();
@@ -65,6 +69,21 @@ export default function InboxScreen() {
     const handlePress = useCallback((id: string) => {
         router.push(`/inbox/${id}`);
     }, [router]);
+
+    const renderMessageItem = useCallback(({ item }: { item: InboxMessage }) => (
+        <MessageCard
+            message={item}
+            // Pass stable handler to enable React.memo optimization
+            onPress={handlePress}
+            onTogglePin={togglePin}
+        />
+    ), [handlePress, togglePin]);
+
+    const renderSectionHeader = useCallback(({ section: { title } }: { section: { title: string } }) => (
+        <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900">
+            <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
+        </View>
+    ), []);
 
     const filterableMessages = useMemo(
         () => messages.slice(0, MAX_FILTER_MESSAGES),
@@ -215,19 +234,8 @@ export default function InboxScreen() {
                         bounces={true}
                         alwaysBounceVertical={true}
                         overScrollMode="always"
-                        renderItem={({ item }) => (
-                            <MessageCard
-                                message={item}
-                                // Pass stable handler to enable React.memo optimization
-                                onPress={handlePress}
-                                onTogglePin={togglePin}
-                            />
-                        )}
-                        renderSectionHeader={({ section: { title } }) => (
-                            <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900">
-                                <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
-                            </View>
-                        )}
+                        renderItem={renderMessageItem}
+                        renderSectionHeader={renderSectionHeader}
                         keyExtractor={item => item.id}
                         stickySectionHeadersEnabled={false} // Sticky headers with sticky list header can be tricky, verifying without first
                         contentContainerStyle={contentContainerStyle}

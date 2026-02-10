@@ -134,6 +134,7 @@ export default function HubDashboard() {
                             <View style={{ width: '47%', aspectRatio: 1 }}>
                                 <MenuTile
                                     label="My Assignment"
+                                    subtitle="Action Required"
                                     icon={Briefcase}
                                     onPress={() => handleTilePress('/(career)/assignment')}
                                 />
@@ -152,6 +153,7 @@ export default function HubDashboard() {
                             <View style={{ width: '47%', aspectRatio: 1 }}>
                                 <MenuTile
                                     label={"My Leave\n& Admin"}
+                                    subtitle="Balance: 15.5"
                                     icon={FileText}
                                     onPress={() => handleTilePress('/(admin)')}
                                 />
@@ -180,6 +182,7 @@ export default function HubDashboard() {
                             }
                         }}
                         onQuickRequest={handleQuickLeavePress}
+                        onFullRequest={() => router.push('/leave/request' as any)}
                         onExpand={(expanded) => {
                             if (expanded) {
                                 setTimeout(() => {

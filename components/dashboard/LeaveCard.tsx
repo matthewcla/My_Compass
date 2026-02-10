@@ -3,7 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { LeaveRequest } from '@/types/schema';
 import { getShadow } from '@/utils/getShadow';
 import { format } from 'date-fns';
-import { ChevronRight, Clock, Plus } from 'lucide-react-native';
+import { ChevronRight, Clock, Plus, Zap } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -12,10 +12,11 @@ interface LeaveCardProps {
     requests?: LeaveRequest[];
     onPressRequest?: (request: LeaveRequest) => void;
     onQuickRequest?: () => void;
+    onFullRequest?: () => void;
     onExpand?: (expanded: boolean) => void;
 }
 
-export function LeaveCard({ balance, requests = [], onPressRequest, onQuickRequest, onExpand }: LeaveCardProps) {
+export function LeaveCard({ balance, requests = [], onPressRequest, onQuickRequest, onFullRequest, onExpand }: LeaveCardProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const [expanded, setExpanded] = useState(false);
@@ -42,10 +43,19 @@ export function LeaveCard({ balance, requests = [], onPressRequest, onQuickReque
                 className="rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
             >
                 {/* Persistent Quick Request Action */}
-                <View className="absolute top-4 right-4 z-50">
+                <View className="absolute top-4 right-4 z-50 flex-row items-center gap-2">
                     <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={onQuickRequest}
+                        className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"
+                        style={getShadow({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 })}
+                    >
+                        <Zap size={16} color={isDark ? '#fbbf24' : '#d97706'} strokeWidth={2.5} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={onFullRequest}
                         className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"
                         style={getShadow({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 })}
                     >

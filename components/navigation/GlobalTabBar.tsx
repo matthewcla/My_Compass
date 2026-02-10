@@ -185,7 +185,8 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
     const [barWidth, setBarWidth] = React.useState(0);
     const pillTranslateX = useSharedValue(0);
 
-    const currentSpoke = (segments[0] === '(tabs)' ? segments[1] : segments[0]) as string;
+    const segmentList = segments as string[];
+    const currentSpoke = (segmentList[0] === '(tabs)' ? segmentList[1] : segmentList[0]) as string;
     const { activeSpoke, setActiveSpoke } = useUIStore();
 
     React.useEffect(() => {

@@ -2,6 +2,14 @@ export type PCSSegmentType = 'ORIGIN' | 'INTERMEDIATE' | 'DESTINATION';
 export type PCSSegmentMode = 'POV' | 'AIR' | 'MIXED' | 'GOV_VEHICLE';
 export type PCSSegmentStatus = 'LOCKED' | 'PLANNING' | 'COMPLETE';
 
+export interface PCSStop {
+  id: string;
+  location: string;
+  arrivalDate: string;
+  departureDate: string;
+  reason: 'LEISURE' | 'OFFICIAL';
+}
+
 export interface PCSSegment {
   id: string;
   type: PCSSegmentType;
@@ -25,6 +33,7 @@ export interface PCSSegment {
   userPlan: {
     mode: PCSSegmentMode | null;
     isAccompanied: boolean;
+    stops?: PCSStop[];
   };
   status: PCSSegmentStatus;
 }

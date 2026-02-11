@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChecklistItem, PCSOrder, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
-import { MOCK_PCS_ORDERS } from '@/constants/MockPCSData';
+import { services } from '@/services/api/serviceRegistry';
 import { useUserStore } from './useUserStore';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 
@@ -47,7 +47,7 @@ interface PCSState {
   financials: Financials;
   currentDraft: PCSSegment | null;
 
-  initializeOrders: () => void;
+  initializeOrders: () => Promise<void>;
   updateSegmentStatus: (segmentId: string, status: PCSSegmentStatus) => void;
   setChecklistItemStatus: (id: string, status: ChecklistItem['status']) => void;
   resetPCS: () => void;
@@ -90,8 +90,14 @@ export const usePCSStore = create<PCSState>()(
         totalPerDiem: 0,
       },
 
-      initializeOrders: () => {
-        const order = MOCK_PCS_ORDERS;
+      initializeOrders: async () => {
+        const userId = useUserStore.getState().user?.id ?? 'unknown';
+        const result = await services.pcs.fetchActiveOrder(userId);
+        if (!result.success) {
+            console.error('[PCSStore] Failed to fetch active order:', result.error.message);
+            return;
+        }
+        const order = result.data;
         const checklist: ChecklistItem[] = [];
 
         // 1. Always Add

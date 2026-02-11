@@ -19,6 +19,7 @@ interface PCSState {
 
   initializeOrders: () => void;
   updateSegmentStatus: (segmentId: string, status: PCSSegmentStatus) => void;
+  setChecklistItemStatus: (id: string, status: ChecklistItem['status']) => void;
   resetPCS: () => void;
 }
 
@@ -93,6 +94,14 @@ export const usePCSStore = create<PCSState>()(
             segments: updatedSegments,
           },
         });
+      },
+
+      setChecklistItemStatus: (id: string, status: ChecklistItem['status']) => {
+        const { checklist } = get();
+        const updatedChecklist = checklist.map((item) =>
+          item.id === id ? { ...item, status } : item
+        );
+        set({ checklist: updatedChecklist });
       },
 
       resetPCS: () => {

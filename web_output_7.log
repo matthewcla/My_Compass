@@ -1,0 +1,81 @@
+
+> my_compass@1.0.0 web /app
+> expo start --web
+
+Starting project at /app
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  @shopify/flash-list@2.2.2 - expected version: 2.0.2
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 61.9% (1220/1599)
+λ node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.8% (1343/3469)
+λ Bundled 6691ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/node/render.js (4452 modules)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (4454/4454)
+"shadow*" style props are deprecated. Use "boxShadow".
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+λ  WARN  [Layout children]: No route named "orders" exists in nested children: [ 'move', 'pcs' ]
+  console.warn (ignoreWarnings.ts:21:9)
+λ  LOG  PcsScreen rendering...
+λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+  console.warn (ignoreWarnings.ts:21:9)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (4454/4454)
+Web Bundled 12576ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js (4454 modules)
+Web Bundled 2868ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js (4445 modules)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 182ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/node/render.js (1 module)
+"shadow*" style props are deprecated. Use "boxShadow".
+[expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+λ  WARN  [Layout children]: No route named "orders" exists in nested children: [ 'move', 'pcs' ]
+  warn (ignoreWarnings.ts:21:9)
+  console.warn (ignoreWarnings.ts:21:9)
+λ  LOG  PcsScreen rendering...
+λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+  warn (ignoreWarnings.ts:21:9)
+  console.warn (ignoreWarnings.ts:21:9)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 1549ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js (1 module)
+Web Bundled 162ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js (1 module)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 202ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/node/render.js (1 module)
+"shadow*" style props are deprecated. Use "boxShadow".
+λ  WARN  [expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+  warn (ignoreWarnings.ts:21:9)
+  _libCtx (ignoreWarnings.ts:21:9)
+  console.warn (components/navigation/AuthGuard.tsx:1:1)
+λ  WARN  [Layout children]: No route named "orders" exists in nested children: [ 'move', 'pcs' ]
+  warn (ignoreWarnings.ts:21:9)
+  _libCtx (ignoreWarnings.ts:21:9)
+  console.warn (components/navigation/AuthGuard.tsx:1:1)
+λ  LOG  PcsScreen rendering...
+λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+  warn (ignoreWarnings.ts:21:9)
+  _libCtx (ignoreWarnings.ts:21:9)
+  console.warn (components/navigation/AuthGuard.tsx:1:1)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2262ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js (1 module)
+Web Bundled 207ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js (1 module)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 107ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/node/render.js (1 module)
+"shadow*" style props are deprecated. Use "boxShadow".
+λ  WARN  [expo-notifications] Listening to push token changes is not yet fully supported on web. Adding a listener will have no effect.
+  warn (ignoreWarnings.ts:21:9)
+  _libCtx (ignoreWarnings.ts:21:9)
+  _react (components/navigation/AuthGuard.tsx:1:1)
+  console.warn (components/navigation/AuthGuard.tsx:3:1)
+λ  WARN  [Layout children]: No route named "orders" exists in nested children: [ 'move', 'pcs' ]
+  warn (ignoreWarnings.ts:21:9)
+  _libCtx (ignoreWarnings.ts:21:9)
+  _react (components/navigation/AuthGuard.tsx:1:1)
+  console.warn (components/navigation/AuthGuard.tsx:3:1)
+λ  LOG  PcsScreen rendering...
+λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
+  warn (ignoreWarnings.ts:21:9)
+  _libCtx (ignoreWarnings.ts:21:9)
+  _react (components/navigation/AuthGuard.tsx:1:1)
+  console.warn (components/navigation/AuthGuard.tsx:3:1)
+Web node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2277ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js (1 module)
+Web Bundled 192ms node_modules/.pnpm/expo-router@6.0.23_@expo+metro-runtime@6.1.2_@types+react@19.1.17_expo-constants@18.0.1_f13ba3b673f555e9fa551e819990eb13/node_modules/expo-router/entry.js (1 module)

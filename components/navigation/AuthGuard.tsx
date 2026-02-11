@@ -37,7 +37,7 @@ export function AuthGuard() {
         }
         // 2. If Authenticated and trying to access Sign In -> Redirect to Hub
         else if (session && inPublicGroup) {
-            router.replace('/(hub)');
+            router.replace('/');
         }
     }, [session, isSessionLoading, segments]);
 

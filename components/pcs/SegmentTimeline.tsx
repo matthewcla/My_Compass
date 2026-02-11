@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import { usePCSStore } from '@/store/usePCSStore';
 import { Check, Lock, Edit2 } from 'lucide-react-native';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
 export const SegmentTimeline = () => {
+  const router = useRouter();
   const activeOrder = usePCSStore((state) => state.activeOrder);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -23,8 +25,8 @@ export const SegmentTimeline = () => {
             const isLocked = status === 'LOCKED';
 
             const handlePress = () => {
-                if (isPlanning) {
-                    console.log("Open Planner");
+                if (isPlanning || isComplete) {
+                    router.push(`/pcs-wizard/${segment.id}/`);
                 }
             };
 
@@ -57,7 +59,7 @@ export const SegmentTimeline = () => {
                     {/* Content Column */}
                     <Pressable
                         onPress={handlePress}
-                        disabled={!isPlanning}
+                        disabled={!isPlanning && !isComplete}
                         className={`flex-1 rounded-xl p-3 ${
                             isPlanning ? 'bg-blue-50/50 dark:bg-slate-800/50 border border-blue-100 dark:border-blue-900' : ''
                         }`}

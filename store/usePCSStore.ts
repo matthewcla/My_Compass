@@ -55,6 +55,7 @@ interface PCSState {
   checkObliserv: () => void;
   updateFinancials: (updates: Partial<Financials> | ((prev: Financials) => Partial<Financials>)) => void;
   startPlanning: (segmentId: string) => void;
+  commitSegment: (segmentId: string) => void;
   updateDraft: (updates: Partial<PCSSegment>) => void;
 }
 
@@ -318,8 +319,33 @@ export const usePCSStore = create<PCSState>()(
 
         const segment = activeOrder.segments.find(s => s.id === segmentId);
         if (segment) {
-            set({ currentDraft: JSON.parse(JSON.stringify(segment)) });
+            const draft = JSON.parse(JSON.stringify(segment));
+            // Ensure stops array exists
+            if (!draft.userPlan.stops) {
+                draft.userPlan.stops = [];
+            }
+            set({ currentDraft: draft });
         }
+      },
+
+      commitSegment: (segmentId: string) => {
+        const { currentDraft, activeOrder } = get();
+        if (!currentDraft || !activeOrder || currentDraft.id !== segmentId) return;
+
+        const updatedSegments = activeOrder.segments.map((s) =>
+          s.id === segmentId ? { ...currentDraft, status: 'COMPLETE' as PCSSegmentStatus } : s
+        );
+
+        set({
+          activeOrder: {
+            ...activeOrder,
+            segments: updatedSegments,
+          },
+          currentDraft: null,
+        });
+
+        // Recalculate financials after commit
+        get().recalculateFinancials();
       },
 
       updateDraft: (updates: Partial<PCSSegment>) => {

@@ -6,7 +6,7 @@ export default function PCSLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="pcs" />
       <Stack.Screen name="move" />
-      <Stack.Screen name="financials" />
+      <Stack.Screen name="financials/index" />
     </Stack>
   );
 }

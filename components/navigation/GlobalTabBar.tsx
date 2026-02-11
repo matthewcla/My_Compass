@@ -10,9 +10,7 @@ import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
     ClipboardList,
     Compass,
-    FileText,
     LayoutGrid,
-    Map as MapIcon,
     Settings,
     Target
 } from 'lucide-react-native';
@@ -104,10 +102,7 @@ const SPOKE_CONFIG: Record<string, SpokeConfig> = {
         primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
         secondary: { label: 'Assignment', route: '/(assignment)', icon: Target },
     },
-    '(pcs)': {
-        primary: { label: 'Orders', route: '/(pcs)/orders', icon: FileText },
-        secondary: { label: 'Move', route: '/(pcs)/move', icon: MapIcon },
-    },
+
     '(profile)': {
         primary: { label: 'Preferences', route: '/(profile)/preferences', icon: Settings },
         secondary: { label: 'Surveys', route: '/(profile)/surveys', icon: ClipboardList },

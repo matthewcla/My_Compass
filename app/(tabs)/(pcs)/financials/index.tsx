@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { usePCSStore } from '@/store/usePCSStore';
-import { ObliservBanner } from './_components/ObliservBanner';
-import { SegmentBreakdownList } from './_components/SegmentBreakdownList';
-import { AllowancesCard } from './_components/AllowancesCard';
+import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
+import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
+import { SegmentBreakdownList } from '@/components/pcs/financials/SegmentBreakdownList';
 import { ScalePressable } from '@/components/ScalePressable';
+import { usePCSStore } from '@/store/usePCSStore';
+import { Stack, useRouter } from 'expo-router';
 import { CheckCircle2 } from 'lucide-react-native';
+import React from 'react';
+import { ScrollView, Text, View } from 'react-native';
 
 import { useEffect } from 'react';
 

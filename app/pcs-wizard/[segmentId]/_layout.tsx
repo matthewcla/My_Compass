@@ -1,7 +1,7 @@
+import { usePCSStore } from '@/store/usePCSStore';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
-import { usePCSStore } from '@/store/usePCSStore';
+import { ActivityIndicator, Text, View } from 'react-native';
 
 export default function PCSWizardLayout() {
   const { segmentId } = useLocalSearchParams<{ segmentId: string }>();
@@ -10,24 +10,24 @@ export default function PCSWizardLayout() {
 
   useEffect(() => {
     const init = async () => {
-        // Hydrate if needed
-        if (usePCSStore.persist && !usePCSStore.persist.hasHydrated()) {
-            await usePCSStore.persist.rehydrate();
-        }
+      // Hydrate if needed
+      if (usePCSStore.persist && !usePCSStore.persist.hasHydrated()) {
+        await usePCSStore.persist.rehydrate();
+      }
 
-        const store = usePCSStore.getState();
+      const store = usePCSStore.getState();
 
-        // Initialize mock orders if empty
-        if (!store.activeOrder) {
-            store.initializeOrders();
-        }
+      // Initialize mock orders if empty
+      if (!store.activeOrder) {
+        store.initializeOrders();
+      }
 
-        // Start planning the segment
-        if (segmentId) {
-            store.startPlanning(segmentId);
-        }
+      // Start planning the segment
+      if (segmentId) {
+        store.startPlanning(segmentId);
+      }
 
-        setIsReady(true);
+      setIsReady(true);
     };
 
     init();
@@ -47,6 +47,8 @@ export default function PCSWizardLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="mode" />
+      <Stack.Screen name="itinerary" />
+      <Stack.Screen name="review" />
     </Stack>
   );
 }

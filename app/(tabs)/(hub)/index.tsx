@@ -158,7 +158,7 @@ export default function HubDashboard() {
                                 <MenuTile
                                     label="My PCS"
                                     icon={MapIcon}
-                                    subtitle={isPCSPhase ? "Action Required:\nOrders Released" : undefined}
+                                    subtitle={isPCSPhase ? "Action Required" : undefined}
                                     onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
                                     locked={!isPCSPhase}
                                     style={isPCSPhase ? { backgroundColor: '#1e293b', borderColor: '#334155' } : undefined}

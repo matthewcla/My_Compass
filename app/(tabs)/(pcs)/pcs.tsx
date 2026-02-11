@@ -1,25 +1,22 @@
 import React, { useEffect } from 'react';
-import { View, Text, ScrollView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 import { ScreenGradient } from '@/components/ScreenGradient';
-import { useScreenHeader } from '@/hooks/useScreenHeader';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { ProfileConfirmationCard } from '@/components/pcs/ProfileConfirmationCard';
 import { SegmentTimeline } from '@/components/pcs/SegmentTimeline';
+import { PCSChecklist } from '@/components/pcs/PCSChecklist';
 import { usePCSStore } from '@/store/usePCSStore';
-import { Check, ChevronRight } from 'lucide-react-native';
-import { useColorScheme } from 'react-native';
+import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
+import Animated from 'react-native-reanimated';
+import { useColorScheme } from '@/components/useColorScheme';
 
 export default function PcsScreen() {
-    const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    useScreenHeader("My PCS", "Relocation Manager");
-
-    const { checklist, initializeOrders, activeOrder } = usePCSStore();
+    const { initializeOrders, activeOrder } = usePCSStore();
 
     useEffect(() => {
-        // Initialize if empty, but check if we need to force reset or just load mock
         if (!activeOrder) {
             initializeOrders();
         }
@@ -27,46 +24,48 @@ export default function PcsScreen() {
 
     return (
         <ScreenGradient>
-            <ScrollView
-                contentContainerStyle={{
-                    paddingTop: 24, // Spacing below header
-                    paddingBottom: insets.bottom + 100, // Clear TabBar
-                    paddingHorizontal: 16
-                }}
-                showsVerticalScrollIndicator={false}
+            <CollapsibleScaffold
+                statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
+                topBar={
+                    <View className="bg-slate-50 dark:bg-slate-950 pb-2">
+                        <ScreenHeader
+                            title="My PCS"
+                            subtitle="Relocation Manager"
+                            withSafeArea={false}
+                        />
+                    </View>
+                }
+                contentContainerStyle={{ paddingBottom: 100 }}
             >
-                <ProfileConfirmationCard />
-
-                <SegmentTimeline />
-
-                <View className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-700">
-                    <Text className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Checklist</Text>
-
-                    {checklist.map((item, index) => {
-                        const isComplete = item.status === 'COMPLETE';
-                        return (
-                            <View key={item.id} className={`flex-row items-center py-3 ${index < checklist.length - 1 ? 'border-b border-slate-100 dark:border-slate-700' : ''}`}>
-                                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3 ${
-                                    isComplete ? 'bg-green-500 border-green-500' : 'border-slate-300 dark:border-slate-600'
-                                }`}>
-                                    {isComplete && <Check size={14} color="white" />}
-                                </View>
-
-                                <View className="flex-1">
-                                    <Text className={`text-base font-medium ${isComplete ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'}`}>
-                                        {item.label}
-                                    </Text>
-                                    <Text className="text-xs text-slate-400 uppercase mt-0.5">
-                                        {item.category.replace('_', ' ')}
-                                    </Text>
-                                </View>
-
-                                <ChevronRight size={20} color={isDark ? '#64748b' : '#94a3b8'} />
-                            </View>
-                        );
-                    })}
-                </View>
-            </ScrollView>
+                {({
+                    onScroll,
+                    onScrollBeginDrag,
+                    onScrollEndDrag,
+                    onLayout,
+                    onContentSizeChange,
+                    scrollEnabled,
+                    scrollEventThrottle,
+                    contentContainerStyle
+                }) => (
+                    <Animated.ScrollView
+                        onScroll={onScroll}
+                        onScrollBeginDrag={onScrollBeginDrag}
+                        onScrollEndDrag={onScrollEndDrag}
+                        onLayout={onLayout}
+                        onContentSizeChange={onContentSizeChange}
+                        scrollEnabled={scrollEnabled}
+                        scrollEventThrottle={scrollEventThrottle}
+                        contentContainerStyle={contentContainerStyle}
+                        showsVerticalScrollIndicator={false}
+                    >
+                         <View style={{ paddingTop: 24 }}>
+                            <ProfileConfirmationCard />
+                            <SegmentTimeline />
+                            <PCSChecklist />
+                        </View>
+                    </Animated.ScrollView>
+                )}
+            </CollapsibleScaffold>
         </ScreenGradient>
     );
 }

@@ -12,8 +12,11 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useSession } from '@/lib/ctx';
 import { useLeaveStore } from '@/store/useLeaveStore';
+import { usePCSStore } from '@/store/usePCSStore';
+import { useDemoStore } from '@/store/useDemoStore';
 import { useUserStore } from '@/store/useUserStore';
 import { LeaveRequest } from '@/types/schema';
+import { DemoPhase } from '@/constants/DemoData';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import {
@@ -57,12 +60,23 @@ export default function HubDashboard() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
+    const isDemoMode = useDemoStore(state => state.isDemoMode);
+    const selectedPhase = useDemoStore(state => state.selectedPhase);
+    const initializeOrders = usePCSStore(state => state.initializeOrders);
+
     // Hydrate defaults on mount
     React.useEffect(() => {
         if (user?.id) {
             fetchUserDefaults(user.id);
         }
     }, [user?.id, fetchUserDefaults]);
+
+    // Initialize PCS Orders if in PCS Demo Phase
+    React.useEffect(() => {
+        if (isDemoMode && selectedPhase === DemoPhase.MY_PCS) {
+            initializeOrders();
+        }
+    }, [isDemoMode, selectedPhase, initializeOrders]);
 
 
 
@@ -125,6 +139,8 @@ export default function HubDashboard() {
     const sections = ['menu', 'leave'];
 
     const renderItem = ({ item }: { item: any }) => {
+        const isPCSPhase = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
+
         switch (item) {
             case 'menu':
                 return (
@@ -142,8 +158,10 @@ export default function HubDashboard() {
                                 <MenuTile
                                     label="My PCS"
                                     icon={MapIcon}
-                                    onPress={() => handleTilePress('/(pcs)')}
-                                    locked
+                                    subtitle={isPCSPhase ? "Action Required" : undefined}
+                                    onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
+                                    locked={!isPCSPhase}
+                                    style={isPCSPhase ? { backgroundColor: '#1e293b', borderColor: '#334155' } : undefined}
                                 />
                             </View>
                         </View>

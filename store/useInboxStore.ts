@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { InboxMessage } from '@/types/inbox';
-import { CorrespondenceService } from '@/services/correspondence';
+import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
 
 const MAX_INBOX_MESSAGES = 500;
@@ -50,8 +50,10 @@ export const useInboxStore = create<InboxState>((set, get) => ({
                 }
             }
 
-            // Fetch fresh data
-            const newMessages = await CorrespondenceService.fetchMessages();
+            // Fetch fresh data via service
+            const inboxResult = await services.inbox.fetchMessages();
+            if (!inboxResult.success) throw new Error(inboxResult.error.message);
+            const newMessages = inboxResult.data;
 
             const existingById = new Map(get().messages.map((m) => [m.id, m]));
             const mergedMessages = clipMessages(

@@ -16,6 +16,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
+import { syncQueue } from '@/services/syncQueue';
 import { View } from 'react-native';
 
 export {
@@ -63,6 +64,7 @@ export default function RootLayout() {
     const initStorage = async () => {
       try {
         await storage.init();
+        await syncQueue.init();
         if (!cancelled) {
           setDbInitialized(true);
         }

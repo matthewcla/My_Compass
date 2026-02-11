@@ -5,6 +5,7 @@
     "email": "matthew.wilson.mil@us.navy.mil",
     "rank": "E-6",
     "title": "IT1",
+    "dependents": 2,
     "uic": "21545",
     "unit": "USS Gerald R. Ford",
     "status": "Active",
@@ -18,5 +19,6 @@
     },
     "privacyMode": false,
     "lastSyncTimestamp": "2026-01-26T22:24:00.000Z",
-    "syncStatus": "synced"
+    "syncStatus": "synced",
+    "eaos": "2027-06-01T00:00:00.000Z"
 }

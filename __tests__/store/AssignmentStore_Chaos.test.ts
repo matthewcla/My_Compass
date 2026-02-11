@@ -8,7 +8,7 @@
  */
 
 import { storage } from '@/services/storage';
-import { selectManifestItems, useAssignmentStore } from '@/store/useAssignmentStore';
+import { MAX_SLATE_SIZE, selectManifestItems, useAssignmentStore } from '@/store/useAssignmentStore';
 
 // Test User ID
 const TEST_USER_ID = 'test-user-001';
@@ -73,7 +73,7 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
      *
      * EXPECTED BEHAVIOR: No "ghost" state where a billet exists in both.
      */
-    it('The Full Slate Bypass: 8th item should not end up in ghost state after withdraw + re-promote', async () => {
+    it('The Full Slate Bypass: overflow item should not end up in ghost state after withdraw + re-promote', async () => {
         const state = useAssignmentStore.getState();
         const billets = state.billets;
 
@@ -82,48 +82,48 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
             b => b.advertisementStatus !== 'projected'
         );
 
-        // We need at least 8 non-projected billets for this test
-        if (nonProjectedBillets.length < 8) {
+        const needed = MAX_SLATE_SIZE + 2; // Need slate + 1 overflow + 1 spare
+        if (nonProjectedBillets.length < needed) {
             console.warn('Not enough non-projected billets for test - skipping');
             return;
         }
 
-        // Fill the slate with 7 items (using non-projected billets)
-        for (let i = 0; i < 7; i++) {
+        // Fill the slate to MAX_SLATE_SIZE
+        for (let i = 0; i < MAX_SLATE_SIZE; i++) {
             await useAssignmentStore.getState().swipe(nonProjectedBillets[i].id, 'up', TEST_USER_ID);
         }
 
-        let stateAfter7 = useAssignmentStore.getState();
-        expect(Object.keys(stateAfter7.applications).length).toBe(7);
+        let stateAfterFull = useAssignmentStore.getState();
+        expect(Object.keys(stateAfterFull.applications).length).toBe(MAX_SLATE_SIZE);
 
-        // Attempt to swipe 'up' on 8th item (should fallback to manifest as 'super')
-        const eighthBillet = nonProjectedBillets[7];
-        await useAssignmentStore.getState().swipe(eighthBillet.id, 'up', TEST_USER_ID);
+        // Attempt to swipe 'up' on overflow item (should fallback to manifest as 'super')
+        const overflowBillet = nonProjectedBillets[MAX_SLATE_SIZE];
+        await useAssignmentStore.getState().swipe(overflowBillet.id, 'up', TEST_USER_ID);
 
-        let stateAfter8 = useAssignmentStore.getState();
-        // Should still only have 7 apps (8th went to manifest)
-        expect(Object.keys(stateAfter8.applications).length).toBe(7);
-        // 8th should be in realDecisions as 'super'
-        expect(stateAfter8.realDecisions[eighthBillet.id]).toBe('super');
+        let stateAfterOverflow = useAssignmentStore.getState();
+        // Should still only have MAX_SLATE_SIZE apps (overflow went to manifest)
+        expect(Object.keys(stateAfterOverflow.applications).length).toBe(MAX_SLATE_SIZE);
+        // Overflow should be in realDecisions as 'super'
+        expect(stateAfterOverflow.realDecisions[overflowBillet.id]).toBe('super');
 
-        // Withdraw one of the original 7 to free a slot
-        const firstAppId = stateAfter8.userApplicationIds[0];
+        // Withdraw one of the original slate items to free a slot
+        const firstAppId = stateAfterOverflow.userApplicationIds[0];
         await useAssignmentStore.getState().withdrawApplication(firstAppId, TEST_USER_ID);
 
-        // Now try to promote the 8th item
-        const promotionResult = useAssignmentStore.getState().promoteToSlate(eighthBillet.id, TEST_USER_ID);
+        // Now try to promote the overflow item
+        const promotionResult = await useAssignmentStore.getState().promoteToSlate(overflowBillet.id, TEST_USER_ID);
 
         expect(promotionResult).toBe(true);
 
         const finalState = useAssignmentStore.getState();
 
         // Count how many applications have this billetId
-        const appsWithEighthBillet = Object.values(finalState.applications).filter(
-            app => app.billetId === eighthBillet.id
+        const appsWithOverflowBillet = Object.values(finalState.applications).filter(
+            app => app.billetId === overflowBillet.id
         );
 
         // ASSERTION: Should be exactly 1 application for this billet
-        expect(appsWithEighthBillet.length).toBe(1);
+        expect(appsWithOverflowBillet.length).toBe(1);
     });
 
     /**
@@ -294,7 +294,7 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
         }
 
         // Attempt to promote the projected billet to slate
-        const promotionResult = useAssignmentStore.getState().promoteToSlate(projectedBillet.id, TEST_USER_ID);
+        const promotionResult = await useAssignmentStore.getState().promoteToSlate(projectedBillet.id, TEST_USER_ID);
 
         // ASSERTION: Promotion should be BLOCKED (return false)
         expect(promotionResult).toBe(false);

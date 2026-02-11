@@ -57,6 +57,11 @@ export const UserSchema = z.object({
      * Used for retention logic and career timing.
      */
     seaos: z.string().datetime().optional(),
+    /**
+     * End of Active Obligated Service (EAOS).
+     * Hard expiration of current contract.
+     */
+    eaos: z.string().datetime().optional(),
     preferences: z.object({
         regions: z.array(z.string()).optional(),
         dutyTypes: z.array(z.string()).optional(),

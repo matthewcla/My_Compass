@@ -3,6 +3,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChecklistItem, PCSOrder, PCSSegmentStatus } from '@/types/pcs';
 import { MOCK_PCS_ORDERS } from '@/constants/MockPCSData';
+import { useUserStore } from './useUserStore';
+import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 
 // Simple UUID generator
 const generateUUID = () => {
@@ -13,14 +15,40 @@ const generateUUID = () => {
   });
 };
 
+interface Financials {
+  advancePay: {
+    requested: boolean;
+    amount: number;
+    months: number;
+    repaymentMonths: number;
+    justification: string | null;
+  };
+  dla: {
+    eligible: boolean;
+    estimatedAmount: number;
+    receivedFY: boolean;
+  };
+  obliserv: {
+    required: boolean;
+    eaos: string;
+    status: 'PENDING' | 'COMPLETE';
+  };
+  // Added to store calculated entitlements
+  totalMalt: number;
+  totalPerDiem: number;
+}
+
 interface PCSState {
   activeOrder: PCSOrder | null;
   checklist: ChecklistItem[];
+  financials: Financials;
 
   initializeOrders: () => void;
   updateSegmentStatus: (segmentId: string, status: PCSSegmentStatus) => void;
   setChecklistItemStatus: (id: string, status: ChecklistItem['status']) => void;
   resetPCS: () => void;
+  recalculateFinancials: () => void;
+  checkObliserv: () => void;
 }
 
 export const usePCSStore = create<PCSState>()(
@@ -28,6 +56,27 @@ export const usePCSStore = create<PCSState>()(
     (set, get) => ({
       activeOrder: null,
       checklist: [],
+      financials: {
+        advancePay: {
+          requested: false,
+          amount: 0,
+          months: 1,
+          repaymentMonths: 12,
+          justification: null,
+        },
+        dla: {
+          eligible: false,
+          estimatedAmount: 0,
+          receivedFY: false,
+        },
+        obliserv: {
+          required: false,
+          eaos: '',
+          status: 'PENDING',
+        },
+        totalMalt: 0,
+        totalPerDiem: 0,
+      },
 
       initializeOrders: () => {
         const order = MOCK_PCS_ORDERS;
@@ -78,6 +127,10 @@ export const usePCSStore = create<PCSState>()(
         });
 
         set({ activeOrder: order, checklist });
+
+        // Initial calculations
+        get().recalculateFinancials();
+        get().checkObliserv();
       },
 
       updateSegmentStatus: (segmentId: string, status: PCSSegmentStatus) => {
@@ -94,6 +147,11 @@ export const usePCSStore = create<PCSState>()(
             segments: updatedSegments,
           },
         });
+
+        // Recalculate as segments change (e.g. status changes might imply plan confirmation, though currently only status updates)
+        // Ideally we should recalculate if plan details change.
+        // For now, we'll leave it manual or on init, or add it here.
+        get().recalculateFinancials();
       },
 
       setChecklistItemStatus: (id: string, status: ChecklistItem['status']) => {
@@ -105,8 +163,97 @@ export const usePCSStore = create<PCSState>()(
       },
 
       resetPCS: () => {
-        set({ activeOrder: null, checklist: [] });
+        set({
+          activeOrder: null,
+          checklist: [],
+          financials: {
+            advancePay: {
+              requested: false,
+              amount: 0,
+              months: 1,
+              repaymentMonths: 12,
+              justification: null,
+            },
+            dla: {
+              eligible: false,
+              estimatedAmount: 0,
+              receivedFY: false,
+            },
+            obliserv: {
+              required: false,
+              eaos: '',
+              status: 'PENDING',
+            },
+            totalMalt: 0,
+            totalPerDiem: 0,
+          }
+        });
       },
+
+      recalculateFinancials: () => {
+        const { activeOrder, financials } = get();
+        if (!activeOrder) return;
+
+        const user = useUserStore.getState().user;
+        if (!user) return;
+
+        let totalMalt = 0;
+        let totalPerDiem = 0;
+
+        // Sum MALT/Per Diem per segment
+        activeOrder.segments.forEach(segment => {
+           const { malt, perDiem } = calculateSegmentEntitlement(segment);
+           totalMalt += malt;
+           totalPerDiem += perDiem;
+        });
+
+        // DLA Calculation
+        const hasDependents = (user.dependents || 0) > 0;
+        const dlaRate = getDLARate(user.rank, hasDependents);
+
+        set({
+            financials: {
+                ...financials,
+                dla: {
+                    ...financials.dla,
+                    eligible: true, // Assuming basic eligibility
+                    estimatedAmount: dlaRate,
+                },
+                totalMalt,
+                totalPerDiem,
+            }
+        });
+      },
+
+      checkObliserv: () => {
+        const { activeOrder, financials } = get();
+        const user = useUserStore.getState().user;
+
+        if (!activeOrder || !user || !user.eaos) return;
+
+        const reportDate = new Date(activeOrder.reportNLT);
+        const eaosDate = new Date(user.eaos);
+
+        // Report + 36 months
+        // Logic: You need 3 years of obligated service from the report date
+        const requiredServiceDate = new Date(reportDate);
+        requiredServiceDate.setMonth(requiredServiceDate.getMonth() + 36);
+
+        // If EAOS is BEFORE the required service date, OBLISERV is required
+        const isObliservRequired = eaosDate < requiredServiceDate;
+
+        set({
+            financials: {
+                ...financials,
+                obliserv: {
+                    ...financials.obliserv,
+                    required: isObliservRequired,
+                    eaos: user.eaos,
+                    status: isObliservRequired ? 'PENDING' : 'COMPLETE',
+                }
+            }
+        });
+      }
     }),
     {
       name: 'pcs-storage',

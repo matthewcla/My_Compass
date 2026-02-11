@@ -43,6 +43,7 @@ export const UserSchema = z.object({
     rank: z.string().optional(), // Pay grade or rank abbreviation
     rating: z.string().optional(), // Enlisted rating (e.g., "IT", "ET")
     title: z.string().optional(), // Billet title / role
+    dependents: z.number().optional(), // Number of dependents
     uic: z.string().optional(), // Current unit
     /**
      * Projected Rotation Date (PRD).

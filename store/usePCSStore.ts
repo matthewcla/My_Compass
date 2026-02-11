@@ -52,6 +52,7 @@ interface PCSState {
   resetPCS: () => void;
   recalculateFinancials: () => void;
   checkObliserv: () => void;
+  updateFinancials: (updates: Partial<Financials> | ((prev: Financials) => Partial<Financials>)) => void;
 }
 
 export const usePCSStore = create<PCSState>()(
@@ -100,6 +101,12 @@ export const usePCSStore = create<PCSState>()(
           label: 'OBLISERV Check',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
+        });
+        checklist.push({
+          id: generateUUID(),
+          label: 'Financial Review',
+          status: 'NOT_STARTED',
+          category: 'FINANCE',
         });
 
         // 2. Conditional Checks
@@ -226,12 +233,49 @@ export const usePCSStore = create<PCSState>()(
                 dla: {
                     ...financials.dla,
                     eligible: true, // Assuming basic eligibility
-                    estimatedAmount: dlaRate,
+                    estimatedAmount: financials.dla.receivedFY ? 0 : dlaRate,
                 },
                 totalMalt,
                 totalPerDiem,
             }
         });
+      },
+
+      updateFinancials: (updates) => {
+        const { financials } = get();
+        const newFinancials = typeof updates === 'function' ? updates(financials) : updates;
+
+        // Deep merge logic (simplified for specific use cases or use lodash/immer if available, but here manual merge is safer)
+        // Since updates is Partial<Financials>, we should be careful.
+        // For now, assume top-level merge or specific nested merge if needed.
+        // Actually, the requirement is to update nested fields like 'dla'.
+        // Let's implement a shallow merge of top-level keys, but since 'dla' is an object, we need to merge it too if provided.
+        // However, standard setState pattern usually replaces the object.
+        // Let's make it smarter or just expect the caller to provide the full nested object if they want to update it.
+        // A better approach for this store structure:
+
+        let mergedFinancials = { ...financials };
+
+        if (newFinancials.advancePay) {
+            mergedFinancials.advancePay = { ...mergedFinancials.advancePay, ...newFinancials.advancePay };
+        }
+        if (newFinancials.dla) {
+            mergedFinancials.dla = { ...mergedFinancials.dla, ...newFinancials.dla };
+        }
+        if (newFinancials.obliserv) {
+            mergedFinancials.obliserv = { ...mergedFinancials.obliserv, ...newFinancials.obliserv };
+        }
+        // Top level primitives
+        if (newFinancials.totalMalt !== undefined) mergedFinancials.totalMalt = newFinancials.totalMalt;
+        if (newFinancials.totalPerDiem !== undefined) mergedFinancials.totalPerDiem = newFinancials.totalPerDiem;
+
+        set({ financials: mergedFinancials });
+
+        // Trigger recalculation if needed, but recalculateFinancials might overwrite some values (like estimatedAmount).
+        // If we update DLA receivedFY, we want recalculateFinancials to run to update estimatedAmount.
+        if (newFinancials.dla && newFinancials.dla.receivedFY !== undefined) {
+             get().recalculateFinancials();
+        }
       },
 
       checkObliserv: () => {

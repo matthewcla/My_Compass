@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChecklistItem, PCSOrder, PCSSegmentStatus } from '@/types/pcs';
+import { ChecklistItem, PCSOrder, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
 import { MOCK_PCS_ORDERS } from '@/constants/MockPCSData';
 import { useUserStore } from './useUserStore';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
@@ -45,6 +45,7 @@ interface PCSState {
   activeOrder: PCSOrder | null;
   checklist: ChecklistItem[];
   financials: Financials;
+  currentDraft: PCSSegment | null;
 
   initializeOrders: () => void;
   updateSegmentStatus: (segmentId: string, status: PCSSegmentStatus) => void;
@@ -53,6 +54,8 @@ interface PCSState {
   recalculateFinancials: () => void;
   checkObliserv: () => void;
   updateFinancials: (updates: Partial<Financials> | ((prev: Financials) => Partial<Financials>)) => void;
+  startPlanning: (segmentId: string) => void;
+  updateDraft: (updates: Partial<PCSSegment>) => void;
 }
 
 export const usePCSStore = create<PCSState>()(
@@ -60,6 +63,7 @@ export const usePCSStore = create<PCSState>()(
     (set, get) => ({
       activeOrder: null,
       checklist: [],
+      currentDraft: null,
       financials: {
         advancePay: {
           requested: false,
@@ -304,6 +308,28 @@ export const usePCSStore = create<PCSState>()(
                     eaos: user.eaos,
                     status: isObliservRequired ? 'PENDING' : 'COMPLETE',
                 }
+            }
+        });
+      },
+
+      startPlanning: (segmentId: string) => {
+        const { activeOrder } = get();
+        if (!activeOrder) return;
+
+        const segment = activeOrder.segments.find(s => s.id === segmentId);
+        if (segment) {
+            set({ currentDraft: JSON.parse(JSON.stringify(segment)) });
+        }
+      },
+
+      updateDraft: (updates: Partial<PCSSegment>) => {
+        const { currentDraft } = get();
+        if (!currentDraft) return;
+
+        set({
+            currentDraft: {
+                ...currentDraft,
+                ...updates,
             }
         });
       }

@@ -1,9 +1,10 @@
-import {
+import type {
     ApiResult,
     CreateLeaveRequestPayload,
-    SubmitLeaveRequestResponse
+    SubmitLeaveRequestResponse,
 } from '@/types/api';
-import { LeaveBalance, LeaveRequest } from '@/types/schema';
+import type { LeaveBalance, LeaveRequest } from '@/types/schema';
+import type { ILeaveService } from './interfaces/ILeaveService';
 
 // =============================================================================
 // HELPER FUNCTIONS
@@ -12,7 +13,7 @@ import { LeaveBalance, LeaveRequest } from '@/types/schema';
 /**
  * Generate a valid draft leave request pre-filled with required defaults.
  * Compliant with LeaveRequestSchema (Zod) from types/schema.ts.
- * 
+ *
  * @param userId - The current user's ID to assign to the request
  * @returns A valid LeaveRequest object in "draft" status
  */
@@ -105,65 +106,51 @@ const MOCK_LEAVE_BALANCE: LeaveBalance = {
 // SERVICE IMPLEMENTATION
 // =============================================================================
 
-/**
- * Fetch leave balance for a user.
- * Returns mock data with 45.5 days current, 15.0 use/lose.
- */
-export const fetchLeaveBalance = async (userId: string): Promise<ApiResult<LeaveBalance>> => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
+const meta = () => ({
+    requestId: `req-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+});
 
-    return {
-        success: true,
-        data: {
-            ...MOCK_LEAVE_BALANCE,
-            userId,
-        },
-        meta: {
-            requestId: `req-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-        },
-    };
+export const mockLeaveService: ILeaveService = {
+    fetchBalance: async (userId: string): Promise<ApiResult<LeaveBalance>> => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+
+        return {
+            success: true,
+            data: { ...MOCK_LEAVE_BALANCE, userId },
+            meta: meta(),
+        };
+    },
+
+    submitRequest: async (
+        payload: CreateLeaveRequestPayload
+    ): Promise<ApiResult<SubmitLeaveRequestResponse['data']>> => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        return {
+            success: true,
+            data: {
+                requestId: `req-new-${Date.now()}`,
+                status: 'pending',
+                submittedAt: new Date().toISOString(),
+                nextApproverId: 'approver-456',
+                nextApproverName: 'CDR Sarah Commander',
+            },
+            meta: meta(),
+        };
+    },
+
+    cancelRequest: async (requestId: string): Promise<ApiResult<{ canceledAt: string }>> => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return {
+            success: true,
+            data: { canceledAt: new Date().toISOString() },
+            meta: meta(),
+        };
+    },
 };
 
-/**
- * Submit a new leave request.
- * Simulates 1.5s delay and returns success.
- */
-export const submitLeaveRequest = async (
-    payload: CreateLeaveRequestPayload
-): Promise<ApiResult<SubmitLeaveRequestResponse['data']>> => {
-    // Simulate network delay (1.5s)
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Determine next approver (mock)
-    const nextApproverId = 'approver-456';
-    const nextApproverName = 'CDR Sarah Commander';
-
-    return {
-        success: true,
-        data: {
-            requestId: `req-new-${Date.now()}`,
-            status: 'pending',
-            submittedAt: new Date().toISOString(),
-            nextApproverId,
-            nextApproverName,
-        },
-        meta: {
-            requestId: `req-${Date.now()}`,
-            timestamp: new Date().toISOString(),
-        },
-    };
-};
-
-/**
- * Cancel an existing leave request.
- */
-export const cancelLeaveRequest = async (requestId: string): Promise<ApiResult<{ canceledAt: string }>> => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return {
-        success: true,
-        data: { canceledAt: new Date().toISOString() },
-        meta: { requestId: `req-${Date.now()}`, timestamp: new Date().toISOString() },
-    };
-};
+// Legacy named exports for backward compatibility during transition
+export const fetchLeaveBalance = mockLeaveService.fetchBalance;
+export const submitLeaveRequest = mockLeaveService.submitRequest;
+export const cancelLeaveRequest = mockLeaveService.cancelRequest;

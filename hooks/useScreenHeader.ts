@@ -8,7 +8,8 @@ export function useScreenHeader(
     title: string,
     subtitle: string | React.ReactNode,
     rightAction?: { icon: any; onPress: () => void },
-    searchConfig?: SearchConfig | null
+    searchConfig?: SearchConfig | null,
+    leftAction?: { icon: any; onPress: () => void } | null
 ) {
     const setHeader = useHeaderStore((state) => state.setHeader);
     const navigation = useContext(NavigationContext);
@@ -25,7 +26,7 @@ export function useScreenHeader(
             }
 
             frame = requestAnimationFrame(() => {
-                setHeader(title, subtitle, rightAction, 'large', searchConfig);
+                setHeader(title, subtitle, rightAction, 'large', searchConfig, leftAction);
                 frame = null;
             });
         };
@@ -48,5 +49,5 @@ export function useScreenHeader(
                 cancelAnimationFrame(frame);
             }
         };
-    }, [title, subtitle, rightAction, searchConfig, setHeader]);
+    }, [title, subtitle, rightAction, searchConfig, leftAction, setHeader]);
 }

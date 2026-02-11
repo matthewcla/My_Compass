@@ -1,4 +1,7 @@
+import { services } from '@/services/api/serviceRegistry';
+import { MOCK_BILLETS } from '@/constants/MockBillets';
 import { storage } from '@/services/storage';
+import { syncQueue } from '@/services/syncQueue';
 import {
     Application,
     Billet,
@@ -6,6 +9,12 @@ import {
     SwipeDecision
 } from '@/types/schema';
 import { create } from 'zustand';
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+export const MAX_SLATE_SIZE = 5;
 
 // =============================================================================
 // UTILITIES
@@ -103,6 +112,11 @@ interface AssignmentActions {
     withdrawApplication: (appId: string, userId: string) => Promise<void>;
 
     /**
+     * Move application up or down in the slate.
+     */
+    moveApplication: (fromIndex: number, direction: 'up' | 'down', userId: string) => Promise<void>;
+
+    /**
      * Reorder application preference ranks based on the provided ID order.
      */
     reorderApplications: (orderedAppIds: string[], userId: string) => Promise<void>;
@@ -197,7 +211,7 @@ const INITIAL_STATE: MyAssignmentState & {
 
 type PendingSwipe = { userId: string; billetId: string; decision: SwipeDecision };
 let pendingSwipes: PendingSwipe[] = [];
-let flushTimeout: NodeJS.Timeout | number | null = null;
+let flushTimeout: ReturnType<typeof setTimeout> | number | null = null;
 
 const purgePendingSwipes = (userId: string, billetId: string): boolean => {
     const initialCount = pendingSwipes.length;
@@ -234,248 +248,6 @@ const persistDecisions = async () => {
         // In a real app, we might want to retry or put them back in queue
     }
 };
-
-// =============================================================================
-// MOCK DATA (Persona: IT1 Samuel P. Wilson)
-// =============================================================================
-
-const MOCK_BILLETS: Billet[] = [
-    {
-        id: 'b1-uss-halsey',
-        title: 'NETWORK SYSTEM ADMIN',
-        uic: '21345',
-        location: 'SAN DIEGO, CA',
-        payGrade: 'E-6',
-        nec: 'H08A', // CANES System Admin
-        dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // ~3 months out
-        billetDescription: 'Lead SysAdmin for USS HALSEY (DDG-97). Security+ required. CANES migration experience preferred.',
-        compass: {
-            matchScore: 98,
-            contextualNarrative: 'This billet is an exceptional match for your profile. Your recent shore tour combined with your NEC H08A certification positions you perfectly to lead the CANES migration team. Completing this sea duty tour will be a strong discriminator for Chief selection next cycle.',
-        },
-        advertisementStatus: 'confirmed_open',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b2-nctams-pac',
-        title: 'COMM CENTER SUPERVISOR',
-        uic: '66890',
-        location: 'WAHIAWA, HI',
-        payGrade: 'E-6',
-        nec: 'H04A', // Transmission Systems Tech
-        dutyType: 'SHORE',
-        reportNotLaterThan: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Watch Supervisor at NCTAMS PAC. Shift work involved.',
-        compass: {
-            matchScore: 89,
-            contextualNarrative: 'A solid leadership opportunity in a high-vis shore command. While slightly outside your core sys-admin track, the Watch Supervisor qualification offered here is highly valued. This tour offers stability for your family while broadening your operational comms experience.',
-        },
-        advertisementStatus: 'confirmed_open',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b3-devgru',
-        title: 'EX TACTICAL COMMS',
-        uic: '00012',
-        location: 'VIRGINIA BEACH, VA',
-        payGrade: 'E-6',
-        nec: 'H09A', // Expeditionary Force
-        dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Expeditionary communications support. Screening required.',
-        compass: {
-            matchScore: 94,
-            contextualNarrative: 'An elite, high-tempo assignment reserved for top performers. Your consistent "Early Promote" evaluations make you a prime candidate. This role requires rigorous screening but offers unparalleled training in tactical comms and direct support to special operations forces.',
-        },
-        advertisementStatus: 'confirmed_open',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    // --- DUMMY DATA FOR TESTING ---
-    {
-        id: 'b4-uss-gerald-r-ford',
-        title: 'SECURITY MANAGER',
-        uic: '23456',
-        location: 'NORFOLK, VA',
-        payGrade: 'E-6',
-        nec: '741A', // Information Systems Technician
-        dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 200 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Manage security protocols and clearances for crew.',
-        compass: {
-            matchScore: 85,
-            contextualNarrative: 'Leverage your attention to detail in this critical program management role. As the Security Manager for a CVN, you will oversee thousands of clearances, giving you direct access to the Command Triad. Ideally suited for someone looking to demonstrate administrative excellence at scale.',
-        },
-        advertisementStatus: 'projected',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b5-nioc-hawaii',
-        title: 'CYBER ANALYST',
-        uic: '34567',
-        location: 'PEARL HARBOR, HI',
-        payGrade: 'E-6',
-        nec: 'H10A', // Cyber Defense Analyst
-        dutyType: 'SHORE',
-        reportNotLaterThan: new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Analyze network traffic for threats.',
-        compass: {
-            matchScore: 92,
-            contextualNarrative: 'Your background in network defense makes you an immediate asset here. This role focuses on active threat hunting and incident response. It is a technical heavy-hitter tour that will qualify you for high-level civilian sector certifications like CISSP and CEH.',
-        },
-        advertisementStatus: 'confirmed_open',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b6-uss-ronald-reagan',
-        title: 'NETWORK ADMIN',
-        uic: '45678',
-        location: 'YOKOSUKA, JAPAN',
-        payGrade: 'E-6',
-        nec: 'H08A',
-        dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 210 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Maintain shipboard networks during deployment.',
-        compass: {
-            matchScore: 88,
-            contextualNarrative: 'Forward Deployed Naval Forces (FDNF) experience is a career accelerator. This sea tour in Japan offers high operational tempo and the chance to lead a large division. While demanding, the promotion rates for sailors completing this tour are significantly above average.',
-        },
-        advertisementStatus: 'projected',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b7-ncts-san-diego',
-        title: 'SATCOM OPERATOR',
-        uic: '56789',
-        location: 'SAN DIEGO, CA',
-        payGrade: 'E-5',
-        nec: 'V01A', // SATCOM
-        dutyType: 'SHORE',
-        reportNotLaterThan: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Operate satellite communications equipment.',
-        compass: {
-            matchScore: 75,
-            contextualNarrative: 'A functional shore duty that keeps you in San Diego. While the technical scope is slightly below your extensive experience, it offers a predictable schedule allowing for college education or off-duty certification work. Good for work-life balance.',
-        },
-        advertisementStatus: 'confirmed_open',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b8-uss-constitution',
-        title: 'PUBLIC AFFAIRS',
-        uic: '67890',
-        location: 'BOSTON, MA',
-        payGrade: 'E-6',
-        nec: 'A01A', // Public Affairs
-        dutyType: 'SHORE',
-        reportNotLaterThan: new Date(Date.now() + 200 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Historic ship duty, public interface required.',
-        compass: {
-            matchScore: 60,
-            contextualNarrative: 'A rare "Special Duty" assignment aboard "Old Ironsides." This is a pivot away from your technical track but offers a unique, once-in-a-lifetime experience. Excellent for public speaking and heritage engagement, though it may pause your technical NEC progression.',
-        },
-        advertisementStatus: 'closed',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b9-pers-40',
-        title: 'DETAILER ASSISTANT',
-        uic: '78901',
-        location: 'MILLINGTON, TN',
-        payGrade: 'E-6',
-        nec: '803R', // Recruiter/Detailer
-        dutyType: 'SHORE',
-        reportNotLaterThan: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Assist in detailer assignments and records.',
-        compass: {
-            matchScore: 80,
-            contextualNarrative: 'Gain "inside baseball" knowledge of the detailing process. Working directly at NPC gives you insight into how slates are built and careers are managed. Networking opportunities here are immense, though the location is less desirable than fleet concentration areas.',
-        },
-        advertisementStatus: 'confirmed_open',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b10-uss-zumwalt',
-        title: 'WEAPONS SYS TECH',
-        uic: '89012',
-        location: 'SAN DIEGO, CA',
-        payGrade: 'E-6',
-        nec: 'V02A',
-        dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 240 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Advanced weapons system maintenance.',
-        compass: {
-            matchScore: 82,
-            contextualNarrative: 'Work on the cutting edge of naval technology aboard the DDG-1000 class. This platform requires technicians who can adapt to new, often experimental systems. Your troubleshooting history suggests you would thrive in this dynamic engineering environment.',
-        },
-        advertisementStatus: 'projected',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b11-navwar',
-        title: 'PROJECT MANAGER',
-        uic: '90123',
-        location: 'SAN DIEGO, CA',
-        payGrade: 'E-7', // Higher rank for variety
-        nec: 'H12A',
-        dutyType: 'SHORE',
-        reportNotLaterThan: new Date(Date.now() + 240 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Manage NAVWAR IT projects.',
-        compass: {
-            matchScore: 70,
-            contextualNarrative: 'This is a stretch assignment typically slated for an E-7, but your package is competitive for a waiver. It involves high-level acquisition program management. Success here would be a definitive "sustained superior performance" indicator for your Chief package.',
-        },
-        advertisementStatus: 'confirmed_open',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b12-uss-america',
-        title: 'RADIO DIV SUPER',
-        uic: '01234',
-        location: 'SASEBO, JAPAN',
-        payGrade: 'E-6',
-        nec: 'H04A',
-        dutyType: 'SEA',
-        reportNotLaterThan: new Date(Date.now() + 260 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'Leading Radio division on LHA-6.',
-        compass: {
-            matchScore: 90,
-            contextualNarrative: 'An urgent fill for a critical leadership gap. You would be stepping immediately into a Division Leading Petty Officer (DLPO) role on a forward-deployed big deck amphib. The responsibility is massive, but the rewards and visibility are equally significant.',
-        },
-        advertisementStatus: 'projected',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-    {
-        id: 'b13-pentagon',
-        title: 'JOINT STAFF SUPPORT',
-        uic: '10101',
-        location: 'ARLINGTON, VA',
-        payGrade: 'E-6',
-        nec: 'H08A',
-        dutyType: 'SHORE',
-        reportNotLaterThan: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000).toISOString(),
-        billetDescription: 'IT support for Joint Staff J6.',
-        compass: {
-            matchScore: 95,
-            contextualNarrative: 'The ultimate prestige shore duty. You will be supporting flag officers and senior civilians in the Joint Staff environment. Requires impeccable bearing, top-tier technical skills, and a TS/SCI clearance. This is a "purple" assignment that looks fantastic on a resume.',
-        },
-        advertisementStatus: 'confirmed_open',
-        lastSyncTimestamp: new Date().toISOString(),
-        syncStatus: 'synced',
-    },
-];
 
 // =============================================================================
 // SELECTORS
@@ -694,7 +466,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
                 // Check threshold
                 if (pendingSwipes.length >= 5) {
-                    await persistDecisions();
+                    persistDecisions();
                 } else {
                     // Debounce
                     if (flushTimeout) clearTimeout(flushTimeout);
@@ -788,16 +560,23 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             return false;
         }
 
-        // 1. Check Limits (Max 5)
-        if (userApplicationIds.length >= 5) {
+        // 1. Block projected billets
+        const billet = billets[billetId];
+        if (billet && billet.advertisementStatus === 'projected') {
+            console.warn('[Store] Blocked promoteToSlate for projected billet');
             return false;
         }
 
-        // 2. Check if already exists
+        // 2. Check Limits
+        if (userApplicationIds.length >= MAX_SLATE_SIZE) {
+            return false;
+        }
+
+        // 3. Check if already exists
         const existing = Object.values(applications).find(a => a.billetId === billetId);
         if (existing) return true;
 
-        // 3. Create Application Object
+        // 4. Create Application Object
         const newApp: Application = {
             id: generateUUID(),
             billetId,
@@ -812,7 +591,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             localModifiedAt: new Date().toISOString(),
         };
 
-        // 4. Update Store
+        // 5. Update Store
         const newApplications = { ...applications, [newApp.id]: newApp };
         const newUserAppIds = [...userApplicationIds, newApp.id];
 
@@ -821,8 +600,8 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             userApplicationIds: newUserAppIds
         });
 
-        // 5. Persist
-        await storage.saveApplication(newApp);
+        // 6. Persist
+        storage.saveApplication(newApp).catch(console.error);
 
         return true;
     },
@@ -916,21 +695,40 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         }
     },
 
+    moveApplication: async (fromIndex: number, direction: 'up' | 'down', userId: string) => {
+        const { userApplicationIds, reorderApplications } = get();
+        if (direction === 'up' && fromIndex === 0) return;
+        if (direction === 'down' && fromIndex === userApplicationIds.length - 1) return;
+
+        const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+        const newOrder = [...userApplicationIds];
+        // Swap
+        [newOrder[fromIndex], newOrder[toIndex]] = [newOrder[toIndex], newOrder[fromIndex]];
+
+        await reorderApplications(newOrder, userId);
+    },
+
     reorderApplications: async (orderedAppIds: string[], userId: string) => {
         const { applications } = get();
         const updatedApplications = { ...applications };
         const appsToSave: Application[] = [];
 
         orderedAppIds.forEach((id, index) => {
-            if (updatedApplications[id]) {
-                const updatedApp = {
-                    ...updatedApplications[id],
-                    preferenceRank: index + 1,
-                    updatedAt: new Date().toISOString(),
-                    localModifiedAt: new Date().toISOString()
-                };
-                updatedApplications[id] = updatedApp;
-                appsToSave.push(updatedApp);
+            const currentRank = index + 1;
+            const app = updatedApplications[id];
+
+            if (app) {
+                // Optimize: Only update if rank changed
+                if (app.preferenceRank !== currentRank) {
+                    const updatedApp = {
+                        ...app,
+                        preferenceRank: currentRank,
+                        updatedAt: new Date().toISOString(),
+                        localModifiedAt: new Date().toISOString()
+                    };
+                    updatedApplications[id] = updatedApp;
+                    appsToSave.push(updatedApp);
+                }
             }
         });
 
@@ -939,8 +737,10 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             userApplicationIds: orderedAppIds // Ensure sorting matches
         });
 
-        // Persist
-        await storage.saveApplications(appsToSave);
+        // Persist only changed apps
+        if (appsToSave.length > 0) {
+            await storage.saveApplications(appsToSave);
+        }
     },
 
     submitSlate: async () => {
@@ -973,6 +773,8 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             await storage.saveApplications(appsToSave);
         } catch (e) {
             console.error('[Store] Failed to persist submitted slate', e);
+            const appIds = appsToSave.map(a => a.id);
+            syncQueue.enqueue('assignment:submitSlate', { appIds }).catch(console.error);
         } finally {
             set({
                 applications: updatedApps,

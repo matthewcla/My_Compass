@@ -1,4 +1,5 @@
 import { useColorScheme } from '@/components/useColorScheme';
+import { useSpotlightAnimations } from '@/hooks/useSpotlightAnimations';
 import { useSession } from '@/lib/ctx';
 import { useCareerStore } from '@/store/useCareerStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
@@ -11,32 +12,29 @@ import {
     SpotlightScope,
     SpotlightSection
 } from '@/types/spotlight';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import {
     CalendarDays,
     ChevronRight,
     Compass,
     Inbox as InboxIcon,
-    Search,
     Settings,
-    Sparkles,
-    X
+    Sparkles
 } from 'lucide-react-native';
 import React from 'react';
 import {
-    Animated,
     BackHandler,
-    InteractionManager,
     Keyboard,
-    KeyboardAvoidingView,
     Platform,
     Pressable,
     ScrollView,
     Text,
-    TextInput,
     View,
     useWindowDimensions
 } from 'react-native';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SECTION_ORDER: SpotlightSection[] = ['Actions', 'Navigation', 'Settings', 'Calendar', 'Inbox'];
@@ -256,6 +254,8 @@ const HighlightedLabel = ({
 };
 
 export function SpotlightOverlay() {
+    const TARGET_SCOPE_HEIGHT = 56;
+
     const { session } = useSession();
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -268,14 +268,15 @@ export function SpotlightOverlay() {
     const scope = useSpotlightStore((state) => state.scope);
     const activeIndex = useSpotlightStore((state) => state.activeIndex);
     const recentItemIds = useSpotlightStore((state) => state.recentItemIds);
-    const openSource = useSpotlightStore((state) => state.source);
     const close = useSpotlightStore((state) => state.close);
     const setQuery = useSpotlightStore((state) => state.setQuery);
     const setScope = useSpotlightStore((state) => state.setScope);
     const setActiveIndex = useSpotlightStore((state) => state.setActiveIndex);
     const registerRecent = useSpotlightStore((state) => state.registerRecent);
     const blurGlobalSearchInput = useHeaderStore((state) => state.blurGlobalSearchInput);
-    const globalSearchBottomY = useHeaderStore((state) => state.globalSearchBottomY);
+    const globalSearchFrame = useHeaderStore((state) => state.globalSearchFrame);
+    const registerGlobalSearchSubmit = useHeaderStore((state) => state.registerGlobalSearchSubmit);
+    const registerGlobalSearchDismiss = useHeaderStore((state) => state.registerGlobalSearchDismiss);
 
     const messages = useInboxStore((state) => state.messages);
     const fetchMessages = useInboxStore((state) => state.fetchMessages);
@@ -284,16 +285,41 @@ export function SpotlightOverlay() {
     const user = useUserStore((state) => state.user);
     const updateUser = useUserStore((state) => state.updateUser);
 
-    const inputRef = React.useRef<TextInput>(null);
     const rankedItemsRef = React.useRef<RankedSpotlightItem[]>([]);
-    const simulatorKeyboardHintShownRef = React.useRef(false);
-    const [keyboardVisible, setKeyboardVisible] = React.useState(false);
-    const sheetTranslateY = React.useRef(new Animated.Value(0)).current;
+    const [keyboardHeight, setKeyboardHeight] = React.useState(0);
+
+    // Track keyboard height so the panel stops at the keyboard edge
+    React.useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const onShow = Keyboard.addListener(showEvent, (e) => setKeyboardHeight(e.endCoordinates.height));
+        const onHide = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+
+        return () => { onShow.remove(); onHide.remove(); };
+    }, []);
+
+    // ── Gesture-close handler (stable ref, called when pan gesture snaps to 0) ──
+    const handleGestureClose = React.useCallback(() => {
+        blurGlobalSearchInput();
+        Keyboard.dismiss();
+        close();
+    }, [blurGlobalSearchInput, close]);
+
+    // ── Spring Animation Engine (UI-thread, interruptible) ──────────
+    const {
+        panelProgress,
+        animatedBackdropStyle,
+        animatedClipStyle,
+        animatedPanelStyle,
+        animatedContentStyle,
+        setExpandedHeight,
+        panGesture,
+        openPanel,
+        closePanel,
+    } = useSpotlightAnimations(handleGestureClose);
 
     const isCompactViewport = width < COMPACT_BREAKPOINT;
-    const useBottomSheetLayout = Platform.OS !== 'web' || isCompactViewport;
-    const isPrimaryFlow = openSource === 'primary';
-    const showInlineSheetInput = !isPrimaryFlow;
 
     const navigationItems = React.useMemo<SpotlightItem[]>(
         () => [
@@ -502,92 +528,78 @@ export function SpotlightOverlay() {
         return result;
     }, [groupedSections]);
 
+    // ── Haptic helper for filter/selection feedback ──────────────────
+    const fireSelectionHaptic = React.useCallback(() => {
+        if (Platform.OS === 'web') return;
+        Haptics.selectionAsync().catch(() => undefined);
+    }, []);
+
     const dismissSpotlight = React.useCallback(() => {
         blurGlobalSearchInput();
-        inputRef.current?.blur();
         Keyboard.dismiss();
-        setKeyboardVisible(false);
-        close();
-    }, [blurGlobalSearchInput, close]);
+
+        if (!isOpen) {
+            close();
+            return;
+        }
+
+        closePanel(() => {
+            close();
+        });
+    }, [blurGlobalSearchInput, close, closePanel, isOpen]);
 
     const executeItem = React.useCallback(
-        async (item: RankedSpotlightItem) => {
+        (item: RankedSpotlightItem) => {
+            fireSelectionHaptic();
             registerRecent(item.id);
-            dismissSpotlight();
-            await Promise.resolve(item.run());
+            closePanel(() => {
+                close();
+                Promise.resolve(item.run()).catch(() => undefined);
+            });
         },
-        [dismissSpotlight, registerRecent]
+        [close, closePanel, fireSelectionHaptic, registerRecent]
     );
 
+    // Fetch data when spotlight opens
     React.useEffect(() => {
         if (!isOpen || !session) return;
         fetchMessages().catch(() => undefined);
         fetchEvents().catch(() => undefined);
     }, [fetchEvents, fetchMessages, isOpen, session]);
 
+    // Open / close spring animation
     React.useEffect(() => {
-        if (!isOpen || !showInlineSheetInput) return;
+        if (isOpen) {
+            openPanel();
+        }
+    }, [isOpen, openPanel]);
 
-        const focusInput = () => {
-            inputRef.current?.focus();
-        };
-
-        const interaction = InteractionManager.runAfterInteractions(focusInput);
-        const frameId = requestAnimationFrame(focusInput);
-        // Mobile can miss the first focus while the sheet animates in; retry a few times.
-        const retry1 = setTimeout(focusInput, 90);
-        const retry2 = setTimeout(focusInput, 220);
-        const retry3 = setTimeout(focusInput, 420);
-        const retry4 = setTimeout(focusInput, 700);
-
-        return () => {
-            interaction.cancel();
-            cancelAnimationFrame(frameId);
-            clearTimeout(retry1);
-            clearTimeout(retry2);
-            clearTimeout(retry3);
-            clearTimeout(retry4);
-        };
-    }, [isOpen, showInlineSheetInput]);
-
+    // Register submit handler
     React.useEffect(() => {
-        if (!isOpen || !useBottomSheetLayout) return;
+        if (!isOpen) {
+            registerGlobalSearchSubmit(null);
+            return;
+        }
+        registerGlobalSearchSubmit(() => {
+            const selected = rankedItemsRef.current[activeIndex] || rankedItemsRef.current[0];
+            if (selected) void executeItem(selected);
+        });
+        return () => registerGlobalSearchSubmit(null);
+    }, [isOpen, activeIndex, executeItem, registerGlobalSearchSubmit]);
 
-        sheetTranslateY.setValue(isPrimaryFlow ? -18 : 36);
-        Animated.spring(sheetTranslateY, {
-            toValue: 0,
-            useNativeDriver: true,
-            speed: 24,
-            bounciness: 0,
-        }).start();
-    }, [isOpen, isPrimaryFlow, sheetTranslateY, useBottomSheetLayout]);
-
+    // Register dismiss handler
     React.useEffect(() => {
-        if (Platform.OS === 'web') return;
+        if (!isOpen) {
+            registerGlobalSearchDismiss(null);
+            return;
+        }
+        registerGlobalSearchDismiss(() => {
+            dismissSpotlight();
+        });
+        return () => registerGlobalSearchDismiss(null);
+    }, [isOpen, dismissSpotlight, registerGlobalSearchDismiss]);
 
-        const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-        const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
-
-        return () => {
-            showSub.remove();
-            hideSub.remove();
-        };
-    }, []);
-
-    React.useEffect(() => {
-        if (!__DEV__ || Platform.OS !== 'ios' || !isOpen || !isPrimaryFlow) return;
-
-        const timeout = setTimeout(() => {
-            if (keyboardVisible || simulatorKeyboardHintShownRef.current) return;
-            simulatorKeyboardHintShownRef.current = true;
-            console.info(
-                '[Spotlight] If the iOS Simulator software keyboard is hidden, disable I/O > Keyboard > Connect Hardware Keyboard.'
-            );
-        }, 1200);
-
-        return () => clearTimeout(timeout);
-    }, [isOpen, isPrimaryFlow, keyboardVisible]);
-
+    // Android back button
     React.useEffect(() => {
         if (Platform.OS !== 'android' || !isOpen) return;
 
@@ -599,15 +611,14 @@ export function SpotlightOverlay() {
         return () => sub.remove();
     }, [dismissSpotlight, isOpen]);
 
+    // Cleanup when closed
     React.useEffect(() => {
         if (isOpen) return;
-
         blurGlobalSearchInput();
-        inputRef.current?.blur();
-        setKeyboardVisible(false);
         Keyboard.dismiss();
     }, [blurGlobalSearchInput, isOpen]);
 
+    // Active index bounds check
     React.useEffect(() => {
         if (!isOpen) return;
 
@@ -621,6 +632,7 @@ export function SpotlightOverlay() {
         }
     }, [activeIndex, isOpen, rankedItems.length, setActiveIndex]);
 
+    // Web keyboard shortcuts
     React.useEffect(() => {
         if (Platform.OS !== 'web') return;
 
@@ -630,6 +642,7 @@ export function SpotlightOverlay() {
             if (pressedSearchShortcut) {
                 event.preventDefault();
                 if (!session) return;
+                if (!globalSearchFrame) return; // No search bar visible
                 const spotlight = useSpotlightStore.getState();
                 if (spotlight.isOpen) {
                     dismissSpotlight();
@@ -674,21 +687,43 @@ export function SpotlightOverlay() {
 
         window.addEventListener('keydown', onKeyDown);
         return () => window.removeEventListener('keydown', onKeyDown);
-    }, [dismissSpotlight, executeItem, session]);
+    }, [dismissSpotlight, executeItem, globalSearchFrame, session]);
+
+    // Layout calculations (must be above early return so hook count is stable)
+    const dropdownTop = globalSearchFrame ? globalSearchFrame.bottom : insets.top + 100;
+    const dropdownLeft = globalSearchFrame ? globalSearchFrame.x : Math.max((width - (isCompactViewport ? width * 0.94 : Math.min(width - 24, 600))) / 2, 12);
+    const dropdownWidth = globalSearchFrame ? globalSearchFrame.width : (isCompactViewport ? width * 0.94 : Math.min(width - 24, 600));
+    const kbOffset = keyboardHeight > 0 ? keyboardHeight : insets.bottom;
+    const bodyMaxHeight = Math.max(0, Math.min(height * 0.6, height - dropdownTop - kbOffset - 16));
+    const maxPanelHeight = TARGET_SCOPE_HEIGHT + bodyMaxHeight;
+
+    // Estimate actual content height so the panel shrinks to fit short lists
+    const SECTION_HEADER_HEIGHT = 40;
+    const ITEM_ROW_HEIGHT = 58;
+    const EMPTY_STATE_HEIGHT = 120;
+    const PADDING_BOTTOM = 16;
+    const estimatedContentHeight = TARGET_SCOPE_HEIGHT + (
+        rows.length === 0
+            ? EMPTY_STATE_HEIGHT
+            : rows.reduce((sum, row) => sum + (row.type === 'section' ? SECTION_HEADER_HEIGHT : ITEM_ROW_HEIGHT), 0) + PADDING_BOTTOM
+    );
+    const expandedBodyHeight = Math.min(estimatedContentHeight, maxPanelHeight);
+
+    // useLayoutEffect (not useEffect) so the shared value is set synchronously
+    // before the first animation frame — prevents height: progress * 0 on open
+    React.useLayoutEffect(() => {
+        setExpandedHeight(expandedBodyHeight);
+    }, [expandedBodyHeight, setExpandedHeight]);
 
     if (!session || !isOpen) return null;
 
-    const inputBackgroundClass = isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200';
-    // Web needs significantly more clearance due to lack of safe area inset and different header height behavior
-    const webTopOffset = Platform.OS === 'web' ? (isCompactViewport ? 90 : 20) : 0;
-    const fallbackTopPassthrough = Math.max(insets.top + 122, 134) + webTopOffset;
-    const primaryTop = (globalSearchBottomY ?? fallbackTopPassthrough) + webTopOffset;
-    const mobileSheetHeight = Math.min(height * 0.62, height - Math.max(insets.top, 10) - 84);
-    const desktopPanelHeight = Math.min(height * 0.82, height - Math.max(insets.top, 12) - 18);
-
     const runQuickRoute = (route: string) => {
-        dismissSpotlight();
-        router.push(route as any);
+        blurGlobalSearchInput();
+        Keyboard.dismiss();
+        closePanel(() => {
+            close();
+            router.push(route as any);
+        });
     };
 
     const renderEmptyState = (
@@ -703,7 +738,9 @@ export function SpotlightOverlay() {
             {query ? (
                 <View className="flex-row flex-wrap justify-center gap-2">
                     <Pressable
-                        onPress={() => runQuickRoute('/calendar')}
+                        onPress={() => {
+                            void runQuickRoute('/calendar');
+                        }}
                         className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
                         <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
@@ -711,7 +748,9 @@ export function SpotlightOverlay() {
                         </Text>
                     </Pressable>
                     <Pressable
-                        onPress={() => runQuickRoute('/inbox')}
+                        onPress={() => {
+                            void runQuickRoute('/inbox');
+                        }}
                         className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
                         <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
@@ -719,7 +758,9 @@ export function SpotlightOverlay() {
                         </Text>
                     </Pressable>
                     <Pressable
-                        onPress={() => runQuickRoute('/(profile)/preferences')}
+                        onPress={() => {
+                            void runQuickRoute('/(profile)/preferences');
+                        }}
                         className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
                         <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
@@ -735,6 +776,7 @@ export function SpotlightOverlay() {
         <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            style={{ flex: 1 }}
             contentContainerStyle={{ paddingBottom: 24 }}
         >
             {rows.length === 0
@@ -806,13 +848,22 @@ export function SpotlightOverlay() {
     );
 
     const renderFilterChips = (
-        <View className="flex-1 flex-row flex-wrap gap-2">
+        <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
+            contentContainerStyle={{ gap: 8 }}
+            style={{ flexGrow: 0 }}
+        >
             {SCOPE_OPTIONS.map((option) => {
                 const isSelected = scope === option.value;
                 return (
                     <Pressable
                         key={option.value}
-                        onPress={() => setScope(option.value)}
+                        onPress={() => {
+                            fireSelectionHaptic();
+                            setScope(option.value);
+                        }}
                         className={`px-3 py-1.5 rounded-full border ${isSelected
                             ? 'bg-blue-600 border-blue-600'
                             : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700'
@@ -827,88 +878,14 @@ export function SpotlightOverlay() {
                     </Pressable>
                 );
             })}
-        </View>
-    );
-
-    const renderSearchHeader = (showEscHint: boolean, showInput: boolean) => (
-        <View className="px-4 pt-3 pb-3 border-b border-slate-200 dark:border-slate-800">
-            {showInput ? (
-                <View className="flex-row items-center gap-2">
-                    <View className={`flex-1 flex-row items-center rounded-2xl border px-3 py-2.5 ${inputBackgroundClass}`}>
-                        <Search
-                            size={18}
-                            color={isDark ? '#94a3b8' : '#64748b'}
-                            strokeWidth={2.4}
-                            style={{ marginRight: 10 }}
-                        />
-
-                        <TextInput
-                            ref={inputRef}
-                            value={query}
-                            onChangeText={(value) => {
-                                setQuery(value);
-                                setActiveIndex(0);
-                            }}
-                            onFocus={() => setKeyboardVisible(true)}
-                            placeholder="Type here to search commands, settings, calendar, and inbox..."
-                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-                            autoCorrect={false}
-                            autoCapitalize="none"
-                            returnKeyType="search"
-                            autoFocus={Platform.OS !== 'web'}
-                            showSoftInputOnFocus={true}
-                            className="flex-1 text-slate-900 dark:text-white text-base"
-                            style={{ outline: 'none' } as any}
-                            accessibilityLabel="Global search input"
-                            onSubmitEditing={() => {
-                                const selected = rankedItems[activeIndex] || rankedItems[0];
-                                if (selected) {
-                                    void executeItem(selected);
-                                }
-                            }}
-                        />
-
-                        {showEscHint && Platform.OS === 'web' && (
-                            <View className="ml-2 px-2 py-1 rounded-md border border-slate-300 dark:border-slate-700">
-                                <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                    Esc
-                                </Text>
-                            </View>
-                        )}
-                    </View>
-
-                    <Pressable
-                        onPress={dismissSpotlight}
-                        accessibilityRole="button"
-                        accessibilityLabel="Close Spotlight search"
-                        className="w-10 h-10 rounded-xl items-center justify-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
-                    >
-                        <X size={18} color={isDark ? '#cbd5e1' : '#334155'} strokeWidth={2.5} />
-                    </Pressable>
-                </View>
-            ) : (
-                <View className="flex-row items-center gap-3">
-                    {renderFilterChips}
-                    <Pressable
-                        onPress={dismissSpotlight}
-                        accessibilityRole="button"
-                        accessibilityLabel="Close Spotlight search"
-                        className="w-10 h-10 rounded-xl items-center justify-center bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
-                    >
-                        <X size={18} color={isDark ? '#cbd5e1' : '#334155'} strokeWidth={2.5} />
-                    </Pressable>
-                </View>
-            )}
-        </View>
+        </ScrollView>
     );
 
     const renderScopeRow = (
-        <View className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex-row items-center gap-3">
+        <View className="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex-row items-center gap-3">
             {renderFilterChips}
         </View>
     );
-
-    const topPassthroughHeight = isPrimaryFlow && useBottomSheetLayout ? primaryTop : 0;
 
     return (
         <View
@@ -922,100 +899,89 @@ export function SpotlightOverlay() {
                 zIndex: 200,
             }}
         >
-            <Pressable
-                onPress={dismissSpotlight}
-                accessibilityRole="button"
-                accessibilityLabel="Dismiss search"
+            {/* Backdrop — dims below search bar */}
+            <Animated.View
+                style={[
+                    {
+                        position: 'absolute',
+                        top: dropdownTop,
+                        right: 0,
+                        bottom: 0,
+                        left: 0,
+                        backgroundColor: 'rgba(2, 6, 23, 0.58)',
+                    },
+                    animatedBackdropStyle,
+                ]}
+            >
+                <Pressable
+                    onPress={() => {
+                        dismissSpotlight();
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Dismiss search"
+                    style={{ flex: 1 }}
+                />
+            </Animated.View>
+
+            {/* Seam cover: prevents morph flicker while panel height animates from 0 */}
+            <View
                 style={{
                     position: 'absolute',
-                    top: topPassthroughHeight,
-                    right: 0,
-                    bottom: 0,
-                    left: 0,
-                    backgroundColor: 'rgba(2, 6, 23, 0.58)',
+                    top: dropdownTop,
+                    left: dropdownLeft,
+                    width: dropdownWidth,
+                    height: 4,
+                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                    borderLeftWidth: 1,
+                    borderRightWidth: 1,
+                    borderColor: isDark ? '#1e293b' : '#e2e8f0',
                 }}
             />
 
-            {useBottomSheetLayout ? (
-                isPrimaryFlow ? (
-                    <KeyboardAvoidingView
-                        pointerEvents="box-none"
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                        style={{
-                            position: 'absolute',
-                            top: primaryTop,
-                            right: 0,
-                            bottom: 0,
-                            left: 0,
-                        }}
-                    >
-                        <Animated.View
-                            style={{
-                                flex: 1,
-                                transform: [{ translateY: sheetTranslateY }],
-                                borderTopLeftRadius: 28,
-                                borderTopRightRadius: 28,
-                                borderTopWidth: 1,
-                                borderRightWidth: 1,
-                                borderLeftWidth: 1,
-                                borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                                backgroundColor: isDark ? '#020617' : '#ffffff',
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {renderSearchHeader(false, false)}
-                            {/* renderScopeRow merged into header for primary flow */}
-                            {renderResultRows}
-                        </Animated.View>
-                    </KeyboardAvoidingView>
-                ) : (
-                    <KeyboardAvoidingView
-                        pointerEvents="box-none"
-                        style={{ flex: 1 }}
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                    >
-                        <Animated.View
-                            style={{
-                                marginTop: 'auto',
-                                height: mobileSheetHeight,
-                                transform: [{ translateY: sheetTranslateY }],
-                                borderTopLeftRadius: 28,
-                                borderTopRightRadius: 28,
+            {/* Results dropdown — positioned below search bar */}
+            {/* Clip container: animated height + overflow hidden.
+                    The inner panel uses translateY (GPU-composited) to slide into view. */}
+            <Animated.View
+                style={[
+                    {
+                        position: 'absolute',
+                        top: dropdownTop,
+                        left: dropdownLeft,
+                        width: dropdownWidth,
+                        overflow: 'hidden',
+                        borderBottomLeftRadius: 24,
+                        borderBottomRightRadius: 24,
+                    },
+                    animatedClipStyle,
+                ]}
+            >
+                <GestureDetector gesture={panGesture}>
+                    <Animated.View
+                        style={[
+                            {
+                                width: dropdownWidth,
+                                height: expandedBodyHeight,
+                                borderBottomLeftRadius: 24,
+                                borderBottomRightRadius: 24,
                                 borderWidth: 1,
+                                borderTopWidth: 0,
                                 borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                                backgroundColor: isDark ? '#020617' : '#ffffff',
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {renderSearchHeader(false, showInlineSheetInput)}
-                            {renderScopeRow}
-                            {renderResultRows}
-                        </Animated.View>
-                    </KeyboardAvoidingView>
-                )
-            ) : (
-                <View
-                    style={{
-                        flex: 1,
-                        paddingTop: Math.max(insets.top, 12) + 12,
-                        paddingHorizontal: 12,
-                    }}
-                >
-                    <View
-                        className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden"
-                        style={{
-                            alignSelf: 'center',
-                            width: '100%',
-                            maxWidth: 760,
-                            maxHeight: desktopPanelHeight,
-                        }}
+                                backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                                boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+                                elevation: 10,
+                            },
+                            animatedPanelStyle,
+                        ]}
                     >
-                        {renderSearchHeader(true, showInlineSheetInput)}
-                        {renderScopeRow}
-                        {renderResultRows}
-                    </View>
-                </View>
-            )}
+                        <Animated.View style={[{ flex: 1 }, animatedContentStyle]}>
+                            {renderScopeRow}
+                            <View style={{ flex: 1 }}>
+                                {renderResultRows}
+                            </View>
+                        </Animated.View>
+                    </Animated.View>
+                </GestureDetector>
+            </Animated.View>
         </View>
     );
 }

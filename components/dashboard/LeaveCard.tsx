@@ -3,7 +3,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { LeaveRequest } from '@/types/schema';
 import { getShadow } from '@/utils/getShadow';
 import { format } from 'date-fns';
-import { ChevronRight, Clock, Plus } from 'lucide-react-native';
+import { ChevronRight, Clock, Plus, Zap } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -12,10 +12,11 @@ interface LeaveCardProps {
     requests?: LeaveRequest[];
     onPressRequest?: (request: LeaveRequest) => void;
     onQuickRequest?: () => void;
+    onFullRequest?: () => void;
     onExpand?: (expanded: boolean) => void;
 }
 
-export function LeaveCard({ balance, requests = [], onPressRequest, onQuickRequest, onExpand }: LeaveCardProps) {
+export function LeaveCard({ balance, requests = [], onPressRequest, onQuickRequest, onFullRequest, onExpand }: LeaveCardProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const [expanded, setExpanded] = useState(false);
@@ -35,21 +36,42 @@ export function LeaveCard({ balance, requests = [], onPressRequest, onQuickReque
     };
 
     return (
-        <View style={getShadow({ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 })}>
+        <View style={getShadow({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 })}>
             <GlassView
                 intensity={60}
                 tint={isDark ? 'dark' : 'light'}
                 className="rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
             >
-                {/* Persistent Quick Request Action */}
-                <View className="absolute top-4 right-4 z-50">
+                {/* Premium Glass Action Buttons */}
+                <View className="absolute top-4 right-4 z-50 flex-row items-center gap-3">
+                    {/* Quick Leave (Lightning) */}
                     <TouchableOpacity
                         activeOpacity={0.7}
                         onPress={onQuickRequest}
-                        className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"
-                        style={getShadow({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 })}
+                        style={getShadow({ shadowColor: isDark ? '#fbbf24' : '#d97706', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
                     >
-                        <Plus size={16} color={isDark ? '#fff' : '#0f172a'} strokeWidth={2.5} />
+                        <GlassView
+                            intensity={40}
+                            tint={isDark ? 'dark' : 'light'}
+                            className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-amber-500/10"
+                        >
+                            <Zap size={20} color={isDark ? '#fbbf24' : '#d97706'} strokeWidth={2.5} />
+                        </GlassView>
+                    </TouchableOpacity>
+
+                    {/* Full Request (Plus) */}
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={onFullRequest}
+                        style={getShadow({ shadowColor: isDark ? '#60a5fa' : '#3b82f6', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
+                    >
+                        <GlassView
+                            intensity={40}
+                            tint={isDark ? 'dark' : 'light'}
+                            className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-blue-500/10"
+                        >
+                            <Plus size={22} color={isDark ? '#60a5fa' : '#3b82f6'} strokeWidth={2.5} />
+                        </GlassView>
                     </TouchableOpacity>
                 </View>
 

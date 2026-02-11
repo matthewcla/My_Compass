@@ -1,31 +1,22 @@
-import { MenuTile } from '@/components/menu/MenuTile';
-import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
-import { useScreenHeader } from '@/hooks/useScreenHeader';
+import OnboardingCard from '@/components/onboarding/OnboardingCard';
+import { ScreenGradient } from '@/components/ScreenGradient';
+import { DEMO_USERS, DemoPhase } from '@/constants/DemoData';
 import { useSession } from '@/lib/ctx';
+import { useDemoStore } from '@/store/useDemoStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
-import * as Clipboard from 'expo-clipboard';
+
 import { usePathname, useSegments } from 'expo-router';
 import {
-  Briefcase,
   ChevronRight,
-  Copy,
-  FileText,
   LogOut,
-  Map as MapIcon,
-  Search,
-  Settings,
-  User
+  Settings
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React, { useState } from 'react';
-import { Platform, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import React from 'react';
+import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function HubMenuSearchHeader() {
-  const globalSearchConfig = useGlobalSpotlightHeaderSearch();
-  useScreenHeader('', '', undefined, globalSearchConfig);
-  return null;
-}
+
 
 export default function MenuHubScreen() {
   const { signOut } = useSession();
@@ -36,7 +27,7 @@ export default function MenuHubScreen() {
   const segmentList = segments as string[];
   const isDark = colorScheme === 'dark';
   const isMenuModalRoute = segmentList.includes('MenuHubModal') || pathname.includes('MenuHubModal');
-  const isHubMenuRoute = !isMenuModalRoute;
+
 
   // Dynamic Theme Colors
   const theme = {
@@ -49,7 +40,7 @@ export default function MenuHubScreen() {
     icon: isDark ? '#94A3B8' : '#94A3B8',
   };
 
-  const [toastVisible, setToastVisible] = useState(false);
+
   const openSpotlight = useSpotlightStore((state) => state.open);
   const spotlightQuery = useSpotlightStore((state) => state.query);
   const setSpotlightQuery = useSpotlightStore((state) => state.setQuery);
@@ -60,156 +51,26 @@ export default function MenuHubScreen() {
     }
   }, [openSpotlight]);
 
-  const handleTilePress = (route: string) => {
-    // router.push(route);
-    console.log('Navigate to:', route);
-  };
-
-  const handleCopyDODID = async () => {
-    await Clipboard.setStringAsync('1234567890');
-    setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 2000);
-  };
+  // Demo Store
+  const isDemoMode = useDemoStore((state) => state.isDemoMode);
+  const selectedUser = useDemoStore((state) => state.selectedUser);
+  const selectedPhase = useDemoStore((state) => state.selectedPhase);
+  const toggleDemoMode = useDemoStore((state) => state.toggleDemoMode);
+  const setSelectedUser = useDemoStore((state) => state.setSelectedUser);
+  const setSelectedPhase = useDemoStore((state) => state.setSelectedPhase);
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      {isHubMenuRoute ? <HubMenuSearchHeader /> : null}
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-
-      {isMenuModalRoute && (
-        <View
-          style={{
-            paddingTop: Math.max(insets.top, 20) + 16,
-            backgroundColor: theme.background,
-            zIndex: 10
-          }}
-          className="px-5 pb-4"
-        >
-          <MotiView
-            from={{ opacity: 0, translateY: -10 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 400 }}
-            style={{
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-              borderRadius: 24,
-            }}
-            className="rounded-3xl shadow-sm border"
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 14,
-                paddingHorizontal: 16,
-              }}
-            >
-              <Search size={22} color={theme.icon} strokeWidth={2.5} />
-              <TextInput
-                value={spotlightQuery}
-                onChangeText={(text) => {
-                  ensureModalSpotlightOpen();
-                  setSpotlightQuery(text);
-                }}
-                onFocus={ensureModalSpotlightOpen}
-                placeholder="Search all app functions..."
-                placeholderTextColor={theme.icon}
-                style={{ color: theme.text, marginLeft: 20 }}
-                className="flex-1 text-[17px] font-medium h-full"
-                autoCorrect={false}
-                autoCapitalize="none"
-                returnKeyType="search"
-                accessibilityLabel="Global search input"
-              />
-              {Platform.OS === 'web' && (
-                <View
-                  style={{
-                    borderColor: theme.border,
-                    backgroundColor: theme.inputBg
-                  }}
-                  className="border rounded-md px-2 py-1"
-                >
-                  <Text style={{ color: theme.subText }} className="text-[10px] font-bold uppercase tracking-wider">
-                    ⌘K
-                  </Text>
-                </View>
-              )}
-            </View>
-          </MotiView>
-        </View>
-      )}
-
+    <ScreenGradient>
+      <View style={{ height: insets.top }} />
       <ScrollView
         contentContainerStyle={{
-          paddingTop: isMenuModalRoute ? 10 : 18,
+          paddingTop: isMenuModalRoute ? 20 : 18,
           paddingBottom: insets.bottom + 120,
           paddingHorizontal: 24
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Grid - Standard Tiles */}
-        {/* Grid - Standard Tiles */}
-        <View className="mb-6">
-          {/* Row 1 */}
-          <View className="flex-row justify-between mb-4">
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 50 }}
-              style={{ width: '47%', aspectRatio: 1 }}
-            >
-              <MenuTile
-                label="Assignment"
-                icon={Briefcase}
-                onPress={() => handleTilePress('/(career)/assignment')}
-              />
-            </MotiView>
-
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 100 }}
-              style={{ width: '47%', aspectRatio: 1 }}
-            >
-              <MenuTile
-                label="My PCS"
-                icon={MapIcon}
-                onPress={() => handleTilePress('/(pcs)')}
-                locked
-              />
-            </MotiView>
-          </View>
-
-          {/* Row 2 */}
-          <View className="flex-row justify-between">
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 150 }}
-              style={{ width: '47%', aspectRatio: 1 }}
-            >
-              <MenuTile
-                label="My Admin"
-                icon={FileText}
-                onPress={() => handleTilePress('/(admin)')}
-                locked
-              />
-            </MotiView>
-
-            <MotiView
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'timing', duration: 300, delay: 200 }}
-              style={{ width: '47%', aspectRatio: 1 }}
-            >
-              <MenuTile
-                label="My Profile"
-                icon={User}
-                onPress={() => handleTilePress('/(profile)')}
-              />
-            </MotiView>
-          </View>
-        </View>
+        <OnboardingCard />
 
         {/* Distinct Settings Tile (Full Width) */}
         <MotiView
@@ -223,7 +84,7 @@ export default function MenuHubScreen() {
               borderColor: theme.border
             }}
             className="rounded-3xl p-5 flex-row items-center justify-between shadow-sm border mb-8"
-            onPress={() => handleTilePress('/(profile)/settings')}
+            onPress={() => console.log('Navigate to: /(profile)/settings')}
             activeOpacity={0.7}
           >
             <View className="flex-row items-center">
@@ -257,57 +118,93 @@ export default function MenuHubScreen() {
           </TouchableOpacity>
         </MotiView>
 
-        {/* DOD ID Footer */}
-        <MotiView
-          from={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 500, delay: 400 }}
-          className="mt-8 items-center"
-        >
-          <TouchableOpacity
-            onPress={handleCopyDODID}
-            activeOpacity={0.6}
-            className="flex-row items-center py-2 px-3 rounded-full"
-            style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent' }}
+        {/* Developer Settings */}
+        {__DEV__ && (
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'timing', duration: 500, delay: 400 }}
+            style={{ marginTop: 32, paddingBottom: 20 }}
           >
-            <Text style={{ color: theme.subText }} className="text-xs font-medium mr-2">
-              DOD ID: 1234567890
-            </Text>
-            {/* Tiny copy icon for affordance, optional but good */}
-            <View style={{ opacity: 0.5 }}>
-              <Copy size={10} color={theme.subText} />
+            <View className="flex-row items-center justify-between mb-4">
+              <Text style={{ color: theme.subText }} className="font-semibold uppercase text-xs tracking-widest">
+                Developer Settings
+              </Text>
+              <Switch
+                value={isDemoMode}
+                onValueChange={toggleDemoMode}
+                trackColor={{ false: theme.border, true: '#F59E0B' }}
+                thumbColor="#FFFFFF"
+              />
             </View>
-          </TouchableOpacity>
-        </MotiView>
+
+            {isDemoMode && (
+              <View
+                style={{
+                  backgroundColor: isDark ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB',
+                  borderColor: isDark ? 'rgba(245, 158, 11, 0.3)' : '#FCD34D',
+                }}
+                className="rounded-2xl p-4 border border-dashed"
+              >
+                <Text className="text-amber-500 font-bold text-xs uppercase tracking-wider mb-4 text-center">
+                  Simulation Active
+                </Text>
+
+                {/* User Selector */}
+                <View className="mb-4">
+                  <Text style={{ color: theme.text }} className="font-medium mb-2 text-sm">Select Persona</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+                    {DEMO_USERS.map((u) => (
+                      <TouchableOpacity
+                        key={u.id}
+                        onPress={() => setSelectedUser(u)}
+                        className={`px-3 py-2 rounded-lg border mr-2 ${selectedUser.id === u.id ? 'bg-amber-500 border-amber-600' : 'bg-transparent border-gray-200'}`}
+                        style={{ borderColor: selectedUser.id === u.id ? '#D97706' : theme.border }}
+                      >
+                        <Text
+                          style={{ color: selectedUser.id === u.id ? '#FFFFFF' : theme.subText }}
+                          className="text-xs font-semibold"
+                        >
+                          {u.title} {u.displayName}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+
+                {/* Phase Selector */}
+                <View className="mb-4">
+                  <Text style={{ color: theme.text }} className="font-medium mb-2 text-sm">Select Phase</Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {Object.values(DemoPhase).map((phase) => (
+                      <TouchableOpacity
+                        key={phase}
+                        onPress={() => setSelectedPhase(phase)}
+                        className={`px-3 py-2 rounded-lg border ${selectedPhase === phase ? 'bg-amber-500 border-amber-600' : 'bg-transparent border-gray-200'}`}
+                        style={{ borderColor: selectedPhase === phase ? '#D97706' : theme.border }}
+                      >
+                        <Text
+                          style={{ color: selectedPhase === phase ? '#FFFFFF' : theme.subText }}
+                          className="text-xs font-semibold"
+                        >
+                          {phase}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <Text style={{ color: theme.subText }} className="text-center text-xs mt-2">
+                  Simulating: <Text style={{ color: theme.text }} className="font-bold">{selectedUser.title} {selectedUser.displayName} ({selectedUser.rank})</Text>
+                </Text>
+              </View>
+            )}
+          </MotiView>
+        )}
 
       </ScrollView>
 
-      {/* Toast Notification */}
-      {toastVisible && (
-        <MotiView
-          from={{ opacity: 0, translateY: 10, scale: 0.9 }}
-          animate={{ opacity: 1, translateY: 0, scale: 1 }}
-          exit={{ opacity: 0, translateY: 10, scale: 0.9 }}
-          style={{
-            position: 'absolute',
-            bottom: insets.bottom + 30,
-            alignSelf: 'center',
-            backgroundColor: isDark ? '#FFFFFF' : '#334155',
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            borderRadius: 20,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}
-        >
-          <Text style={{ color: isDark ? '#000000' : '#FFFFFF', fontWeight: '600' }}>
-            Copied to clipboard
-          </Text>
-        </MotiView>
-      )}
-    </View>
+
+    </ScreenGradient>
   );
 }

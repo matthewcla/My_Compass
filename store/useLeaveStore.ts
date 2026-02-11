@@ -1,7 +1,11 @@
-import * as api from '@/services/api/mockLeaveService';
+import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
+import { syncQueue } from '@/services/syncQueue';
+import { useDemoStore } from '@/store/useDemoStore';
+import { MOCK_LEAVE_DEFAULTS } from '@/constants/MockLeaveDefaults';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import {
+    LeaveBalance,
     LeaveRequest,
     LeaveRequestDefaults,
     MyAdminState,
@@ -111,7 +115,33 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
         try {
             // 1. Fetch from API
-            const result = await api.fetchLeaveBalance(userId);
+            let result;
+            const { isDemoMode, selectedUser } = useDemoStore.getState();
+
+            if (isDemoMode) {
+                const now = new Date().toISOString();
+                const balance = selectedUser.leaveBalance ?? 30.0; // Fallback for stale persisted store
+                const demoBalance: LeaveBalance = {
+                    id: `lb-${selectedUser.id}`,
+                    userId: selectedUser.id,
+                    currentBalance: balance,
+                    useOrLoseDays: 0,
+                    useOrLoseExpirationDate: new Date(new Date().getFullYear(), 8, 30).toISOString(), // Sep 30
+                    earnedThisFiscalYear: 0,
+                    usedThisFiscalYear: 0,
+                    projectedEndOfYearBalance: balance,
+                    maxCarryOver: 60,
+                    balanceAsOfDate: now,
+                    lastSyncTimestamp: now,
+                    syncStatus: 'synced',
+                };
+                console.log('[Store] Using Demo Balance:', demoBalance);
+                // Simulate API delay/result structure
+                result = { success: true, data: demoBalance };
+            } else {
+                result = await services.leave.fetchBalance(userId);
+            }
+
             console.log('[Store] fetchLeaveBalance result:', result);
 
             if (result.success) {
@@ -142,21 +172,9 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         try {
             let defaults = await storage.getLeaveDefaults(userId);
 
-            // Dummy Data Persistence Logic
+            // Seed defaults from mock data if not yet persisted
             if (!defaults) {
-                defaults = {
-                    leaveAddress: '',
-                    leavePhoneNumber: '',
-                    emergencyContact: {
-                        name: 'Sarah Connor',
-                        relationship: 'Mother',
-                        phoneNumber: '555-867-5309',
-                    },
-                    dutySection: 'Deck Department',
-                    deptDiv: 'First Division',
-                    dutyPhone: '555-000-1111',
-                    rationStatus: 'not_applicable',
-                };
+                defaults = { ...MOCK_LEAVE_DEFAULTS };
                 await storage.saveLeaveDefaults(userId, defaults);
             }
 
@@ -169,6 +187,17 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     fetchUserRequests: async (userId: string) => {
         set({ isSyncingRequests: true });
         try {
+            // In demo mode, don't read stale SQLite data from previous sessions
+            const { isDemoMode } = useDemoStore.getState();
+            if (isDemoMode) {
+                set({
+                    leaveRequests: {},
+                    userLeaveRequestIds: [],
+                    isSyncingRequests: false,
+                });
+                return;
+            }
+
             const requests = await storage.getUserLeaveRequests(userId);
             const requestMap = requests.reduce((acc, req) => {
                 acc[req.id] = req;
@@ -332,7 +361,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             // -----------------------------------------------------------------------
             // STEP 2: NETWORK TRANSACTION
             // -----------------------------------------------------------------------
-            const result = await api.submitLeaveRequest(payload);
+            const result = await services.leave.submitRequest(payload);
 
             if (result.success) {
                 // ---------------------------------------------------------------------
@@ -381,41 +410,42 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
             } else {
                 // ---------------------------------------------------------------------
-                // STEP 4: FAILURE RECONCILIATION
+                // STEP 4: FAILURE RECONCILIATION — enqueue for retry
                 // ---------------------------------------------------------------------
-                // Mark as error or remove? 
-                // Let's mark syncStatus as error.
-                const failedRequest: LeaveRequest = {
+                const pendingRequest: LeaveRequest = {
                     ...optimisticRequest,
-                    syncStatus: 'error',
+                    syncStatus: 'pending_upload',
                 };
 
                 set((state) => ({
                     leaveRequests: {
                         ...state.leaveRequests,
-                        [tempId]: failedRequest,
+                        [tempId]: pendingRequest,
                     },
                     isSyncingRequests: false,
                 }));
 
-                await storage.saveLeaveRequest(failedRequest);
+                await storage.saveLeaveRequest(pendingRequest);
+                await syncQueue.enqueue('leave:submit', { requestId: tempId, payload });
             }
 
         } catch (error) {
             console.error('submitRequest transaction error:', error);
             set({ isSyncingRequests: false });
-            // Ensure we update sync status to error in store if it crashed
+
+            // Enqueue for retry instead of dead-ending at error
             set((state) => {
                 if (state.leaveRequests[tempId]) {
                     return {
                         leaveRequests: {
                             ...state.leaveRequests,
-                            [tempId]: { ...state.leaveRequests[tempId], syncStatus: 'error' }
+                            [tempId]: { ...state.leaveRequests[tempId], syncStatus: 'pending_upload' }
                         }
                     }
                 }
                 return {};
             });
+            await syncQueue.enqueue('leave:submit', { requestId: tempId, payload });
         }
     },
 
@@ -551,7 +581,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
         try {
             await storage.saveLeaveRequest(updatedRequest);
-            const result = await api.cancelLeaveRequest(requestId);
+            const result = await services.leave.cancelRequest(requestId);
 
             if (result.success) {
                 // Confirm sync

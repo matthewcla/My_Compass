@@ -11,12 +11,12 @@ import '../global.css';
 import '../ignoreWarnings';
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
-import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
+import { syncQueue } from '@/services/syncQueue';
 import { View } from 'react-native';
 
 export {
@@ -26,7 +26,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(hub)',
+  initialRouteName: '(tabs)',
 };
 
 const safeSplashHide = async () => {
@@ -64,6 +64,7 @@ export default function RootLayout() {
     const initStorage = async () => {
       try {
         await storage.init();
+        await syncQueue.init();
         if (!cancelled) {
           setDbInitialized(true);
         }
@@ -121,28 +122,21 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SessionProvider>
-          <AuthGuard />
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
-          <View
-            className="flex-1 bg-white dark:bg-black"
-            onLayout={onLayoutRootView}
-            style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
-          >
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(hub)" />
-              <Stack.Screen name="(assignment)" />
-              <Stack.Screen name="(pcs)" />
-              <Stack.Screen name="(admin)" />
-              <Stack.Screen name="(profile)" />
-              <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
-              <Stack.Screen name="leave" />
-              <Stack.Screen name="(career)" />
-              <Stack.Screen name="(calendar)" />
-              <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
-            </Stack>
-            <SpotlightOverlay />
-            <GlobalTabBar />
-          </View>
+            <AuthGuard />
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
+            <View
+              className="flex-1 bg-white dark:bg-black"
+              onLayout={onLayoutRootView}
+              style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
+            >
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+                <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+                <Stack.Screen name="leave" />
+                <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
+              </Stack>
+              <SpotlightOverlay />
+            </View>
         </SessionProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

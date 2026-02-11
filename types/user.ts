@@ -43,6 +43,7 @@ export const UserSchema = z.object({
     rank: z.string().optional(), // Pay grade or rank abbreviation
     rating: z.string().optional(), // Enlisted rating (e.g., "IT", "ET")
     title: z.string().optional(), // Billet title / role
+    dependents: z.number().optional(), // Number of dependents
     uic: z.string().optional(), // Current unit
     /**
      * Projected Rotation Date (PRD).
@@ -56,6 +57,11 @@ export const UserSchema = z.object({
      * Used for retention logic and career timing.
      */
     seaos: z.string().datetime().optional(),
+    /**
+     * End of Active Obligated Service (EAOS).
+     * Hard expiration of current contract.
+     */
+    eaos: z.string().datetime().optional(),
     preferences: z.object({
         regions: z.array(z.string()).optional(),
         dutyTypes: z.array(z.string()).optional(),

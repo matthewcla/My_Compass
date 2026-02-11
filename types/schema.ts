@@ -2,6 +2,7 @@
 // My Compass - Offline-First Data Layer Schema
 // Phase 1: My Assignment (Transactional Market) + My Admin (Leave Module)
 
+import { runMigrationSystem } from '@/services/migrations';
 import { z } from 'zod';
 
 // =============================================================================
@@ -312,74 +313,8 @@ export async function initializeSQLiteTables(db: { execAsync: (sql: string) => P
         await db.execAsync(tableDef);
     }
 
-    // Run migrations for existing databases
-    await runMigrations(db);
-}
-
-/**
- * Database migrations for schema updates.
- * Each migration is idempotent and safe to run multiple times.
- */
-async function runMigrations(db: { execAsync: (sql: string) => Promise<void> }): Promise<void> {
-    // Migration 1: Add preferences column to users table (if missing)
-    try {
-        await db.execAsync(`ALTER TABLE users ADD COLUMN preferences TEXT;`);
-        console.log('[DB Migration] Added preferences column to users table');
-    } catch (e: any) {
-        // Column already exists - this is expected for new databases
-        if (!e.message?.includes('duplicate column name')) {
-            console.error('[DB Migration] Error adding preferences column:', e);
-        }
-    }
-
-    // Migration 2: Add normal_working_hours and leave_in_conus to leave_requests table
-    try {
-        await db.execAsync(`ALTER TABLE leave_requests ADD COLUMN normal_working_hours TEXT DEFAULT '0700-1600';`);
-        console.log('[DB Migration] Added normal_working_hours column to leave_requests table');
-    } catch (e: any) {
-        if (!e.message?.includes('duplicate column name')) {
-            console.error('[DB Migration] Error adding normal_working_hours column:', e);
-        }
-    }
-
-    try {
-        await db.execAsync(`ALTER TABLE leave_requests ADD COLUMN leave_in_conus INTEGER DEFAULT 1;`);
-        console.log('[DB Migration] Added leave_in_conus column to leave_requests table');
-    } catch (e: any) {
-        if (!e.message?.includes('duplicate column name')) {
-            console.error('[DB Migration] Error adding leave_in_conus column:', e);
-        }
-    }
-
-    // Migration 3: Add prd and seaos to users table
-    try {
-        await db.execAsync(`ALTER TABLE users ADD COLUMN prd TEXT;`);
-        console.log('[DB Migration] Added prd column to users table');
-    } catch (e: any) {
-        if (!e.message?.includes('duplicate column name')) {
-            console.error('[DB Migration] Error adding prd column:', e);
-        }
-    }
-
-    try {
-        await db.execAsync(`ALTER TABLE users ADD COLUMN seaos TEXT;`);
-        console.log('[DB Migration] Added seaos column to users table');
-    } catch (e: any) {
-        if (!e.message?.includes('duplicate column name')) {
-            console.error('[DB Migration] Error adding seaos column:', e);
-        }
-    }
-
-    // Migration 4: Create assignment_decisions_entries table
-    try {
-        await db.execAsync(SQLiteTableDefinitions.assignment_decisions_entries);
-        console.log('[DB Migration] Created assignment_decisions_entries table');
-    } catch (e: any) {
-        // Table might already exist if initialized via main loop, but this ensures migration for existing DBs
-        if (!e.message?.includes('already exists')) {
-            console.error('[DB Migration] Error creating assignment_decisions_entries table:', e);
-        }
-    }
+    // Run versioned migration system
+    await runMigrationSystem(db);
 }
 
 // =============================================================================
@@ -669,7 +604,7 @@ export const LeaveRequestSchema = z.object({
     leaveInConus: z.boolean().default(true),
 
     // Remarks
-    memberRemarks: z.string().optional(),
+    memberRemarks: z.string().nullable().optional(),
 
     // Checklist
     preReviewChecks: PreReviewChecksSchema.optional(),
@@ -685,23 +620,23 @@ export const LeaveRequestSchema = z.object({
 
     // Approval chain
     approvalChain: z.array(ApproverSchema),
-    currentApproverId: z.string().optional(), // Who needs to act next
+    currentApproverId: z.string().nullable().optional(), // Who needs to act next
 
     // Return reason (if status = returned)
-    returnReason: z.string().optional(),
+    returnReason: z.string().nullable().optional(),
 
     // Denial reason (if status = denied)
-    denialReason: z.string().optional(),
+    denialReason: z.string().nullable().optional(),
 
     // Timestamps
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
-    submittedAt: z.string().datetime().optional(),
+    submittedAt: z.string().datetime().nullable().optional(),
 
     // Sync metadata
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
-    localModifiedAt: z.string().datetime().optional(),
+    localModifiedAt: z.string().datetime().nullable().optional(),
 });
 export type LeaveRequest = z.infer<typeof LeaveRequestSchema>;
 

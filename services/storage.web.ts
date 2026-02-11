@@ -109,6 +109,19 @@ class WebStorage implements IStorageService {
     localStorage.setItem(this.APPLICATIONS_KEY, encryptData(JSON.stringify(allApps)));
   }
 
+  async saveApplications(apps: Application[]): Promise<void> {
+    const allApps = await this._getAllApplications();
+    for (const app of apps) {
+      const index = allApps.findIndex((a) => a.id === app.id);
+      if (index >= 0) {
+        allApps[index] = app;
+      } else {
+        allApps.push(app);
+      }
+    }
+    localStorage.setItem(this.APPLICATIONS_KEY, encryptData(JSON.stringify(allApps)));
+  }
+
   async getApplication(id: string): Promise<Application | null> {
     const apps = await this._getAllApplications();
     return apps.find((a) => a.id === id) || null;
@@ -278,6 +291,15 @@ class WebStorage implements IStorageService {
     } catch (e) {
       console.warn('Failed to parse InboxMessages data (healing)', e);
       return [];
+    }
+  }
+
+  async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
+    const messages = await this.getInboxMessages();
+    const index = messages.findIndex((m) => m.id === id);
+    if (index >= 0) {
+      messages[index].isRead = isRead;
+      await this.saveInboxMessages(messages);
     }
   }
 

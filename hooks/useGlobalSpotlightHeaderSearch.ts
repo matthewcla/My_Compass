@@ -23,7 +23,8 @@ export function useGlobalSpotlightHeaderSearch(
     const setSpotlightQuery = useSpotlightStore((state) => state.setQuery);
 
     const ensureSpotlightOpen = useCallback(() => {
-        if (!useSpotlightStore.getState().isOpen) {
+        const state = useSpotlightStore.getState();
+        if (!state.isOpen) {
             openSpotlight({ source, preserveQuery: true });
         }
     }, [openSpotlight, source]);

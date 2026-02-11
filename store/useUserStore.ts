@@ -1,3 +1,4 @@
+import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
 import type { SyncStatus } from '@/types/schema';
 import type { User } from '@/types/user';
@@ -61,15 +62,6 @@ const MOCK_USER: User = {
 };
 
 /**
- * Validate token format (mock implementation)
- * In production, this would verify JWT signature and expiration
- */
-function isValidToken(token: string): boolean {
-    // Mock validation: token must be non-empty and not "invalid"
-    return token.length > 0 && token !== 'invalid';
-}
-
-/**
  * User Store
  * 
  * Manages authenticated user state and provides methods for
@@ -88,22 +80,16 @@ export const useUserStore = create<UserStore>((set, get) => ({
         set({ isHydrating: true, hydrationError: null });
 
         try {
-            // Simulate network delay for token validation
-            await new Promise((resolve) => setTimeout(resolve, 300));
-
-            // Validate token
-            if (!isValidToken(token)) {
-                throw new Error('Invalid or expired token');
-            }
-
-            // In production: decode JWT claims and/or fetch user profile
-            // For mock: return hardcoded user data matching UserSchema
             console.log('[UserStore] Hydrating user from token...');
 
-            // OFFLINE DEV: Always use MOCK_USER from mockProfile.json
-            // This ensures fresh mock data is used, ignoring stale SQLite cache
+            const result = await services.user.getCurrentUser(token);
+
+            if (!result.success) {
+                throw new Error(result.error.message);
+            }
+
             const finalUser: User = {
-                ...MOCK_USER,
+                ...result.data,
                 lastSyncTimestamp: new Date().toISOString(),
             };
 

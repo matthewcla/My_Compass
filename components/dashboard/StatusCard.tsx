@@ -1,8 +1,10 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
+import { usePCSStore } from '@/store/usePCSStore';
+import { DemoPhase } from '@/constants/DemoData';
 import { useRouter } from 'expo-router';
-import { Calendar, Timer } from 'lucide-react-native';
+import { Calendar, Timer, Map as MapIcon } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -18,9 +20,50 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
     const selectedUser = useDemoStore((state) => state.selectedUser);
+    const selectedPhase = useDemoStore((state) => state.selectedPhase);
+    const activeOrder = usePCSStore((state) => state.activeOrder);
     const router = useRouter();
 
     if (isDemoMode) {
+        if (selectedPhase === DemoPhase.MY_PCS) {
+            const destination = activeOrder?.segments.find(s => s.type === 'DESTINATION');
+            const nltDate = destination?.dates.nlt ? new Date(destination.dates.nlt).toLocaleDateString() : 'TBD';
+            const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
+
+            return (
+                <View className="flex flex-col gap-2 my-2">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-emerald-500 dark:border-emerald-400 pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-row items-center justify-between shadow-sm"
+                    >
+                        <View className="flex-row items-center gap-4 flex-1">
+                            <View className="bg-emerald-100 dark:bg-emerald-900/50 p-3 rounded-full">
+                                <MapIcon size={24} color={isDark ? '#34d399' : '#059669'} />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-emerald-900 dark:text-emerald-100 text-base font-bold leading-none mb-1">
+                                    Orders Received
+                                </Text>
+                                <Text className="text-emerald-800 dark:text-emerald-200 text-xs font-medium leading-tight">
+                                    Report to {gainingCommand} by {nltDate}.
+                                </Text>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={() => router.push('/(tabs)/(pcs)/pcs')}
+                            className="bg-emerald-100 dark:bg-emerald-900/60 px-3 py-2 rounded-lg ml-1 border border-emerald-200 dark:border-emerald-700/50"
+                        >
+                            <Text className="text-[10px] font-bold text-emerald-800 dark:text-emerald-200 text-center uppercase tracking-wide">
+                                View{'\n'}Roadmap
+                            </Text>
+                        </TouchableOpacity>
+                    </GlassView>
+                </View>
+            );
+        }
+
         const lastName = selectedUser.displayName.split(' ').pop();
         // const headline = `Cycle Prep: ${selectedUser.title} ${lastName}`; // OLD
         const headline = "MNA Negotiation Window";

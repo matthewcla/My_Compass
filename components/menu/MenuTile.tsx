@@ -1,6 +1,6 @@
 import { Lock } from 'lucide-react-native';
 import React from 'react';
-import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Text, TouchableOpacity, View, useColorScheme, ViewStyle } from 'react-native';
 
 interface MenuTileProps {
     label: string;
@@ -8,6 +8,8 @@ interface MenuTileProps {
     icon: any; // Lucide icon component
     onPress: () => void;
     locked?: boolean;
+    className?: string;
+    style?: ViewStyle;
 }
 
 export const MenuTile: React.FC<MenuTileProps> = ({
@@ -15,7 +17,9 @@ export const MenuTile: React.FC<MenuTileProps> = ({
     subtitle,
     icon: Icon,
     onPress,
-    locked = false
+    locked = false,
+    className,
+    style
 }) => {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -25,11 +29,11 @@ export const MenuTile: React.FC<MenuTileProps> = ({
             onPress={onPress}
             activeOpacity={0.7}
             disabled={locked}
-            style={{
+            style={[{
                 backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
                 borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
-            }}
-            className={`rounded-3xl p-3 w-full flex-1 justify-between shadow-sm border ${locked ? 'opacity-50' : ''}`}
+            }, style]}
+            className={`rounded-3xl p-3 w-full flex-1 justify-between shadow-sm border ${locked ? 'opacity-50' : ''} ${className || ''}`}
         >
             <View className="flex-row justify-between items-start">
                 <View

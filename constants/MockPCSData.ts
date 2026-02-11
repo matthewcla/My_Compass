@@ -95,6 +95,7 @@ export const MOCK_PCS_ORDERS: PCSOrder = {
     uic: '45678',
   },
   segments: [SEGMENT_1, SEGMENT_2, SEGMENT_3],
+  reportNLT: SEGMENT_3.dates.nlt,
   isOconus: true,
   isSeaDuty: true,
 };

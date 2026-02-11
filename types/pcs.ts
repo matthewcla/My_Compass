@@ -36,6 +36,7 @@ export interface PCSOrder {
     uic: string;
   };
   segments: PCSSegment[];
+  reportNLT: string;
   isOconus: boolean;
   isSeaDuty: boolean;
 }

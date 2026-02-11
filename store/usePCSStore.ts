@@ -21,6 +21,9 @@ interface Financials {
     amount: number;
     months: number;
     repaymentMonths: number;
+    repaymentJustification: string | null;
+    timing: 'EARLY' | 'STANDARD' | 'LATE';
+    timingJustification: string | null;
     justification: string | null;
   };
   dla: {
@@ -62,6 +65,9 @@ export const usePCSStore = create<PCSState>()(
           amount: 0,
           months: 1,
           repaymentMonths: 12,
+          repaymentJustification: null,
+          timing: 'STANDARD',
+          timingJustification: null,
           justification: null,
         },
         dla: {
@@ -172,6 +178,9 @@ export const usePCSStore = create<PCSState>()(
               amount: 0,
               months: 1,
               repaymentMonths: 12,
+              repaymentJustification: null,
+              timing: 'STANDARD',
+              timingJustification: null,
               justification: null,
             },
             dla: {

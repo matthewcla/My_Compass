@@ -87,23 +87,16 @@ export default function SignInScreen() {
                     onAnimationComplete={() => { /* Haptics handled internally now */ }}
                 />
 
-                {/* Login Controls - Non-Blocking Mount with Staggered Entrance */}
+                {/* Login Controls - Unified Flex Column */}
                 <Animated.View
                     entering={FadeInDown.delay(300).springify()}
                     style={{
-                        position: 'absolute',
-                        bottom: '25%',
-                        left: 0,
-                        right: 0,
                         width: '100%',
                         alignItems: 'center',
                         paddingHorizontal: 16,
-                        paddingBottom: Platform.OS === 'web' ? insets.bottom : 0
+                        marginTop: 80,
                     }}
                 >
-                    {/* Spacer to push buttons down relative to the moved-up logo */}
-                    <View className="h-20" />
-
                     {/* 
                         DOUBLE-CONTAINER PATTERN (Visual Stability)
                         Outer: Layout + Shadow
@@ -141,11 +134,8 @@ export default function SignInScreen() {
                                         borderRadius: BUTTON_RADIUS,
                                         justifyContent: 'center',
                                         alignItems: 'center',
-                                        overflow: 'hidden', // Ensures content stays inside border
+                                        overflow: 'hidden',
 
-                                        // STYLE DETERMINISM:
-                                        // Border width is ALWAYS 1.
-                                        // Color becomes transparent in Light Mode to match Dark Mode footprint.
                                         borderWidth: BORDER_WIDTH,
                                         borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'transparent',
 

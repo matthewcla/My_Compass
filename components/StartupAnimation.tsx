@@ -1,5 +1,4 @@
-import Colors from '@/constants/Colors';
-import { getShadow, getTextShadow } from '@/utils/getShadow';
+import { getTextShadow } from '@/utils/getShadow';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import React, { useEffect } from 'react';
@@ -13,7 +12,7 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 
-const LOGO_SIZE = 140;
+const LOGO_SIZE = 200;
 const INITIAL_SCALE = 0.6; // Start small
 const FINAL_SCALE = 1.0; // Grow to full size
 
@@ -105,9 +104,7 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
     // Dynamic Colors
     const textColor = isDark ? 'white' : '#0f172a';
     const taglineColor = isDark ? '#94A3B8' : '#475569';
-    const circleBg = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.03)';
-    const circleBorder = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.08)';
-    const logoTint = isDark ? Colors.light.navyGold : '#eab308';
+
 
     // Day Mode: No text shadow for clean look. Dark Mode: Subtle shadow.
     const textShadowStyle = isDark ? getTextShadow({
@@ -137,40 +134,28 @@ export default function StartupAnimation({ onAnimationComplete }: StartupAnimati
             className="items-center justify-center z-10"
             style={[
                 rootStyle,
-                { alignItems: 'center', justifyContent: 'center', width: '100%', transform: [{ translateY: -50 }] }
+                { alignItems: 'center', justifyContent: 'center', width: '100%' }
             ]}
         >
 
-            {/* Logo Circle with Glass Effect */}
+            {/* App Logo - Anchor & Compass Emblem */}
             <Animated.View
-                className="justify-center items-center mb-9 border"
+                className="justify-center items-center mb-6"
                 style={[
                     logoAnimatedStyle,
                     {
                         width: LOGO_SIZE,
                         height: LOGO_SIZE,
-                        borderRadius: LOGO_SIZE / 2,
-                        backgroundColor: circleBg,
-                        borderColor: circleBorder,
-                        overflow: 'hidden',
                         justifyContent: 'center',
                         alignItems: 'center',
                     },
-                    getShadow({
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 10 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 20,
-                        elevation: 0,
-                    })
                 ]}
             >
                 <Image
-                    source={require('@/assets/images/splash-icon.png')}
+                    source={require('@/assets/images/app-logo.png')}
                     style={{
-                        tintColor: logoTint,
-                        width: LOGO_SIZE * 0.7,
-                        height: LOGO_SIZE * 0.7,
+                        width: LOGO_SIZE,
+                        height: LOGO_SIZE,
                     }}
                     resizeMode="contain"
                 />

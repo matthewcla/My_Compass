@@ -42,7 +42,7 @@ export default function ModeSelectionScreen() {
       }
     });
 
-    router.push('./itinerary');
+    router.push(`/pcs-wizard/${currentDraft.id}/itinerary`);
   };
 
   if (!currentDraft) return null;
@@ -66,13 +66,13 @@ export default function ModeSelectionScreen() {
               key={option.mode}
               onPress={() => handleSelect(option.mode)}
               className={`p-4 rounded-xl border-2 flex-row items-center gap-4 ${currentDraft.userPlan.mode === option.mode
-                  ? 'bg-blue-50 border-blue-600 dark:bg-blue-900/20 dark:border-blue-500'
-                  : 'bg-white border-transparent dark:bg-slate-900'
+                ? 'bg-blue-50 border-blue-600 dark:bg-blue-900/20 dark:border-blue-500'
+                : 'bg-white border-transparent dark:bg-slate-900'
                 }`}
             >
               <View className={`w-12 h-12 rounded-full items-center justify-center ${currentDraft.userPlan.mode === option.mode
-                  ? 'bg-blue-100 dark:bg-blue-800'
-                  : 'bg-slate-100 dark:bg-slate-800'
+                ? 'bg-blue-100 dark:bg-blue-800'
+                : 'bg-slate-100 dark:bg-slate-800'
                 }`}>
                 <option.icon
                   size={24}

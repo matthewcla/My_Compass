@@ -90,52 +90,54 @@ export function LeaveCard({
                 tint={isDark ? 'dark' : 'light'}
                 className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
             >
-                {/* Premium Glass Action Buttons */}
-                <View className="absolute top-4 right-4 z-50 flex-row items-center gap-3">
-                    {/* Quick Leave (Lightning) */}
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={onQuickRequest}
-                        style={getShadow({ shadowColor: isDark ? '#fbbf24' : '#d97706', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
-                    >
-                        <GlassView
-                            intensity={40}
-                            tint={isDark ? 'dark' : 'light'}
-                            className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-amber-500/10"
-                        >
-                            <Zap size={20} color={isDark ? '#fbbf24' : '#d97706'} strokeWidth={2.5} />
-                        </GlassView>
-                    </TouchableOpacity>
+                <View className="p-5">
+                    {/* Header Row: Balance + Action Buttons */}
+                    <View className="flex-row items-center justify-between mb-4">
+                        {/* Left: Balance */}
+                        <View className="flex-col">
+                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Leave Balance</Text>
+                            <View className="flex-row items-baseline gap-1.5">
+                                <Text className="text-3xl font-bold text-slate-900 dark:text-white leading-none">{balance}</Text>
+                                <Text className="text-sm text-slate-400 font-medium">Days</Text>
+                            </View>
+                        </View>
 
-                    {/* Full Request (Plus) */}
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={onFullRequest}
-                        style={getShadow({ shadowColor: isDark ? '#60a5fa' : '#3b82f6', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
-                    >
-                        <GlassView
-                            intensity={40}
-                            tint={isDark ? 'dark' : 'light'}
-                            className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-blue-500/10"
-                        >
-                            <Plus size={22} color={isDark ? '#60a5fa' : '#3b82f6'} strokeWidth={2.5} />
-                        </GlassView>
-                    </TouchableOpacity>
-                </View>
+                        {/* Right: Action Buttons */}
+                        <View className="flex-row items-center gap-3">
+                            {/* Quick Leave (Lightning) */}
+                            <TouchableOpacity
+                                activeOpacity={0.7}
+                                onPress={onQuickRequest}
+                                style={getShadow({ shadowColor: isDark ? '#fbbf24' : '#d97706', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
+                            >
+                                <GlassView
+                                    intensity={40}
+                                    tint={isDark ? 'dark' : 'light'}
+                                    className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-amber-500/10"
+                                >
+                                    <Zap size={20} color={isDark ? '#fbbf24' : '#d97706'} strokeWidth={2.5} />
+                                </GlassView>
+                            </TouchableOpacity>
 
-
-                <View className="p-5 flex-row items-start justify-between min-h-[100px]">
-                    {/* Left Column: Balance */}
-                    <View className="flex-col pt-1">
-                        <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Leave Balance</Text>
-                        <View className="flex-row items-baseline gap-1.5">
-                            <Text className="text-3xl font-bold text-slate-900 dark:text-white leading-none">{balance}</Text>
-                            <Text className="text-sm text-slate-400 font-medium">Days</Text>
+                            {/* Full Request (Plus) */}
+                            <TouchableOpacity
+                                activeOpacity={0.7}
+                                onPress={onFullRequest}
+                                style={getShadow({ shadowColor: isDark ? '#60a5fa' : '#3b82f6', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
+                            >
+                                <GlassView
+                                    intensity={40}
+                                    tint={isDark ? 'dark' : 'light'}
+                                    className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-blue-500/10"
+                                >
+                                    <Plus size={22} color={isDark ? '#60a5fa' : '#3b82f6'} strokeWidth={2.5} />
+                                </GlassView>
+                            </TouchableOpacity>
                         </View>
                     </View>
 
-                    {/* Right Column: Smart Stack */}
-                    <View className="flex-1 ml-6 relative items-end z-10 pt-[30px] pb-[3px]">
+                    {/* Request Smart Stack */}
+                    <View className="w-full">
 
                         {!hasRequests ? (
                             // Empty State

@@ -94,7 +94,7 @@ export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
                         className="flex-row items-center gap-3 py-3 px-4 rounded-xl bg-[rgba(0,0,0,0.03)]"
                         onPress={() => {
                             onClose();
-                            router.push('/(profile)/preferences');
+                            router.push('/(profile)/preferences' as any);
                         }}
                     >
                         <Settings size={20} color={theme.text} />

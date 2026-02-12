@@ -14,7 +14,21 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "mil.navy.mycompass",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Required for event check-in",
+        "NSPhotoLibraryUsageDescription": "My Compass may save images to your photo library.",
+        "NSLocationWhenInUseUsageDescription": "My Compass uses your location to find nearby commands and events.",
+        "NSCalendarsUsageDescription": "My Compass syncs leave requests to your calendar.",
+        "NSRemindersUsageDescription": "My Compass creates reminders for important career milestones.",
+        "NSFaceIDUsageDescription": "My Compass uses Face ID to secure your sensitive personnel data.",
+        "NSContactsUsageDescription": "My Compass accesses contacts to help you connect with sailors."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +36,10 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -46,6 +63,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "90a02736-d91a-49c4-a21f-9844b9f6dda0"
+      }
+    },
+    "owner": "matthewcla"
   }
 }

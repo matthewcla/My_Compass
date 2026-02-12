@@ -70,7 +70,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                 rationStatus: draft.rationStatus,
                 modeOfTravel: draft.modeOfTravel,
                 destinationCountry: draft.destinationCountry,
-                memberRemarks: draft.memberRemarks,
+                memberRemarks: draft.memberRemarks ?? undefined,
                 startTime: format(startDate, 'HH:mm'),
                 endTime: format(endDate, 'HH:mm'),
                 leaveInConus: draft.leaveInConus,

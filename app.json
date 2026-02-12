@@ -14,6 +14,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "icon": "./assets/images/favicon.png",
       "supportsTablet": true,
       "bundleIdentifier": "mil.navy.mycompass",
       "buildNumber": "2",

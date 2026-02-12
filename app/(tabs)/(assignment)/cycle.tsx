@@ -151,7 +151,7 @@ export default function CycleScreen() {
                         <Text className="text-sm font-bold text-slate-500 uppercase tracking-widest">
                             Archive
                         </Text>
-                        <TouchableOpacity onPress={() => router.push('/(career)/manifest')}>
+                        <TouchableOpacity onPress={() => router.push('/(career)/manifest' as any)}>
                             <Text className="text-sm font-bold text-blue-600 dark:text-blue-400">
                                 View Archive
                             </Text>
@@ -164,7 +164,7 @@ export default function CycleScreen() {
                         <ManifestRail
                             items={manifestCandidates}
                             onSelect={(billet) => handleRailItemPress(billet.id)}
-                            onSeeAll={() => router.push('/(career)/manifest')}
+                            onSeeAll={() => router.push('/(career)/manifest' as any)}
                         />
                     </View>
 

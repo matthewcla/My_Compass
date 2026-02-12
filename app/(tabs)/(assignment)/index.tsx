@@ -42,9 +42,9 @@ export default function AssignmentDashboard() {
                 }}
             >
                 {/* Content */}
-                <SlateSummaryWidget onPress={() => router.push('/(assignment)/cycle')} />
+                <SlateSummaryWidget onPress={() => router.push('/(assignment)/cycle' as any)} />
 
-                <DiscoveryEntryWidget onPress={() => router.push('/(career)/discovery')} />
+                <DiscoveryEntryWidget onPress={() => router.push('/(career)/discovery' as any)} />
 
                 {/* Footer Info */}
                 <View className="mt-4 mb-8">

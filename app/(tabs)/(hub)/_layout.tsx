@@ -16,7 +16,7 @@ export default function HubLayout() {
     if (!session && !inAuthGroup) {
       router.replace('/sign-in');
     } else if (session && inAuthGroup) {
-      router.replace('/(hub)');
+      router.replace('/(hub)' as any);
     }
   }, [session, isLoading, segments]);
 

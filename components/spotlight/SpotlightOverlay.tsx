@@ -908,7 +908,7 @@ export function SpotlightOverlay() {
                         right: 0,
                         bottom: 0,
                         left: 0,
-                        backgroundColor: 'rgba(2, 6, 23, 0.58)',
+                        backgroundColor: isDark ? 'rgba(2, 6, 23, 0.58)' : 'rgba(15, 23, 42, 0.35)',
                     },
                     animatedBackdropStyle,
                 ]}

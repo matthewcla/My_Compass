@@ -85,6 +85,8 @@ export function HubSkeleton() {
 
   const textPlaceholderBg = isDark ? 'rgba(71, 85, 105, 0.6)' : 'rgba(203, 213, 225, 0.8)';
   const accentBg = isDark ? 'rgba(59, 130, 246, 0.4)' : 'rgba(37, 99, 235, 0.3)';
+  const tileBg = isDark ? '#1E293B' : '#FFFFFF';
+  const tileBorder = isDark ? '#334155' : '#E2E8F0';
 
   return (
     <View className="flex-1 p-4 pt-2.5 gap-6">
@@ -118,86 +120,71 @@ export function HubSkeleton() {
         </View>
       </SkeletonBlock>
 
-      {/* ====== DiscoveryCard Skeleton ====== */}
-      {/* Hero card with gradient background (~300px) */}
-      <SkeletonBlock
-        index={1}
-        height={280}
-        style={{
-          borderRadius: 16,
-        }}
-      >
-        <LinearGradient
-          colors={['#1e293b', '#020617']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View className="p-5 flex-1 justify-between">
-          {/* Header */}
-          <View className="flex-row justify-between items-start">
-            <View>
-              <View style={{ width: 140, height: 20, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.15)', marginBottom: 8 }} />
-              <View style={{ width: 180, height: 12, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)' }} />
-            </View>
-            {/* Icon placeholder */}
-            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.1)' }} />
-          </View>
-
-          {/* Large number + Button */}
-          <View>
-            <View className="flex-row items-center gap-3 mb-6">
-              {/* Big number */}
-              <View style={{ width: 80, height: 48, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.15)' }} />
+      {/* ====== 2×2 MenuTile Grid Skeleton ====== */}
+      {/* Row 1 */}
+      <View className="flex-row justify-between">
+        {[1, 2].map((i) => (
+          <SkeletonBlock
+            key={i}
+            index={i}
+            height={0}
+            style={{
+              width: '47%',
+              aspectRatio: 1,
+              height: undefined,
+              borderRadius: 24,
+              backgroundColor: tileBg,
+              borderWidth: 1,
+              borderColor: tileBorder,
+            }}
+          >
+            <View className="p-3 flex-1 justify-between">
+              {/* Icon bubble */}
+              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : '#EFF6FF' }} />
+              {/* Label */}
               <View>
-                <View style={{ width: 100, height: 12, borderRadius: 4, backgroundColor: 'rgba(52, 211, 153, 0.3)', marginBottom: 4 }} />
-                <View style={{ width: 80, height: 10, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+                <View style={{ width: 90, height: 14, borderRadius: 6, backgroundColor: textPlaceholderBg, marginBottom: 4 }} />
+                <View style={{ width: 60, height: 10, borderRadius: 4, backgroundColor: textPlaceholderBg }} />
               </View>
             </View>
-            {/* CTA Button placeholder */}
-            <View style={{ width: '100%', height: 52, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.9)' }} />
-          </View>
-        </View>
-      </SkeletonBlock>
+          </SkeletonBlock>
+        ))}
+      </View>
 
-      {/* ====== StatsCard Skeleton ====== */}
-      {/* Glass card with donut chart and 3 action boxes (~120px) */}
-      <SkeletonBlock
-        index={2}
-        height={120}
-        style={{
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)',
-        }}
-      >
-        <View className="p-5 flex-1 justify-between">
-          {/* Header row */}
-          <View className="flex-row justify-between items-start">
-            <View>
-              <View style={{ width: 80, height: 8, borderRadius: 4, backgroundColor: textPlaceholderBg, marginBottom: 6 }} />
-              <View className="flex-row items-baseline gap-1">
-                <View style={{ width: 32, height: 20, borderRadius: 4, backgroundColor: textPlaceholderBg }} />
-                <View style={{ width: 70, height: 10, borderRadius: 4, backgroundColor: textPlaceholderBg }} />
+      {/* Row 2 */}
+      <View className="flex-row justify-between" style={{ marginTop: -8 }}>
+        {[3, 4].map((i) => (
+          <SkeletonBlock
+            key={i}
+            index={i}
+            height={0}
+            style={{
+              width: '47%',
+              aspectRatio: 1,
+              height: undefined,
+              borderRadius: 24,
+              backgroundColor: tileBg,
+              borderWidth: 1,
+              borderColor: tileBorder,
+            }}
+          >
+            <View className="p-3 flex-1 justify-between">
+              {/* Icon bubble */}
+              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isDark ? '#334155' : '#F1F5F9' }} />
+              {/* Label */}
+              <View>
+                <View style={{ width: 80, height: 14, borderRadius: 6, backgroundColor: textPlaceholderBg, marginBottom: 4 }} />
+                <View style={{ width: 50, height: 10, borderRadius: 4, backgroundColor: textPlaceholderBg }} />
               </View>
             </View>
-            {/* Mini donut placeholder */}
-            <View style={{ width: 32, height: 32, borderRadius: 16, borderWidth: 4, borderColor: textPlaceholderBg, backgroundColor: 'transparent' }} />
-          </View>
-
-          {/* 3 Action boxes */}
-          <View className="flex-row gap-4">
-            <View style={{ flex: 1, height: 40, borderRadius: 8, backgroundColor: isDark ? 'rgba(244, 63, 94, 0.2)' : 'rgba(255, 241, 242, 0.9)' }} />
-            <View style={{ flex: 1, height: 40, borderRadius: 8, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(239, 246, 255, 0.9)' }} />
-            <View style={{ flex: 1, height: 40, borderRadius: 8, backgroundColor: isDark ? 'rgba(71, 85, 105, 0.5)' : 'rgba(241, 245, 249, 0.9)' }} />
-          </View>
-        </View>
-      </SkeletonBlock>
+          </SkeletonBlock>
+        ))}
+      </View>
 
       {/* ====== LeaveCard Skeleton ====== */}
       {/* Glass card with corner accent (~80px) */}
       <SkeletonBlock
-        index={3}
+        index={5}
         height={80}
         style={{
           borderRadius: 12,

@@ -189,7 +189,7 @@ export function ScreenHeader({
     const hasHeaderContent = Boolean(title || subtitle || rightAction);
 
     return (
-        <View className="z-50 bg-gray-100 dark:bg-black">
+        <View className="z-50 bg-slate-50 dark:bg-slate-950">
             {hasHeaderContent && (
                 <View
                     style={{

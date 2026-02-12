@@ -36,11 +36,16 @@ export function LeaveCard({ balance, requests = [], onPressRequest, onQuickReque
     };
 
     return (
-        <View style={getShadow({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 })}>
+        <View style={getShadow({
+            shadowColor: isDark ? '#94a3b8' : '#64748b',
+            shadowOpacity: isDark ? 0.12 : 0.14,
+            shadowRadius: isDark ? 10 : 14,
+            elevation: 3,
+        })}>
             <GlassView
                 intensity={60}
                 tint={isDark ? 'dark' : 'light'}
-                className="rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
+                className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
             >
                 {/* Premium Glass Action Buttons */}
                 <View className="absolute top-4 right-4 z-50 flex-row items-center gap-3">

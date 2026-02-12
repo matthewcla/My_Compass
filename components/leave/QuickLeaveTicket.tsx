@@ -4,6 +4,7 @@ import Colors from '@/constants/Colors';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { LeaveRequest } from '@/types/schema';
+import { formatDays } from '@/utils/formatDays';
 import { projectLeaveBalance } from '@/utils/leaveProjection';
 import { format } from 'date-fns';
 import { MapPin, Phone, Triangle, X } from 'lucide-react-native';
@@ -180,7 +181,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                                         Avail
                                     </Text>
                                     <Text className="text-green-600 dark:text-green-400 text-xl font-mono font-bold">
-                                        {projection.availableOnDeparture.toFixed(1)}
+                                        {formatDays(projection.availableOnDeparture)}
                                     </Text>
                                 </View>
 
@@ -206,7 +207,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                                         Remain
                                     </Text>
                                     <Text className={`text-xl font-mono font-bold ${projection.isOverdraft ? 'text-red-500' : 'text-green-600 dark:text-green-400'}`}>
-                                        {projection.remainingOnReturn.toFixed(1)}
+                                        {formatDays(projection.remainingOnReturn)}
                                     </Text>
                                 </View>
                             </>

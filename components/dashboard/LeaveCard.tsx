@@ -1,6 +1,7 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { LeaveBalance, LeaveRequest } from '@/types/schema';
+import { formatDays } from '@/utils/formatDays';
 import { getShadow } from '@/utils/getShadow';
 import { projectLeaveBalance } from '@/utils/leaveProjection';
 import { differenceInDays, format, parseISO } from 'date-fns';
@@ -198,13 +199,13 @@ export function LeaveCard({
                                                             <View className="flex-row items-center gap-1">
                                                                 <Text className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">Avail</Text>
                                                                 <Text className="text-[11px] font-bold font-mono" style={{ color: colors.projText }}>
-                                                                    {proj.availableOnDeparture.toFixed(1)}
+                                                                    {formatDays(proj.availableOnDeparture)}
                                                                 </Text>
                                                             </View>
                                                             <View className="flex-row items-center gap-1">
                                                                 <Text className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">Chg</Text>
                                                                 <Text className="text-[11px] font-bold font-mono" style={{ color: colors.projText }}>
-                                                                    {(req.chargeDays || proj.availableOnDeparture - proj.remainingOnReturn).toFixed(1)}
+                                                                    {formatDays(req.chargeDays || proj.availableOnDeparture - proj.remainingOnReturn)}
                                                                 </Text>
                                                             </View>
                                                             <View className="flex-row items-center gap-1">
@@ -212,7 +213,7 @@ export function LeaveCard({
                                                                 <Text className={`text-[11px] font-bold font-mono ${proj.isOverdraft ? 'text-red-500' : ''}`}
                                                                     style={!proj.isOverdraft ? { color: colors.projText } : undefined}
                                                                 >
-                                                                    {proj.remainingOnReturn.toFixed(1)}
+                                                                    {formatDays(proj.remainingOnReturn)}
                                                                 </Text>
                                                             </View>
                                                         </>

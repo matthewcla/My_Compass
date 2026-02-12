@@ -1,5 +1,6 @@
 import { GlassView } from '@/components/ui/GlassView';
 import Colors from '@/constants/Colors';
+import { formatDays } from '@/utils/formatDays';
 import { TrendingDown, Wallet } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { Text, View, useColorScheme } from 'react-native';
@@ -76,7 +77,7 @@ export function LeaveImpactHUD({
                             ) : (
                                 <>
                                     <Text className="text-xl font-bold text-slate-900 dark:text-white">
-                                        {chargeableDays.toFixed(1)}
+                                        {formatDays(chargeableDays)}
                                     </Text>
                                     <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1">
                                         Days
@@ -104,7 +105,7 @@ export function LeaveImpactHUD({
                             ) : (
                                 <>
                                     <Text className={`text-xl font-bold ${isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                                        {remainingOnReturn.toFixed(1)}
+                                        {formatDays(remainingOnReturn)}
                                     </Text>
                                     <Text className="text-[10px] font-medium text-slate-400 dark:text-slate-500 text-right">
                                         on return

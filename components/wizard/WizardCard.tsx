@@ -53,6 +53,7 @@ export function WizardCard({
                                 contentContainerClassName={noPadding ? undefined : "p-4 md:p-6 web:p-8"}
                                 showsVerticalScrollIndicator={false}
                                 keyboardShouldPersistTaps="handled"
+                                keyboardDismissMode="interactive"
                             >
                                 {children}
                             </ScrollView>

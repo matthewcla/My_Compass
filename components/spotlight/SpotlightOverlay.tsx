@@ -775,6 +775,7 @@ export function SpotlightOverlay() {
     const renderResultRows = (
         <ScrollView
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingBottom: 24 }}

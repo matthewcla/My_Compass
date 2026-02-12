@@ -114,7 +114,13 @@ class SQLiteStorage implements IStorageService {
       }
 
       return validRequests;
-    } catch (error) {
+    } catch (error: any) {
+      // Check if error is "no such table" - means DB not initialized yet
+      if (error?.message?.includes('no such table')) {
+        console.warn('[Storage] leave_requests table not yet created. Returning empty array.');
+        return [];
+      }
+
       if (error instanceof DataIntegrityError) throw error;
       throw new DataIntegrityError('Failed to parse LeaveRequest records', error);
     }
@@ -682,10 +688,20 @@ class SQLiteStorage implements IStorageService {
       const decrypted = decryptData(result.data);
       const parsed = JSON.parse(decrypted);
       return LeaveRequestDefaultsSchema.parse(parsed);
-    } catch (error) {
+    } catch (error: any) {
+      // Check if error is "no such table" - means DB not initialized yet
+      if (error?.message?.includes('no such table')) {
+        console.warn('[Storage] leave_defaults table not yet created. Returning null.');
+        return null;
+      }
+
       console.error(`[Storage] Data Corruption detected for LeaveDefaults (User ${userId}). Resetting defaults.`, error);
-      // Self-healing: Delete corrupted record so we can start fresh next time
-      await db.runAsync('DELETE FROM leave_defaults WHERE user_id = ?', userId);
+      // Self-healing: Delete corrupted record only if table exists
+      try {
+        await db.runAsync('DELETE FROM leave_defaults WHERE user_id = ?', userId);
+      } catch (deleteError) {
+        // Ignore delete errors if table doesn't exist
+      }
       return null;
     }
   }

@@ -66,6 +66,7 @@
       "typedRoutes": true
     },
     "extra": {
+      "enableDevSettings": true,
       "router": {},
       "eas": {
         "projectId": "90a02736-d91a-49c4-a21f-9844b9f6dda0"

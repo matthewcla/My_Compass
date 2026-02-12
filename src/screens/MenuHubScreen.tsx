@@ -4,6 +4,7 @@ import { DEMO_USERS, DemoPhase } from '@/constants/DemoData';
 import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
+import Constants from 'expo-constants';
 
 import { usePathname, useSegments } from 'expo-router';
 import {
@@ -50,6 +51,9 @@ export default function MenuHubScreen() {
       openSpotlight({ source: 'shortcut', preserveQuery: true });
     }
   }, [openSpotlight]);
+
+  // Check if developer settings should be shown
+  const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings ?? __DEV__;
 
   // Demo Store
   const isDemoMode = useDemoStore((state) => state.isDemoMode);
@@ -119,7 +123,7 @@ export default function MenuHubScreen() {
         </MotiView>
 
         {/* Developer Settings */}
-        {__DEV__ && (
+        {enableDevSettings && (
           <MotiView
             from={{ opacity: 0 }}
             animate={{ opacity: 1 }}

@@ -7,11 +7,19 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, w
 
 interface LeaveImpactHUDProps {
     chargeableDays: number;
-    projectedBalance: number;
+    availableOnDeparture: number;
+    remainingOnReturn: number;
     isOverdraft: boolean;
+    isUnchargeable?: boolean;
 }
 
-export function LeaveImpactHUD({ chargeableDays, projectedBalance, isOverdraft }: LeaveImpactHUDProps) {
+export function LeaveImpactHUD({
+    chargeableDays,
+    availableOnDeparture,
+    remainingOnReturn,
+    isOverdraft,
+    isUnchargeable = false,
+}: LeaveImpactHUDProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
     const themeColors = Colors[colorScheme];
@@ -33,7 +41,7 @@ export function LeaveImpactHUD({ chargeableDays, projectedBalance, isOverdraft }
             withTiming(1.2, { duration: 100 }),
             withSpring(1)
         );
-    }, [projectedBalance]);
+    }, [remainingOnReturn]);
 
     const chargeStyle = useAnimatedStyle(() => ({
         transform: [{ scale: chargeScale.value }]
@@ -61,12 +69,20 @@ export function LeaveImpactHUD({ chargeableDays, projectedBalance, isOverdraft }
                             Leave Charge
                         </Text>
                         <Animated.View style={[chargeStyle, { flexDirection: 'row', alignItems: 'flex-end' }]}>
-                            <Text className="text-xl font-bold text-slate-900 dark:text-white">
-                                {chargeableDays.toFixed(1)}
-                            </Text>
-                            <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1">
-                                Days
-                            </Text>
+                            {isUnchargeable ? (
+                                <Text className="text-base font-bold text-slate-400 dark:text-slate-500">
+                                    No Charge
+                                </Text>
+                            ) : (
+                                <>
+                                    <Text className="text-xl font-bold text-slate-900 dark:text-white">
+                                        {chargeableDays.toFixed(1)}
+                                    </Text>
+                                    <Text className="text-xs font-medium text-slate-500 dark:text-slate-400 ml-1">
+                                        Days
+                                    </Text>
+                                </>
+                            )}
                         </Animated.View>
                     </View>
                 </View>
@@ -81,13 +97,24 @@ export function LeaveImpactHUD({ chargeableDays, projectedBalance, isOverdraft }
                             Remaining
                         </Text>
                         <Animated.View style={balanceStyle}>
-                            <Text className={`text-xl font-bold ${isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                                {projectedBalance.toFixed(1)}
-                            </Text>
+                            {isUnchargeable ? (
+                                <Text className="text-base font-bold text-slate-400 dark:text-slate-500">
+                                    No Impact
+                                </Text>
+                            ) : (
+                                <>
+                                    <Text className={`text-xl font-bold ${isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                                        {remainingOnReturn.toFixed(1)}
+                                    </Text>
+                                    <Text className="text-[10px] font-medium text-slate-400 dark:text-slate-500 text-right">
+                                        on return
+                                    </Text>
+                                </>
+                            )}
                         </Animated.View>
                     </View>
-                    <View className={`w-10 h-10 rounded-full items-center justify-center ${isOverdraft ? 'bg-red-50 dark:bg-red-900/30' : 'bg-green-50 dark:bg-green-900/30'}`}>
-                        <Wallet size={20} className={isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'} />
+                    <View className={`w-10 h-10 rounded-full items-center justify-center ${isUnchargeable ? 'bg-slate-100 dark:bg-slate-800' : isOverdraft ? 'bg-red-50 dark:bg-red-900/30' : 'bg-green-50 dark:bg-green-900/30'}`}>
+                        <Wallet size={20} className={isUnchargeable ? 'text-slate-400 dark:text-slate-500' : isOverdraft ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'} />
                     </View>
                 </View>
 

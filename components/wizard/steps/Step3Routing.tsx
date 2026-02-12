@@ -39,7 +39,7 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                     <View className="bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700 gap-4">
 
                         {/* Duty Section */}
-                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 pb-2 gap-3">
+                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 py-2 gap-3">
                             <Briefcase size={20} color={themeColors.tint} strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-labelPrimary dark:text-white"
@@ -51,7 +51,7 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                         </View>
 
                         {/* Dept/Div */}
-                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 pb-2 gap-3">
+                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 py-2 gap-3">
                             <Building2 size={20} color={themeColors.tint} strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-labelPrimary dark:text-white"
@@ -63,7 +63,7 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                         </View>
 
                         {/* Duty Phone */}
-                        <View className="flex-row items-center gap-3">
+                        <View className="flex-row items-center py-2 gap-3">
                             <Phone size={20} color={themeColors.tint} strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-labelPrimary dark:text-white"

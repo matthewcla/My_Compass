@@ -50,6 +50,7 @@ export default function HubDashboard() {
 
     const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
     const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
+    const leaveBalance = useLeaveStore(state => state.leaveBalance);
 
     const leaveRequests = React.useMemo(() => {
         return userLeaveRequestIds
@@ -190,7 +191,9 @@ export default function HubDashboard() {
                 return (
                     <LeaveCard
                         balance={data?.leave?.currentBalance ?? 0}
+                        leaveBalance={leaveBalance}
                         requests={leaveRequests}
+                        allRequests={leaveRequests}
                         onPressRequest={(req) => {
                             if (req.status === 'draft') {
                                 router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
@@ -278,6 +281,7 @@ export default function HubDashboard() {
                         draft={quickDraft}
                         onSubmit={handleQuickLeaveSubmit}
                         onEdit={handleQuickLeaveEdit}
+                        onClose={() => setQuickDraft(null)}
                     />
                 </View>
             )}

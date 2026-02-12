@@ -4,24 +4,27 @@ import Colors from '@/constants/Colors';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { LeaveRequest } from '@/types/schema';
+import { projectLeaveBalance } from '@/utils/leaveProjection';
 import { format } from 'date-fns';
-import { MapPin, Phone, Shield, Triangle, Zap } from 'lucide-react-native';
-import React, { useState } from 'react';
+import { MapPin, Phone, Triangle, X } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
 import { Alert, Pressable, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 interface QuickLeaveTicketProps {
     draft: LeaveRequest;
     onSubmit: () => void;
     onEdit: () => void;
+    onClose: () => void;
 }
 
-export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketProps) {
+export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeaveTicketProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
     const themeColors = Colors[colorScheme];
 
     const submitRequest = useLeaveStore((state) => state.submitRequest);
     const leaveBalance = useLeaveStore((state) => state.leaveBalance);
+    const leaveRequests = useLeaveStore((state) => state.leaveRequests);
 
     const [startDate, setStartDate] = useState(new Date(draft.startDate));
     const [endDate, setEndDate] = useState(new Date(draft.endDate));
@@ -48,7 +51,6 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
     const handleSign = async () => {
         setIsSubmitting(true);
         try {
-            // Use displayAddress for validation if draft address is empty
             const finalAddress = draft.leaveAddress || displayAddress;
 
             if (!finalAddress || !draft.leavePhoneNumber || !draft.emergencyContact) {
@@ -87,9 +89,26 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
 
     const daysCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
+    // --- Projection ---
+    const projection = useMemo(() => {
+        const balance = leaveBalance?.currentBalance ?? 30;
+        const maxCarryOver = leaveBalance?.maxCarryOver ?? 60;
+        const allRequests = Object.values(leaveRequests);
+
+        return projectLeaveBalance({
+            currentBalance: balance,
+            maxCarryOver,
+            departureDate: startDate,
+            returnDate: endDate,
+            chargeableDays: daysCount,
+            leaveType: draft.leaveType,
+            allRequests,
+            currentRequestId: draft.id,
+        });
+    }, [startDate, endDate, daysCount, draft.leaveType, draft.id, leaveBalance, leaveRequests]);
+
     return (
-        <View className="mx-4 my-auto">
-            {/* Glass Cockpit Card */}
+        <View style={{ alignSelf: 'stretch', marginHorizontal: 20 }}>
             {/* Glass Cockpit Card */}
             <View
                 className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-800"
@@ -98,76 +117,108 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                 {/* Status Indicator Strip (Left) */}
                 <View className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
 
-                {/* Header Section */}
+                {/* Header */}
                 <View className="flex-row items-center justify-between p-4 border-b border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
-                    <View className="flex-row items-center gap-2">
-                        <Shield size={16} color={isDark ? "#60a5fa" : "#3b82f6"} />
-                        <Text className="text-blue-600 dark:text-blue-400 font-bold text-xs tracking-[0.2em] uppercase">
-                            QUICK LEAVE REQUEST
-                        </Text>
-                    </View>
-
-                    {/* Balance HUD */}
-                    <View className="flex-row items-center gap-2 bg-slate-200/50 dark:bg-white/10 px-2 py-1 rounded border border-slate-300/50 dark:border-white/10">
-                        <Zap size={10} color={isDark ? "#fbbf24" : "#d97706"} fill={isDark ? "#fbbf24" : "#d97706"} />
-                        <Text className="text-slate-600 dark:text-amber-400 text-[10px] font-bold tracking-wider">
-                            {leaveBalance?.currentBalance ?? 30.0} DAYS
-                        </Text>
-                    </View>
+                    <Text className="text-blue-600 dark:text-blue-400 font-bold text-xs tracking-widest uppercase">
+                        QUICK LEAVE REQUEST
+                    </Text>
+                    <Pressable
+                        onPress={onClose}
+                        className="p-1 rounded-full bg-slate-200/50 dark:bg-white/10 active:opacity-70"
+                        hitSlop={8}
+                    >
+                        <X size={16} color={isDark ? '#94a3b8' : '#64748b'} />
+                    </Pressable>
                 </View>
 
-                {/* Main Data Grid */}
-                <View className="p-6 gap-8">
-                    {/* Primary: Dates */}
-                    <View className="flex-row items-baseline justify-between z-10">
-                        <View>
-                            <Text className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">
-                                Duration
-                            </Text>
-                            <View className="flex-row items-baseline gap-2">
-                                <Text className="text-slate-900 dark:text-white text-4xl font-mono font-medium tracking-tight">
-                                    {daysCount}
+                {/* Main Content */}
+                <View className="p-5 gap-5">
+
+                    {/* Hero: Date Pills (centered) */}
+                    <View className="items-center gap-2">
+                        <View className="flex-row items-center gap-3">
+                            <TouchableOpacity
+                                onPress={() => setShowStartPicker(true)}
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700/50 border border-slate-200/70 dark:border-slate-600/40"
+                            >
+                                <Text className="text-slate-900 dark:text-white text-lg font-mono font-semibold tracking-tight">
+                                    {format(startDate, 'dd MMM')}
                                 </Text>
-                                <Text className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase">
-                                    DAYS
+                            </TouchableOpacity>
+
+                            <Triangle size={8} color={isDark ? "#94a3b8" : "#64748b"} rotation={90} fill={isDark ? "#94a3b8" : "#64748b"} />
+
+                            <TouchableOpacity
+                                onPress={() => setShowEndPicker(true)}
+                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700/50 border border-slate-200/70 dark:border-slate-600/40"
+                            >
+                                <Text className="text-slate-900 dark:text-white text-lg font-mono font-semibold tracking-tight">
+                                    {format(endDate, 'dd MMM')}
                                 </Text>
-                            </View>
+                            </TouchableOpacity>
                         </View>
 
-                        <View className="items-end">
-                            <Text className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-1">
-                                Period
-                            </Text>
-                            <View className="flex-row items-center gap-3">
-                                <TouchableOpacity
-                                    onPress={() => setShowStartPicker(true)}
-                                    className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700/50"
-                                >
-                                    <Text className="text-slate-900 dark:text-white text-lg font-mono font-medium">
-                                        {format(startDate, 'dd MMM')}
-                                    </Text>
-                                </TouchableOpacity>
-
-                                <Triangle size={8} color={isDark ? "#94a3b8" : "#64748b"} rotation={90} fill={isDark ? "#94a3b8" : "#64748b"} />
-
-                                <TouchableOpacity
-                                    onPress={() => setShowEndPicker(true)}
-                                    className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-700/50"
-                                >
-                                    <Text className="text-slate-900 dark:text-white text-lg font-mono font-medium">
-                                        {format(endDate, 'dd MMM')}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
+                        {/* Chargeable days subtitle */}
+                        <Text className="text-slate-400 dark:text-slate-500 text-xs font-medium">
+                            {daysCount} chargeable {daysCount === 1 ? 'day' : 'days'}
+                        </Text>
                     </View>
 
-                    {/* Secondary Information - Clean List */}
-                    <View className="gap-5">
+                    {/* Projection Strip: Avail | Charge | Remain */}
+                    <View className="flex-row items-center justify-between bg-slate-50 dark:bg-slate-700/30 rounded-xl px-3 py-3 border border-slate-200/70 dark:border-slate-600/30">
+                        {projection.isUnchargeable ? (
+                            <View className="flex-1 items-center">
+                                <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                                    No charge to leave balance
+                                </Text>
+                            </View>
+                        ) : (
+                            <>
+                                {/* Available */}
+                                <View className="flex-1 items-center">
+                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                                        Avail
+                                    </Text>
+                                    <Text className="text-green-600 dark:text-green-400 text-xl font-mono font-bold">
+                                        {projection.availableOnDeparture.toFixed(1)}
+                                    </Text>
+                                </View>
+
+                                {/* Divider */}
+                                <View className="h-8 w-[1px] bg-slate-200 dark:bg-slate-600" />
+
+                                {/* Charge */}
+                                <View className="flex-1 items-center">
+                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                                        Charge
+                                    </Text>
+                                    <Text className="text-slate-900 dark:text-white text-xl font-mono font-bold">
+                                        {daysCount}.0
+                                    </Text>
+                                </View>
+
+                                {/* Divider */}
+                                <View className="h-8 w-[1px] bg-slate-200 dark:bg-slate-600" />
+
+                                {/* Remaining */}
+                                <View className="flex-1 items-center">
+                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                                        Remain
+                                    </Text>
+                                    <Text className={`text-xl font-mono font-bold ${projection.isOverdraft ? 'text-red-500' : 'text-green-600 dark:text-green-400'}`}>
+                                        {projection.remainingOnReturn.toFixed(1)}
+                                    </Text>
+                                </View>
+                            </>
+                        )}
+                    </View>
+
+                    {/* Secondary Information */}
+                    <View className="gap-4">
                         {/* Location */}
-                        <View className="flex-row items-center gap-4">
-                            <View className="w-8 h-8 rounded-full items-center justify-center bg-blue-50 dark:bg-blue-900/20">
-                                <MapPin size={16} color={!draft.leaveAddress ? '#ef4444' : (isDark ? '#60a5fa' : '#3b82f6')} />
+                        <View className="flex-row items-center gap-3">
+                            <View className="w-7 h-7 rounded-full items-center justify-center bg-blue-50 dark:bg-blue-900/20">
+                                <MapPin size={14} color={!draft.leaveAddress ? '#ef4444' : (isDark ? '#60a5fa' : '#3b82f6')} />
                             </View>
                             <View className="flex-1">
                                 <View className="flex-row justify-between items-center mb-0.5">
@@ -183,9 +234,9 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                         </View>
 
                         {/* Emergency Contact */}
-                        <View className="flex-row items-center gap-4">
-                            <View className="w-8 h-8 rounded-full items-center justify-center bg-slate-100 dark:bg-slate-700/50">
-                                <Phone size={16} color={isDark ? "#94a3b8" : "#64748b"} />
+                        <View className="flex-row items-center gap-3">
+                            <View className="w-7 h-7 rounded-full items-center justify-center bg-slate-100 dark:bg-slate-700/50">
+                                <Phone size={14} color={isDark ? "#94a3b8" : "#64748b"} />
                             </View>
                             <View className="flex-1">
                                 <View className="flex-row justify-between items-center mb-0.5">
@@ -209,10 +260,8 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                         isSubmitting={isSubmitting}
                     />
                 </View>
-
             </View>
 
-            {/* Glass Calendar Modals */}
             {/* Glass Calendar Modals */}
             <GlassCalendarModal
                 visible={showStartPicker}
@@ -231,6 +280,6 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit }: QuickLeaveTicketPr
                 minDate={startDate}
                 title="Select End Date"
             />
-        </View >
+        </View>
     );
 }

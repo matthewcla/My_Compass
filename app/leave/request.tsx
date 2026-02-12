@@ -12,6 +12,8 @@ import { useLeaveStore } from '@/store/useLeaveStore';
 import { useUserId } from '@/store/useUserStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { calculateLeave } from '@/utils/leaveLogic';
+import { projectLeaveBalance } from '@/utils/leaveProjection';
+import { parseISO } from 'date-fns';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -258,7 +260,24 @@ export default function LeaveRequestScreen() {
         }, availableDays);
     }, [formData.startDate, formData.endDate, formData.startTime, formData.endTime, formData.departureWorkingHours, formData.returnWorkingHours, availableDays]);
 
-    const { chargeableDays, projectedBalance, isOverdraft } = calculation;
+    const { chargeableDays } = calculation;
+
+    // --- Forward Projection ---
+    const projection = useMemo(() => {
+        const departureDate = formData.startDate ? parseISO(formData.startDate) : new Date();
+        const returnDate = formData.endDate ? parseISO(formData.endDate) : new Date();
+
+        return projectLeaveBalance({
+            currentBalance: availableDays,
+            maxCarryOver: leaveBalance?.maxCarryOver ?? 60,
+            departureDate,
+            returnDate,
+            chargeableDays,
+            leaveType: formData.leaveType || 'annual',
+            allRequests: Object.values(leaveRequests),
+            currentRequestId: currentDraftId ?? undefined,
+        });
+    }, [availableDays, leaveBalance?.maxCarryOver, formData.startDate, formData.endDate, chargeableDays, formData.leaveType, leaveRequests, currentDraftId]);
 
     console.log('[LeaveRequest] Render Balance:', leaveBalance);
     console.log('[LeaveRequest] Available Days:', availableDays);
@@ -408,6 +427,12 @@ export default function LeaveRequestScreen() {
                         entering={FadeInDown.delay(100).springify()}
                         className="bg-white/95 dark:bg-slate-900/95 sticky top-0 z-10 px-4 py-2"
                     >
+                        <Text
+                            style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
+                            className="text-slate-400 dark:text-gray-500 ml-8 mb-1"
+                        >
+                            LEAVE FLOW
+                        </Text>
                         <WizardStatusBar
                             currentStep={activeStep}
                             onStepPress={scrollToSection}
@@ -429,6 +454,7 @@ export default function LeaveRequestScreen() {
                             onScroll={handleScroll}
                             scrollEventThrottle={16}
                             keyboardShouldPersistTaps="handled"
+                            keyboardDismissMode="interactive"
                         >
                             {/* 1. Intent */}
                             <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
@@ -490,8 +516,10 @@ export default function LeaveRequestScreen() {
                         <View className="pt-4 px-4">
                             <LeaveImpactHUD
                                 chargeableDays={chargeableDays}
-                                projectedBalance={projectedBalance}
-                                isOverdraft={isOverdraft}
+                                availableOnDeparture={projection.availableOnDeparture}
+                                remainingOnReturn={projection.remainingOnReturn}
+                                isOverdraft={projection.isOverdraft}
+                                isUnchargeable={projection.isUnchargeable}
                             />
                             <View className="mt-4 flex-row items-center gap-3">
                                 {/* Exit Button */}

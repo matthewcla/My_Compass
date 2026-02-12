@@ -53,7 +53,9 @@ export interface LeaveCalculationResult {
  */
 export function calculateLeave(
     input: LeaveCalculationInput,
-    currentBalance: number
+    currentBalance: number,
+    /** If provided (from projection engine), used for overdraft check instead of raw currentBalance. */
+    projectedAvailable?: number,
 ): LeaveCalculationResult {
     const { startDate, endDate, startTime, endTime, departureWorkingHours, returnWorkingHours } = input;
     const errors: string[] = [];
@@ -171,7 +173,8 @@ export function calculateLeave(
     }
 
     const chargeableDays = Math.max(0, dayCount);
-    const projectedBalance = currentBalance - chargeableDays;
+    const effectiveBalance = projectedAvailable ?? currentBalance;
+    const projectedBalance = effectiveBalance - chargeableDays;
 
     return {
         chargeableDays,

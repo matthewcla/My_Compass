@@ -8,15 +8,16 @@ import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { DemoPhase } from '@/constants/DemoData';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useSession } from '@/lib/ctx';
+import { useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSStore } from '@/store/usePCSStore';
-import { useDemoStore } from '@/store/useDemoStore';
 import { useUserStore } from '@/store/useUserStore';
 import { LeaveRequest } from '@/types/schema';
-import { DemoPhase } from '@/constants/DemoData';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import {
@@ -49,6 +50,7 @@ export default function HubDashboard() {
 
     const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
     const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
+    const leaveBalance = useLeaveStore(state => state.leaveBalance);
 
     const leaveRequests = React.useMemo(() => {
         return userLeaveRequestIds
@@ -161,7 +163,7 @@ export default function HubDashboard() {
                                     subtitle={isPCSPhase ? "Action Required" : undefined}
                                     onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
                                     locked={!isPCSPhase}
-                                    style={isPCSPhase ? { backgroundColor: '#1e293b', borderColor: '#334155' } : undefined}
+                                    accent={isPCSPhase ? '#D97706' : undefined}
                                 />
                             </View>
                         </View>
@@ -169,7 +171,7 @@ export default function HubDashboard() {
                         <View className="flex-row justify-between">
                             <View style={{ width: '47%', aspectRatio: 1 }}>
                                 <MenuTile
-                                    label={"My Leave\n& Admin"}
+                                    label="My Leave & Admin"
                                     icon={FileText}
                                     onPress={() => handleTilePress('/(admin)')}
                                 />
@@ -189,7 +191,9 @@ export default function HubDashboard() {
                 return (
                     <LeaveCard
                         balance={data?.leave?.currentBalance ?? 0}
+                        leaveBalance={leaveBalance}
                         requests={leaveRequests}
+                        allRequests={leaveRequests}
                         onPressRequest={(req) => {
                             if (req.status === 'draft') {
                                 router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
@@ -216,7 +220,7 @@ export default function HubDashboard() {
     return (
         <ScreenGradient>
             <CollapsibleScaffold
-                statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
+                statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 topBar={
                     <View className="bg-slate-50 dark:bg-slate-950 pb-2">
                         <View className="px-4 pt-2">
@@ -277,6 +281,7 @@ export default function HubDashboard() {
                         draft={quickDraft}
                         onSubmit={handleQuickLeaveSubmit}
                         onEdit={handleQuickLeaveEdit}
+                        onClose={() => setQuickDraft(null)}
                     />
                 </View>
             )}

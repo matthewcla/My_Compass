@@ -1,3 +1,4 @@
+import { formatDays } from '@/utils/formatDays';
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -19,7 +20,7 @@ export function LeaveBalanceCard({
                     Days Available
                 </Text>
                 <Text className="text-4xl font-bold text-slate-900 dark:text-white mt-1">
-                    {daysAvailable.toFixed(1)}
+                    {formatDays(daysAvailable)}
                 </Text>
             </View>
 
@@ -32,7 +33,7 @@ export function LeaveBalanceCard({
                         className={`text-lg font-semibold ${useOrLose > 0 ? 'text-red-600' : 'text-slate-700 dark:text-slate-300'
                             }`}
                     >
-                        {useOrLose.toFixed(1)}
+                        {formatDays(useOrLose)}
                     </Text>
                 </View>
 
@@ -41,7 +42,7 @@ export function LeaveBalanceCard({
                         Projected
                     </Text>
                     <Text className="text-lg font-semibold text-slate-400 dark:text-slate-500 text-right">
-                        {projectedBalance.toFixed(1)}
+                        {formatDays(projectedBalance)}
                     </Text>
                 </View>
             </View>

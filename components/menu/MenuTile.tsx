@@ -1,6 +1,7 @@
+import Colors from '@/constants/Colors';
 import { Lock } from 'lucide-react-native';
 import React from 'react';
-import { Text, TouchableOpacity, View, useColorScheme, ViewStyle } from 'react-native';
+import { Text, TouchableOpacity, useColorScheme, View, ViewStyle } from 'react-native';
 
 interface MenuTileProps {
     label: string;
@@ -8,6 +9,8 @@ interface MenuTileProps {
     icon: any; // Lucide icon component
     onPress: () => void;
     locked?: boolean;
+    /** Accent color for active/important state — adds a left border accent and tinted icon bubble */
+    accent?: string;
     className?: string;
     style?: ViewStyle;
 }
@@ -18,11 +21,15 @@ export const MenuTile: React.FC<MenuTileProps> = ({
     icon: Icon,
     onPress,
     locked = false,
+    accent,
     className,
     style
 }) => {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const colors = Colors[colorScheme ?? 'light'];
+
+    const isAccented = !!accent && !locked;
 
     return (
         <TouchableOpacity
@@ -30,20 +37,34 @@ export const MenuTile: React.FC<MenuTileProps> = ({
             activeOpacity={0.7}
             disabled={locked}
             style={[{
-                backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-                borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+                backgroundColor: colors.surface,
+                borderColor: isAccented ? accent : colors.surfaceBorder,
+                borderLeftWidth: isAccented ? 3 : 1,
             }, style]}
             className={`rounded-3xl p-3 w-full flex-1 justify-between shadow-sm border ${locked ? 'opacity-50' : ''} ${className || ''}`}
         >
             <View className="flex-row justify-between items-start">
                 <View
-                    style={{ backgroundColor: isDark ? (locked ? '#334155' : 'rgba(59, 130, 246, 0.2)') : (locked ? '#F1F5F9' : '#EFF6FF') }}
+                    style={{
+                        backgroundColor: isAccented
+                            ? (isDark ? `${accent}33` : `${accent}18`)
+                            : (locked ? colors.iconBubbleLocked : colors.iconBubble),
+                    }}
                     className="p-3 rounded-full"
                 >
-                    <Icon size={24} color={locked ? '#94A3B8' : '#3B82F6'} strokeWidth={2.5} />
+                    <Icon
+                        size={24}
+                        color={isAccented ? accent : (locked ? '#94A3B8' : '#3B82F6')}
+                        strokeWidth={2.5}
+                    />
                 </View>
                 {locked && (
                     <Lock size={16} color="#CBD5E1" />
+                )}
+                {isAccented && (
+                    <View
+                        style={{ backgroundColor: accent, width: 8, height: 8, borderRadius: 4 }}
+                    />
                 )}
             </View>
 
@@ -51,16 +72,17 @@ export const MenuTile: React.FC<MenuTileProps> = ({
                 <Text
                     style={{
                         color: isDark ? (locked ? '#94A3B8' : '#FFFFFF') : (locked ? '#94A3B8' : '#0F172A'),
-                        lineHeight: 22
+                        lineHeight: 20
                     }}
-                    className="font-bold text-[17px]"
+                    className="font-bold text-[15px]"
                     numberOfLines={2}
                 >
                     {label}
                 </Text>
                 {subtitle && (
                     <Text
-                        className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium"
+                        style={isAccented ? { color: accent } : undefined}
+                        className={`text-xs mt-0.5 font-semibold ${isAccented ? '' : 'text-slate-500 dark:text-slate-400 font-medium'}`}
                         numberOfLines={1}
                     >
                         {subtitle}
@@ -70,3 +92,4 @@ export const MenuTile: React.FC<MenuTileProps> = ({
         </TouchableOpacity >
     );
 };
+

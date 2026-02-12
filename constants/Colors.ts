@@ -8,6 +8,11 @@ const navyLight = '#1E3A5F';
 const navyGold = '#C9A227';
 
 export const Colors = {
+  // Canvas gradient stops (shared with ScreenGradient)
+  gradient: {
+    light: ['#f8fafc', '#e2e8f0'] as const, // Slate-50 → Slate-200
+    dark: ['#0f172a', '#020617'] as const,   // Slate-900 → Slate-950
+  },
   blue: {
     500: '#3b82f6',
     600: '#2563eb',
@@ -39,6 +44,10 @@ export const Colors = {
     wizardCardBackground: '#FFFFFF',
     inputBackground: '#F8FAFC',
     accentText: systemBlueLight,
+    surface: '#FFFFFF',
+    surfaceBorder: '#E2E8F0',
+    iconBubble: '#EFF6FF',
+    iconBubbleLocked: '#F1F5F9',
 
     status: {
       success: '#16a34a',
@@ -65,6 +74,10 @@ export const Colors = {
     wizardCardBackground: '#1E293B',
     inputBackground: '#0F172A',
     accentText: '#FFFFFF',
+    surface: '#1E293B',
+    surfaceBorder: '#334155',
+    iconBubble: 'rgba(59, 130, 246, 0.2)',
+    iconBubbleLocked: '#334155',
 
     status: {
       success: '#4ade80',

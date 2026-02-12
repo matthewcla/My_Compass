@@ -2,7 +2,7 @@
   "expo": {
     "name": "My_Compass",
     "slug": "My_Compass",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mycompass",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "mil.navy.mycompass",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSCameraUsageDescription": "Required for event check-in",
         "NSPhotoLibraryUsageDescription": "My Compass may save images to your photo library.",

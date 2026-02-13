@@ -1,7 +1,8 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, PCSOrder, PCSRoute, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
+import { ChecklistItem, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { useUserStore } from './useUserStore';
@@ -14,6 +15,25 @@ const generateUUID = () => {
     return v.toString(16);
   });
 };
+
+/**
+ * Derive the current PCS phase from segment statuses.
+ * Pure function — no persisted state, always computed.
+ */
+export function derivePhase(segments: PCSSegment[] | undefined): PCSPhase {
+  if (!segments || segments.length === 0) return 'DORMANT';
+
+  const allLocked = segments.every((s) => s.status === 'LOCKED');
+  const anyPlanning = segments.some((s) => s.status === 'PLANNING');
+  const allComplete = segments.every((s) => s.status === 'COMPLETE');
+
+  if (allComplete) return 'CHECK_IN';
+  if (anyPlanning) return 'TRANSIT_LEAVE';
+  if (allLocked) return 'ORDERS_NEGOTIATION';
+
+  // Mixed states default to negotiation
+  return 'ORDERS_NEGOTIATION';
+}
 
 interface Financials {
   advancePay: {
@@ -394,4 +414,13 @@ export const usePCSRoute = (): PCSRoute | null => {
   }
 
   return null;
+};
+
+/**
+ * Computed phase selector — derives PCS phase from segment statuses.
+ * Uses useMemo to prevent re-renders when segments haven't changed.
+ */
+export const usePCSPhase = (): PCSPhase => {
+  const segments = usePCSStore((state) => state.activeOrder?.segments);
+  return useMemo(() => derivePhase(segments), [segments]);
 };

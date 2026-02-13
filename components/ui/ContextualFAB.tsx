@@ -1,5 +1,5 @@
-import { usePCSStore } from '@/store/usePCSStore';
-import { PCSSegment } from '@/types/pcs';
+import { derivePhase, usePCSStore } from '@/store/usePCSStore';
+import { PCSPhase } from '@/types/pcs';
 import { Camera, MapPin, MessageCircle } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Pressable } from 'react-native';
@@ -8,26 +8,9 @@ import Animated, {
     FadeOut
 } from 'react-native-reanimated';
 
-type PCSPhase = 'DORMANT' | 'ORDERS_NEGOTIATION' | 'TRANSIT_LEAVE' | 'CHECK_IN';
-
 interface PhaseConfig {
     bgClass: string;
     icon: React.ReactNode;
-}
-
-function derivePhase(segments: PCSSegment[] | undefined): PCSPhase {
-    if (!segments || segments.length === 0) return 'DORMANT';
-
-    const allLocked = segments.every((s) => s.status === 'LOCKED');
-    const anyPlanning = segments.some((s) => s.status === 'PLANNING');
-    const allComplete = segments.every((s) => s.status === 'COMPLETE');
-
-    if (allComplete) return 'CHECK_IN';
-    if (anyPlanning) return 'TRANSIT_LEAVE';
-    if (allLocked) return 'ORDERS_NEGOTIATION';
-
-    // Mixed states default to negotiation
-    return 'ORDERS_NEGOTIATION';
 }
 
 export function ContextualFAB() {

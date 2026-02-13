@@ -1,6 +1,7 @@
 import { PCSChecklist } from '@/components/pcs/PCSChecklist';
 import { ProfileConfirmationCard } from '@/components/pcs/ProfileConfirmationCard';
 import { SegmentTimeline } from '@/components/pcs/SegmentTimeline';
+import { PCSPhaseWidgets } from '@/components/pcs/widgets/PCSPhaseWidgets';
 import React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
@@ -24,6 +25,7 @@ export function PCSActiveState() {
         >
             <View style={{ paddingTop: 24 }}>
                 <ProfileConfirmationCard />
+                <PCSPhaseWidgets />
                 <SegmentTimeline />
                 <PCSChecklist />
             </View>

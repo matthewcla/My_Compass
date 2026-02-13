@@ -46,9 +46,6 @@ export default function PCSWizardLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="mode" />
-      <Stack.Screen name="itinerary" />
-      <Stack.Screen name="review" />
     </Stack>
   );
 }

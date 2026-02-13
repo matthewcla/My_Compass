@@ -1,10 +1,10 @@
+import { services } from '@/services/api/serviceRegistry';
+import { ChecklistItem, PCSOrder, PCSRoute, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
+import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChecklistItem, PCSOrder, PCSRoute, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
-import { services } from '@/services/api/serviceRegistry';
 import { useUserStore } from './useUserStore';
-import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 
 // Simple UUID generator
 const generateUUID = () => {
@@ -94,8 +94,8 @@ export const usePCSStore = create<PCSState>()(
         const userId = useUserStore.getState().user?.id ?? 'unknown';
         const result = await services.pcs.fetchActiveOrder(userId);
         if (!result.success) {
-            console.error('[PCSStore] Failed to fetch active order:', result.error.message);
-            return;
+          console.error('[PCSStore] Failed to fetch active order:', result.error.message);
+          return;
         }
         const order = result.data;
         const checklist: ChecklistItem[] = [];
@@ -229,9 +229,9 @@ export const usePCSStore = create<PCSState>()(
 
         // Sum MALT/Per Diem per segment
         activeOrder.segments.forEach(segment => {
-           const { malt, perDiem } = calculateSegmentEntitlement(segment);
-           totalMalt += malt;
-           totalPerDiem += perDiem;
+          const { malt, perDiem } = calculateSegmentEntitlement(segment);
+          totalMalt += malt;
+          totalPerDiem += perDiem;
         });
 
         // DLA Calculation
@@ -239,16 +239,16 @@ export const usePCSStore = create<PCSState>()(
         const dlaRate = getDLARate(user.rank, hasDependents);
 
         set({
-            financials: {
-                ...financials,
-                dla: {
-                    ...financials.dla,
-                    eligible: true, // Assuming basic eligibility
-                    estimatedAmount: financials.dla.receivedFY ? 0 : dlaRate,
-                },
-                totalMalt,
-                totalPerDiem,
-            }
+          financials: {
+            ...financials,
+            dla: {
+              ...financials.dla,
+              eligible: true, // Assuming basic eligibility
+              estimatedAmount: financials.dla.receivedFY ? 0 : dlaRate,
+            },
+            totalMalt,
+            totalPerDiem,
+          }
         });
       },
 
@@ -268,13 +268,13 @@ export const usePCSStore = create<PCSState>()(
         let mergedFinancials = { ...financials };
 
         if (newFinancials.advancePay) {
-            mergedFinancials.advancePay = { ...mergedFinancials.advancePay, ...newFinancials.advancePay };
+          mergedFinancials.advancePay = { ...mergedFinancials.advancePay, ...newFinancials.advancePay };
         }
         if (newFinancials.dla) {
-            mergedFinancials.dla = { ...mergedFinancials.dla, ...newFinancials.dla };
+          mergedFinancials.dla = { ...mergedFinancials.dla, ...newFinancials.dla };
         }
         if (newFinancials.obliserv) {
-            mergedFinancials.obliserv = { ...mergedFinancials.obliserv, ...newFinancials.obliserv };
+          mergedFinancials.obliserv = { ...mergedFinancials.obliserv, ...newFinancials.obliserv };
         }
         // Top level primitives
         if (newFinancials.totalMalt !== undefined) mergedFinancials.totalMalt = newFinancials.totalMalt;
@@ -285,7 +285,7 @@ export const usePCSStore = create<PCSState>()(
         // Trigger recalculation if needed, but recalculateFinancials might overwrite some values (like estimatedAmount).
         // If we update DLA receivedFY, we want recalculateFinancials to run to update estimatedAmount.
         if (newFinancials.dla && newFinancials.dla.receivedFY !== undefined) {
-             get().recalculateFinancials();
+          get().recalculateFinancials();
         }
       },
 
@@ -307,15 +307,15 @@ export const usePCSStore = create<PCSState>()(
         const isObliservRequired = eaosDate < requiredServiceDate;
 
         set({
-            financials: {
-                ...financials,
-                obliserv: {
-                    ...financials.obliserv,
-                    required: isObliservRequired,
-                    eaos: user.eaos,
-                    status: isObliservRequired ? 'PENDING' : 'COMPLETE',
-                }
+          financials: {
+            ...financials,
+            obliserv: {
+              ...financials.obliserv,
+              required: isObliservRequired,
+              eaos: user.eaos,
+              status: isObliservRequired ? 'PENDING' : 'COMPLETE',
             }
+          }
         });
       },
 
@@ -325,12 +325,12 @@ export const usePCSStore = create<PCSState>()(
 
         const segment = activeOrder.segments.find(s => s.id === segmentId);
         if (segment) {
-            const draft = JSON.parse(JSON.stringify(segment));
-            // Ensure stops array exists
-            if (!draft.userPlan.stops) {
-                draft.userPlan.stops = [];
-            }
-            set({ currentDraft: draft });
+          const draft = JSON.parse(JSON.stringify(segment));
+          // Ensure stops array exists
+          if (!draft.userPlan.stops) {
+            draft.userPlan.stops = [];
+          }
+          set({ currentDraft: draft });
         }
       },
 
@@ -359,10 +359,10 @@ export const usePCSStore = create<PCSState>()(
         if (!currentDraft) return;
 
         set({
-            currentDraft: {
-                ...currentDraft,
-                ...updates,
-            }
+          currentDraft: {
+            ...currentDraft,
+            ...updates,
+          }
         });
       }
     }),
@@ -379,6 +379,7 @@ export const usePCSStore = create<PCSState>()(
 export const useActiveOrder = () => usePCSStore((state) => state.activeOrder);
 export const usePCSFinancials = () => usePCSStore((state) => state.financials);
 export const usePCSChecklist = () => usePCSStore((state) => state.checklist);
+export const selectHasActiveOrders = (state: PCSState) => state.activeOrder !== null;
 
 /**
  * Get PCS Route from current user (via demo store or user store)

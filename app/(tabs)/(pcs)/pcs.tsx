@@ -1,21 +1,22 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { PCSChecklist } from '@/components/pcs/PCSChecklist';
-import { ProfileConfirmationCard } from '@/components/pcs/ProfileConfirmationCard';
-import { SegmentTimeline } from '@/components/pcs/SegmentTimeline';
+import { PCSActiveState } from '@/components/pcs/states/PCSActiveState';
+import { PCSArchiveState } from '@/components/pcs/states/PCSArchiveState';
+import { ContextualFAB } from '@/components/ui/ContextualFAB';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useHeaderStore } from '@/store/useHeaderStore';
-import { usePCSStore } from '@/store/usePCSStore';
+import { selectHasActiveOrders, usePCSStore } from '@/store/usePCSStore';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { Layout } from 'react-native-reanimated';
 
 export default function PcsScreen() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    const { initializeOrders, activeOrder } = usePCSStore();
+    const { initializeOrders } = usePCSStore();
+    const hasActiveOrders = usePCSStore(selectHasActiveOrders);
     const resetHeader = useHeaderStore((state) => state.resetHeader);
 
     useEffect(() => {
@@ -24,10 +25,10 @@ export default function PcsScreen() {
     }, [resetHeader]);
 
     useEffect(() => {
-        if (!activeOrder) {
+        if (!hasActiveOrders) {
             initializeOrders();
         }
-    }, [activeOrder, initializeOrders]);
+    }, [hasActiveOrders, initializeOrders]);
 
     return (
         <ScreenGradient>
@@ -65,14 +66,18 @@ export default function PcsScreen() {
                         contentContainerStyle={contentContainerStyle}
                         showsVerticalScrollIndicator={false}
                     >
-                        <View style={{ paddingTop: 24 }}>
-                            <ProfileConfirmationCard />
-                            <SegmentTimeline />
-                            <PCSChecklist />
-                        </View>
+                        <Animated.View layout={Layout.springify().damping(15)}>
+                            {hasActiveOrders
+                                ? <PCSActiveState />
+                                : <PCSArchiveState />
+                            }
+                        </Animated.View>
                     </Animated.ScrollView>
                 )}
             </CollapsibleScaffold>
+
+            {/* FAB positioned outside ScrollView, inside ScreenGradient */}
+            <ContextualFAB />
         </ScreenGradient>
     );
 }

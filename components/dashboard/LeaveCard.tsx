@@ -104,7 +104,7 @@ export function LeaveCard({
 
                         {/* Right: Action Buttons */}
                         <View className="flex-row items-center gap-3">
-                            {/* Quick Leave (Lightning) */}
+                            {/* Quick Leave (Lightning) - Keep Gold/Amber */}
                             <TouchableOpacity
                                 activeOpacity={0.7}
                                 onPress={onQuickRequest}
@@ -119,18 +119,19 @@ export function LeaveCard({
                                 </GlassView>
                             </TouchableOpacity>
 
-                            {/* Full Request (Plus) */}
+                            {/* Full Request (Plus) - Changed from Blue to Slate-900 (Navy) */}
                             <TouchableOpacity
                                 activeOpacity={0.7}
                                 onPress={onFullRequest}
-                                style={getShadow({ shadowColor: isDark ? '#60a5fa' : '#3b82f6', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
+                                style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#0f172a', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
                             >
                                 <GlassView
                                     intensity={40}
                                     tint={isDark ? 'dark' : 'light'}
-                                    className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-blue-500/10"
+                                    // Navy background for button
+                                    className="w-11 h-11 rounded-full items-center justify-center border border-white/10 bg-slate-900/10 dark:bg-slate-700/30"
                                 >
-                                    <Plus size={22} color={isDark ? '#60a5fa' : '#3b82f6'} strokeWidth={2.5} />
+                                    <Plus size={22} color={isDark ? '#ffffff' : '#0f172a'} strokeWidth={2.5} />
                                 </GlassView>
                             </TouchableOpacity>
                         </View>
@@ -148,12 +149,55 @@ export function LeaveCard({
                                 {activeRequests.map((req, index) => {
                                     const getStatusColors = (status: string) => {
                                         switch (status) {
-                                            case 'draft': return { bg: 'bg-orange-50 dark:bg-orange-950', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-900 dark:text-orange-100', label: 'text-orange-800 dark:text-orange-200', icon: isDark ? "#fdba74" : "#c2410c", projText: isDark ? '#fdba74' : '#9a3412' };
-                                            case 'pending': return { bg: 'bg-sky-50 dark:bg-sky-950', border: 'border-sky-200 dark:border-sky-800', text: 'text-sky-900 dark:text-sky-100', label: 'text-sky-800 dark:text-sky-200', icon: isDark ? "#7dd3fc" : "#0369a1", projText: isDark ? '#7dd3fc' : '#0c4a6e' };
-                                            case 'approved': return { bg: 'bg-emerald-50 dark:bg-emerald-950', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-900 dark:text-emerald-100', label: 'text-emerald-800 dark:text-emerald-200', icon: isDark ? "#6ee7b7" : "#047857", projText: isDark ? '#6ee7b7' : '#064e3b' };
+                                            // Draft -> Slate/Neutral (was Orange)
+                                            case 'draft':
+                                                return {
+                                                    bg: 'bg-slate-100 dark:bg-slate-800',
+                                                    border: 'border-slate-200 dark:border-slate-700',
+                                                    text: 'text-slate-700 dark:text-slate-300',
+                                                    label: 'text-slate-500 dark:text-slate-400',
+                                                    icon: isDark ? "#94a3b8" : "#64748b",
+                                                    projText: isDark ? '#94a3b8' : '#475569'
+                                                };
+                                            // Pending -> Amber (was Sky)
+                                            case 'pending':
+                                                return {
+                                                    bg: 'bg-amber-50 dark:bg-amber-950/40',
+                                                    border: 'border-amber-200 dark:border-amber-800',
+                                                    text: 'text-amber-900 dark:text-amber-100',
+                                                    label: 'text-amber-800 dark:text-amber-200',
+                                                    icon: isDark ? "#fbbf24" : "#d97706",
+                                                    projText: isDark ? '#fbbf24' : '#b45309'
+                                                };
+                                            // Approved -> Slate-900/Navy (was Emerald) - "Official"
+                                            case 'approved':
+                                                return {
+                                                    bg: 'bg-white dark:bg-slate-900',
+                                                    border: 'border-slate-300 dark:border-slate-700',
+                                                    text: 'text-slate-900 dark:text-white',
+                                                    label: 'text-slate-700 dark:text-slate-300',
+                                                    icon: isDark ? "#f8fafc" : "#0f172a",
+                                                    projText: isDark ? '#f8fafc' : '#0f172a'
+                                                };
                                             case 'returned':
-                                            case 'denied': return { bg: 'bg-red-50 dark:bg-red-950', border: 'border-red-200 dark:border-red-800', text: 'text-red-900 dark:text-red-100', label: 'text-red-800 dark:text-red-200', icon: isDark ? "#fca5a5" : "#b91c1c", projText: isDark ? '#fca5a5' : '#7f1d1d' };
-                                            default: return { bg: 'bg-slate-50 dark:bg-slate-800', border: 'border-slate-200 dark:border-slate-700', text: 'text-slate-700 dark:text-slate-200', label: 'text-slate-500 dark:text-slate-400', icon: isDark ? "#94a3b8" : "#64748b", projText: isDark ? '#94a3b8' : '#334155' };
+                                            case 'denied':
+                                                return {
+                                                    bg: 'bg-red-50 dark:bg-red-950/50',
+                                                    border: 'border-red-200 dark:border-red-800',
+                                                    text: 'text-red-900 dark:text-red-100',
+                                                    label: 'text-red-800 dark:text-red-200',
+                                                    icon: isDark ? "#fca5a5" : "#b91c1c",
+                                                    projText: isDark ? '#fca5a5' : '#7f1d1d'
+                                                };
+                                            default:
+                                                return {
+                                                    bg: 'bg-slate-50 dark:bg-slate-800',
+                                                    border: 'border-slate-200 dark:border-slate-700',
+                                                    text: 'text-slate-700 dark:text-slate-200',
+                                                    label: 'text-slate-500 dark:text-slate-400',
+                                                    icon: isDark ? "#94a3b8" : "#64748b",
+                                                    projText: isDark ? '#94a3b8' : '#334155'
+                                                };
                                         }
                                     };
 

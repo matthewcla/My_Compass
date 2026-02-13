@@ -110,8 +110,9 @@ export const AdvancePayVisualizer = ({
               <Pressable
                 key={option}
                 onPress={() => handleMonthsChange(typedOption)}
+                // Changed Blue-600 to Slate-900/Blue-900 (Navy Theme)
                 className={`px-4 py-2.5 rounded-full border ${isSelected
-                    ? 'bg-blue-600 border-blue-600'
+                    ? 'bg-slate-900 border-slate-900'
                     : 'bg-slate-100 border-slate-200 active:bg-slate-200'
                   }`}
                 accessibilityRole="button"
@@ -142,6 +143,8 @@ export const AdvancePayVisualizer = ({
               <Pressable
                 key={option}
                 onPress={() => handleTermChange(option)}
+                // Keep Slate-900 for consistency or maybe Amber-500 if we want to differentiate? 
+                // Let's stick to Slate-900 for primary controls to be clean Navy style.
                 className={`px-4 py-2.5 rounded-full border ${isSelected
                     ? 'bg-slate-900 border-slate-900'
                     : 'bg-slate-100 border-slate-200 active:bg-slate-200'
@@ -175,7 +178,8 @@ export const AdvancePayVisualizer = ({
           <Text className="text-slate-500 text-xs uppercase font-semibold tracking-wider">
             Debt Deduction
           </Text>
-          <Text className="text-red-600 text-base font-bold">
+          {/* Changed Red to Slate-600 or maybe Blue-900? Let's use Slate-600 for neutral deduction per user request for less standard colors */}
+          <Text className="text-slate-600 text-base font-bold">
             -{formatCurrency(debtDeduction)}/mo
           </Text>
         </View>
@@ -183,7 +187,8 @@ export const AdvancePayVisualizer = ({
           <Text className="text-slate-500 text-xs uppercase font-semibold tracking-wider">
             Projected Net Pay
           </Text>
-          <Text className="text-emerald-700 text-base font-bold">
+          {/* Changed Emerald to Amber-600 (Gold/Bronze) for positive cashflow */}
+          <Text className="text-amber-600 text-base font-bold">
             {formatCurrency(projectedNetPay)}/mo
           </Text>
         </View>
@@ -198,11 +203,13 @@ export const AdvancePayVisualizer = ({
         {/* Legend */}
         <View className="flex-row items-center gap-4 mb-3">
           <View className="flex-row items-center">
-            <View className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2" />
+            {/* Gold dot for Net Pay */}
+            <View className="w-2.5 h-2.5 rounded-full bg-amber-400 mr-2" />
             <Text className="text-slate-600 text-xs">Projected net pay</Text>
           </View>
           <View className="flex-row items-center">
-            <View className="w-2.5 h-2.5 rounded-full bg-red-500 mr-2" />
+            {/* Slate dot for Deduction */}
+            <View className="w-2.5 h-2.5 rounded-full bg-slate-400 mr-2" />
             <Text className="text-slate-600 text-xs">Debt deduction</Text>
           </View>
         </View>
@@ -235,17 +242,17 @@ export const AdvancePayVisualizer = ({
                     style={{ height: CHART_HEIGHT, width: barWidth }}
                   >
                     <View className="w-full h-full flex-col-reverse">
-                      {/* Projected Net Pay Bar */}
+                      {/* Projected Net Pay Bar - Gold */}
                       <Animated.View
                         layout={LinearTransition.springify().damping(15)}
-                        className={`w-full ${isBaseline ? 'bg-emerald-300' : 'bg-emerald-500'
+                        className={`w-full ${isBaseline ? 'bg-amber-300' : 'bg-amber-400'
                           }`}
                         style={{ height: projectedHeight }}
                       />
-                      {/* Debt Deduction Bar */}
+                      {/* Debt Deduction Bar - Slate/Grey */}
                       <Animated.View
                         layout={LinearTransition.springify().damping(15)}
-                        className="w-full bg-red-500"
+                        className="w-full bg-slate-400"
                         style={{ height: debtHeight }}
                       />
                     </View>

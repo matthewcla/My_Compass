@@ -54,7 +54,8 @@ export const MenuTile: React.FC<MenuTileProps> = ({
                 >
                     <Icon
                         size={24}
-                        color={isAccented ? accent : (locked ? '#94A3B8' : '#3B82F6')}
+                        // Changed default from Blue-500 (#3B82F6) to Slate-900 (#0F172A)
+                        color={isAccented ? accent : (locked ? '#94A3B8' : '#0F172A')}
                         strokeWidth={2.5}
                     />
                 </View>

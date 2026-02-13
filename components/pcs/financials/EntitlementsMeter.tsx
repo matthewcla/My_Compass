@@ -1,6 +1,6 @@
-import { calculatePCSEntitlements } from '@/utils/financialMath';
-import { useCurrentProfile } from '@/store/useDemoStore';
 import { DemoUser } from '@/constants/DemoData';
+import { useCurrentProfile } from '@/store/useDemoStore';
+import { calculatePCSEntitlements } from '@/utils/financialMath';
 import { Minus, Plus } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -114,8 +114,9 @@ export const EntitlementsMeter = () => {
             Navy payout vs out-of-pocket spend
           </Text>
         </View>
-        <View className="rounded-full px-3 py-1 border border-emerald-300/60 bg-emerald-500/20">
-          <Text className="text-emerald-700 dark:text-emerald-200 font-semibold text-xs">
+        {/* Changed from Emerald to Amber (Gold) */}
+        <View className="rounded-full px-3 py-1 border border-amber-300/60 bg-amber-500/20">
+          <Text className="text-amber-700 dark:text-amber-300 font-semibold text-xs">
             {formatCurrency(payout)}
           </Text>
         </View>
@@ -124,21 +125,21 @@ export const EntitlementsMeter = () => {
       <View className="items-center mb-6">
         <View className="relative">
           <Svg width={RING_SIZE} height={RING_SIZE}>
-            {/* Background Track */}
+            {/* Background Track - Changed from Red/35 to White/20 (or Slate-600/30 for visibility) */}
             <Circle
               cx={RING_SIZE / 2}
               cy={RING_SIZE / 2}
               r={RING_RADIUS}
-              stroke="rgba(239, 68, 68, 0.35)"
+              stroke="rgba(148, 163, 184, 0.25)"
               strokeWidth={RING_STROKE}
               fill="transparent"
             />
-            {/* Animated Value Ring */}
+            {/* Animated Value Ring - Changed from Emerald to Amber (Gold) */}
             <AnimatedCircle
               cx={RING_SIZE / 2}
               cy={RING_SIZE / 2}
               r={RING_RADIUS}
-              stroke="#10B981"
+              stroke="#FBBF24"
               strokeWidth={RING_STROKE}
               fill="transparent"
               animatedProps={animatedCircleProps}
@@ -157,8 +158,8 @@ export const EntitlementsMeter = () => {
             */}
             <Text
               className={`text-2xl font-black ${netBalance >= 0
-                  ? 'text-emerald-700 dark:text-emerald-300'
-                  : 'text-rose-700 dark:text-rose-300'
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-slate-500 dark:text-slate-400'
                 }`}
             >
               {netBalance >= 0 ? '+' : '-'}
@@ -169,13 +170,15 @@ export const EntitlementsMeter = () => {
 
         <View className="flex-row items-center gap-4 mt-4">
           <View className="flex-row items-center">
-            <View className="h-2.5 w-2.5 rounded-full bg-emerald-500 mr-2" />
+            {/* Gold dot for Navy Payout */}
+            <View className="h-2.5 w-2.5 rounded-full bg-amber-400 mr-2" />
             <Text className="text-xs text-slate-700 dark:text-slate-200">
               Navy payout
             </Text>
           </View>
           <View className="flex-row items-center">
-            <View className="h-2.5 w-2.5 rounded-full bg-red-400 mr-2" />
+            {/* Slate/White dot for Out of Pocket (User cost) */}
+            <View className="h-2.5 w-2.5 rounded-full bg-slate-400 mr-2" />
             <Text className="text-xs text-slate-700 dark:text-slate-200">
               Out of pocket
             </Text>

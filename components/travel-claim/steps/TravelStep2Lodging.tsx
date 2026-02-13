@@ -1,3 +1,4 @@
+import { ReceiptUploader } from '@/components/travel-claim/ReceiptUploader';
 import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
 import { addDays, differenceInCalendarDays, format } from 'date-fns';
@@ -8,14 +9,12 @@ import {
   ChevronUp,
   DollarSign,
   Hotel,
-  ImagePlus,
   Plus,
   Trash2,
 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Image,
   Modal,
   Pressable,
   Text,
@@ -48,8 +47,6 @@ interface LodgingStepFormData {
 }
 
 const TLE_DAILY_CAP = 150;
-const RECEIPT_PLACEHOLDER_URI =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAQAAABzL7Q8AAAAPUlEQVR42u3OMQEAIAwAsQf/nsMBOZGG3E2Y6QKZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmZmRm5Aw7KAL7B2jNYAAAAAElFTkSuQmCC';
 
 const toDateOnly = (value: string): string => {
   if (!value) return '';
@@ -311,37 +308,11 @@ function LodgingExpenseCard({
             </View>
           </View>
 
-          <View className="flex-row items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 p-3">
-            <View className="flex-row items-center flex-1">
-              <View className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 items-center justify-center mr-3">
-                {expense.receiptUri ? (
-                  <Image source={{ uri: expense.receiptUri }} className="w-full h-full" resizeMode="cover" />
-                ) : (
-                  <ImagePlus size={18} color={isDark ? '#94a3b8' : '#64748b'} />
-                )}
-              </View>
-              <View className="flex-1">
-                <Text className="text-slate-900 dark:text-white font-semibold">Receipt Photo</Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {expense.receiptUri ? 'Photo attached' : 'No receipt attached'}
-                </Text>
-              </View>
-            </View>
-            <Pressable
-              onPress={() =>
-                onUpdate({
-                  receiptUri: expense.receiptUri
-                    ? ''
-                    : RECEIPT_PLACEHOLDER_URI,
-                })
-              }
-              className="px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30"
-            >
-              <Text className="text-blue-700 dark:text-blue-300 text-xs font-semibold">
-                {expense.receiptUri ? 'Replace Photo' : 'Add Photo'}
-              </Text>
-            </Pressable>
-          </View>
+          <ReceiptUploader
+            onPhotoSelected={(uri) => onUpdate({ receiptUri: uri })}
+            existingUri={expense.receiptUri}
+            label="Receipt Photo"
+          />
 
           <Pressable
             onPress={onDelete}

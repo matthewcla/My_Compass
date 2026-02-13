@@ -1,9 +1,9 @@
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { calculateAdvancePayAmortization } from '@/utils/financialMath';
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
-const BASE_PAY = 3800;
 const CHART_HEIGHT = 180;
 
 const formatCurrency = (value: number): string =>
@@ -12,7 +12,7 @@ const formatCurrency = (value: number): string =>
 type MonthOption = 1 | 2 | 3;
 type RepaymentOption = 12 | 24;
 
-const shouldShowTick = (month: number, repaymentTerm: RepaymentOption): boolean => {
+const shouldShowTick = (month: number, repaymentTerm: number): boolean => {
   if (month === 0 || month === 1 || month === repaymentTerm) {
     return true;
   }
@@ -20,14 +20,48 @@ const shouldShowTick = (month: number, repaymentTerm: RepaymentOption): boolean 
   return repaymentTerm === 24 ? month % 6 === 0 : month % 3 === 0;
 };
 
-export const AdvancePayVisualizer = () => {
-  const [monthsRequested, setMonthsRequested] = useState<MonthOption>(2);
-  const [repaymentTerm, setRepaymentTerm] = useState<RepaymentOption>(12);
+interface AdvancePayVisualizerProps {
+  monthsRequested?: number;
+  onMonthsRequestedChange?: (value: number) => void;
+  repaymentTerm?: number;
+  onRepaymentTermChange?: (value: number) => void;
+}
+
+export const AdvancePayVisualizer = ({
+  monthsRequested: externalMonths,
+  onMonthsRequestedChange,
+  repaymentTerm: externalTerm,
+  onRepaymentTermChange,
+}: AdvancePayVisualizerProps = {}) => {
+  const user = useCurrentProfile();
+  const BASE_PAY = user?.financialProfile?.basePay || 3800;
+
+  const [internalMonths, setInternalMonths] = useState<MonthOption>(2);
+  const [internalTerm, setInternalTerm] = useState<RepaymentOption>(12);
+
+  const monthsRequested = (externalMonths as MonthOption) ?? internalMonths;
+  const repaymentTerm = (externalTerm as RepaymentOption) ?? internalTerm;
+
+  const handleMonthsChange = (val: MonthOption) => {
+    if (onMonthsRequestedChange) {
+      onMonthsRequestedChange(val);
+    } else {
+      setInternalMonths(val);
+    }
+  };
+
+  const handleTermChange = (val: RepaymentOption) => {
+    if (onRepaymentTermChange) {
+      onRepaymentTermChange(val);
+    } else {
+      setInternalTerm(val);
+    }
+  };
 
   const amortization = useMemo(
     () =>
-      calculateAdvancePayAmortization(BASE_PAY, monthsRequested, repaymentTerm),
-    [monthsRequested, repaymentTerm],
+      calculateAdvancePayAmortization(BASE_PAY, monthsRequested, repaymentTerm as 12 | 24),
+    [monthsRequested, repaymentTerm, BASE_PAY],
   );
 
   const originalNetPay = amortization[0]?.originalNetPay ?? 0;
@@ -75,7 +109,7 @@ export const AdvancePayVisualizer = () => {
             return (
               <Pressable
                 key={option}
-                onPress={() => setMonthsRequested(typedOption)}
+                onPress={() => handleMonthsChange(typedOption)}
                 className={`px-4 py-2.5 rounded-full border ${isSelected
                     ? 'bg-blue-600 border-blue-600'
                     : 'bg-slate-100 border-slate-200 active:bg-slate-200'
@@ -107,7 +141,7 @@ export const AdvancePayVisualizer = () => {
             return (
               <Pressable
                 key={option}
-                onPress={() => setRepaymentTerm(option)}
+                onPress={() => handleTermChange(option)}
                 className={`px-4 py-2.5 rounded-full border ${isSelected
                     ? 'bg-slate-900 border-slate-900'
                     : 'bg-slate-100 border-slate-200 active:bg-slate-200'

@@ -2,18 +2,22 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable, Platform, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePCSStore } from '@/store/usePCSStore';
+import { useCurrentProfile } from '@/store/useDemoStore';
+import { AdvancePayVisualizer } from '@/components/pcs/financials/AdvancePayVisualizer';
 import { ChevronLeft, Plus, Minus, Check, DollarSign, Calendar, Clock, AlertCircle } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from 'react-native';
-
-const BASE_PAY = 3199; // Mocked E-5 Basic Pay
 
 export default function AdvancePayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme() ?? 'light';
   const isDark = colorScheme === 'dark';
+
+  const user = useCurrentProfile();
+  const BASE_PAY = user?.financialProfile?.basePay || 3800;
+  const payGrade = user?.financialProfile?.payGrade || 'E-6';
 
   const { financials, resetPCS } = usePCSStore(); // Accessing store, though we only update on save
   // Ideally we might want to load existing values if editing, but for now we start fresh or from default
@@ -75,7 +79,7 @@ export default function AdvancePayScreen() {
         <View className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-row items-start gap-3">
           <InfoIcon size={20} color={isDark ? '#60a5fa' : '#2563eb'} style={{ marginTop: 2 }} />
           <Text className="flex-1 text-sm text-blue-800 dark:text-blue-200 font-medium leading-5">
-            Based on your E-5 Basic Pay of <Text className="font-bold">${BASE_PAY.toLocaleString()}</Text>.
+            Based on your {payGrade} Basic Pay of <Text className="font-bold">${BASE_PAY.toLocaleString()}</Text>.
             Request up to 3 months of pay to cover immediate PCS expenses.
           </Text>
         </View>
@@ -211,6 +215,15 @@ export default function AdvancePayScreen() {
                 />
               </View>
             )}
+          </View>
+
+          <View className="mb-8">
+            <AdvancePayVisualizer
+              monthsRequested={amountMonths}
+              onMonthsRequestedChange={setAmountMonths}
+              repaymentTerm={repaymentMonths}
+              onRepaymentTermChange={setRepaymentMonths}
+            />
           </View>
 
         </ScrollView>

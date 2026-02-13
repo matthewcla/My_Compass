@@ -1,4 +1,5 @@
 import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
+import { EntitlementsMeter } from '@/components/pcs/financials/EntitlementsMeter';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { SegmentBreakdownList } from '@/components/pcs/financials/SegmentBreakdownList';
 import { ScalePressable } from '@/components/ScalePressable';
@@ -42,6 +43,9 @@ export default function FinancialSummaryScreen() {
         className="flex-1 bg-slate-50 p-4"
         contentContainerStyle={{ paddingBottom: 100 }}
       >
+        <View className="mb-6">
+          <EntitlementsMeter />
+        </View>
         <ObliservBanner />
         <SegmentBreakdownList />
         <AllowancesCard />

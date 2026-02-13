@@ -1,4 +1,6 @@
 import { calculatePCSEntitlements } from '@/utils/financialMath';
+import { useCurrentProfile } from '@/store/useDemoStore';
+import { DemoUser } from '@/constants/DemoData';
 import { Minus, Plus } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -23,9 +25,24 @@ const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
 export const EntitlementsMeter = () => {
-  const [dependentsCount, setDependentsCount] = useState(1);
-  const [estimatedMileage, setEstimatedMileage] = useState(2100);
+  const user = useCurrentProfile();
+  const financialProfile = user?.financialProfile;
+  const demoUser = user as DemoUser | null;
+
+  // Initialize state with user values or defaults
+  const [dependentsCount, setDependentsCount] = useState(financialProfile?.dependentsCount ?? 1);
+  const [estimatedMileage, setEstimatedMileage] = useState(demoUser?.pcsRoute?.estimatedMileage ?? 2100);
   const [outOfPocketText, setOutOfPocketText] = useState('1800');
+
+  // Update state if user changes (e.g. persona switch)
+  useEffect(() => {
+    if (financialProfile) {
+      setDependentsCount(financialProfile.dependentsCount);
+    }
+    if (demoUser?.pcsRoute) {
+      setEstimatedMileage(demoUser.pcsRoute.estimatedMileage);
+    }
+  }, [financialProfile, demoUser]);
 
   // Shared value for the animated stroke length
   const progress = useSharedValue(0);
@@ -39,19 +56,19 @@ export const EntitlementsMeter = () => {
     () =>
       calculatePCSEntitlements(
         {
-          paygrade: 'E-6',
-          monthlyBasePay: 3800,
+          paygrade: financialProfile?.payGrade || 'E-6',
+          monthlyBasePay: financialProfile?.basePay || 3800,
           hasDependents: dependentsCount > 0,
           numberOfDependents: dependentsCount,
         },
         {
-          originStation: 'Current Duty Station',
-          destinationStation: 'Next Duty Station',
+          originStation: demoUser?.pcsRoute?.losingZip || 'Current Duty Station',
+          destinationStation: demoUser?.pcsRoute?.gainingZip || 'Next Duty Station',
           authorizedMiles: estimatedMileage,
           tleDaysAuthorized: 10,
         },
       ),
-    [dependentsCount, estimatedMileage],
+    [dependentsCount, estimatedMileage, financialProfile, demoUser],
   );
 
   const payout = entitlements.totalNavyPayout;

@@ -2,6 +2,16 @@ export type PCSSegmentType = 'ORIGIN' | 'INTERMEDIATE' | 'DESTINATION';
 export type PCSSegmentMode = 'POV' | 'AIR' | 'MIXED' | 'GOV_VEHICLE';
 export type PCSSegmentStatus = 'LOCKED' | 'PLANNING' | 'COMPLETE';
 
+/**
+ * PCS Route information for travel distance calculations.
+ * Used for MALT, per diem, and advance pay calculations.
+ */
+export interface PCSRoute {
+  losingZip: string;
+  gainingZip: string;
+  estimatedMileage: number;
+}
+
 export interface PCSStop {
   id: string;
   location: string;

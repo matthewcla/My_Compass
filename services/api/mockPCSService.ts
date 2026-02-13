@@ -1,15 +1,18 @@
 import type { ApiResult } from '@/types/api';
 import type { PCSOrder } from '@/types/pcs';
 import type { IPCSService } from './interfaces/IPCSService';
-import { MOCK_PCS_ORDERS } from '@/constants/MockPCSData';
+import { getPCSOrderByUserId } from '@/constants/MockPCSData';
 
 export const mockPCSService: IPCSService = {
-    fetchActiveOrder: async (_userId: string): Promise<ApiResult<PCSOrder>> => {
+    fetchActiveOrder: async (userId: string): Promise<ApiResult<PCSOrder>> => {
         await new Promise((resolve) => setTimeout(resolve, 400));
+
+        // Get persona-specific PCS order based on user ID
+        const pcsOrder = getPCSOrderByUserId(userId);
 
         return {
             success: true,
-            data: MOCK_PCS_ORDERS,
+            data: pcsOrder,
             meta: {
                 requestId: `req-${Date.now()}`,
                 timestamp: new Date().toISOString(),

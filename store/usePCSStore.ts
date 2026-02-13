@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChecklistItem, PCSOrder, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
+import { ChecklistItem, PCSOrder, PCSRoute, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
 import { services } from '@/services/api/serviceRegistry';
 import { useUserStore } from './useUserStore';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
@@ -372,3 +372,25 @@ export const usePCSStore = create<PCSState>()(
     }
   )
 );
+
+/**
+ * Selector hooks for PCS data access
+ */
+export const useActiveOrder = () => usePCSStore((state) => state.activeOrder);
+export const usePCSFinancials = () => usePCSStore((state) => state.financials);
+export const usePCSChecklist = () => usePCSStore((state) => state.checklist);
+
+/**
+ * Get PCS Route from current user (via demo store or user store)
+ * This connects the user's pcsRoute data to the PCS store consumers
+ */
+export const usePCSRoute = (): PCSRoute | null => {
+  const user = useUserStore((state) => state.user);
+
+  // Check if user has pcsRoute data (from demo personas)
+  if (user && 'pcsRoute' in user) {
+    return (user as any).pcsRoute || null;
+  }
+
+  return null;
+};

@@ -180,3 +180,11 @@ export const useUserId = () => useUserStore((state) => state.user?.id);
 export const useUserDisplayName = () => useUserStore((state) => state.user?.displayName);
 export const useUserRank = () => useUserStore((state) => state.user?.rank);
 export const useIsHydrating = () => useUserStore((state) => state.isHydrating);
+
+/**
+ * Selector hooks for PCS Financial Profile data
+ */
+export const useFinancialProfile = () => useUserStore((state) => state.user?.financialProfile);
+export const useUserDependents = () => useUserStore((state) => state.user?.dependents);
+export const useBasePay = () => useUserStore((state) => state.user?.financialProfile?.basePay);
+export const usePayGrade = () => useUserStore((state) => state.user?.financialProfile?.payGrade || state.user?.rank);

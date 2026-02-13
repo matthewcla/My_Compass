@@ -1,0 +1,236 @@
+import { calculateAdvancePayAmortization } from '@/utils/financialMath';
+import React, { useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import Animated, { LinearTransition } from 'react-native-reanimated';
+
+const BASE_PAY = 3800;
+const CHART_HEIGHT = 180;
+
+const formatCurrency = (value: number): string =>
+  `$${Math.round(value).toLocaleString()}`;
+
+type MonthOption = 1 | 2 | 3;
+type RepaymentOption = 12 | 24;
+
+const shouldShowTick = (month: number, repaymentTerm: RepaymentOption): boolean => {
+  if (month === 0 || month === 1 || month === repaymentTerm) {
+    return true;
+  }
+
+  return repaymentTerm === 24 ? month % 6 === 0 : month % 3 === 0;
+};
+
+export const AdvancePayVisualizer = () => {
+  const [monthsRequested, setMonthsRequested] = useState<MonthOption>(2);
+  const [repaymentTerm, setRepaymentTerm] = useState<RepaymentOption>(12);
+
+  const amortization = useMemo(
+    () =>
+      calculateAdvancePayAmortization(BASE_PAY, monthsRequested, repaymentTerm),
+    [monthsRequested, repaymentTerm],
+  );
+
+  const originalNetPay = amortization[0]?.originalNetPay ?? 0;
+  const debtDeduction = amortization[0]?.deductionAmount ?? 0;
+  const projectedNetPay = amortization[0]?.projectedNetPay ?? 0;
+  const totalAdvance = BASE_PAY * monthsRequested;
+
+  const chartRows = useMemo(() => {
+    if (!amortization.length) {
+      return [];
+    }
+
+    return [
+      {
+        monthIndex: 0,
+        originalNetPay,
+        deductionAmount: 0,
+        projectedNetPay: originalNetPay,
+      },
+      ...amortization,
+    ];
+  }, [amortization, originalNetPay]);
+
+  const barWidth = repaymentTerm === 24 ? 14 : 18;
+
+  return (
+    <View className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+      <Text className="text-slate-900 text-lg font-extrabold">
+        Advance Pay Impact Visualizer
+      </Text>
+      <Text className="text-slate-500 text-sm mt-1 mb-5">
+        See how repayment deductions change each LES.
+      </Text>
+
+      {/* Controls: Months Requested */}
+      <View className="mb-5">
+        <Text className="text-slate-600 text-xs font-semibold uppercase tracking-wider mb-2">
+          Months Requested
+        </Text>
+        <View className="flex-row gap-2">
+          {[1, 2, 3].map((option) => {
+            const typedOption = option as MonthOption;
+            const isSelected = monthsRequested === typedOption;
+
+            return (
+              <Pressable
+                key={option}
+                onPress={() => setMonthsRequested(typedOption)}
+                className={`px-4 py-2.5 rounded-full border ${isSelected
+                    ? 'bg-blue-600 border-blue-600'
+                    : 'bg-slate-100 border-slate-200 active:bg-slate-200'
+                  }`}
+                accessibilityRole="button"
+                accessibilityLabel={`Set months requested to ${option}`}
+              >
+                <Text
+                  className={`font-semibold ${isSelected ? 'text-white' : 'text-slate-700'
+                    }`}
+                >
+                  {option} Month{option > 1 ? 's' : ''}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Controls: Repayment Term */}
+      <View className="mb-5">
+        <Text className="text-slate-600 text-xs font-semibold uppercase tracking-wider mb-2">
+          Repayment Term
+        </Text>
+        <View className="flex-row gap-2">
+          {([12, 24] as const).map((option) => {
+            const isSelected = repaymentTerm === option;
+
+            return (
+              <Pressable
+                key={option}
+                onPress={() => setRepaymentTerm(option)}
+                className={`px-4 py-2.5 rounded-full border ${isSelected
+                    ? 'bg-slate-900 border-slate-900'
+                    : 'bg-slate-100 border-slate-200 active:bg-slate-200'
+                  }`}
+                accessibilityRole="button"
+                accessibilityLabel={`Set repayment term to ${option} months`}
+              >
+                <Text
+                  className={`font-semibold ${isSelected ? 'text-white' : 'text-slate-700'
+                    }`}
+                >
+                  {option} Months
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Summary Card */}
+      <View className="rounded-2xl border border-slate-200 bg-slate-50 p-4 mb-5">
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-slate-500 text-xs uppercase font-semibold tracking-wider">
+            Advance Total
+          </Text>
+          <Text className="text-slate-900 text-base font-bold">
+            {formatCurrency(totalAdvance)}
+          </Text>
+        </View>
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-slate-500 text-xs uppercase font-semibold tracking-wider">
+            Debt Deduction
+          </Text>
+          <Text className="text-red-600 text-base font-bold">
+            -{formatCurrency(debtDeduction)}/mo
+          </Text>
+        </View>
+        <View className="flex-row justify-between items-center">
+          <Text className="text-slate-500 text-xs uppercase font-semibold tracking-wider">
+            Projected Net Pay
+          </Text>
+          <Text className="text-emerald-700 text-base font-bold">
+            {formatCurrency(projectedNetPay)}/mo
+          </Text>
+        </View>
+      </View>
+
+      {/* Visualizer Chart */}
+      <View className="rounded-2xl border border-slate-200 bg-white p-3">
+        <Text className="text-slate-800 font-semibold text-sm mb-3">
+          Projected LES Over Repayment
+        </Text>
+
+        {/* Legend */}
+        <View className="flex-row items-center gap-4 mb-3">
+          <View className="flex-row items-center">
+            <View className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2" />
+            <Text className="text-slate-600 text-xs">Projected net pay</Text>
+          </View>
+          <View className="flex-row items-center">
+            <View className="w-2.5 h-2.5 rounded-full bg-red-500 mr-2" />
+            <Text className="text-slate-600 text-xs">Debt deduction</Text>
+          </View>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingRight: 8 }}
+        >
+          <View className="flex-row items-end">
+            {chartRows.map((row) => {
+              const projectedHeight =
+                originalNetPay > 0
+                  ? (row.projectedNetPay / originalNetPay) * CHART_HEIGHT
+                  : 0;
+              const debtHeight =
+                originalNetPay > 0
+                  ? (row.deductionAmount / originalNetPay) * CHART_HEIGHT
+                  : 0;
+              const isBaseline = row.monthIndex === 0;
+
+              return (
+                <View
+                  key={row.monthIndex}
+                  className="items-center"
+                  style={{ marginRight: 8, width: barWidth + 4 }}
+                >
+                  <View
+                    className="rounded-t-md rounded-b-sm border border-slate-200 overflow-hidden bg-slate-100"
+                    style={{ height: CHART_HEIGHT, width: barWidth }}
+                  >
+                    <View className="w-full h-full flex-col-reverse">
+                      {/* Projected Net Pay Bar */}
+                      <Animated.View
+                        layout={LinearTransition.springify().damping(15)}
+                        className={`w-full ${isBaseline ? 'bg-emerald-300' : 'bg-emerald-500'
+                          }`}
+                        style={{ height: projectedHeight }}
+                      />
+                      {/* Debt Deduction Bar */}
+                      <Animated.View
+                        layout={LinearTransition.springify().damping(15)}
+                        className="w-full bg-red-500"
+                        style={{ height: debtHeight }}
+                      />
+                    </View>
+                  </View>
+                  <Text className="text-[10px] text-slate-500 mt-1 h-3">
+                    {shouldShowTick(row.monthIndex, repaymentTerm)
+                      ? isBaseline
+                        ? 'Now'
+                        : `${row.monthIndex}`
+                      : ''}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+    </View>
+  );
+};
+
+

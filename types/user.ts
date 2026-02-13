@@ -20,6 +20,17 @@ export const DUTY_TYPES = [
 ] as const;
 
 /**
+ * Financial profile for PCS entitlement calculations.
+ * Contains pay grade, base pay, and dependent information.
+ */
+export interface FinancialProfile {
+    payGrade: string;
+    basePay: number;
+    hasDependents: boolean;
+    dependentsCount: number;
+}
+
+/**
  * Zod schema for User.
  * Matches the User interface.
  */
@@ -67,6 +78,12 @@ export const UserSchema = z.object({
         dutyTypes: z.array(z.string()).optional(),
     }).optional(),
     privacyMode: z.boolean().optional(),
+    financialProfile: z.object({
+        payGrade: z.string(),
+        basePay: z.number(),
+        hasDependents: z.boolean(),
+        dependentsCount: z.number(),
+    }).optional(),
     lastSyncTimestamp: z.string().datetime(),
     syncStatus: SyncStatusSchema,
 });

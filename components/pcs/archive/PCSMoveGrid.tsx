@@ -2,8 +2,13 @@ import type { CollapsibleScaffoldListProps } from '@/components/CollapsibleScaff
 import { HistoricalPCSOrder } from '@/types/pcs';
 import { FlashList, ListRenderItemInfo } from '@shopify/flash-list';
 import React, { useCallback, useMemo } from 'react';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { Platform, Text, View, useWindowDimensions } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { PCSMoveCard } from './PCSMoveCard';
+
+const AnimatedFlashList = (Platform.OS === 'web'
+  ? FlashList
+  : Animated.createAnimatedComponent(FlashList)) as React.ComponentType<any>;
 
 interface PCSMoveGridProps {
   orders: HistoricalPCSOrder[];
@@ -69,7 +74,7 @@ export function PCSMoveGrid({
   );
 
   return (
-    <FlashList<HistoricalPCSOrder>
+    <AnimatedFlashList
       key={key}
       data={orders}
       renderItem={renderItem}
@@ -87,7 +92,6 @@ export function PCSMoveGrid({
       scrollEventThrottle={listProps?.scrollEventThrottle ?? 16}
       contentContainerStyle={contentContainerStyle}
       showsVerticalScrollIndicator={false}
-      // @ts-expect-error: FlashList type definitions in this project may omit estimatedItemSize.
       estimatedItemSize={210}
       drawDistance={620}
       removeClippedSubviews

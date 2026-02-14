@@ -29,6 +29,17 @@ This directory contains developer-facing documentation for the My Compass projec
 | [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) | Prioritized debt register (P0–P3), 16 items including CUI/PII API prep |
 | [API_INTEGRATION_ROADMAP.md](./API_INTEGRATION_ROADMAP.md) | Mock-to-real transition plan for NSIPS, eCRM, MNA, ADE integration |
 
+### Feature Inventory
+
+| Document | Description |
+|----------|-------------|
+| [FLOWS_IMPLEMENTED.md](./FLOWS_IMPLEMENTED.md) | All built multi-screen flows (Leave Wizard, PCS Wizard, Travel Claim, etc.) with user paths |
+| [FLOWS_NOT_IMPLEMENTED.md](./FLOWS_NOT_IMPLEMENTED.md) | Planned flows not yet built (Profile Confirmation, OBLISERV Check, Screenings, etc.) |
+| [WIDGETS_IMPLEMENTED.md](./WIDGETS_IMPLEMENTED.md) | All built widgets (40+) — dashboard, PCS, assignment, leave, travel, inbox |
+| [WIDGETS_NOT_IMPLEMENTED.md](./WIDGETS_NOT_IMPLEMENTED.md) | Planned widgets not yet built (BAH, housing, status trackers, etc.) |
+| [TOOLS_IMPLEMENTED.md](./TOOLS_IMPLEMENTED.md) | All built tools (Billet Discovery, Slating, HHG Estimator, Inbox, Calendar, etc.) |
+| [TOOLS_NOT_IMPLEMENTED.md](./TOOLS_NOT_IMPLEMENTED.md) | Planned tools (BAH Calculator, TMO Scheduler, Document Vault, LES Viewer, etc.) |
+
 ### Other
 
 | Document | Description |

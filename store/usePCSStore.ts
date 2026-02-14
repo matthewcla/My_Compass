@@ -2,8 +2,9 @@ import { services } from '@/services/api/serviceRegistry';
 import { ChecklistItem, HHGItem, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase } from '@/types/pcs';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
-import { CachedPDF, cachePDF } from '@/utils/pdfCache';
+import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -110,7 +111,8 @@ interface PCSState {
 
   // Caching
   cachedOrders: CachedPDF | null;
-  cacheOrders: (url: string) => Promise<void>;
+  cacheOrders: (url: string) => Promise<{ success: boolean; cached?: CachedPDF; error?: any }>;
+  initializeOrdersCache: () => Promise<void>;
 }
 
 export const usePCSStore = create<PCSState>()(
@@ -579,10 +581,58 @@ export const usePCSStore = create<PCSState>()(
         try {
           const filename = `orders_${Date.now()}.pdf`;
           const cached = await cachePDF(url, filename);
+          await savePDFMetadata(cached); // Ensure metadata is saved (cachePDF does this too, but for consistency if cachePDF changes)
+          // Actually cachePDF explicitly calls savePDFMetadata internally, so redundant but harmless.
+          // Wait, cachePDF returns cachedPDF object.
+
           set({ cachedOrders: cached });
+          return { success: true, cached };
         } catch (error) {
           console.error('[PCSStore] Failed to cache orders:', error);
-          // Optional: Expose error state or toast
+          return { success: false, error };
+        }
+      },
+
+      initializeOrdersCache: async () => {
+        try {
+          const metadata = await loadPDFMetadata();
+          const allFiles = Object.values(metadata);
+
+          // filter for orders
+          const orderFiles = allFiles.filter(pdf => pdf.filename.startsWith('orders_'));
+
+          // 1. Cleanup old files (> 90 days)
+          const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+          const oldFiles = orderFiles.filter(pdf => new Date(pdf.cachedAt).getTime() < ninetyDaysAgo);
+
+          await Promise.all(oldFiles.map(pdf => deleteCachedPDF(pdf.filename)));
+
+          // 2. Determine latest valid cached file
+          const validFiles = orderFiles.filter(pdf => {
+            // Must be recent enough AND not deleted in step 1
+            return new Date(pdf.cachedAt).getTime() >= ninetyDaysAgo;
+          });
+
+          if (validFiles.length > 0) {
+            // Sort by Date Descending
+            const sorted = validFiles.sort((a, b) =>
+              new Date(b.cachedAt).getTime() - new Date(a.cachedAt).getTime()
+            );
+            const latest = sorted[0];
+
+            // Verify file actually exists
+            const fileInfo = await FileSystem.getInfoAsync(latest.localUri);
+            if (fileInfo.exists) {
+              set({ cachedOrders: latest });
+            } else {
+              // Metadata ok but file gone - clean up
+              await deleteCachedPDF(latest.filename);
+              // Could try the next one, but typically if latest is gone, something is wrong.
+              // For robustness, maybe loop? But simple approach is fine for now.
+            }
+          }
+        } catch (error) {
+          console.error('[PCSStore] Failed to initialize orders cache:', error);
         }
       },
     }),

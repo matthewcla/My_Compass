@@ -5,19 +5,36 @@ import Constants from 'expo-constants';
 import React from 'react';
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 
+// ── Display Labels ──────────────────────────────────────────────────────────
+// Map internal enum values to demo-friendly labels
+
 const PCS_PHASES: PCSPhase[] = ['ORDERS_NEGOTIATION', 'TRANSIT_LEAVE', 'CHECK_IN'];
+
 const PCS_PHASE_LABELS: Record<PCSPhase, string> = {
     DORMANT: 'DORMANT',
-    ORDERS_NEGOTIATION: 'PRE-TRAVEL',
+    ORDERS_NEGOTIATION: 'PRE-TRANSFER',
     TRANSIT_LEAVE: 'IN TRANSIT',
-    CHECK_IN: 'POST-TRAVEL',
+    CHECK_IN: 'ARRIVED ONSTA',
 };
+
 const TRANSIT_SUB_PHASES: TRANSITSubPhase[] = ['PLANNING', 'ACTIVE_TRAVEL'];
-const CONTEXT_TRACKS = ['ACTIVE', 'ARCHIVE'] as const;
+
+const TRANSIT_SUB_LABELS: Record<TRANSITSubPhase, string> = {
+    PLANNING: 'PLANNING',
+    ACTIVE_TRAVEL: 'EN ROUTE',
+};
+
+const VIEW_MODES = ['ACTIVE', 'ARCHIVE'] as const;
+
+const VIEW_MODE_LABELS: Record<typeof VIEW_MODES[number], string> = {
+    ACTIVE: 'Active Orders',
+    ARCHIVE: 'Sea Bag',
+};
 
 /**
- * Inline developer panel for the PCS landing page.
- * Renders phase override pills, context track toggle, and archive data controls.
+ * Inline demo panel for the PCS landing page.
+ * Provides scenario switching for live demonstrations:
+ * view mode, travel phase, and sample archive data.
  * Only visible in __DEV__ or when enableDevSettings is true.
  */
 export function PCSDevPanel() {
@@ -53,20 +70,20 @@ export function PCSDevPanel() {
             <Text
                 className="text-blue-400 font-bold text-xs uppercase tracking-wider mb-3 text-center"
             >
-                PCS Dev Controls
+                Demo Scenarios
             </Text>
 
-            {/* Context Track Override */}
+            {/* View Mode */}
             <Text className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 text-center">
-                Context Track
+                View
             </Text>
             <View className="flex-row flex-wrap gap-2 justify-center mb-3">
-                {CONTEXT_TRACKS.map((ctx) => {
-                    const isActive = pcsContextOverride === ctx;
+                {VIEW_MODES.map((mode) => {
+                    const isActive = pcsContextOverride === mode;
                     return (
                         <TouchableOpacity
-                            key={ctx}
-                            onPress={() => setPcsContextOverride(isActive ? null : ctx)}
+                            key={mode}
+                            onPress={() => setPcsContextOverride(isActive ? null : mode)}
                             className={`px-3 py-2 rounded-lg border ${isActive ? 'bg-emerald-500 border-emerald-600' : 'bg-transparent'}`}
                             style={{ borderColor: isActive ? '#059669' : borderColor }}
                         >
@@ -74,16 +91,16 @@ export function PCSDevPanel() {
                                 style={{ color: isActive ? '#FFFFFF' : isDark ? '#94A3B8' : '#64748B' }}
                                 className="text-xs font-semibold"
                             >
-                                {ctx}
+                                {VIEW_MODE_LABELS[mode]}
                             </Text>
                         </TouchableOpacity>
                     );
                 })}
             </View>
 
-            {/* Phase Override */}
+            {/* Travel Phase */}
             <Text className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 text-center">
-                Phase Override
+                Travel Phase
             </Text>
             <View className="flex-row flex-wrap gap-2 justify-center">
                 {PCS_PHASES.map((phase) => {
@@ -106,7 +123,7 @@ export function PCSDevPanel() {
                 })}
             </View>
 
-            {/* Sub-Phase Override (visible when Transit Leave is active) */}
+            {/* In Transit Sub-Phase */}
             {showSubPhase && (
                 <View className="flex-row flex-wrap gap-2 justify-center mt-3">
                     {TRANSIT_SUB_PHASES.map((sub) => {
@@ -122,7 +139,7 @@ export function PCSDevPanel() {
                                     style={{ color: isActive ? '#FFFFFF' : isDark ? '#94A3B8' : '#64748B' }}
                                     className="text-[10px] font-semibold"
                                 >
-                                    {sub.replace(/_/g, ' ')}
+                                    {TRANSIT_SUB_LABELS[sub]}
                                 </Text>
                             </TouchableOpacity>
                         );
@@ -130,7 +147,7 @@ export function PCSDevPanel() {
                 </View>
             )}
 
-            {/* Archive Data Controls */}
+            {/* Sea Bag Data */}
             <View className="flex-row gap-2 justify-center mt-3 pt-3 border-t border-dashed" style={{ borderTopColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#BFDBFE' }}>
                 <TouchableOpacity
                     onPress={seedDemoArchiveData}
@@ -138,7 +155,7 @@ export function PCSDevPanel() {
                     style={{ borderColor: isDark ? '#166534' : '#86EFAC', backgroundColor: isDark ? 'rgba(22, 101, 52, 0.3)' : '#F0FDF4' }}
                 >
                     <Text className="text-[10px] font-semibold" style={{ color: isDark ? '#86EFAC' : '#166534' }}>
-                        Seed Archive ({archiveCount})
+                        Load Sea Bag ({archiveCount})
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -147,14 +164,14 @@ export function PCSDevPanel() {
                     style={{ borderColor: isDark ? '#991B1B' : '#FCA5A5', backgroundColor: isDark ? 'rgba(153, 27, 27, 0.3)' : '#FEF2F2' }}
                 >
                     <Text className="text-[10px] font-semibold" style={{ color: isDark ? '#FCA5A5' : '#991B1B' }}>
-                        Clear Archive
+                        Clear Sea Bag
                     </Text>
                 </TouchableOpacity>
             </View>
 
             {(pcsPhaseOverride || pcsContextOverride) && (
                 <Text className="text-blue-400 text-[10px] text-center mt-2">
-                    {pcsContextOverride ? `Context: ${pcsContextOverride}` : ''}{pcsPhaseOverride && pcsContextOverride ? ' · ' : ''}{pcsPhaseOverride ? 'Phase override active' : ''}
+                    {pcsContextOverride ? VIEW_MODE_LABELS[pcsContextOverride] : ''}{pcsPhaseOverride && pcsContextOverride ? ' · ' : ''}{pcsPhaseOverride ? PCS_PHASE_LABELS[pcsPhaseOverride] : ''}
                 </Text>
             )}
         </View>

@@ -21,6 +21,7 @@ interface DemoState {
   setPcsSubPhaseOverride: (subPhase: TRANSITSubPhase | null) => void;
   setPcsContextOverride: (context: 'ACTIVE' | 'ARCHIVE' | null) => void;
   advanceLiquidationStatus: () => void;
+  loadMockHistoricalOrders: () => void;
 }
 
 export const useDemoStore = create<DemoState>()(
@@ -61,6 +62,13 @@ export const useDemoStore = create<DemoState>()(
         const currentIndex = progression.indexOf(current);
         const nextStatus = progression[Math.min(currentIndex + 1, progression.length - 1)];
         pcsStore.updateLiquidationStatus(nextStatus);
+      },
+
+      loadMockHistoricalOrders: () => {
+        // Import lazily to avoid circular dependency
+        const { usePCSArchiveStore } = require('./usePCSArchiveStore');
+        const { MOCK_HISTORICAL_PCS_ORDERS } = require('@/constants/MockPCSData');
+        usePCSArchiveStore.getState().setHistoricalOrders(MOCK_HISTORICAL_PCS_ORDERS);
       },
     }),
     {

@@ -2,6 +2,7 @@ export type PCSSegmentType = 'ORIGIN' | 'INTERMEDIATE' | 'DESTINATION';
 export type PCSSegmentMode = 'POV' | 'AIR' | 'MIXED' | 'GOV_VEHICLE';
 export type PCSSegmentStatus = 'LOCKED' | 'PLANNING' | 'COMPLETE';
 export type PCSPhase = 'DORMANT' | 'ORDERS_NEGOTIATION' | 'TRANSIT_LEAVE' | 'CHECK_IN';
+export type TRANSITSubPhase = 'PLANNING' | 'ACTIVE_TRAVEL';
 
 /**
  * PCS Route information for travel distance calculations.

@@ -1,10 +1,11 @@
 import { useDemoStore } from '@/store/useDemoStore';
-import { PCSPhase } from '@/types/pcs';
+import { PCSPhase, TRANSITSubPhase } from '@/types/pcs';
 import Constants from 'expo-constants';
 import React from 'react';
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 const PCS_PHASES: PCSPhase[] = ['TRANSIT_LEAVE', 'CHECK_IN'];
+const TRANSIT_SUB_PHASES: TRANSITSubPhase[] = ['PLANNING', 'ACTIVE_TRAVEL'];
 
 /**
  * Inline developer panel for the PCS landing page.
@@ -16,6 +17,8 @@ export function PCSDevPanel() {
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
     const pcsPhaseOverride = useDemoStore((state) => state.pcsPhaseOverride);
     const setPcsPhaseOverride = useDemoStore((state) => state.setPcsPhaseOverride);
+    const pcsSubPhaseOverride = useDemoStore((state) => state.pcsSubPhaseOverride);
+    const setPcsSubPhaseOverride = useDemoStore((state) => state.setPcsSubPhaseOverride);
 
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
@@ -23,6 +26,7 @@ export function PCSDevPanel() {
     if (!enableDevSettings || !isDemoMode) return null;
 
     const borderColor = isDark ? '#27272A' : '#F1F5F9';
+    const showSubPhase = pcsPhaseOverride === 'TRANSIT_LEAVE';
 
     return (
         <View
@@ -60,6 +64,30 @@ export function PCSDevPanel() {
                 })}
             </View>
 
+            {/* Sub-Phase Override (visible when Transit Leave is active) */}
+            {showSubPhase && (
+                <View className="flex-row flex-wrap gap-2 justify-center mt-3">
+                    {TRANSIT_SUB_PHASES.map((sub) => {
+                        const isActive = pcsSubPhaseOverride === sub;
+                        return (
+                            <TouchableOpacity
+                                key={sub}
+                                onPress={() => setPcsSubPhaseOverride(isActive ? null : sub)}
+                                className={`px-3 py-1.5 rounded-lg border ${isActive ? 'bg-amber-500 border-amber-600' : 'bg-transparent'}`}
+                                style={{ borderColor: isActive ? '#D97706' : borderColor }}
+                            >
+                                <Text
+                                    style={{ color: isActive ? '#FFFFFF' : isDark ? '#94A3B8' : '#64748B' }}
+                                    className="text-[10px] font-semibold"
+                                >
+                                    {sub.replace(/_/g, ' ')}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            )}
+
             {pcsPhaseOverride && (
                 <Text className="text-blue-400 text-[10px] text-center mt-2">
                     Override active — computed phase bypassed
@@ -68,4 +96,3 @@ export function PCSDevPanel() {
         </View>
     );
 }
-

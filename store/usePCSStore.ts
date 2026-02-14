@@ -1,7 +1,8 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, HHGItem, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
+import { ChecklistItem, HHGItem, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase } from '@/types/pcs';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
+import { CachedPDF, cachePDF } from '@/utils/pdfCache';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMemo } from 'react';
 import { create } from 'zustand';
@@ -34,6 +35,22 @@ export function derivePhase(segments: PCSSegment[] | undefined): PCSPhase {
 
   // Mixed states default to negotiation
   return 'ORDERS_NEGOTIATION';
+}
+
+/**
+ * Derive whether a Sailor is still planning or actively traveling.
+ * Compares today's date against the projected departure date.
+ * Pure function — no persisted state, always computed.
+ */
+export function deriveSubPhase(currentDraft: PCSSegment | null): TRANSITSubPhase {
+  if (!currentDraft) return 'PLANNING';
+
+  const departureDate = new Date(currentDraft.dates.projectedDeparture);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  departureDate.setHours(0, 0, 0, 0);
+
+  return today >= departureDate ? 'ACTIVE_TRAVEL' : 'PLANNING';
 }
 
 interface Financials {
@@ -90,6 +107,10 @@ interface PCSState {
   updateHHGItem: (id: string, updates: Partial<HHGItem>) => void;
   removeHHGItem: (id: string) => void;
   clearHHGItems: () => void;
+
+  // Caching
+  cachedOrders: CachedPDF | null;
+  cacheOrders: (url: string) => Promise<void>;
 }
 
 export const usePCSStore = create<PCSState>()(
@@ -128,6 +149,7 @@ export const usePCSStore = create<PCSState>()(
           items: [],
         },
       },
+      cachedOrders: null,
 
       initializeOrders: async () => {
         const userId = useUserStore.getState().user?.id ?? 'unknown';
@@ -551,7 +573,18 @@ export const usePCSStore = create<PCSState>()(
             },
           };
         });
-      }
+      },
+
+      cacheOrders: async (url: string) => {
+        try {
+          const filename = `orders_${Date.now()}.pdf`;
+          const cached = await cachePDF(url, filename);
+          set({ cachedOrders: cached });
+        } catch (error) {
+          console.error('[PCSStore] Failed to cache orders:', error);
+          // Optional: Expose error state or toast
+        }
+      },
     }),
     {
       name: 'pcs-storage',
@@ -600,4 +633,23 @@ export const usePCSPhase = (): PCSPhase => {
     if (isDemoMode && phaseOverride) return phaseOverride;
     return derivePhase(segments);
   }, [segments, isDemoMode, phaseOverride]);
+};
+
+/**
+ * Sub-phase selector — derives PLANNING vs ACTIVE_TRAVEL within TRANSIT_LEAVE.
+ * Auto-updates when currentDraft changes (e.g. departure date passes).
+ * Respects pcsSubPhaseOverride from useDemoStore when demo mode is active.
+ */
+export const useSubPhase = (): TRANSITSubPhase => {
+  const currentDraft = usePCSStore((state) => state.currentDraft);
+
+  // Dev override: import lazily to avoid circular deps in production
+  const { useDemoStore } = require('./useDemoStore');
+  const isDemoMode = useDemoStore((state: any) => state.isDemoMode);
+  const subPhaseOverride = useDemoStore((state: any) => state.pcsSubPhaseOverride);
+
+  return useMemo(() => {
+    if (isDemoMode && subPhaseOverride) return subPhaseOverride;
+    return deriveSubPhase(currentDraft);
+  }, [currentDraft, isDemoMode, subPhaseOverride]);
 };

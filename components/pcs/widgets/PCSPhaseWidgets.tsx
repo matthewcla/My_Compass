@@ -1,15 +1,18 @@
 import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
+import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
 import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
 import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
 import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
-import { usePCSPhase } from '@/store/usePCSStore';
+import { ReceiptScannerWidget } from '@/components/pcs/widgets/ReceiptScannerWidget';
+import { usePCSPhase, useSubPhase } from '@/store/usePCSStore';
 import React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 
 export function PCSPhaseWidgets() {
     const phase = usePCSPhase();
+    const subPhase = useSubPhase();
 
     if (phase === 'DORMANT') return null;
 
@@ -28,12 +31,20 @@ export function PCSPhaseWidgets() {
                     </>
                 )}
 
-                {/* ── TRANSIT_LEAVE ───────────────────────────────────────── */}
-                {phase === 'TRANSIT_LEAVE' && (
+                {/* ── TRANSIT_LEAVE · PLANNING (Phase 2) ─────────────────── */}
+                {phase === 'TRANSIT_LEAVE' && subPhase === 'PLANNING' && (
                     <>
                         <AllowancesCard variant="widget" />
                         <LeaveImpactWidget />
                         <HHGWeightGaugeWidget />
+                    </>
+                )}
+
+                {/* ── TRANSIT_LEAVE · ACTIVE_TRAVEL (Phase 3) ────────────── */}
+                {phase === 'TRANSIT_LEAVE' && subPhase === 'ACTIVE_TRAVEL' && (
+                    <>
+                        <ReceiptScannerWidget />
+                        <DigitalOrdersWallet />
                     </>
                 )}
 
@@ -48,3 +59,4 @@ export function PCSPhaseWidgets() {
         </Animated.View>
     );
 }
+

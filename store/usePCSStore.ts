@@ -191,6 +191,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 1,
+          helpText: 'Verify your rank, dependents, and contact info are current in the system.',
         });
         checklist.push({
           id: generateUUID(),
@@ -198,6 +199,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 1,
+          helpText: 'If your EAOS doesn\u2019t extend 36 months past your report date, you\u2019ll need to extend or reenlist before orders release.',
         });
 
         // Phase 1: Conditional Screenings
@@ -208,6 +210,7 @@ export const usePCSStore = create<PCSState>()(
             status: 'NOT_STARTED',
             category: 'SCREENING',
             uctPhase: 1,
+            helpText: 'Required medical, dental, and security screenings for OCONUS duty stations.',
           });
         }
 
@@ -218,6 +221,7 @@ export const usePCSStore = create<PCSState>()(
             status: 'NOT_STARTED',
             category: 'SCREENING',
             uctPhase: 1,
+            helpText: 'Physical readiness screening required for sea duty assignments.',
           });
         }
 
@@ -228,6 +232,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'FINANCE',
           uctPhase: 2,
+          helpText: 'Review your estimated entitlements: DLA, MALT, per diem, and advance pay eligibility.',
         });
         checklist.push({
           id: generateUUID(),
@@ -235,6 +240,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 2,
+          helpText: 'Your DLA and travel entitlements are calculated from your NSIPS Page 2 dependency data. Inaccurate data = wrong pay.',
         });
         checklist.push({
           id: generateUUID(),
@@ -243,6 +249,7 @@ export const usePCSStore = create<PCSState>()(
           category: 'PRE_TRAVEL',
           uctPhase: 2,
           actionRoute: '/pcs-wizard/hhg',
+          helpText: 'Book your household goods pickup through DPS. The earlier you book, the more flexibility on dates.',
         });
         checklist.push({
           id: generateUUID(),
@@ -251,6 +258,7 @@ export const usePCSStore = create<PCSState>()(
           category: 'FINANCE',
           uctPhase: 2,
           actionRoute: '/pcs-wizard/financials/advance-pay',
+          helpText: 'DLA partially reimburses relocation costs. Advance Pay provides up to 3 months\u2019 base pay before your move.',
         });
 
         // Phase 3: Transit & Leave — Segment Planning
@@ -262,6 +270,7 @@ export const usePCSStore = create<PCSState>()(
             status: 'NOT_STARTED',
             category: 'PRE_TRAVEL',
             uctPhase: 3,
+            helpText: 'Plan your route, travel mode, and leave requests for this segment.',
           });
         });
 
@@ -272,6 +281,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 4,
+          helpText: 'Report to your new command\u2019s quarterdeck with your orders. This starts your check-in sheet.',
         });
         checklist.push({
           id: generateUUID(),
@@ -280,6 +290,7 @@ export const usePCSStore = create<PCSState>()(
           category: 'FINANCE',
           uctPhase: 4,
           actionRoute: '/pcs-wizard/travel-claim',
+          helpText: 'Your travel voucher for reimbursement. File within 5 business days of arrival for fastest payout.',
         });
 
         set({ activeOrder: order, checklist });

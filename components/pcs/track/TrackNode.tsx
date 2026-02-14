@@ -21,6 +21,7 @@ interface TrackNodeProps {
     phase: UCTPhase;
     title: string;
     dateRange?: string;
+    daysIndicator?: string;
     status: UCTNodeStatus;
     isLast?: boolean;
     children?: React.ReactNode;
@@ -79,6 +80,7 @@ export function TrackNode({
     phase,
     title,
     dateRange,
+    daysIndicator,
     status,
     isLast = false,
     children,
@@ -187,11 +189,22 @@ export function TrackNode({
                         {/* Title */}
                         <Text className="text-xl font-black" style={titleStyle}>{title}</Text>
 
-                        {/* Date Range */}
-                        {dateRange && (
-                            <Text className="text-sm text-slate-500 font-medium mt-0.5">
-                                {dateRange}
-                            </Text>
+                        {/* Date Range + Days Indicator */}
+                        {(dateRange || daysIndicator) && (
+                            <View className="flex-row items-center mt-0.5 flex-wrap">
+                                {dateRange && (
+                                    <Text className="text-sm text-slate-500 font-medium mr-2">
+                                        {dateRange}
+                                    </Text>
+                                )}
+                                {daysIndicator && status !== 'COMPLETED' && (
+                                    <View className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                                        <Text className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                            {daysIndicator}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
                         )}
 
                         {/* Locked Toast */}

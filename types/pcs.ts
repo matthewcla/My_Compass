@@ -95,6 +95,7 @@ export interface ChecklistItem {
   uctPhase: UCTPhase;
   completedAt?: string;
   actionRoute?: string;
+  helpText?: string;
 }
 
 /**

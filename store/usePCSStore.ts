@@ -1,5 +1,5 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, HHGItem, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase } from '@/types/pcs';
+import { ChecklistItem, HHGItem, LiquidationStatus, LiquidationStep, LiquidationTracking, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase } from '@/types/pcs';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
@@ -18,6 +18,20 @@ const generateUUID = () => {
     return v.toString(16);
   });
 };
+
+/**
+ * Add business days to a date (excludes weekends).
+ * Used for estimating payment dates in liquidation tracking.
+ */
+function addBusinessDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    if (result.getDay() !== 0 && result.getDay() !== 6) added++;
+  }
+  return result;
+}
 
 /**
  * Derive the current PCS phase from segment statuses.
@@ -84,6 +98,7 @@ interface Financials {
     isOverLimit: boolean;
     items: HHGItem[];
   };
+  liquidation: LiquidationTracking | null;
 }
 
 interface PCSState {
@@ -108,6 +123,10 @@ interface PCSState {
   updateHHGItem: (id: string, updates: Partial<HHGItem>) => void;
   removeHHGItem: (id: string) => void;
   clearHHGItems: () => void;
+
+  // Liquidation Actions
+  initializeLiquidation: (claimId: string) => void;
+  updateLiquidationStatus: (status: LiquidationStatus) => void;
 
   // Caching
   cachedOrders: CachedPDF | null;
@@ -150,6 +169,7 @@ export const usePCSStore = create<PCSState>()(
           isOverLimit: false,
           items: [],
         },
+        liquidation: null,
       },
       cachedOrders: null,
 
@@ -282,6 +302,7 @@ export const usePCSStore = create<PCSState>()(
               isOverLimit: false,
               items: [],
             },
+            liquidation: null,
           }
         });
       },
@@ -368,6 +389,9 @@ export const usePCSStore = create<PCSState>()(
         if (newFinancials.totalPerDiem !== undefined) mergedFinancials.totalPerDiem = newFinancials.totalPerDiem;
         if (newFinancials.hhg) {
           mergedFinancials.hhg = { ...mergedFinancials.hhg, ...newFinancials.hhg };
+        }
+        if (newFinancials.liquidation !== undefined) {
+          mergedFinancials.liquidation = newFinancials.liquidation;
         }
 
         set({ financials: mergedFinancials });
@@ -571,6 +595,52 @@ export const usePCSStore = create<PCSState>()(
                 items: [],
                 estimatedWeight: 0,
                 isOverLimit: false,
+              },
+            },
+          };
+        });
+      },
+
+      initializeLiquidation: (claimId: string) => {
+        const steps: LiquidationStep[] = [
+          { status: 'SUBMITTED', label: 'Submitted', completedDate: new Date().toISOString() },
+          { status: 'CPPA_REVIEW', label: 'CPPA Review' },
+          { status: 'NPPSC_AUDIT', label: 'NPPSC Audit' },
+          { status: 'PAID', label: 'Paid' },
+        ];
+
+        set((state) => ({
+          financials: {
+            ...state.financials,
+            liquidation: {
+              claimId,
+              currentStatus: 'SUBMITTED',
+              steps,
+              estimatedPaymentDate: addBusinessDays(new Date(), 14).toISOString(),
+              actualPaymentAmount: null,
+              submittedAt: new Date().toISOString(),
+            },
+          },
+        }));
+      },
+
+      updateLiquidationStatus: (status: LiquidationStatus) => {
+        set((state) => {
+          if (!state.financials.liquidation) return state;
+
+          const updatedSteps = state.financials.liquidation.steps.map(step =>
+            step.status === status
+              ? { ...step, completedDate: new Date().toISOString() }
+              : step
+          );
+
+          return {
+            financials: {
+              ...state.financials,
+              liquidation: {
+                ...state.financials.liquidation,
+                currentStatus: status,
+                steps: updatedSteps,
               },
             },
           };

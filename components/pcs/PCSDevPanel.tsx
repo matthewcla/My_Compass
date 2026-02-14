@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import React from 'react';
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 
-const PCS_PHASES: PCSPhase[] = ['TRANSIT_LEAVE', 'CHECK_IN'];
+const PCS_PHASES: PCSPhase[] = ['ORDERS_NEGOTIATION', 'TRANSIT_LEAVE', 'CHECK_IN'];
 const TRANSIT_SUB_PHASES: TRANSITSubPhase[] = ['PLANNING', 'ACTIVE_TRAVEL'];
 
 /**

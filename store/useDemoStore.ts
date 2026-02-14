@@ -1,6 +1,6 @@
 import { DEMO_USERS, DemoPhase, DemoUser } from '@/constants/DemoData';
 import { useUserStore } from '@/store/useUserStore';
-import { PCSPhase, TRANSITSubPhase } from '@/types/pcs';
+import { LiquidationStatus, PCSPhase, TRANSITSubPhase } from '@/types/pcs';
 import { User } from '@/types/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
@@ -18,6 +18,7 @@ interface DemoState {
   setSelectedPhase: (phase: DemoPhase) => void;
   setPcsPhaseOverride: (phase: PCSPhase | null) => void;
   setPcsSubPhaseOverride: (subPhase: TRANSITSubPhase | null) => void;
+  advanceLiquidationStatus: () => void;
 }
 
 export const useDemoStore = create<DemoState>()(
@@ -34,6 +35,29 @@ export const useDemoStore = create<DemoState>()(
       setSelectedPhase: (phase) => set({ selectedPhase: phase }),
       setPcsPhaseOverride: (phase) => set({ pcsPhaseOverride: phase }),
       setPcsSubPhaseOverride: (subPhase) => set({ pcsSubPhaseOverride: subPhase }),
+
+      advanceLiquidationStatus: () => {
+        // Import lazily to avoid circular dependency
+        const { usePCSStore } = require('./usePCSStore');
+        const pcsStore = usePCSStore.getState();
+        const current = pcsStore.financials.liquidation?.currentStatus;
+
+        if (!current) {
+          // Initialize liquidation if not started
+          pcsStore.initializeLiquidation('demo-claim-001');
+          return;
+        }
+
+        const progression: LiquidationStatus[] = [
+          'SUBMITTED',
+          'CPPA_REVIEW',
+          'NPPSC_AUDIT',
+          'PAID',
+        ];
+        const currentIndex = progression.indexOf(current);
+        const nextStatus = progression[Math.min(currentIndex + 1, progression.length - 1)];
+        pcsStore.updateLiquidationStatus(nextStatus);
+      },
     }),
     {
       name: 'demo-storage',

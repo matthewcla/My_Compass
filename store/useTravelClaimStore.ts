@@ -118,6 +118,12 @@ interface TravelClaimActions {
      * Reset the store to initial state.
      */
     resetStore: () => void;
+
+    /**
+     * Create a PCS claim draft pre-hydrated with order data.
+     * Convenience wrapper for creating PCS-specific claims.
+     */
+    createPCSClaimFromOrder: (userId: string, orderNumber: string) => Promise<string>;
 }
 
 export type TravelClaimStore = TravelClaimState & TravelClaimActions;
@@ -445,6 +451,68 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
             // resetStore
             // -----------------------------------------------------------------
             resetStore: () => set(INITIAL_STATE),
+
+            // -----------------------------------------------------------------
+            // createPCSClaimFromOrder
+            // -----------------------------------------------------------------
+            createPCSClaimFromOrder: async (userId: string, orderNumber: string) => {
+                // Import here to avoid circular dependency
+                const { usePCSStore } = await import('./usePCSStore');
+                const activeOrder = usePCSStore.getState().activeOrder;
+
+                if (!activeOrder) {
+                    throw new Error('No active PCS order found');
+                }
+
+                const claimId = `tc-pcs-${Date.now()}`;
+                const now = new Date().toISOString();
+
+                const newClaim: TravelClaim = {
+                    id: claimId,
+                    userId,
+                    orderNumber: activeOrder.orderNumber,
+                    travelType: 'pcs',
+                    departureDate: activeOrder.segments[0]?.dates.projectedDeparture || '',
+                    returnDate: activeOrder.segments[activeOrder.segments.length - 1]?.dates.projectedArrival || '',
+                    departureLocation: activeOrder.segments[0]?.location.name || '',
+                    destinationLocation: activeOrder.gainingCommand.name,
+                    isOconus: activeOrder.isOconus,
+                    travelMode: 'pov',
+
+                    // Entitlements - will be calculated in wizard
+                    maltAmount: 0,
+                    maltMiles: 0,
+                    dlaAmount: 0,
+                    tleDays: 0,
+                    tleAmount: 0,
+                    perDiemDays: [],
+
+                    // Expenses - TODO: Link to Phase 3 scanned receipts from ReceiptScannerWidget
+                    expenses: [],
+
+                    // Totals
+                    totalExpenses: 0,
+                    totalEntitlements: 0,
+                    totalClaimAmount: 0,
+                    advanceAmount: 0,
+                    netPayable: 0,
+
+                    // Status
+                    status: 'draft',
+                    statusHistory: [],
+                    approvalChain: [],
+                    memberCertification: true,
+
+                    // Timestamps
+                    createdAt: now,
+                    updatedAt: now,
+                    syncStatus: 'pending_upload',
+                    lastSyncTimestamp: now,
+                };
+
+                await get().createDraft(newClaim);
+                return claimId;
+            },
         }),
         {
             name: STORAGE_KEY,

@@ -1,10 +1,13 @@
 import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
+import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
 import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
 import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
 import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
 import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
+import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
 import { ReceiptScannerWidget } from '@/components/pcs/widgets/ReceiptScannerWidget';
+import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
 import { usePCSPhase, useSubPhase } from '@/store/usePCSStore';
 import React from 'react';
 import { View } from 'react-native';
@@ -51,8 +54,9 @@ export function PCSPhaseWidgets() {
                 {/* ── CHECK_IN ────────────────────────────────────────────── */}
                 {phase === 'CHECK_IN' && (
                     <>
-                        {/* TODO: CheckInProgressWidget */}
-                        {/* TODO: GainingCommandContactCard */}
+                        <BaseWelcomeKit />
+                        <TravelClaimHUDWidget />
+                        <LiquidationTrackerWidget />
                     </>
                 )}
             </View>

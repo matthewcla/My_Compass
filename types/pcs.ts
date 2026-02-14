@@ -62,6 +62,13 @@ export interface PCSOrder {
   gainingCommand: {
     name: string;
     uic: string;
+    address?: string;
+    zip?: string;
+    quarterdeckPhone?: string;
+    psdPhone?: string;
+    oodPhone?: string;
+    uniformOfDay?: string;
+    quarterdeckLocation?: { latitude: number; longitude: number };
   };
   segments: PCSSegment[];
   reportNLT: string;
@@ -75,4 +82,26 @@ export interface ChecklistItem {
   segmentId?: string;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE';
   category: 'PRE_TRAVEL' | 'FINANCE' | 'SCREENING';
+}
+
+/**
+ * Liquidation tracking for PCS travel claims.
+ * Tracks the payment status from submission through NPPSC processing.
+ */
+export type LiquidationStatus = 'NOT_STARTED' | 'SUBMITTED' | 'CPPA_REVIEW' | 'NPPSC_AUDIT' | 'PAID';
+
+export interface LiquidationStep {
+  status: LiquidationStatus;
+  label: string;
+  estimatedDate?: string;
+  completedDate?: string;
+}
+
+export interface LiquidationTracking {
+  claimId: string | null;
+  currentStatus: LiquidationStatus;
+  steps: LiquidationStep[];
+  estimatedPaymentDate: string | null;
+  actualPaymentAmount: number | null;
+  submittedAt: string | null;
 }

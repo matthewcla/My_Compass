@@ -76,12 +76,25 @@ export interface PCSOrder {
   isSeaDuty: boolean;
 }
 
+export type UCTPhase = 1 | 2 | 3 | 4;
+
+export type UCTNodeStatus = 'COMPLETED' | 'ACTIVE' | 'LOCKED';
+
+export interface UCTPhaseConfig {
+  phase: UCTPhase;
+  title: string;
+  description: string;
+}
+
 export interface ChecklistItem {
   id: string;
   label: string;
   segmentId?: string;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE';
   category: 'PRE_TRAVEL' | 'FINANCE' | 'SCREENING';
+  uctPhase: UCTPhase;
+  completedAt?: string;
+  actionRoute?: string;
 }
 
 /**

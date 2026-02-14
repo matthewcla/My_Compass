@@ -1,5 +1,5 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, HHGItem, LiquidationStatus, LiquidationStep, LiquidationTracking, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase } from '@/types/pcs';
+import { ChecklistItem, HHGItem, LiquidationStatus, LiquidationStep, LiquidationTracking, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
@@ -183,33 +183,30 @@ export const usePCSStore = create<PCSState>()(
         const order = result.data;
         const checklist: ChecklistItem[] = [];
 
-        // 1. Always Add
+        // Phase 1: Orders & OBLISERV
         checklist.push({
           id: generateUUID(),
           label: 'Profile Confirmation',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
+          uctPhase: 1,
         });
         checklist.push({
           id: generateUUID(),
           label: 'OBLISERV Check',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
-        });
-        checklist.push({
-          id: generateUUID(),
-          label: 'Financial Review',
-          status: 'NOT_STARTED',
-          category: 'FINANCE',
+          uctPhase: 1,
         });
 
-        // 2. Conditional Checks
+        // Phase 1: Conditional Screenings
         if (order.isOconus) {
           checklist.push({
             id: generateUUID(),
             label: 'Overseas Screening',
             status: 'NOT_STARTED',
             category: 'SCREENING',
+            uctPhase: 1,
           });
         }
 
@@ -219,10 +216,43 @@ export const usePCSStore = create<PCSState>()(
             label: 'Sea Duty Screening',
             status: 'NOT_STARTED',
             category: 'SCREENING',
+            uctPhase: 1,
           });
         }
 
-        // 3. Segment Planning
+        // Phase 2: Logistics & Finances
+        checklist.push({
+          id: generateUUID(),
+          label: 'Financial Review',
+          status: 'NOT_STARTED',
+          category: 'FINANCE',
+          uctPhase: 2,
+        });
+        checklist.push({
+          id: generateUUID(),
+          label: 'Update NSIPS Dependency Data (Page 2)',
+          status: 'NOT_STARTED',
+          category: 'PRE_TRAVEL',
+          uctPhase: 2,
+        });
+        checklist.push({
+          id: generateUUID(),
+          label: 'Schedule Household Goods (DPS)',
+          status: 'NOT_STARTED',
+          category: 'PRE_TRAVEL',
+          uctPhase: 2,
+          actionRoute: '/pcs-wizard/hhg',
+        });
+        checklist.push({
+          id: generateUUID(),
+          label: 'Submit DLA / Advance Pay Request',
+          status: 'NOT_STARTED',
+          category: 'FINANCE',
+          uctPhase: 2,
+          actionRoute: '/pcs-wizard/financials/advance-pay',
+        });
+
+        // Phase 3: Transit & Leave — Segment Planning
         order.segments.forEach((segment) => {
           checklist.push({
             id: generateUUID(),
@@ -230,7 +260,25 @@ export const usePCSStore = create<PCSState>()(
             segmentId: segment.id,
             status: 'NOT_STARTED',
             category: 'PRE_TRAVEL',
+            uctPhase: 3,
           });
+        });
+
+        // Phase 4: Check-in & Travel Claim
+        checklist.push({
+          id: generateUUID(),
+          label: 'Complete Gaining Command Check-In',
+          status: 'NOT_STARTED',
+          category: 'PRE_TRAVEL',
+          uctPhase: 4,
+        });
+        checklist.push({
+          id: generateUUID(),
+          label: 'File DD 1351-2 Travel Claim',
+          status: 'NOT_STARTED',
+          category: 'FINANCE',
+          uctPhase: 4,
+          actionRoute: '/pcs-wizard/travel-claim',
         });
 
         set({ activeOrder: order, checklist });
@@ -772,4 +820,34 @@ export const useSubPhase = (): TRANSITSubPhase => {
     if (isDemoMode && subPhaseOverride) return subPhaseOverride;
     return deriveSubPhase(currentDraft);
   }, [currentDraft, isDemoMode, subPhaseOverride]);
+};
+
+/**
+ * Computed UCT phase status selector.
+ * Maps from PCSPhase + TRANSITSubPhase → Record<UCTPhase, UCTNodeStatus>.
+ * Determines which TrackNode is COMPLETED, ACTIVE, or LOCKED.
+ */
+export const useUCTPhaseStatus = (): Record<UCTPhase, UCTNodeStatus> => {
+  const phase = usePCSPhase();
+  const subPhase = useSubPhase();
+
+  return useMemo(() => {
+    // Map PCSPhase → active UCT phase number
+    let activeUCT: UCTPhase;
+    switch (phase) {
+      case 'ORDERS_NEGOTIATION': activeUCT = 1; break;
+      case 'TRANSIT_LEAVE':
+        activeUCT = subPhase === 'ACTIVE_TRAVEL' ? 3 : 2;
+        break;
+      case 'CHECK_IN': activeUCT = 4; break;
+      default: activeUCT = 1; // DORMANT defaults to phase 1
+    }
+
+    return {
+      1: activeUCT > 1 ? 'COMPLETED' : activeUCT === 1 ? 'ACTIVE' : 'LOCKED',
+      2: activeUCT > 2 ? 'COMPLETED' : activeUCT === 2 ? 'ACTIVE' : 'LOCKED',
+      3: activeUCT > 3 ? 'COMPLETED' : activeUCT === 3 ? 'ACTIVE' : 'LOCKED',
+      4: activeUCT === 4 ? 'ACTIVE' : 'LOCKED', // Phase 4 is never "COMPLETED" in active orders
+    } as Record<UCTPhase, UCTNodeStatus>;
+  }, [phase, subPhase]);
 };

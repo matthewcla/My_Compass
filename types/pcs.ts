@@ -21,6 +21,13 @@ export interface PCSStop {
   reason: 'LEISURE' | 'OFFICIAL';
 }
 
+export interface HHGItem {
+  id: string;
+  category: 'FURNITURE' | 'APPLIANCES' | 'BOXES' | 'VEHICLE' | 'OTHER';
+  description: string;
+  estimatedWeight: number;
+}
+
 export interface PCSSegment {
   id: string;
   type: PCSSegmentType;

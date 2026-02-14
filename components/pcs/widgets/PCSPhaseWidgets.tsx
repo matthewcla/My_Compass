@@ -1,5 +1,8 @@
+import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
+import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
+import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
 import { usePCSPhase } from '@/store/usePCSStore';
 import React from 'react';
 import { View } from 'react-native';
@@ -28,8 +31,9 @@ export function PCSPhaseWidgets() {
                 {/* ── TRANSIT_LEAVE ───────────────────────────────────────── */}
                 {phase === 'TRANSIT_LEAVE' && (
                     <>
-                        {/* TODO: TravelChecklistWidget */}
-                        {/* TODO: ItinerarySnapshotCard */}
+                        <AllowancesCard variant="widget" />
+                        <LeaveImpactWidget />
+                        <HHGWeightGaugeWidget />
                     </>
                 )}
 

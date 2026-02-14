@@ -1,5 +1,6 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
+import { ChecklistItem, HHGItem, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus } from '@/types/pcs';
+import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMemo } from 'react';
@@ -59,6 +60,12 @@ interface Financials {
   // Added to store calculated entitlements
   totalMalt: number;
   totalPerDiem: number;
+  hhg: {
+    maxWeightAllowance: number;
+    estimatedWeight: number;
+    isOverLimit: boolean;
+    items: HHGItem[];
+  };
 }
 
 interface PCSState {
@@ -77,6 +84,12 @@ interface PCSState {
   startPlanning: (segmentId: string) => void;
   commitSegment: (segmentId: string) => void;
   updateDraft: (updates: Partial<PCSSegment>) => void;
+
+  // HHG Actions
+  addHHGItem: (item: Omit<HHGItem, 'id'>) => void;
+  updateHHGItem: (id: string, updates: Partial<HHGItem>) => void;
+  removeHHGItem: (id: string) => void;
+  clearHHGItems: () => void;
 }
 
 export const usePCSStore = create<PCSState>()(
@@ -108,6 +121,12 @@ export const usePCSStore = create<PCSState>()(
         },
         totalMalt: 0,
         totalPerDiem: 0,
+        hhg: {
+          maxWeightAllowance: 0,
+          estimatedWeight: 0,
+          isOverLimit: false,
+          items: [],
+        },
       },
 
       initializeOrders: async () => {
@@ -233,6 +252,12 @@ export const usePCSStore = create<PCSState>()(
             },
             totalMalt: 0,
             totalPerDiem: 0,
+            hhg: {
+              maxWeightAllowance: 0,
+              estimatedWeight: 0,
+              isOverLimit: false,
+              items: [],
+            },
           }
         });
       },
@@ -258,6 +283,18 @@ export const usePCSStore = create<PCSState>()(
         const hasDependents = (user.dependents || 0) > 0;
         const dlaRate = getDLARate(user.rank, hasDependents);
 
+        // Safe fallback for persisted state that predates HHG field
+        const currentHhg = financials.hhg ?? {
+          maxWeightAllowance: 0,
+          estimatedWeight: 0,
+          isOverLimit: false,
+          items: [],
+        };
+
+        const hhgItems = currentHhg.items ?? [];
+        const maxWeight = getHHGWeightAllowance(user.rank || 'E-1', hasDependents);
+        const estimatedWeight = hhgItems.reduce((sum, item) => sum + item.estimatedWeight, 0);
+
         set({
           financials: {
             ...financials,
@@ -268,6 +305,12 @@ export const usePCSStore = create<PCSState>()(
             },
             totalMalt,
             totalPerDiem,
+            hhg: {
+              ...currentHhg,
+              maxWeightAllowance: maxWeight,
+              estimatedWeight,
+              isOverLimit: estimatedWeight > maxWeight,
+            },
           }
         });
       },
@@ -299,12 +342,20 @@ export const usePCSStore = create<PCSState>()(
         // Top level primitives
         if (newFinancials.totalMalt !== undefined) mergedFinancials.totalMalt = newFinancials.totalMalt;
         if (newFinancials.totalPerDiem !== undefined) mergedFinancials.totalPerDiem = newFinancials.totalPerDiem;
+        if (newFinancials.hhg) {
+          mergedFinancials.hhg = { ...mergedFinancials.hhg, ...newFinancials.hhg };
+        }
 
         set({ financials: mergedFinancials });
 
         // Trigger recalculation if needed, but recalculateFinancials might overwrite some values (like estimatedAmount).
         // If we update DLA receivedFY, we want recalculateFinancials to run to update estimatedAmount.
         if (newFinancials.dla && newFinancials.dla.receivedFY !== undefined) {
+          get().recalculateFinancials();
+        }
+
+        // Recalculate if HHG items change
+        if (newFinancials.hhg && newFinancials.hhg.items) {
           get().recalculateFinancials();
         }
       },
@@ -383,6 +434,122 @@ export const usePCSStore = create<PCSState>()(
             ...currentDraft,
             ...updates,
           }
+        });
+      },
+
+      addHHGItem: (item) => {
+        const id = generateUUID();
+        set((state) => {
+          // Guard against undefined hhg (persisted state fallback)
+          const currentHhg = state.financials.hhg ?? {
+            maxWeightAllowance: 0,
+            estimatedWeight: 0,
+            isOverLimit: false,
+            items: [],
+          };
+
+          const newItems = [...(currentHhg.items || []), { ...item, id }];
+          const estimatedWeight = newItems.reduce((sum, i) => sum + i.estimatedWeight, 0);
+
+          // Re-verify allowance in case rank changed without recalc (though recalculateFinancials handles it usually)
+          // We can just use the current max, or we could re-run getHHGWeightAllowance if we had user access here easily.
+          // Sticking to state.financials.hhg.maxWeightAllowance is safer/faster for now.
+          const maxWeight = currentHhg.maxWeightAllowance || 0;
+          const isOverLimit = estimatedWeight > maxWeight;
+
+          return {
+            financials: {
+              ...state.financials,
+              hhg: {
+                ...currentHhg,
+                items: newItems,
+                estimatedWeight,
+                isOverLimit,
+              },
+            },
+          };
+        });
+      },
+
+      updateHHGItem: (id, updates) => {
+        set((state) => {
+          const currentHhg = state.financials.hhg ?? {
+            maxWeightAllowance: 0,
+            estimatedWeight: 0,
+            isOverLimit: false,
+            items: [],
+          };
+
+          const newItems = (currentHhg.items || []).map((item) =>
+            item.id === id ? { ...item, ...updates } : item
+          );
+
+          const estimatedWeight = newItems.reduce((sum, i) => sum + i.estimatedWeight, 0);
+          const maxWeight = currentHhg.maxWeightAllowance || 0;
+          const isOverLimit = estimatedWeight > maxWeight;
+
+          return {
+            financials: {
+              ...state.financials,
+              hhg: {
+                ...currentHhg,
+                items: newItems,
+                estimatedWeight,
+                isOverLimit,
+              },
+            },
+          };
+        });
+      },
+
+      removeHHGItem: (id) => {
+        set((state) => {
+          const currentHhg = state.financials.hhg ?? {
+            maxWeightAllowance: 0,
+            estimatedWeight: 0,
+            isOverLimit: false,
+            items: [],
+          };
+
+          const newItems = (currentHhg.items || []).filter((item) => item.id !== id);
+          const estimatedWeight = newItems.reduce((sum, i) => sum + i.estimatedWeight, 0);
+          const maxWeight = currentHhg.maxWeightAllowance || 0;
+          const isOverLimit = estimatedWeight > maxWeight;
+
+          return {
+            financials: {
+              ...state.financials,
+              hhg: {
+                ...currentHhg,
+                items: newItems,
+                estimatedWeight,
+                isOverLimit,
+              },
+            },
+          };
+        });
+      },
+
+      clearHHGItems: () => {
+        set((state) => {
+          const currentHhg = state.financials.hhg ?? {
+            maxWeightAllowance: 0,
+            estimatedWeight: 0,
+            isOverLimit: false,
+            items: [],
+          };
+
+          return {
+            financials: {
+              ...state.financials,
+              hhg: {
+                ...currentHhg,
+                items: [],
+                estimatedWeight: 0,
+                isOverLimit: false,
+              },
+            },
+          };
         });
       }
     }),

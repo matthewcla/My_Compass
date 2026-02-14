@@ -419,8 +419,18 @@ export const usePCSRoute = (): PCSRoute | null => {
 /**
  * Computed phase selector — derives PCS phase from segment statuses.
  * Uses useMemo to prevent re-renders when segments haven't changed.
+ * Respects pcsPhaseOverride from useDemoStore when demo mode is active.
  */
 export const usePCSPhase = (): PCSPhase => {
   const segments = usePCSStore((state) => state.activeOrder?.segments);
-  return useMemo(() => derivePhase(segments), [segments]);
+
+  // Dev override: import lazily to avoid circular deps in production
+  const { useDemoStore } = require('./useDemoStore');
+  const isDemoMode = useDemoStore((state: any) => state.isDemoMode);
+  const phaseOverride = useDemoStore((state: any) => state.pcsPhaseOverride);
+
+  return useMemo(() => {
+    if (isDemoMode && phaseOverride) return phaseOverride;
+    return derivePhase(segments);
+  }, [segments, isDemoMode, phaseOverride]);
 };

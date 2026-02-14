@@ -1,6 +1,7 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { PCSActiveState } from '@/components/pcs/states/PCSActiveState';
 import { PCSArchiveState } from '@/components/pcs/states/PCSArchiveState';
 import { ContextualFAB } from '@/components/ui/ContextualFAB';
@@ -71,6 +72,7 @@ export default function PcsScreen() {
                                 ? <PCSActiveState />
                                 : <PCSArchiveState />
                             }
+                            <PCSDevPanel />
                         </Animated.View>
                     </Animated.ScrollView>
                 )}

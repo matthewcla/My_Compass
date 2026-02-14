@@ -1,5 +1,4 @@
 import { PCSChecklist } from '@/components/pcs/PCSChecklist';
-import { ProfileConfirmationCard } from '@/components/pcs/ProfileConfirmationCard';
 import { SegmentTimeline } from '@/components/pcs/SegmentTimeline';
 import { PCSPhaseWidgets } from '@/components/pcs/widgets/PCSPhaseWidgets';
 import React from 'react';
@@ -10,7 +9,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
  * PCS Active State — Tactical Command Center
  *
  * Renders the active PCS order content:
- * - Profile Confirmation Card
+ * - Phase Widgets
  * - Segment Timeline
  * - PCS Checklist
  *
@@ -24,7 +23,6 @@ export function PCSActiveState() {
             exiting={FadeOut.duration(200)}
         >
             <View style={{ paddingTop: 24 }}>
-                <ProfileConfirmationCard />
                 <PCSPhaseWidgets />
                 <SegmentTimeline />
                 <PCSChecklist />

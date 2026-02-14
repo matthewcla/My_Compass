@@ -105,3 +105,70 @@ export interface LiquidationTracking {
   actualPaymentAmount: number | null;
   submittedAt: string | null;
 }
+
+// =============================================================================
+// PCS DOCUMENT ARCHIVE — "The Digital Sea Bag"
+// =============================================================================
+
+/**
+ * Document categories for archived PCS documents.
+ * Maps to the standard Navy PCS paperwork lifecycle.
+ */
+export type DocumentCategory =
+  | 'ORDERS'          // Stamped official orders PDF
+  | 'TRAVEL_VOUCHER'  // DD 1351-2 (liquidated claim)
+  | 'W2'              // Annual W-2 tax form
+  | 'RECEIPT'          // Individual expense receipts
+  | 'OTHER';           // Miscellaneous documents
+
+/**
+ * A single document associated with a historical PCS move.
+ * Stored locally with encrypted metadata in SQLite.
+ */
+export interface PCSDocument {
+  id: string;
+  pcsOrderId: string;
+  category: DocumentCategory;
+  filename: string;
+  displayName: string;
+  localUri: string;
+  originalUrl?: string;
+  sizeBytes: number;
+  uploadedAt: string;
+  metadata?: Record<string, string>;
+}
+
+/**
+ * A completed PCS move, archived for long-term reference.
+ * Created when an active PCS order transitions to DORMANT
+ * (all segments COMPLETE + 90-day post-arrival window).
+ *
+ * This is what sailors see in the "Digital Sea Bag" — a searchable
+ * record of past moves with all associated documents.
+ */
+export interface HistoricalPCSOrder {
+  id: string;
+  orderNumber: string;
+  userId: string;
+
+  originCommand: string;
+  originLocation: string;
+  gainingCommand: string;
+  gainingLocation: string;
+
+  departureDate: string;
+  arrivalDate: string;
+  fiscalYear: number;
+
+  totalMalt: number;
+  totalPerDiem: number;
+  totalReimbursement: number;
+
+  documents: PCSDocument[];
+
+  status: 'ACTIVE' | 'ARCHIVED';
+  archivedAt?: string;
+
+  isOconus: boolean;
+  isSeaDuty: boolean;
+}

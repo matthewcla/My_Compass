@@ -73,6 +73,53 @@ const migrations: Migration[] = [
             `);
         },
     },
+    {
+        version: 7,
+        description: 'Create historical_pcs_orders and pcs_documents tables',
+        up: async (db) => {
+            await db.execAsync(`
+                CREATE TABLE IF NOT EXISTS historical_pcs_orders (
+                    id TEXT PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    order_number TEXT NOT NULL,
+                    origin_command TEXT,
+                    origin_location TEXT,
+                    gaining_command TEXT,
+                    gaining_location TEXT,
+                    departure_date TEXT,
+                    arrival_date TEXT,
+                    fiscal_year INTEGER,
+                    total_malt REAL DEFAULT 0,
+                    total_per_diem REAL DEFAULT 0,
+                    total_reimbursement REAL DEFAULT 0,
+                    is_oconus INTEGER DEFAULT 0,
+                    is_sea_duty INTEGER DEFAULT 0,
+                    status TEXT NOT NULL CHECK(status IN ('ACTIVE', 'ARCHIVED')),
+                    archived_at TEXT,
+                    last_sync_timestamp TEXT NOT NULL,
+                    sync_status TEXT NOT NULL CHECK(sync_status IN ('synced', 'pending_upload', 'error'))
+                );
+                CREATE INDEX IF NOT EXISTS idx_historical_pcs_user_id ON historical_pcs_orders(user_id);
+                CREATE INDEX IF NOT EXISTS idx_historical_pcs_fiscal_year ON historical_pcs_orders(fiscal_year);
+            `);
+            await db.execAsync(`
+                CREATE TABLE IF NOT EXISTS pcs_documents (
+                    id TEXT PRIMARY KEY,
+                    pcs_order_id TEXT NOT NULL,
+                    category TEXT NOT NULL CHECK(category IN ('ORDERS', 'TRAVEL_VOUCHER', 'W2', 'RECEIPT', 'OTHER')),
+                    filename TEXT NOT NULL,
+                    display_name TEXT,
+                    local_uri TEXT,
+                    original_url TEXT,
+                    size_bytes INTEGER DEFAULT 0,
+                    uploaded_at TEXT,
+                    metadata TEXT,
+                    FOREIGN KEY (pcs_order_id) REFERENCES historical_pcs_orders(id) ON DELETE CASCADE
+                );
+                CREATE INDEX IF NOT EXISTS idx_pcs_documents_order_id ON pcs_documents(pcs_order_id);
+            `);
+        },
+    },
 ];
 
 // =============================================================================

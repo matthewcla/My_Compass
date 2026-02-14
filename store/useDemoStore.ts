@@ -12,12 +12,14 @@ interface DemoState {
   selectedPhase: DemoPhase;
   pcsPhaseOverride: PCSPhase | null;
   pcsSubPhaseOverride: TRANSITSubPhase | null;
+  pcsContextOverride: 'ACTIVE' | 'ARCHIVE' | null;
 
   toggleDemoMode: () => void;
   setSelectedUser: (user: DemoUser) => void;
   setSelectedPhase: (phase: DemoPhase) => void;
   setPcsPhaseOverride: (phase: PCSPhase | null) => void;
   setPcsSubPhaseOverride: (subPhase: TRANSITSubPhase | null) => void;
+  setPcsContextOverride: (context: 'ACTIVE' | 'ARCHIVE' | null) => void;
   advanceLiquidationStatus: () => void;
 }
 
@@ -29,12 +31,14 @@ export const useDemoStore = create<DemoState>()(
       selectedPhase: DemoPhase.MVP,
       pcsPhaseOverride: null,
       pcsSubPhaseOverride: null,
+      pcsContextOverride: null,
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
       setSelectedUser: (user) => set({ selectedUser: user }),
       setSelectedPhase: (phase) => set({ selectedPhase: phase }),
       setPcsPhaseOverride: (phase) => set({ pcsPhaseOverride: phase }),
       setPcsSubPhaseOverride: (subPhase) => set({ pcsSubPhaseOverride: subPhase }),
+      setPcsContextOverride: (context) => set({ pcsContextOverride: context }),
 
       advanceLiquidationStatus: () => {
         // Import lazily to avoid circular dependency

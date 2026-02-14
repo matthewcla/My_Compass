@@ -4,6 +4,7 @@
 import { CareerEvent } from '@/types/career';
 import { DashboardData } from '@/types/dashboard';
 import { InboxMessage } from '@/types/inbox';
+import { HistoricalPCSOrder, PCSDocument } from '@/types/pcs';
 import {
   Application,
   Billet,
@@ -321,6 +322,18 @@ class WebStorage implements IStorageService {
       return [];
     }
   }
+
+  // Historical PCS Orders
+  async saveHistoricalPCSOrder(_order: HistoricalPCSOrder): Promise<void> { }
+  async getUserHistoricalPCSOrders(_userId: string): Promise<HistoricalPCSOrder[]> { return []; }
+  async getHistoricalPCSOrder(_id: string): Promise<HistoricalPCSOrder | null> { return null; }
+  async deleteHistoricalPCSOrder(_id: string): Promise<void> { }
+
+  // PCS Documents
+  async savePCSDocument(_doc: PCSDocument): Promise<void> { }
+  async getPCSDocument(_docId: string): Promise<PCSDocument | null> { return null; }
+  async getPCSDocuments(_pcsOrderId: string): Promise<PCSDocument[]> { return []; }
+  async deletePCSDocument(_docId: string): Promise<void> { }
 }
 
 export const storage: IStorageService = new WebStorage();

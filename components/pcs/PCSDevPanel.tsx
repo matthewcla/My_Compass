@@ -112,7 +112,10 @@ export function PCSDevPanel() {
                     return (
                         <TouchableOpacity
                             key={phase}
-                            onPress={() => setPcsPhaseOverride(isActive ? null : phase)}
+                            onPress={() => {
+                                if (pcsContextOverride !== 'ACTIVE') setPcsContextOverride('ACTIVE');
+                                setPcsPhaseOverride(isActive ? null : phase);
+                            }}
                             className={`px-3 py-2 rounded-lg border ${isActive ? 'bg-blue-500 border-blue-600' : 'bg-transparent'}`}
                             style={{ borderColor: isActive ? '#2563EB' : borderColor }}
                         >
@@ -161,7 +164,10 @@ export function PCSDevPanel() {
                     return (
                         <TouchableOpacity
                             key={phase}
-                            onPress={() => setUctPhaseOverride(isActive ? null : phase)}
+                            onPress={() => {
+                                if (pcsContextOverride !== 'ACTIVE') setPcsContextOverride('ACTIVE');
+                                setUctPhaseOverride(isActive ? null : phase);
+                            }}
                             className={`px-3 py-1.5 rounded-lg border ${isActive ? 'bg-purple-500 border-purple-600' : 'bg-transparent'}`}
                             style={{ borderColor: isActive ? '#7E22CE' : borderColor }}
                         >
@@ -198,9 +204,9 @@ export function PCSDevPanel() {
                 </TouchableOpacity>
             </View>
 
-            {(pcsPhaseOverride || pcsContextOverride) && (
+            {(pcsPhaseOverride || pcsContextOverride || uctPhaseOverride) && (
                 <Text className="text-blue-400 text-[10px] text-center mt-2">
-                    {pcsContextOverride ? VIEW_MODE_LABELS[pcsContextOverride] : ''}{pcsPhaseOverride && pcsContextOverride ? ' · ' : ''}{pcsPhaseOverride ? PCS_PHASE_LABELS[pcsPhaseOverride] : ''}
+                    {pcsContextOverride ? VIEW_MODE_LABELS[pcsContextOverride] : ''}{pcsPhaseOverride && pcsContextOverride ? ' · ' : ''}{pcsPhaseOverride ? PCS_PHASE_LABELS[pcsPhaseOverride] : ''}{uctPhaseOverride ? `${pcsPhaseOverride || pcsContextOverride ? ' · ' : ''}UCT ${uctPhaseOverride}` : ''}
                 </Text>
             )}
         </View>

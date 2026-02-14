@@ -6,9 +6,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 import '../ignoreWarnings';
+
+// Suppress strict-mode warnings from Layout animations reading shared values during render
+configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false });
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';

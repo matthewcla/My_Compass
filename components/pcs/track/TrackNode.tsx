@@ -43,21 +43,32 @@ function StatusIcon({ status, isDark }: { status: UCTNodeStatus; isDark: boolean
     }
 }
 
-function iconContainerClasses(status: UCTNodeStatus): string {
+function iconContainerStyle(status: UCTNodeStatus, isDark: boolean) {
     switch (status) {
         case 'COMPLETED':
-            return 'bg-green-500';
+            return { backgroundColor: '#22c55e' }; // green-500
         case 'ACTIVE':
-            return 'bg-blue-700 dark:bg-blue-600 border-2 border-blue-200 shadow-md';
+            return {
+                backgroundColor: isDark ? '#2563eb' : '#1d4ed8', // blue-600 / blue-700
+                borderWidth: 2,
+                borderColor: '#bfdbfe', // blue-200
+            };
         case 'LOCKED':
-            return 'bg-slate-200 dark:bg-slate-700';
+            return { backgroundColor: isDark ? '#334155' : '#e2e8f0' }; // slate-700 / slate-200
     }
 }
 
-function lineColor(status: UCTNodeStatus): string {
+function lineColorStyle(status: UCTNodeStatus, isDark: boolean) {
     return status === 'COMPLETED'
-        ? 'bg-green-500'
-        : 'bg-slate-200 dark:bg-slate-700';
+        ? { backgroundColor: '#22c55e' } // green-500
+        : { backgroundColor: isDark ? '#334155' : '#e2e8f0' }; // slate-700 / slate-200
+}
+
+function titleColorValue(status: UCTNodeStatus, isDark: boolean): string {
+    if (status === 'LOCKED') {
+        return isDark ? '#64748b' : '#94a3b8'; // slate-500 / slate-400
+    }
+    return isDark ? '#ffffff' : '#0f172a'; // white / slate-900
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -77,6 +88,11 @@ export function TrackNode({
 
     // ── Local expand state ──────────────────────────────────────────────────
     const [expanded, setExpanded] = useState(status === 'ACTIVE');
+
+    // Sync expanded state when status changes (e.g. demo override)
+    useEffect(() => {
+        setExpanded(status === 'ACTIVE');
+    }, [status]);
 
     // ── Locked toast message ────────────────────────────────────────────────
     const [lockedToast, setLockedToast] = useState<string | null>(null);
@@ -137,10 +153,7 @@ export function TrackNode({
         status === 'ACTIVE' || (status === 'COMPLETED' && expanded);
 
     // ── Title color ────────────────────────────────────────────────────────
-    const titleColor =
-        status === 'LOCKED'
-            ? 'text-slate-400 dark:text-slate-500'
-            : 'text-slate-900 dark:text-white';
+    const titleStyle = { color: titleColorValue(status, isDark) };
 
     return (
         <Animated.View
@@ -153,8 +166,8 @@ export function TrackNode({
                 <View className="mr-4 items-center z-10" style={{ width: ICON_SIZE }}>
                     {/* Icon Circle */}
                     <View
-                        className={`rounded-full items-center justify-center ${iconContainerClasses(status)}`}
-                        style={{ width: ICON_SIZE, height: ICON_SIZE }}
+                        className="rounded-full items-center justify-center"
+                        style={[{ width: ICON_SIZE, height: ICON_SIZE }, iconContainerStyle(status, isDark)]}
                     >
                         <StatusIcon status={status} isDark={isDark} />
                     </View>
@@ -162,8 +175,8 @@ export function TrackNode({
                     {/* Vertical Connecting Line */}
                     {!isLast && (
                         <View
-                            className={`w-1 flex-1 mt-2 ${lineColor(status)}`}
-                            style={{ minHeight: 24 }}
+                            className="w-1 flex-1 mt-2"
+                            style={[{ minHeight: 24 }, lineColorStyle(status, isDark)]}
                         />
                     )}
                 </View>
@@ -172,7 +185,7 @@ export function TrackNode({
                 <Animated.View style={[shakeStyle, { flex: 1 }]}>
                     <Pressable onPress={handlePress} className="pb-6">
                         {/* Title */}
-                        <Text className={`text-xl font-black ${titleColor}`}>{title}</Text>
+                        <Text className="text-xl font-black" style={titleStyle}>{title}</Text>
 
                         {/* Date Range */}
                         {dateRange && (

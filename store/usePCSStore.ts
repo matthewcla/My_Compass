@@ -8,6 +8,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { useDemoStore } from './useDemoStore';
 import { useUserStore } from './useUserStore';
 
 // Simple UUID generator
@@ -791,11 +792,8 @@ export const usePCSRoute = (): PCSRoute | null => {
  */
 export const usePCSPhase = (): PCSPhase => {
   const segments = usePCSStore((state) => state.activeOrder?.segments);
-
-  // Dev override: import lazily to avoid circular deps in production
-  const { useDemoStore } = require('./useDemoStore');
-  const isDemoMode = useDemoStore((state: any) => state.isDemoMode);
-  const phaseOverride = useDemoStore((state: any) => state.pcsPhaseOverride);
+  const isDemoMode = useDemoStore((state) => state.isDemoMode);
+  const phaseOverride = useDemoStore((state) => state.pcsPhaseOverride);
 
   return useMemo(() => {
     if (isDemoMode && phaseOverride) return phaseOverride;
@@ -810,11 +808,8 @@ export const usePCSPhase = (): PCSPhase => {
  */
 export const useSubPhase = (): TRANSITSubPhase => {
   const currentDraft = usePCSStore((state) => state.currentDraft);
-
-  // Dev override: import lazily to avoid circular deps in production
-  const { useDemoStore } = require('./useDemoStore');
-  const isDemoMode = useDemoStore((state: any) => state.isDemoMode);
-  const subPhaseOverride = useDemoStore((state: any) => state.pcsSubPhaseOverride);
+  const isDemoMode = useDemoStore((state) => state.isDemoMode);
+  const subPhaseOverride = useDemoStore((state) => state.pcsSubPhaseOverride);
 
   return useMemo(() => {
     if (isDemoMode && subPhaseOverride) return subPhaseOverride;
@@ -830,11 +825,8 @@ export const useSubPhase = (): TRANSITSubPhase => {
 export const useUCTPhaseStatus = (): Record<UCTPhase, UCTNodeStatus> => {
   const phase = usePCSPhase();
   const subPhase = useSubPhase();
-
-  // Dev override: import lazily to avoid circular deps in production
-  const { useDemoStore } = require('./useDemoStore');
-  const isDemoMode = useDemoStore((state: any) => state.isDemoMode);
-  const uctPhaseOverride = useDemoStore((state: any) => state.uctPhaseOverride);
+  const isDemoMode = useDemoStore((state) => state.isDemoMode);
+  const uctPhaseOverride = useDemoStore((state) => state.uctPhaseOverride);
 
   return useMemo(() => {
     // Map PCSPhase → active UCT phase number
@@ -859,5 +851,5 @@ export const useUCTPhaseStatus = (): Record<UCTPhase, UCTNodeStatus> => {
       3: activeUCT > 3 ? 'COMPLETED' : activeUCT === 3 ? 'ACTIVE' : 'LOCKED',
       4: activeUCT === 4 ? 'ACTIVE' : 'LOCKED', // Phase 4 is never "COMPLETED" in active orders
     } as Record<UCTPhase, UCTNodeStatus>;
-  }, [phase, subPhase]);
+  }, [phase, subPhase, isDemoMode, uctPhaseOverride]);
 };

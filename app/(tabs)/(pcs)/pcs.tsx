@@ -11,7 +11,7 @@ import { useHeaderStore } from '@/store/useHeaderStore';
 import { selectHasActiveOrders, usePCSStore } from '@/store/usePCSStore';
 import React, { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
-import Animated, { Layout } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 export default function PcsScreen() {
     const colorScheme = useColorScheme();
@@ -78,7 +78,7 @@ export default function PcsScreen() {
                         contentContainerStyle={contentContainerStyle}
                         showsVerticalScrollIndicator={false}
                     >
-                        <Animated.View layout={Layout.springify().damping(15)}>
+                        <Animated.View>
                             <PCSActiveState />
                             <PCSDevPanel />
                         </Animated.View>

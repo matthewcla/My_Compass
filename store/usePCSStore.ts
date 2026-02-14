@@ -831,16 +831,26 @@ export const useUCTPhaseStatus = (): Record<UCTPhase, UCTNodeStatus> => {
   const phase = usePCSPhase();
   const subPhase = useSubPhase();
 
+  // Dev override: import lazily to avoid circular deps in production
+  const { useDemoStore } = require('./useDemoStore');
+  const isDemoMode = useDemoStore((state: any) => state.isDemoMode);
+  const uctPhaseOverride = useDemoStore((state: any) => state.uctPhaseOverride);
+
   return useMemo(() => {
     // Map PCSPhase → active UCT phase number
     let activeUCT: UCTPhase;
-    switch (phase) {
-      case 'ORDERS_NEGOTIATION': activeUCT = 1; break;
-      case 'TRANSIT_LEAVE':
-        activeUCT = subPhase === 'ACTIVE_TRAVEL' ? 3 : 2;
-        break;
-      case 'CHECK_IN': activeUCT = 4; break;
-      default: activeUCT = 1; // DORMANT defaults to phase 1
+
+    if (isDemoMode && uctPhaseOverride) {
+      activeUCT = uctPhaseOverride;
+    } else {
+      switch (phase) {
+        case 'ORDERS_NEGOTIATION': activeUCT = 1; break;
+        case 'TRANSIT_LEAVE':
+          activeUCT = subPhase === 'ACTIVE_TRAVEL' ? 3 : 2;
+          break;
+        case 'CHECK_IN': activeUCT = 4; break;
+        default: activeUCT = 1; // DORMANT defaults to phase 1
+      }
     }
 
     return {

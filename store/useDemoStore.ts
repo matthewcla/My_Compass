@@ -1,6 +1,6 @@
 import { DEMO_USERS, DemoPhase, DemoUser } from '@/constants/DemoData';
 import { useUserStore } from '@/store/useUserStore';
-import { LiquidationStatus, PCSPhase, TRANSITSubPhase } from '@/types/pcs';
+import { LiquidationStatus, PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
 import { User } from '@/types/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
@@ -12,6 +12,7 @@ interface DemoState {
   selectedPhase: DemoPhase;
   pcsPhaseOverride: PCSPhase | null;
   pcsSubPhaseOverride: TRANSITSubPhase | null;
+  uctPhaseOverride: UCTPhase | null;
   pcsContextOverride: 'ACTIVE' | 'ARCHIVE' | null;
 
   toggleDemoMode: () => void;
@@ -19,6 +20,7 @@ interface DemoState {
   setSelectedPhase: (phase: DemoPhase) => void;
   setPcsPhaseOverride: (phase: PCSPhase | null) => void;
   setPcsSubPhaseOverride: (subPhase: TRANSITSubPhase | null) => void;
+  setUctPhaseOverride: (phase: UCTPhase | null) => void;
   setPcsContextOverride: (context: 'ACTIVE' | 'ARCHIVE' | null) => void;
   advanceLiquidationStatus: () => void;
   loadMockHistoricalOrders: () => void;
@@ -32,6 +34,7 @@ export const useDemoStore = create<DemoState>()(
       selectedPhase: DemoPhase.MVP,
       pcsPhaseOverride: null,
       pcsSubPhaseOverride: null,
+      uctPhaseOverride: null,
       pcsContextOverride: null,
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
@@ -39,6 +42,7 @@ export const useDemoStore = create<DemoState>()(
       setSelectedPhase: (phase) => set({ selectedPhase: phase }),
       setPcsPhaseOverride: (phase) => set({ pcsPhaseOverride: phase }),
       setPcsSubPhaseOverride: (subPhase) => set({ pcsSubPhaseOverride: subPhase }),
+      setUctPhaseOverride: (phase) => set({ uctPhaseOverride: phase }),
       setPcsContextOverride: (context) => set({ pcsContextOverride: context }),
 
       advanceLiquidationStatus: () => {

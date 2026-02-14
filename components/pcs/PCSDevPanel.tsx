@@ -1,6 +1,6 @@
 import { useDemoStore } from '@/store/useDemoStore';
 import { usePCSArchiveStore } from '@/store/usePCSArchiveStore';
-import { PCSPhase, TRANSITSubPhase } from '@/types/pcs';
+import { PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
 import Constants from 'expo-constants';
 import React from 'react';
 import { Text, TouchableOpacity, View, useColorScheme } from 'react-native';
@@ -24,6 +24,8 @@ const TRANSIT_SUB_LABELS: Record<TRANSITSubPhase, string> = {
     ACTIVE_TRAVEL: 'EN ROUTE',
 };
 
+const UCT_PHASES: UCTPhase[] = [1, 2, 3, 4];
+
 const VIEW_MODES = ['ACTIVE', 'ARCHIVE'] as const;
 
 const VIEW_MODE_LABELS: Record<typeof VIEW_MODES[number], string> = {
@@ -44,6 +46,8 @@ export function PCSDevPanel() {
     const setPcsPhaseOverride = useDemoStore((state) => state.setPcsPhaseOverride);
     const pcsSubPhaseOverride = useDemoStore((state) => state.pcsSubPhaseOverride);
     const setPcsSubPhaseOverride = useDemoStore((state) => state.setPcsSubPhaseOverride);
+    const uctPhaseOverride = useDemoStore((state) => state.uctPhaseOverride);
+    const setUctPhaseOverride = useDemoStore((state) => state.setUctPhaseOverride);
     const pcsContextOverride = useDemoStore((state) => state.pcsContextOverride);
     const setPcsContextOverride = useDemoStore((state) => state.setPcsContextOverride);
 
@@ -146,6 +150,31 @@ export function PCSDevPanel() {
                     })}
                 </View>
             )}
+
+            {/* UCT Phase */}
+            <Text className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 mt-3 text-center">
+                UCT Phase
+            </Text>
+            <View className="flex-row flex-wrap gap-2 justify-center">
+                {UCT_PHASES.map((phase) => {
+                    const isActive = uctPhaseOverride === phase;
+                    return (
+                        <TouchableOpacity
+                            key={phase}
+                            onPress={() => setUctPhaseOverride(isActive ? null : phase)}
+                            className={`px-3 py-1.5 rounded-lg border ${isActive ? 'bg-purple-500 border-purple-600' : 'bg-transparent'}`}
+                            style={{ borderColor: isActive ? '#7E22CE' : borderColor }}
+                        >
+                            <Text
+                                style={{ color: isActive ? '#FFFFFF' : isDark ? '#94A3B8' : '#64748B' }}
+                                className="text-[10px] font-semibold"
+                            >
+                                Phase {phase}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
 
             {/* Sea Bag Data */}
             <View className="flex-row gap-2 justify-center mt-3 pt-3 border-t border-dashed" style={{ borderTopColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#BFDBFE' }}>

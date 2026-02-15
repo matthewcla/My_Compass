@@ -117,7 +117,9 @@ class SQLiteStorage implements IStorageService {
       return validRequests;
     } catch (error: any) {
       // Check if error is "no such table" - means DB not initialized yet
-      if (error?.message?.includes('no such table')) {
+      // prepareAsync wraps the real error in its cause chain, so check stringified form too
+      const errStr = String(error?.message || '') + String(error?.cause || '') + String(error || '');
+      if (errStr.includes('no such table')) {
         console.warn('[Storage] leave_requests table not yet created. Returning empty array.');
         return [];
       }
@@ -691,7 +693,9 @@ class SQLiteStorage implements IStorageService {
       return LeaveRequestDefaultsSchema.parse(parsed);
     } catch (error: any) {
       // Check if error is "no such table" - means DB not initialized yet
-      if (error?.message?.includes('no such table')) {
+      // prepareAsync wraps the real error in its cause chain, so check stringified form too
+      const errStr = String(error?.message || '') + String(error?.cause || '') + String(error || '');
+      if (errStr.includes('no such table')) {
         console.warn('[Storage] leave_defaults table not yet created. Returning null.');
         return null;
       }

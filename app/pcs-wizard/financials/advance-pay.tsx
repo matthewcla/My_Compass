@@ -64,9 +64,9 @@ export default function AdvancePayScreen() {
       {/* Header */}
       <View
         style={{ paddingTop: insets.top }}
-        className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pb-4 px-4 shadow-sm z-10"
+        className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pb-2 px-4 shadow-sm z-10"
       >
-        <View className="flex-row items-start justify-between mb-4 mt-2">
+        <View className="flex-row items-start justify-between mb-1 mt-2">
           <View className="flex-1">
             <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-400 dark:text-gray-500">
               PHASE 2
@@ -107,8 +107,8 @@ export default function AdvancePayScreen() {
                     key={m}
                     onPress={() => setAmountMonths(m)}
                     className={`flex-1 py-3 rounded-xl border-2 items-center justify-center ${amountMonths === m
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                      ? 'bg-blue-600 border-blue-600'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
                       }`}
                   >
                     <Text className={`font-bold ${amountMonths === m ? 'text-white' : 'text-slate-600 dark:text-slate-300'}`}>

@@ -239,6 +239,38 @@ Every flow must provide a **single close/back control** using the `ChevronLeft` 
 </Pressable>
 ```
 
+#### 2.2.4 Flow Header Container Padding Standard
+
+Every flow header (the sticky container holding the subtitle/title row and, when present, the navigation/status bar) must use **consistent padding** to ensure uniform vertical rhythm across all flows.
+
+**Required values (matching canonical Leave Flow):**
+
+| Token | Value | Where |
+|---|---|---|
+| Container horizontal padding | `px-4` (16px) | Outer `Animated.View` or header `View` |
+| Container vertical padding | `py-2` (8px top + 8px bottom) | Outer `Animated.View` or header `View` |
+| Title row → nav bar gap | `mb-1` (4px) | On the title row `View` (only when a status/nav bar follows) |
+
+**Anti-patterns:**
+- ❌ `pb-4` or `paddingBottom: 12+` — over-padded; use `py-2` (8px)
+- ❌ `mt-2` + `mb-4` on the title row — use `mb-1` only (spacing comes from container `py-2`)
+- ❌ Omitting `paddingBottom` entirely — causes the nav bar to stick flush to the container edge
+
+**Conforming flows:** `leave/request.tsx`, `travel-claim/request.tsx`, `[segmentId]/index.tsx`
+**Reference implementation:** [leave/request.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/app/leave/request.tsx) (lines 426–457)
+
+```tsx
+<Animated.View
+    entering={FadeInDown.delay(100).springify()}
+    className="bg-white/95 dark:bg-slate-900/95 sticky top-0 z-10 px-4 py-2"
+>
+    <View className="flex-row items-start justify-between mb-1">
+        {/* subtitle + title */}
+    </View>
+    <WizardStatusBar ... />
+</Animated.View>
+```
+
 ### 2.3 Smart Stack (Widget Pattern)
 
 Widgets are small, glanceable components that can render in two modes:

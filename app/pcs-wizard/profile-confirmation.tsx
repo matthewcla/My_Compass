@@ -23,7 +23,7 @@ import {
     Home,
     Phone,
     Plus,
-    Shield,
+
     Trash2,
     UserCheck,
     Users,
@@ -53,13 +53,12 @@ const uuid = () =>
 
 // ─── Section Steps ───────────────────────────────────────
 const PROFILE_STEPS: { id: number; icon: LucideIcon; label: string }[] = [
-    { id: 0, icon: Shield, label: 'Service' },
-    { id: 1, icon: Phone, label: 'Contact' },
-    { id: 2, icon: Users, label: 'Dependents' },
-    { id: 3, icon: Home, label: 'Housing' },
-    { id: 4, icon: Car, label: 'Vehicle' },
-    { id: 5, icon: Heart, label: 'Beneficiaries' },
-    { id: 6, icon: UserCheck, label: 'PADD' },
+    { id: 0, icon: Phone, label: 'Contact' },
+    { id: 1, icon: Users, label: 'Dependents' },
+    { id: 2, icon: Home, label: 'Housing' },
+    { id: 3, icon: Car, label: 'Vehicle' },
+    { id: 4, icon: Heart, label: 'Beneficiaries' },
+    { id: 5, icon: UserCheck, label: 'PADD' },
 ];
 
 const TOTAL_STEPS = PROFILE_STEPS.length;
@@ -410,26 +409,24 @@ export default function ProfileConfirmationScreen() {
         (index: number): boolean => {
             if (!user) return false;
             switch (index) {
-                case 0: // Service Record
-                    return !!(user.rank && user.dutyStation?.name);
-                case 1: // Contact
+                case 0: // Contact
                     return !!(user.email && user.phone && user.emergencyContact?.name && user.emergencyContact?.phone);
-                case 2: // Dependents — complete if marital status set, count matches, all have name + dob
+                case 1: // Dependents — complete if marital status set, count matches, all have name + dob
                     if (!user.maritalStatus) return false;
                     const deps = user.dependentDetails || [];
                     if ((user.dependents || 0) > 0 && deps.length === 0) return false;
                     return deps.every((d) => d.name && d.dob);
-                case 3: // Housing
+                case 2: // Housing
                     return !!(user.housing?.type);
-                case 4: // Vehicles — complete if at least one vehicle with all fields
+                case 3: // Vehicles — complete if at least one vehicle with all fields
                     const vehicles = user.vehicles || [];
                     if (vehicles.length === 0) return false;
                     return vehicles.every((v) => v.make && v.model && v.year);
-                case 5: // Beneficiaries — at least one with name + percentage
+                case 4: // Beneficiaries — at least one with name + percentage
                     const bens = user.beneficiaries || [];
                     if (bens.length === 0) return false;
                     return bens.every((b) => b.name && b.percentage > 0);
-                case 6: // PADD — name is required
+                case 5: // PADD — name is required
                     return !!(user.padd?.name);
                 default:
                     return false;
@@ -711,9 +708,9 @@ export default function ProfileConfirmationScreen() {
                     {/* ── Header ──────────────────────────────── */}
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
-                        style={{ backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)' }}
+                        style={{ backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)', paddingBottom: 8 }}
                     >
-                        <View style={{ paddingHorizontal: 16, paddingTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ paddingHorizontal: 16, paddingTop: 8, marginBottom: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <View>
                                 <Text
                                     style={{
@@ -763,53 +760,10 @@ export default function ProfileConfirmationScreen() {
                             keyboardDismissMode="interactive"
                             showsVerticalScrollIndicator={false}
                         >
-                            {/* ═══ 0. Service Record ═══ */}
+                            {/* ═══ 0. Contact Info ═══ */}
                             <View
                                 onLayout={(e) => handleSectionLayout(0, e.nativeEvent.layout.y)}
                                 style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(0), paddingLeft: 14 }}
-                            >
-                                <Text
-                                    style={{
-                                        fontSize: 16, fontWeight: '800', letterSpacing: -0.3,
-                                        color: isDark ? '#FFFFFF' : '#0F172A', marginBottom: 12,
-                                    }}
-                                >
-                                    Service Record
-                                </Text>
-                                <Field label="Rank" value={user.rank || ''} readOnly />
-                                <Field label="Rate / Rating" value={user.rating || ''} readOnly />
-                                <Field label="Pay Grade" value={user.financialProfile?.payGrade || user.rank || ''} readOnly />
-                                <Field label="UIC" value={user.uic || ''} readOnly />
-                                <Field
-                                    label="Duty Station"
-                                    value={user.dutyStation?.name || ''}
-                                    onChangeText={(v) => updateNested('dutyStation', 'name', v)}
-                                    placeholder="e.g. USS Gerald R. Ford"
-                                />
-                                <Field
-                                    label="Duty Station Address"
-                                    value={user.dutyStation?.address || ''}
-                                    onChangeText={(v) => updateNested('dutyStation', 'address', v)}
-                                    placeholder="Full address"
-                                />
-                                <Field
-                                    label="Duty Station ZIP"
-                                    value={user.dutyStation?.zip || ''}
-                                    onChangeText={(v) => updateNested('dutyStation', 'zip', v)}
-                                    placeholder="e.g. 23511"
-                                    keyboardType="numeric"
-                                />
-                                <Field label="PRD" value={user.prd ? new Date(user.prd).toLocaleDateString() : ''} readOnly />
-                                <Field label="EAOS" value={user.eaos ? new Date(user.eaos).toLocaleDateString() : ''} readOnly />
-                                <Field label="SEAOS" value={user.seaos ? new Date(user.seaos).toLocaleDateString() : ''} readOnly />
-
-                                <SectionConfirmButton state={sectionStates[0]} onConfirm={() => confirmSection(0)} />
-                            </View>
-
-                            {/* ═══ 1. Contact Info ═══ */}
-                            <View
-                                onLayout={(e) => handleSectionLayout(1, e.nativeEvent.layout.y)}
-                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(1), paddingLeft: 14 }}
                             >
                                 <Text
                                     style={{
@@ -998,13 +952,13 @@ export default function ProfileConfirmationScreen() {
                                     placeholder="City, State ZIP"
                                 />
 
-                                <SectionConfirmButton state={sectionStates[1]} onConfirm={() => confirmSection(1)} />
+                                <SectionConfirmButton state={sectionStates[0]} onConfirm={() => confirmSection(0)} />
                             </View>
 
-                            {/* ═══ 2. Dependents ═══ */}
+                            {/* ═══ 1. Dependents ═══ */}
                             <View
-                                onLayout={(e) => handleSectionLayout(2, e.nativeEvent.layout.y)}
-                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(2), paddingLeft: 14 }}
+                                onLayout={(e) => handleSectionLayout(1, e.nativeEvent.layout.y)}
+                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(1), paddingLeft: 14 }}
                             >
                                 <Text
                                     style={{
@@ -1091,13 +1045,13 @@ export default function ProfileConfirmationScreen() {
                                         </Text>
                                     </View>
                                 </ScalePressable>
-                                <SectionConfirmButton state={sectionStates[2]} onConfirm={() => confirmSection(2)} />
+                                <SectionConfirmButton state={sectionStates[1]} onConfirm={() => confirmSection(1)} />
                             </View>
 
-                            {/* ═══ 3. Housing ═══ */}
+                            {/* ═══ 2. Housing ═══ */}
                             <View
-                                onLayout={(e) => handleSectionLayout(3, e.nativeEvent.layout.y)}
-                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(3), paddingLeft: 14 }}
+                                onLayout={(e) => handleSectionLayout(2, e.nativeEvent.layout.y)}
+                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(2), paddingLeft: 14 }}
                             >
                                 <Text
                                     style={{
@@ -1126,13 +1080,13 @@ export default function ProfileConfirmationScreen() {
                                     placeholder="e.g. 23451"
                                     keyboardType="numeric"
                                 />
-                                <SectionConfirmButton state={sectionStates[3]} onConfirm={() => confirmSection(3)} />
+                                <SectionConfirmButton state={sectionStates[2]} onConfirm={() => confirmSection(2)} />
                             </View>
 
-                            {/* ═══ 4. Vehicles (POV) ═══ */}
+                            {/* ═══ 3. Vehicles (POV) ═══ */}
                             <View
-                                onLayout={(e) => handleSectionLayout(4, e.nativeEvent.layout.y)}
-                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(4), paddingLeft: 14 }}
+                                onLayout={(e) => handleSectionLayout(3, e.nativeEvent.layout.y)}
+                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(3), paddingLeft: 14 }}
                             >
                                 <Text
                                     style={{
@@ -1198,13 +1152,13 @@ export default function ProfileConfirmationScreen() {
                                         </Text>
                                     </View>
                                 </ScalePressable>
-                                <SectionConfirmButton state={sectionStates[4]} onConfirm={() => confirmSection(4)} />
+                                <SectionConfirmButton state={sectionStates[3]} onConfirm={() => confirmSection(3)} />
                             </View>
 
-                            {/* ═══ 5. Beneficiaries ═══ */}
+                            {/* ═══ 4. Beneficiaries ═══ */}
                             <View
-                                onLayout={(e) => handleSectionLayout(5, e.nativeEvent.layout.y)}
-                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(5), paddingLeft: 14 }}
+                                onLayout={(e) => handleSectionLayout(4, e.nativeEvent.layout.y)}
+                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(4), paddingLeft: 14 }}
                             >
                                 <Text
                                     style={{
@@ -1291,13 +1245,13 @@ export default function ProfileConfirmationScreen() {
                                         </Text>
                                     </View>
                                 </ScalePressable>
-                                <SectionConfirmButton state={sectionStates[5]} onConfirm={() => confirmSection(5)} />
+                                <SectionConfirmButton state={sectionStates[4]} onConfirm={() => confirmSection(4)} />
                             </View>
 
-                            {/* ═══ 6. PADD ═══ */}
+                            {/* ═══ 5. PADD ═══ */}
                             <View
-                                onLayout={(e) => handleSectionLayout(6, e.nativeEvent.layout.y)}
-                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(6), paddingLeft: 14 }}
+                                onLayout={(e) => handleSectionLayout(5, e.nativeEvent.layout.y)}
+                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(5), paddingLeft: 14 }}
                             >
                                 <Text
                                     style={{
@@ -1363,7 +1317,7 @@ export default function ProfileConfirmationScreen() {
                                     placeholder="23451"
                                     keyboardType="numeric"
                                 />
-                                <SectionConfirmButton state={sectionStates[6]} onConfirm={() => confirmSection(6)} />
+                                <SectionConfirmButton state={sectionStates[5]} onConfirm={() => confirmSection(5)} />
                             </View>
 
 
@@ -1402,36 +1356,22 @@ export default function ProfileConfirmationScreen() {
                             </View>
                         </View>
 
-                        {/* Action buttons */}
-                        <View style={{ flexDirection: 'row', gap: 12 }}>
-                            <Pressable
-                                onPress={() => router.back()}
-                                style={{
-                                    width: 56, height: 56, borderRadius: 14,
-                                    backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
-                                    borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0',
-                                    alignItems: 'center', justifyContent: 'center',
-                                }}
-                            >
-                                <ChevronLeft size={24} color={isDark ? '#94A3B8' : '#64748B'} />
-                            </Pressable>
-
-                            <Pressable
-                                onPress={handleFinalConfirm}
-                                disabled={!allConfirmed}
-                                style={{
-                                    flex: 1, height: 56, borderRadius: 14,
-                                    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-                                    backgroundColor: allConfirmed ? '#059669' : isDark ? '#1E293B' : '#CBD5E1',
-                                    opacity: allConfirmed ? 1 : 0.7,
-                                }}
-                            >
-                                <Check size={20} color="#FFFFFF" strokeWidth={2.5} />
-                                <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '700' }}>
-                                    {allConfirmed ? 'Confirm Profile' : `${sectionStates.filter((s) => s === 'confirmed_complete' || s === 'confirmed_partial').length}/${TOTAL_STEPS} Sections`}
-                                </Text>
-                            </Pressable>
-                        </View>
+                        {/* Action button */}
+                        <Pressable
+                            onPress={handleFinalConfirm}
+                            disabled={!allConfirmed}
+                            style={{
+                                height: 56, borderRadius: 14,
+                                flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                backgroundColor: allConfirmed ? '#059669' : isDark ? '#1E293B' : '#CBD5E1',
+                                opacity: allConfirmed ? 1 : 0.7,
+                            }}
+                        >
+                            <Check size={20} color="#FFFFFF" strokeWidth={2.5} />
+                            <Text style={{ color: '#FFFFFF', fontSize: 17, fontWeight: '700' }}>
+                                {allConfirmed ? 'Confirm Profile' : `${sectionStates.filter((s) => s === 'confirmed_complete' || s === 'confirmed_partial').length}/${TOTAL_STEPS} Sections`}
+                            </Text>
+                        </Pressable>
                     </View>
                 </View>
             </SafeAreaView>

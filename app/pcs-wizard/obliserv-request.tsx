@@ -144,9 +144,9 @@ export default function ObliservRequestScreen() {
             {/* ── Header ──────────────────────────────── */}
             <View
                 style={{ paddingTop: insets.top }}
-                className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pb-4 px-4 shadow-sm z-10"
+                className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pb-2 px-4 shadow-sm z-10"
             >
-                <View className="flex-row items-start justify-between mb-4 mt-2">
+                <View className="flex-row items-start justify-between mb-1 mt-2">
                     <View className="flex-1">
                         <Text
                             style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}

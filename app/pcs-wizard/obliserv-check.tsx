@@ -144,7 +144,7 @@ export default function ObliservCheckScreen() {
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
                         style={{
-                            paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12,
+                            paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8,
                             flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
                             backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)',
                         }}

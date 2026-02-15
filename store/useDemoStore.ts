@@ -6,6 +6,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+// ── Demo Scenario Presets ───────────────────────────────────────────────────
+
+export interface DemoScenario {
+  id: string;
+  label: string;
+  icon: string;
+  context: 'ACTIVE' | 'ARCHIVE';
+  phase: PCSPhase | null;
+  subPhase?: TRANSITSubPhase | null;
+  uctPhase?: UCTPhase | null;
+}
+
+export const DEMO_SCENARIOS: DemoScenario[] = [
+  { id: 'orders', label: 'Orders Received', icon: '📋', context: 'ACTIVE', phase: 'ORDERS_NEGOTIATION', uctPhase: 1 },
+  { id: 'planning', label: 'Planning Move', icon: '📦', context: 'ACTIVE', phase: 'TRANSIT_LEAVE', subPhase: 'PLANNING', uctPhase: 2 },
+  { id: 'enroute', label: 'En Route', icon: '✈️', context: 'ACTIVE', phase: 'TRANSIT_LEAVE', subPhase: 'ACTIVE_TRAVEL', uctPhase: 3 },
+  { id: 'arrived', label: 'Arrived On-Station', icon: '⚓', context: 'ACTIVE', phase: 'CHECK_IN', uctPhase: 4 },
+  { id: 'archive', label: 'Sea Bag', icon: '🎒', context: 'ARCHIVE', phase: null },
+];
+
 interface DemoState {
   isDemoMode: boolean;
   selectedUser: DemoUser;
@@ -14,6 +34,7 @@ interface DemoState {
   pcsSubPhaseOverride: TRANSITSubPhase | null;
   uctPhaseOverride: UCTPhase | null;
   pcsContextOverride: 'ACTIVE' | 'ARCHIVE' | null;
+  activeDemoScenarioId: string | null;
 
   toggleDemoMode: () => void;
   setSelectedUser: (user: DemoUser) => void;
@@ -22,6 +43,8 @@ interface DemoState {
   setPcsSubPhaseOverride: (subPhase: TRANSITSubPhase | null) => void;
   setUctPhaseOverride: (phase: UCTPhase | null) => void;
   setPcsContextOverride: (context: 'ACTIVE' | 'ARCHIVE' | null) => void;
+  applyDemoScenario: (scenario: DemoScenario) => void;
+  clearDemoScenario: () => void;
   updateSelectedUser: (updates: Partial<DemoUser>) => void;
   advanceLiquidationStatus: () => void;
   loadMockHistoricalOrders: () => void;
@@ -37,6 +60,7 @@ export const useDemoStore = create<DemoState>()(
       pcsSubPhaseOverride: null,
       uctPhaseOverride: null,
       pcsContextOverride: null,
+      activeDemoScenarioId: null,
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
       setSelectedUser: (user) => set({ selectedUser: user }),
@@ -44,10 +68,26 @@ export const useDemoStore = create<DemoState>()(
         selectedUser: { ...state.selectedUser, ...updates },
       })),
       setSelectedPhase: (phase) => set({ selectedPhase: phase }),
-      setPcsPhaseOverride: (phase) => set({ pcsPhaseOverride: phase }),
-      setPcsSubPhaseOverride: (subPhase) => set({ pcsSubPhaseOverride: subPhase }),
-      setUctPhaseOverride: (phase) => set({ uctPhaseOverride: phase }),
-      setPcsContextOverride: (context) => set({ pcsContextOverride: context }),
+      setPcsPhaseOverride: (phase) => set({ pcsPhaseOverride: phase, activeDemoScenarioId: null }),
+      setPcsSubPhaseOverride: (subPhase) => set({ pcsSubPhaseOverride: subPhase, activeDemoScenarioId: null }),
+      setUctPhaseOverride: (phase) => set({ uctPhaseOverride: phase, activeDemoScenarioId: null }),
+      setPcsContextOverride: (context) => set({ pcsContextOverride: context, activeDemoScenarioId: null }),
+
+      applyDemoScenario: (scenario) => set({
+        pcsContextOverride: scenario.context,
+        pcsPhaseOverride: scenario.phase,
+        pcsSubPhaseOverride: scenario.subPhase ?? null,
+        uctPhaseOverride: scenario.uctPhase ?? null,
+        activeDemoScenarioId: scenario.id,
+      }),
+
+      clearDemoScenario: () => set({
+        pcsContextOverride: null,
+        pcsPhaseOverride: null,
+        pcsSubPhaseOverride: null,
+        uctPhaseOverride: null,
+        activeDemoScenarioId: null,
+      }),
 
       advanceLiquidationStatus: () => {
         // Import lazily to avoid circular dependency

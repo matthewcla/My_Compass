@@ -7,7 +7,7 @@ import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWid
 import { usePCSPhase, useSubPhase } from '@/store/usePCSStore';
 import React from 'react';
 import { View } from 'react-native';
-import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 export function PCSPhaseWidgets() {
     const phase = usePCSPhase();
@@ -19,7 +19,7 @@ export function PCSPhaseWidgets() {
         <Animated.View
             entering={FadeIn.duration(400)}
             exiting={FadeOut.duration(200)}
-            layout={Layout.springify().damping(15)}
+            layout={LinearTransition.duration(300)}
         >
             <View className="px-4 space-y-4">
                 {/* ── ORDERS_NEGOTIATION ──────────────────────────────────── */}

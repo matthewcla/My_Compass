@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import Animated, {
     FadeIn,
-    Layout,
+    LinearTransition,
     useAnimatedStyle,
     useSharedValue,
     withSequence,
@@ -159,7 +159,7 @@ export function TrackNode({
 
     return (
         <Animated.View
-            layout={Layout.springify().damping(15)}
+            layout={LinearTransition.duration(300)}
             style={{ opacity: nodeOpacity }}
             className="px-4"
         >

@@ -4,7 +4,6 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { PCSActiveState } from '@/components/pcs/states/PCSActiveState';
 import { PCSArchiveState } from '@/components/pcs/states/PCSArchiveState';
-import { ContextualFAB } from '@/components/ui/ContextualFAB';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
@@ -80,7 +79,6 @@ export default function PcsScreen() {
                     >
                         <Animated.View>
                             <PCSActiveState />
-                            <PCSDevPanel />
                         </Animated.View>
                     </Animated.ScrollView>
                 ) : (
@@ -96,13 +94,12 @@ export default function PcsScreen() {
                                 clipToPadding: false,
                                 contentContainerStyle,
                             }}
-                            footer={<PCSDevPanel />}
                         />
                     )}
             </CollapsibleScaffold>
 
-            {/* FAB positioned outside ScrollView, inside ScreenGradient */}
-            <ContextualFAB />
+            {/* Floating demo panel — outside CollapsibleScaffold */}
+            <PCSDevPanel />
         </ScreenGradient>
     );
 }

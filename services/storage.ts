@@ -871,21 +871,36 @@ class SQLiteStorage implements IStorageService {
 
   async saveCareerEvents(events: CareerEvent[]): Promise<void> {
     await this.withWriteTransaction(async (runner) => {
-      for (const event of events) {
+      // Chunking to avoid SQLite variable limit (default usually 999 or 32766)
+      const CHUNK_SIZE = 50;
+
+      for (let i = 0; i < events.length; i += CHUNK_SIZE) {
+        const chunk = events.slice(i, i + CHUNK_SIZE);
+        if (chunk.length === 0) continue;
+
+        const placeholders = chunk.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+        const values: any[] = [];
+
+        for (const event of chunk) {
+          values.push(
+            event.eventId,
+            event.eventType,
+            event.title,
+            event.date,
+            event.location,
+            event.attendanceStatus,
+            event.priority,
+            event.qr_token || null,
+            new Date().toISOString(),
+            'synced'
+          );
+        }
+
         await runner.runAsync(
           `INSERT OR REPLACE INTO career_events (
             event_id, event_type, title, date, location, attendance_status, priority, qr_token, last_sync_timestamp, sync_status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-          event.eventId,
-          event.eventType,
-          event.title,
-          event.date,
-          event.location,
-          event.attendanceStatus,
-          event.priority,
-          event.qr_token || null,
-          new Date().toISOString(),
-          'synced'
+          ) VALUES ${placeholders};`,
+          ...values
         );
       }
     });

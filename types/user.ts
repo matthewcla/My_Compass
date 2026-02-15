@@ -20,7 +20,7 @@ export const DUTY_TYPES = [
 ] as const;
 
 export const MARITAL_STATUSES = ['single', 'married', 'divorced', 'widowed'] as const;
-export const HOUSING_TYPES = ['on_base', 'off_base', 'barracks', 'ship', 'government'] as const;
+export const HOUSING_TYPES = ['on_base', 'off_base', 'barracks', 'ship', 'government', 'not_yet_secured'] as const;
 export const DUTY_STATION_TYPES = ['CONUS', 'OCONUS', 'AFLOAT'] as const;
 export const DEPENDENT_RELATIONSHIPS = ['spouse', 'child', 'parent', 'other'] as const;
 
@@ -135,8 +135,6 @@ export const UserSchema = z.object({
     /** @security PII */
     homeAddress: AddressSchema.optional(),
     mailingAddress: AddressSchema.optional(),
-    /** Whether the member has a residence at their next duty station (they may not yet). */
-    hasNextDutyStationResidence: z.boolean().optional(),
 
     // ── Service Record ───────────────────────────────
     maritalStatus: z.enum(MARITAL_STATUSES).optional(),

@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { usePCSStore } from '@/store/usePCSStore';
-import { Check } from 'lucide-react-native';
 import { useColorScheme } from '@/components/useColorScheme';
+import { usePCSStore } from '@/store/usePCSStore';
 import { ChecklistItem } from '@/types/pcs';
+import { Check } from 'lucide-react-native';
+import React from 'react';
+import { Text, View } from 'react-native';
 
 export const PCSChecklist = () => {
     const { checklist, activeOrder } = usePCSStore();
@@ -48,23 +48,20 @@ export const PCSChecklist = () => {
 
                         return (
                             <View key={item.id} className={`flex-row items-center p-4 ${!isLast ? 'border-b border-slate-100 dark:border-slate-700' : ''}`}>
-                                <View className={`w-5 h-5 rounded-full border items-center justify-center mr-3 ${
-                                    isComplete ? 'bg-green-500 border-green-500' :
-                                    isActionRequired ? 'border-blue-500' :
-                                    'border-slate-300 dark:border-slate-600'
-                                }`}>
+                                <View className={`w-5 h-5 rounded-full border items-center justify-center mr-3 ${isComplete ? 'bg-green-500 border-green-500' :
+                                        isActionRequired ? 'border-blue-500' :
+                                            'border-slate-300 dark:border-slate-600'
+                                    }`}>
                                     {isComplete && <Check size={12} color="white" />}
                                     {isActionRequired && !isComplete && <View className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
                                 </View>
                                 <View className="flex-1">
-                                    <Text className={`text-base font-medium ${
-                                        isComplete ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'
-                                    }`}>
+                                    <Text className={`text-base font-medium ${isComplete ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'
+                                        }`}>
                                         {item.label}
                                     </Text>
-                                    <Text className="text-xs text-slate-400 uppercase mt-0.5">
-                                        {item.category.replace('_', ' ')}
-                                    </Text>
+
+
                                 </View>
                             </View>
                         );

@@ -84,10 +84,10 @@ export function TrackChecklistItem({ item, onToggle }: TrackChecklistItemProps) 
         {/* Status circle */}
         <View
           className={`w-5 h-5 rounded-full border items-center justify-center mr-3 ${isComplete
-              ? 'bg-green-500 border-green-500'
-              : showActionIndicator
-                ? 'border-blue-500'
-                : 'border-slate-300 dark:border-slate-600'
+            ? 'bg-green-500 border-green-500'
+            : showActionIndicator
+              ? 'border-blue-500'
+              : 'border-slate-300 dark:border-slate-600'
             }`}
         >
           {isComplete ? <Check size={12} color="#ffffff" /> : null}
@@ -128,9 +128,8 @@ export function TrackChecklistItem({ item, onToggle }: TrackChecklistItemProps) 
             <Text className="mt-0.5 text-xs text-green-600 dark:text-green-400">{completedDateLabel}</Text>
           ) : null}
 
-          <Text className="text-xs text-slate-400 uppercase mt-0.5">
-            {item.category.replace(/_/g, ' ')}
-          </Text>
+
+
         </View>
 
         {/* Action chevron */}

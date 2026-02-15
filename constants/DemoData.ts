@@ -59,7 +59,7 @@ export const DEMO_USERS: DemoUser[] = [
       state: 'WA',
       zip: '98207',
     },
-    hasNextDutyStationResidence: false,
+
     emergencyContact: {
       name: 'Maria Trent',
       phone: '425-555-0192',
@@ -72,9 +72,9 @@ export const DEMO_USERS: DemoUser[] = [
       { id: 'dep-a3', name: 'Sofia Trent', relationship: 'child', dob: '2021-02-28', efmpEnrolled: true, address: { street: '4318 Cascade Dr', city: 'Everett', state: 'WA', zip: '98207' } },
     ],
     housing: {
-      type: 'off_base',
-      address: '4318 Cascade Dr, Everett, WA',
-      zip: '98207',
+      type: 'not_yet_secured',
+      address: '',
+      zip: '',
     },
     vehicles: [
       { id: 'veh-a1', make: 'Honda', model: 'Pilot', year: 2022, licensePlate: 'WA-NAVY1' },
@@ -141,7 +141,7 @@ export const DEMO_USERS: DemoUser[] = [
       state: 'CA',
       zip: '92101',
     },
-    hasNextDutyStationResidence: true,
+
     emergencyContact: {
       name: 'Rosa Navarro',
       phone: '619-555-0847',
@@ -216,7 +216,7 @@ export const DEMO_USERS: DemoUser[] = [
       state: 'WA',
       zip: '98315',
     },
-    hasNextDutyStationResidence: false,
+
     emergencyContact: {
       name: 'Keisha Hargrove',
       phone: '360-555-0316',

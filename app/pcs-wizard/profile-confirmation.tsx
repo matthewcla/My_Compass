@@ -1,9 +1,9 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import Colors from '@/constants/Colors';
-import { useCurrentProfile } from '@/store/useDemoStore';
+import { useCurrentProfile, useUpdateProfile } from '@/store/useDemoStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { usePCSStore } from '@/store/usePCSStore';
-import { useUserStore } from '@/store/useUserStore';
+
 import type { Address, Beneficiary, DependentDetail, POV } from '@/types/user';
 import {
     DEPENDENT_RELATIONSHIPS,
@@ -382,7 +382,7 @@ export default function ProfileConfirmationScreen() {
 
     // ── Store ──────────────────────────────────────────────
     const user = useCurrentProfile();
-    const updateUser = useUserStore((s) => s.updateUser);
+    const updateUser = useUpdateProfile();
     const setHeaderVisible = useHeaderStore((s) => s.setVisible);
     const checklist = usePCSStore((s) => s.checklist);
     const setChecklistItemStatus = usePCSStore((s) => s.setChecklistItemStatus);
@@ -905,20 +905,6 @@ export default function ProfileConfirmationScreen() {
                                     keyboardType="numeric"
                                 />
 
-                                {/* Next Duty Station Residence */}
-                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 }}>
-                                    <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#CBD5E1' : '#334155', flex: 1 }}>
-                                        Residence at next duty station?
-                                    </Text>
-                                    <Switch
-                                        value={user.hasNextDutyStationResidence ?? false}
-                                        onValueChange={(v) => u('hasNextDutyStationResidence', v)}
-                                        trackColor={{ false: isDark ? '#3F3F46' : '#CBD5E1', true: '#3B82F6' }}
-                                    />
-                                </View>
-                                <Text style={{ fontSize: 11, color: isDark ? '#64748B' : '#94A3B8', marginBottom: 8 }}>
-                                    Indicate whether you have secured housing at your gaining command.
-                                </Text>
 
                                 {/* Emergency Contact Address */}
                                 <Text

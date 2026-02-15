@@ -22,6 +22,7 @@ interface DemoState {
   setPcsSubPhaseOverride: (subPhase: TRANSITSubPhase | null) => void;
   setUctPhaseOverride: (phase: UCTPhase | null) => void;
   setPcsContextOverride: (context: 'ACTIVE' | 'ARCHIVE' | null) => void;
+  updateSelectedUser: (updates: Partial<DemoUser>) => void;
   advanceLiquidationStatus: () => void;
   loadMockHistoricalOrders: () => void;
 }
@@ -39,6 +40,9 @@ export const useDemoStore = create<DemoState>()(
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
       setSelectedUser: (user) => set({ selectedUser: user }),
+      updateSelectedUser: (updates) => set((state) => ({
+        selectedUser: { ...state.selectedUser, ...updates },
+      })),
       setSelectedPhase: (phase) => set({ selectedPhase: phase }),
       setPcsPhaseOverride: (phase) => set({ pcsPhaseOverride: phase }),
       setPcsSubPhaseOverride: (subPhase) => set({ pcsSubPhaseOverride: subPhase }),
@@ -103,4 +107,20 @@ export const useCurrentProfile = (): User | null => {
     return selectedUser;
   }
   return realUser;
+};
+
+/**
+ * Helper hook to get the correct updateUser function based on Demo Mode status.
+ * In demo mode, updates go to useDemoStore.updateSelectedUser.
+ * In production mode, updates go to useUserStore.updateUser.
+ */
+export const useUpdateProfile = (): ((updates: Partial<User>) => void) => {
+  const isDemoMode = useDemoStore((state) => state.isDemoMode);
+  const updateDemoUser = useDemoStore((state) => state.updateSelectedUser);
+  const updateRealUser = useUserStore((state) => state.updateUser);
+
+  if (isDemoMode) {
+    return updateDemoUser;
+  }
+  return updateRealUser;
 };

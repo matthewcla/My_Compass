@@ -218,6 +218,22 @@ export const usePCSStore = create<PCSState>()(
           helpText: 'Verify your rank, dependents, and contact info are current in the system.',
         });
 
+        // Conditional: housing not yet secured → open task to update later
+        const demoStore = require('./useDemoStore').useDemoStore;
+        const currentUser = demoStore.getState().isDemoMode
+          ? demoStore.getState().selectedUser
+          : useUserStore.getState().user;
+        if (currentUser?.housing?.type === 'not_yet_secured') {
+          checklist.push({
+            id: generateUUID(),
+            label: 'Update Residence',
+            status: 'NOT_STARTED',
+            category: 'PRE_TRAVEL',
+            uctPhase: 1,
+            actionRoute: '/pcs-wizard/profile-confirmation',
+            helpText: 'You indicated housing is not yet secured. Update your residence when finalized.',
+          });
+        }
 
 
         // Phase 1: Conditional Screenings

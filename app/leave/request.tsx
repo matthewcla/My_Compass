@@ -429,9 +429,15 @@ export default function LeaveRequestScreen() {
                     >
                         <Text
                             style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
-                            className="text-slate-400 dark:text-gray-500 ml-8 mb-1"
+                            className="text-slate-400 dark:text-gray-500 ml-8 mb-0"
                         >
-                            LEAVE FLOW
+                            ADMIN FLOW
+                        </Text>
+                        <Text
+                            style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}
+                            className="text-slate-900 dark:text-white ml-8 mb-1"
+                        >
+                            Leave Request
                         </Text>
                         <WizardStatusBar
                             currentStep={activeStep}

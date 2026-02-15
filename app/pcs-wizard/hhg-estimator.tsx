@@ -1,5 +1,4 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { ScreenHeader } from '@/components/ScreenHeader';
 import { useColorScheme } from '@/components/useColorScheme';
 import { usePCSStore } from '@/store/usePCSStore';
 import { HHGItem } from '@/types/pcs';
@@ -20,7 +19,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-interface HHGTemplate extends Omit<HHGItem, 'id'> {}
+interface HHGTemplate extends Omit<HHGItem, 'id'> { }
 
 const COMMON_ITEMS: HHGTemplate[] = [
   { category: 'FURNITURE', description: 'Couch/Sofa', estimatedWeight: 200 },
@@ -152,9 +151,9 @@ export default function HHGEstimatorScreen() {
       prev.map((item) =>
         item.id === editingItem.id
           ? {
-              ...item,
-              estimatedWeight: nextWeight,
-            }
+            ...item,
+            estimatedWeight: nextWeight,
+          }
           : item,
       ),
     );
@@ -215,11 +214,21 @@ export default function HHGEstimatorScreen() {
 
   return (
     <View className="flex-1 bg-slate-50 dark:bg-slate-950">
-      <ScreenHeader
-        title="HHG Estimator"
-        subtitle="Room-by-room weight planner"
-        leftAction={{ icon: ChevronLeft, onPress: handleBack }}
-      />
+      <View style={{ paddingTop: insets.top }} className="bg-slate-50 dark:bg-slate-950 px-4 pb-2 pt-2">
+        <View className="flex-row items-start justify-between">
+          <View className="flex-1">
+            <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-400 dark:text-gray-500">
+              PHASE 2
+            </Text>
+            <Text style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }} className="text-slate-900 dark:text-white">
+              HHG Estimator
+            </Text>
+          </View>
+          <Pressable onPress={handleBack} className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+          </Pressable>
+        </View>
+      </View>
 
       <View className="px-4 pb-3 pt-1 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 z-10">
         <View className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-3">
@@ -320,11 +329,10 @@ export default function HHGEstimatorScreen() {
         <ScalePressable
           onPress={handleSaveEstimate}
           disabled={saving}
-          className={`rounded-xl px-4 py-3.5 items-center ${
-            saving
+          className={`rounded-xl px-4 py-3.5 items-center ${saving
               ? 'bg-slate-300 dark:bg-slate-700'
               : 'bg-blue-600 dark:bg-blue-700'
-          }`}
+            }`}
           accessibilityRole="button"
           accessibilityLabel="Save HHG estimate"
         >

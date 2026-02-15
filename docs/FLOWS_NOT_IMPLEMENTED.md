@@ -5,15 +5,15 @@
 
 ---
 
-## 1. Profile Confirmation Flow
+## ~~1. Profile Confirmation Flow~~ ✅ IMPLEMENTED
 
 | Property | Detail |
 |----------|--------|
 | **UCT Phase** | 1 — Orders & OBLISERV |
-| **Checklist Item** | "Profile Confirmation" |
-| **Current Behavior** | Manual toggle only (no `actionRoute`) |
-| **What's Needed** | Screen displaying user profile data (rank, dependents, contact info) from store with a "Confirm" action that marks the checklist item COMPLETE |
-| **Suggested Route** | `/pcs-wizard/profile-confirmation` |
+| **Route** | `/pcs-wizard/profile-confirmation` |
+| **Header** | `PHASE 1` / Profile Confirmation |
+| **Pattern** | 5-step ProfileStatusBar (Service → Contact → Dependents → Housing → Vehicle) with scroll-tracked sections, per-section confirm buttons (green/amber/red tri-state), skip detection on icon tap, and disabled final confirm until all sections acknowledged |
+| **Completeness Affordances** | Icon-only coloring (green = complete, amber = partial, red = skipped); connecting lines always neutral gray |
 
 ---
 

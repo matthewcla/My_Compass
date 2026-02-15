@@ -1,11 +1,11 @@
-import type { ApiResult } from '@/types/api';
-import type { User } from '@/types/user';
-import type { SyncStatus } from '@/types/schema';
-import type { IUserService } from './interfaces/IUserService';
 import mockProfileData from '@/data/mockProfile.json';
+import type { ApiResult } from '@/types/api';
+import type { SyncStatus } from '@/types/schema';
+import type { User } from '@/types/user';
+import type { IUserService } from './interfaces/IUserService';
 
 const MOCK_USER: User = {
-    ...mockProfileData,
+    ...(mockProfileData as unknown as User),
     rank: 'E-6',
     rating: 'IT',
     syncStatus: mockProfileData.syncStatus as SyncStatus,

@@ -191,6 +191,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 1,
+          actionRoute: '/pcs-wizard/profile-confirmation',
           helpText: 'Verify your rank, dependents, and contact info are current in the system.',
         });
         checklist.push({
@@ -248,7 +249,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 2,
-          actionRoute: '/pcs-wizard/hhg',
+          actionRoute: '/pcs-wizard/hhg-estimator',
           helpText: 'Book your household goods pickup through DPS. The earlier you book, the more flexibility on dates.',
         });
         checklist.push({
@@ -289,7 +290,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'FINANCE',
           uctPhase: 4,
-          actionRoute: '/pcs-wizard/travel-claim',
+          actionRoute: '/travel-claim/request',
           helpText: 'Your travel voucher for reimbursement. File within 5 business days of arrival for fastest payout.',
         });
 

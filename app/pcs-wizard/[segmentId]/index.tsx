@@ -158,9 +158,15 @@ export default function PCSWizardScreen() {
           >
             <Text
               style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
-              className="text-slate-400 dark:text-gray-500 ml-8 mb-1"
+              className="text-slate-400 dark:text-gray-500 ml-8 mb-0"
             >
-              PCS FLOW
+              PHASE 3
+            </Text>
+            <Text
+              style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}
+              className="text-slate-900 dark:text-white ml-8 mb-1"
+            >
+              PCS Travel Plan
             </Text>
             <PCSWizardStatusBar
               currentStep={activeStep}
@@ -250,8 +256,8 @@ export default function PCSWizardScreen() {
                   onPress={handleCommit}
                   disabled={!validateStep(0) || !validateStep(1)}
                   className={`flex-1 h-14 rounded-xl flex-row items-center justify-center ${validateStep(0) && validateStep(1)
-                      ? 'bg-emerald-600 active:bg-emerald-700'
-                      : 'bg-slate-300 dark:bg-slate-700'
+                    ? 'bg-emerald-600 active:bg-emerald-700'
+                    : 'bg-slate-300 dark:bg-slate-700'
                     }`}
                 >
                   <Check size={20} color="white" />

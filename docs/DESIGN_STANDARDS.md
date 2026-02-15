@@ -77,6 +77,39 @@ All multi-step forms follow the **single-page continuous-scroll wizard** pattern
 
 **Any new PCS form** (DLA Request, NSIPS Update, Travel Claim) must replicate this pattern exactly.
 
+#### 2.2.1 Flow Header Standard
+
+Every flow screen must display a **two-line header** above the status bar (or above the content if no status bar exists):
+
+1. **Subtitle** — `fontSize: 11`, `fontWeight: 600`, `letterSpacing: 1.5`, uppercase, secondary color (`text-slate-400 dark:text-gray-500`)
+   - For PCS flows: use `PHASE N` (e.g., `PHASE 1`, `PHASE 2`)
+   - For admin flows: use flow category (e.g., `ADMIN FLOW`)
+2. **Title** — `fontSize: 20`, `fontWeight: 800`, `letterSpacing: -0.5`, primary color (`text-slate-900 dark:text-white`)
+   - Human-readable flow name (e.g., `Profile Confirmation`, `HHG Estimator`, `Leave Request`)
+
+**Current flow registry:**
+
+| Screen | Subtitle | Title | Phase |
+|--------|----------|-------|-------|
+| Profile Confirmation | `PHASE 1` | Profile Confirmation | 1 |
+| Advance Basic Pay | `PHASE 2` | Advance Basic Pay | 2 |
+| HHG Estimator | `PHASE 2` | HHG Estimator | 2 |
+| PCS Travel Plan | `PHASE 3` | PCS Travel Plan | 3 |
+| Travel Claim | `PHASE 4` | Travel Claim | 4 |
+| Leave Request | `ADMIN FLOW` | Leave Request | — |
+
+**Implementation example:**
+```tsx
+<Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
+      className="text-slate-400 dark:text-gray-500 ml-8 mb-0">
+    PHASE 2
+</Text>
+<Text style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}
+      className="text-slate-900 dark:text-white ml-8 mb-1">
+    HHG Estimator
+</Text>
+```
+
 ### 2.3 Smart Stack (Widget Pattern)
 
 Widgets are small, glanceable components that can render in two modes:

@@ -10,8 +10,7 @@ import Colors from '@/constants/Colors';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { useTravelClaimStore } from '@/store/useTravelClaimStore';
 import { useUserId } from '@/store/useUserStore';
-import { CreateTravelClaimPayload, TravelClaim } from '@/types/travelClaim';
-import { calculateTravelClaim } from '@/utils/travelClaimCalculations';
+import { TravelClaim } from '@/types/travelClaim';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
@@ -88,7 +87,7 @@ export default function TravelClaimRequestScreen() {
         const init = async () => {
             try {
                 // Non-blocking fetch
-                fetchUserClaims(userId).catch(() => {});
+                fetchUserClaims(userId).catch(() => { });
                 setIsHydrated(true);
             } catch (e) {
                 // Fallback handled by timeout or state update
@@ -114,7 +113,7 @@ export default function TravelClaimRequestScreen() {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             lastSyncTimestamp: new Date().toISOString(),
-            syncStatus: 'pending',
+            syncStatus: 'pending_upload',
             departureDate: new Date().toISOString(),
             returnDate: new Date().toISOString(),
             departureLocation: '',
@@ -155,12 +154,12 @@ export default function TravelClaimRequestScreen() {
         const errors: number[] = [];
         // Map 0-4 to 1-5
         for (let i = 0; i <= 4; i++) {
-            const stepNum = (i + 1) as 1|2|3|4|5;
+            const stepNum = (i + 1) as 1 | 2 | 3 | 4 | 5;
             const res = validateStepStore(currentDraftId, stepNum);
             if (!res.success) {
                 // Only show error for current or past steps if invalid?
                 if (i <= activeStep && !res.success) {
-                     errors.push(i);
+                    errors.push(i);
                 }
             }
         }
@@ -198,16 +197,15 @@ export default function TravelClaimRequestScreen() {
             // 'destinationZip': ignored
         };
 
-        const targetField = fieldMap[field] || (field as keyof TravelClaim);
+        const targetField = fieldMap[field];
 
-        // Check if targetField is actually a key of TravelClaim (runtime check mostly)
-        // We cast to any to bypass strict type check for now, relying on store to handle partial updates
-        if (targetField === 'originZip' || targetField === 'destinationZip' || targetField === 'estimatedMileage') {
-             // Ignore transient fields for now
-             return;
+        // Ignore transient fields that don't exist on TravelClaim
+        if (!targetField && ['originZip', 'destinationZip', 'estimatedMileage'].includes(field)) {
+            return;
         }
 
-        updateDraft(currentDraftId, { [targetField]: value });
+        const resolvedField = targetField || (field as keyof TravelClaim);
+        updateDraft(currentDraftId, { [resolvedField]: value });
     };
 
     // specialized updaters
@@ -260,13 +258,9 @@ export default function TravelClaimRequestScreen() {
     };
 
     const handleSubmit = async () => {
-        if (!validateAll() || !claim || !userId) return;
+        if (!validateAll() || !claim || !userId || !currentDraftId) return;
 
         try {
-            // WORKAROUND: I will update the draft status to 'pending' and maybe call `submitClaim`
-            // effectively replacing it? Or maybe I shouldn't call `submitClaim` if it ignores data.
-            // I'll stick to updating the draft to 'pending'.
-
             await updateDraft(currentDraftId, {
                 status: 'pending',
                 submittedAt: new Date().toISOString(),
@@ -310,11 +304,16 @@ export default function TravelClaimRequestScreen() {
                         entering={FadeInDown.delay(100).springify()}
                         className="bg-white/95 dark:bg-slate-900/95 sticky top-0 z-10 px-4 py-2"
                     >
-                        <View className="flex-row justify-between items-center mb-1 pl-8 pr-2">
-                             <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-400 dark:text-gray-500">
-                                TRAVEL CLAIM
-                            </Text>
-                            <Pressable onPress={() => setShowExitModal(true)} className="p-1">
+                        <View className="flex-row justify-between items-start mb-1 pr-2">
+                            <View className="pl-8">
+                                <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-400 dark:text-gray-500">
+                                    PHASE 4
+                                </Text>
+                                <Text style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }} className="text-slate-900 dark:text-white">
+                                    Travel Claim
+                                </Text>
+                            </View>
+                            <Pressable onPress={() => setShowExitModal(true)} className="p-1 mt-1">
                                 <X size={20} color={themeColors.text} />
                             </Pressable>
                         </View>
@@ -323,7 +322,6 @@ export default function TravelClaimRequestScreen() {
                             currentStep={activeStep}
                             onStepPress={scrollToSection}
                             errorSteps={stepErrors}
-                            steps={STEPS}
                         />
                     </Animated.View>
 
@@ -348,11 +346,11 @@ export default function TravelClaimRequestScreen() {
                                     pcsOrderId={claim.orderNumber}
                                     startDate={claim.departureDate}
                                     endDate={claim.returnDate}
-                                    travelMode={claim.travelMode}
-                                    originZip={''} // Not in TravelClaim type top level, simplified
+                                    travelMode={({ pov: 'POV', commercial_air: 'AIR', gov_vehicle: 'GOV_VEHICLE', mixed: 'MIXED', rail: 'POV' } as const)[claim.travelMode]}
+                                    originZip={''}
                                     destinationZip={''}
                                     estimatedMileage={claim.maltMiles}
-                                    actualMileage={claim.maltMiles} // Re-using for now
+                                    actualMileage={claim.maltMiles}
                                     onUpdate={(field, val) => handleUpdate(field as string, val)}
                                     embedded
                                 />
@@ -415,7 +413,6 @@ export default function TravelClaimRequestScreen() {
                                     onSign={handleSubmit}
                                     isSubmitting={isSyncing}
                                     disabled={!claim.memberCertification}
-                                    label="Submit Claim"
                                 />
                             </View>
                         </View>
@@ -423,24 +420,24 @@ export default function TravelClaimRequestScreen() {
                 </View>
             </SafeAreaView>
 
-             {/* Exit Modal */}
-             {showExitModal && (
-                    <View className="absolute inset-0 z-50 items-center justify-center p-4">
-                        <Animated.View entering={FadeIn} className="absolute inset-0 bg-black/60">
-                            <Pressable className="flex-1" onPress={() => setShowExitModal(false)} />
-                        </Animated.View>
-                        <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden p-6">
-                            <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">Save Draft?</Text>
-                            <View className="gap-3 mt-4">
-                                <Pressable onPress={() => { setShowExitModal(false); router.back(); }} className="bg-blue-600 p-3 rounded-xl items-center">
-                                    <Text className="text-white font-bold">Save & Exit</Text>
-                                </Pressable>
-                                <Pressable onPress={() => { discardDraft(currentDraftId!); setShowExitModal(false); router.back(); }} className="bg-red-50 dark:bg-red-900/20 p-3 rounded-xl items-center">
-                                    <Text className="text-red-600 dark:text-red-400 font-bold">Discard</Text>
-                                </Pressable>
-                            </View>
-                        </Animated.View>
-                    </View>
+            {/* Exit Modal */}
+            {showExitModal && (
+                <View className="absolute inset-0 z-50 items-center justify-center p-4">
+                    <Animated.View entering={FadeIn} className="absolute inset-0 bg-black/60">
+                        <Pressable className="flex-1" onPress={() => setShowExitModal(false)} />
+                    </Animated.View>
+                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden p-6">
+                        <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">Save Draft?</Text>
+                        <View className="gap-3 mt-4">
+                            <Pressable onPress={() => { setShowExitModal(false); router.back(); }} className="bg-blue-600 p-3 rounded-xl items-center">
+                                <Text className="text-white font-bold">Save & Exit</Text>
+                            </Pressable>
+                            <Pressable onPress={() => { discardDraft(currentDraftId!); setShowExitModal(false); router.back(); }} className="bg-red-50 dark:bg-red-900/20 p-3 rounded-xl items-center">
+                                <Text className="text-red-600 dark:text-red-400 font-bold">Discard</Text>
+                            </Pressable>
+                        </View>
+                    </Animated.View>
+                </View>
             )}
 
             {/* Success Overlay */}

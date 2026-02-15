@@ -1,5 +1,5 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, HHGItem, LiquidationStatus, LiquidationStep, LiquidationTracking, MovingCostsBreakdown, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
+import { ChecklistItem, HHGItem, HHGShipment, HHGShipmentType, LiquidationStatus, LiquidationStep, LiquidationTracking, MovingCostsBreakdown, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
@@ -118,11 +118,9 @@ interface Financials {
   totalPerDiem: number;
   hhg: {
     maxWeightAllowance: number;
-    estimatedWeight: number;
+    estimatedWeight: number;        // sum across ALL shipments
     isOverLimit: boolean;
-    items: HHGItem[];
-    shipmentType: 'GBL' | 'PPM' | null;
-    selectedPickupWindowId: string | null;
+    shipments: HHGShipment[];       // multi-shipment support
     estimatedExcessCost: number;
   };
   movingCosts: MovingCostsBreakdown | null;
@@ -146,12 +144,18 @@ interface PCSState {
   commitSegment: (segmentId: string) => void;
   updateDraft: (updates: Partial<PCSSegment>) => void;
 
-  // HHG Actions
+  // HHG Shipment Actions (multi-shipment)
+  addShipment: (type: HHGShipmentType, label: string, originZip: string, destinationZip?: string | null) => void;
+  removeShipment: (id: string) => void;
+  addItemToShipment: (shipmentId: string, item: Omit<HHGItem, 'id'>) => void;
+  removeItemFromShipment: (shipmentId: string, itemId: string) => void;
+  updateShipment: (id: string, updates: Partial<HHGShipment>) => void;
+
+  // Legacy HHG Actions (forward to default shipment for backward compat)
   addHHGItem: (item: Omit<HHGItem, 'id'>) => void;
-  updateHHGItem: (id: string, updates: Partial<HHGItem>) => void;
   removeHHGItem: (id: string) => void;
   clearHHGItems: () => void;
-  updateHHGPlan: (updates: { shipmentType?: 'GBL' | 'PPM' | null; selectedPickupWindowId?: string | null; estimatedExcessCost?: number }) => void;
+  updateHHGPlan: (updates: Partial<{ estimatedExcessCost: number }>) => void;
   updateMovingCosts: (updates: Partial<MovingCostsBreakdown>) => void;
 
   // Liquidation Actions
@@ -197,9 +201,7 @@ export const usePCSStore = create<PCSState>()(
           maxWeightAllowance: 0,
           estimatedWeight: 0,
           isOverLimit: false,
-          items: [],
-          shipmentType: null,
-          selectedPickupWindowId: null,
+          shipments: [],
           estimatedExcessCost: 0,
         },
         movingCosts: null,
@@ -388,9 +390,7 @@ export const usePCSStore = create<PCSState>()(
               maxWeightAllowance: 0,
               estimatedWeight: 0,
               isOverLimit: false,
-              items: [],
-              shipmentType: null,
-              selectedPickupWindowId: null,
+              shipments: [],
               estimatedExcessCost: 0,
             },
             movingCosts: null,
@@ -420,24 +420,28 @@ export const usePCSStore = create<PCSState>()(
         const hasDependents = (user.dependents || 0) > 0;
         const dlaRate = getDLARate(user.rank, hasDependents);
 
-        // Safe fallback for persisted state that predates HHG field
+        // Safe fallback for persisted state that predates multi-shipment migration
         const currentHhg = financials.hhg ?? {
           maxWeightAllowance: 0,
           estimatedWeight: 0,
           isOverLimit: false,
-          items: [],
+          shipments: [],
+          estimatedExcessCost: 0,
         };
 
-        const hhgItems = currentHhg.items ?? [];
+        // Sum weight across ALL shipments
+        const allShipments = currentHhg.shipments ?? [];
         const maxWeight = getHHGWeightAllowance(user.rank || 'E-1', hasDependents);
-        const estimatedWeight = hhgItems.reduce((sum, item) => sum + item.estimatedWeight, 0);
+        const estimatedWeight = allShipments.reduce(
+          (sum, s) => sum + s.items.reduce((iSum, i) => iSum + i.estimatedWeight, 0), 0
+        );
 
         set({
           financials: {
             ...financials,
             dla: {
               ...financials.dla,
-              eligible: true, // Assuming basic eligibility
+              eligible: true,
               estimatedAmount: financials.dla.receivedFY ? 0 : dlaRate,
             },
             totalMalt,
@@ -494,8 +498,8 @@ export const usePCSStore = create<PCSState>()(
           get().recalculateFinancials();
         }
 
-        // Recalculate if HHG items change
-        if (newFinancials.hhg && newFinancials.hhg.items) {
+        // Recalculate if HHG shipments change
+        if (newFinancials.hhg && newFinancials.hhg.shipments) {
           get().recalculateFinancials();
         }
       },
@@ -586,120 +590,165 @@ export const usePCSStore = create<PCSState>()(
         });
       },
 
-      addHHGItem: (item) => {
+      // ─── Multi-Shipment Actions ───────────────────────────────────
+
+      addShipment: (type, label, originZip, destinationZip) => {
         const id = generateUUID();
+        const newShipment: HHGShipment = {
+          id,
+          type,
+          label,
+          items: [],
+          estimatedWeight: 0,
+          originZip,
+          destinationZip: type === 'NTS' ? null : (destinationZip ?? null),
+          selectedPickupWindowId: null,
+          status: 'DRAFT',
+          ...(type === 'NTS' ? { storage: { facility: 'NTS', maxDaysSIT: 90, estimatedStartDate: new Date().toISOString().split('T')[0] } } : {}),
+        };
+        set((state) => ({
+          financials: {
+            ...state.financials,
+            hhg: {
+              ...state.financials.hhg,
+              shipments: [...(state.financials.hhg.shipments || []), newShipment],
+            },
+          },
+        }));
+      },
+
+      removeShipment: (id) => {
         set((state) => {
-          // Guard against undefined hhg (persisted state fallback)
-          const currentHhg = state.financials.hhg ?? {
-            maxWeightAllowance: 0,
-            estimatedWeight: 0,
-            isOverLimit: false,
-            items: [],
-          };
-
-          const newItems = [...(currentHhg.items || []), { ...item, id }];
-          const estimatedWeight = newItems.reduce((sum, i) => sum + i.estimatedWeight, 0);
-
-          // Re-verify allowance in case rank changed without recalc (though recalculateFinancials handles it usually)
-          // We can just use the current max, or we could re-run getHHGWeightAllowance if we had user access here easily.
-          // Sticking to state.financials.hhg.maxWeightAllowance is safer/faster for now.
-          const maxWeight = currentHhg.maxWeightAllowance || 0;
-          const isOverLimit = estimatedWeight > maxWeight;
-
+          const newShipments = (state.financials.hhg.shipments || []).filter(s => s.id !== id);
+          const estimatedWeight = newShipments.reduce(
+            (sum, s) => sum + s.items.reduce((iSum, i) => iSum + i.estimatedWeight, 0), 0
+          );
+          const maxWeight = state.financials.hhg.maxWeightAllowance || 0;
           return {
             financials: {
               ...state.financials,
               hhg: {
-                ...currentHhg,
-                items: newItems,
+                ...state.financials.hhg,
+                shipments: newShipments,
                 estimatedWeight,
-                isOverLimit,
+                isOverLimit: estimatedWeight > maxWeight,
               },
             },
           };
         });
       },
 
-      updateHHGItem: (id, updates) => {
+      addItemToShipment: (shipmentId, item) => {
+        const itemId = generateUUID();
         set((state) => {
-          const currentHhg = state.financials.hhg ?? {
-            maxWeightAllowance: 0,
-            estimatedWeight: 0,
-            isOverLimit: false,
-            items: [],
-          };
-
-          const newItems = (currentHhg.items || []).map((item) =>
-            item.id === id ? { ...item, ...updates } : item
+          const shipments = (state.financials.hhg.shipments || []).map(s => {
+            if (s.id !== shipmentId) return s;
+            const newItems = [...s.items, { ...item, id: itemId }];
+            return {
+              ...s,
+              items: newItems,
+              estimatedWeight: newItems.reduce((sum, i) => sum + i.estimatedWeight, 0),
+            };
+          });
+          const estimatedWeight = shipments.reduce(
+            (sum, s) => sum + s.items.reduce((iSum, i) => iSum + i.estimatedWeight, 0), 0
           );
-
-          const estimatedWeight = newItems.reduce((sum, i) => sum + i.estimatedWeight, 0);
-          const maxWeight = currentHhg.maxWeightAllowance || 0;
-          const isOverLimit = estimatedWeight > maxWeight;
-
+          const maxWeight = state.financials.hhg.maxWeightAllowance || 0;
           return {
             financials: {
               ...state.financials,
               hhg: {
-                ...currentHhg,
-                items: newItems,
+                ...state.financials.hhg,
+                shipments,
                 estimatedWeight,
-                isOverLimit,
+                isOverLimit: estimatedWeight > maxWeight,
               },
             },
           };
         });
+      },
+
+      removeItemFromShipment: (shipmentId, itemId) => {
+        set((state) => {
+          const shipments = (state.financials.hhg.shipments || []).map(s => {
+            if (s.id !== shipmentId) return s;
+            const newItems = s.items.filter(i => i.id !== itemId);
+            return {
+              ...s,
+              items: newItems,
+              estimatedWeight: newItems.reduce((sum, i) => sum + i.estimatedWeight, 0),
+            };
+          });
+          const estimatedWeight = shipments.reduce(
+            (sum, s) => sum + s.items.reduce((iSum, i) => iSum + i.estimatedWeight, 0), 0
+          );
+          const maxWeight = state.financials.hhg.maxWeightAllowance || 0;
+          return {
+            financials: {
+              ...state.financials,
+              hhg: {
+                ...state.financials.hhg,
+                shipments,
+                estimatedWeight,
+                isOverLimit: estimatedWeight > maxWeight,
+              },
+            },
+          };
+        });
+      },
+
+      updateShipment: (id, updates) => {
+        set((state) => ({
+          financials: {
+            ...state.financials,
+            hhg: {
+              ...state.financials.hhg,
+              shipments: (state.financials.hhg.shipments || []).map(s =>
+                s.id === id ? { ...s, ...updates } : s
+              ),
+            },
+          },
+        }));
+      },
+
+      // ─── Legacy HHG Actions (forward to default shipment) ────────
+
+      addHHGItem: (item) => {
+        const { financials } = get();
+        let shipments = financials.hhg.shipments || [];
+        let defaultShipment = shipments[0];
+        if (!defaultShipment) {
+          // Auto-create default shipment
+          get().addShipment('GBL', 'Main Shipment', '');
+          shipments = get().financials.hhg.shipments;
+          defaultShipment = shipments[0];
+        }
+        get().addItemToShipment(defaultShipment.id, item);
       },
 
       removeHHGItem: (id) => {
-        set((state) => {
-          const currentHhg = state.financials.hhg ?? {
-            maxWeightAllowance: 0,
-            estimatedWeight: 0,
-            isOverLimit: false,
-            items: [],
-          };
-
-          const newItems = (currentHhg.items || []).filter((item) => item.id !== id);
-          const estimatedWeight = newItems.reduce((sum, i) => sum + i.estimatedWeight, 0);
-          const maxWeight = currentHhg.maxWeightAllowance || 0;
-          const isOverLimit = estimatedWeight > maxWeight;
-
-          return {
-            financials: {
-              ...state.financials,
-              hhg: {
-                ...currentHhg,
-                items: newItems,
-                estimatedWeight,
-                isOverLimit,
-              },
-            },
-          };
-        });
+        // Search all shipments for the item
+        const { financials } = get();
+        for (const s of (financials.hhg.shipments || [])) {
+          if (s.items.some(i => i.id === id)) {
+            get().removeItemFromShipment(s.id, id);
+            return;
+          }
+        }
       },
 
       clearHHGItems: () => {
-        set((state) => {
-          const currentHhg = state.financials.hhg ?? {
-            maxWeightAllowance: 0,
-            estimatedWeight: 0,
-            isOverLimit: false,
-            items: [],
-          };
-
-          return {
-            financials: {
-              ...state.financials,
-              hhg: {
-                ...currentHhg,
-                items: [],
-                estimatedWeight: 0,
-                isOverLimit: false,
-              },
+        set((state) => ({
+          financials: {
+            ...state.financials,
+            hhg: {
+              ...state.financials.hhg,
+              shipments: [],
+              estimatedWeight: 0,
+              isOverLimit: false,
             },
-          };
-        });
+          },
+        }));
       },
 
       updateHHGPlan: (updates) => {

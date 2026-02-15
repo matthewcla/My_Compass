@@ -24,7 +24,7 @@ export interface PCSStop {
 
 export interface HHGItem {
   id: string;
-  category: 'FURNITURE' | 'APPLIANCES' | 'BOXES' | 'VEHICLE' | 'OTHER';
+  category: 'FURNITURE' | 'APPLIANCES' | 'ELECTRONICS' | 'BOXES' | 'VEHICLE' | 'OUTDOOR' | 'KIDS' | 'OTHER';
   description: string;
   estimatedWeight: number;
 }
@@ -200,7 +200,56 @@ export interface HistoricalPCSOrder {
 
 // ─── DPS / HHG Move Planning Types ────────────────────────────────
 
-export type HHGShipmentType = 'GBL' | 'PPM';
+export type HHGShipmentType = 'GBL' | 'PPM' | 'NTS';
+
+/** Storage facility type: NTS = long-term government storage, SIT = short-term at origin/destination. */
+export type StorageType = 'NTS' | 'SIT_ORIGIN' | 'SIT_DESTINATION';
+
+/** A single "lot" of HHG being moved or stored. */
+export interface HHGShipment {
+  id: string;
+  type: HHGShipmentType;
+  label: string;
+  items: HHGItem[];
+  estimatedWeight: number;
+  originZip: string;
+  destinationZip: string | null;  // null for NTS
+
+  storage?: {
+    facility: StorageType;
+    maxDaysSIT: number;           // 90 days per JTR
+    estimatedStartDate: string;
+    estimatedEndDate?: string;
+  };
+
+  dpsConfirmation?: DPSMoveConfirmation | null;
+  selectedPickupWindowId: string | null;
+  status: 'DRAFT' | 'SUBMITTED' | 'CONFIRMED';
+}
+
+export interface StorageFacility {
+  id: string;
+  name: string;
+  address: string;
+  zip: string;
+  capacityLabel: 'AVAILABLE' | 'LIMITED' | 'FULL';
+}
+
+export interface NTSStorageRequest {
+  originZip: string;
+  facilityId: string;
+  estimatedWeight: number;
+  estimatedStartDate: string;
+  memberName: string;
+  ordersNumber: string;
+}
+
+export interface NTSStorageConfirmation {
+  confirmationNumber: string;
+  facility: StorageFacility;
+  scheduledPickup: PickupWindow;
+  createdAt: string;
+}
 
 export interface PickupWindow {
   id: string;

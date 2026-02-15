@@ -1,10 +1,14 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import { HHGCostProjection } from '@/components/pcs/financials/HHGCostProjection';
+import { HHGWeightRing } from '@/components/pcs/widgets/HHGWeightRing';
 import { MoveDatePlanner } from '@/components/pcs/widgets/MoveDatePlanner';
 import { HHGWizardStatusBar } from '@/components/pcs/wizard/HHGWizardStatusBar';
+import { services } from '@/services/api/serviceRegistry';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { usePCSStore } from '@/store/usePCSStore';
+import { isApiSuccess } from '@/types/api';
 import { HHGItem } from '@/types/pcs';
+import { HHGTemplate, HHG_CATALOGUE, HHG_ROOMS, QUICK_ESTIMATE_PRESETS, getQuickEstimateWeight } from '@/utils/hhg';
 import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
@@ -13,53 +17,36 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import {
     CheckCircle,
     ChevronLeft,
-    ExternalLink,
+    Home,
+    Loader2,
     Package,
+    PenLine,
     Plus,
+    Send,
     Trash2,
-    Weight
+    Weight,
+    Zap
 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     KeyboardAvoidingView,
     LayoutChangeEvent,
-    Linking,
     Modal,
     NativeScrollEvent,
     NativeSyntheticEvent,
     Platform,
     Pressable,
+    ScrollView,
     Text,
     TextInput,
     View,
-    useColorScheme,
+    useColorScheme
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// ─── HHG Templates ─────────────────────────────────────────────
-
-interface HHGTemplate extends Omit<HHGItem, 'id'> { }
-
-const COMMON_ITEMS: HHGTemplate[] = [
-    { category: 'FURNITURE', description: 'Couch/Sofa', estimatedWeight: 200 },
-    { category: 'FURNITURE', description: 'King Bed Frame', estimatedWeight: 150 },
-    { category: 'FURNITURE', description: 'Dining Table', estimatedWeight: 100 },
-    { category: 'FURNITURE', description: 'Dresser', estimatedWeight: 120 },
-    { category: 'FURNITURE', description: 'Bookshelf', estimatedWeight: 80 },
-    { category: 'APPLIANCES', description: 'Refrigerator', estimatedWeight: 250 },
-    { category: 'APPLIANCES', description: 'Washer + Dryer Set', estimatedWeight: 300 },
-    { category: 'APPLIANCES', description: 'Microwave', estimatedWeight: 45 },
-    { category: 'BOXES', description: 'Small Box (1.5 cu ft)', estimatedWeight: 30 },
-    { category: 'BOXES', description: 'Medium Box (3 cu ft)', estimatedWeight: 50 },
-    { category: 'BOXES', description: 'Large Box (4.5 cu ft)', estimatedWeight: 70 },
-    { category: 'BOXES', description: 'Wardrobe Box', estimatedWeight: 90 },
-    { category: 'VEHICLE', description: 'Motorcycle', estimatedWeight: 500 },
-    { category: 'OTHER', description: 'Gym Equipment Set', estimatedWeight: 220 },
-    { category: 'OTHER', description: 'Tool Chest', estimatedWeight: 180 },
-    { category: 'OTHER', description: 'Outdoor Grill', estimatedWeight: 90 },
-];
+// Use the catalogue from utils/hhg.ts — no inline templates needed
 
 const TEMP_ITEM_PREFIX = 'tmp-hhg-';
 const TOTAL_STEPS = 4;
@@ -108,6 +95,7 @@ export default function HHGMovePlannerScreen() {
     const removeHHGItem = usePCSStore((s) => s.removeHHGItem);
     const setChecklistItemStatus = usePCSStore((s) => s.setChecklistItemStatus);
     const checklist = usePCSStore((s) => s.checklist);
+    const activeOrder = usePCSStore((s) => s.activeOrder);
 
     // ── Hide Global Header ────────────────────────────────────
     useFocusEffect(
@@ -127,13 +115,25 @@ export default function HHGMovePlannerScreen() {
     const [showSuccess, setShowSuccess] = useState(false);
     const initialItemsRef = useRef<HHGItem[]>([]);
 
+    // Catalogue UI
+    const [selectedRoom, setSelectedRoom] = useState<string>('Living Room');
+    const [showCustomEntry, setShowCustomEntry] = useState(false);
+    const [customDesc, setCustomDesc] = useState('');
+    const [customWeight, setCustomWeight] = useState('');
+    const [showQuickEstimate, setShowQuickEstimate] = useState(false);
+
+    // DPS Submission
+    const [dpsSubmitting, setDpsSubmitting] = useState(false);
+    const [dpsConfirmation, setDpsConfirmation] = useState<string | null>(null);
+
     // ── Scroll Tracking State ─────────────────────────────────
     const [activeStep, setActiveStep] = useState(0);
     const scrollViewRef = useRef<any>(null);
     const sectionCoords = useRef<number[]>([]);
 
     useEffect(() => {
-        const cloned = (hhg.items || []).map((item) => ({ ...item }));
+        const allItems = (hhg.shipments || []).flatMap(s => s.items);
+        const cloned = allItems.map((item) => ({ ...item }));
         setItems(cloned);
         initialItemsRef.current = cloned;
 
@@ -234,6 +234,63 @@ export default function HHGMovePlannerScreen() {
             )
         );
         closeEditModal();
+    };
+
+    // ── Custom Item Entry ─────────────────────────────────────
+
+    const handleAddCustomItem = () => {
+        const w = parseWeightInput(customWeight);
+        if (!customDesc.trim() || w <= 0) return;
+        triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
+        setItems((prev) => [...prev, createTempItem({
+            category: 'OTHER',
+            description: customDesc.trim(),
+            estimatedWeight: w,
+            room: 'Other',
+        })]);
+        setCustomDesc('');
+        setCustomWeight('');
+        setShowCustomEntry(false);
+    };
+
+    // ── Quick Estimate ────────────────────────────────────────
+
+    const handleQuickEstimate = (presetKey: string) => {
+        triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);
+        const weight = getQuickEstimateWeight(presetKey);
+        setItems([createTempItem({
+            category: 'OTHER',
+            description: `Quick Estimate — ${presetKey}`,
+            estimatedWeight: weight,
+            room: 'Other',
+        })]);
+        setShowQuickEstimate(false);
+        setSheetOpen(false);
+    };
+
+    // ── In-App DPS Submission ─────────────────────────────────
+
+    const handleDPSSubmit = async () => {
+        if (dpsSubmitting || runningTotal === 0) return;
+        setDpsSubmitting(true);
+        triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);
+
+        const shipment = hhg.shipments?.[0];
+        const result = await services.dps.createMoveRequest({
+            originZip: shipment?.originZip || '23604',
+            destinationZip: shipment?.destinationZip || activeOrder?.gainingCommand?.zip || '92134',
+            estimatedWeight: runningTotal,
+            shipmentType: (shipment?.type as any) || 'GBL',
+            requestedPickupWindowId: shipment?.selectedPickupWindowId || '',
+            memberName: 'Service Member',
+            ordersNumber: activeOrder?.orderNumber || '',
+        });
+
+        if (isApiSuccess(result)) {
+            setDpsConfirmation(result.data.confirmationNumber);
+            triggerHaptic(Haptics.ImpactFeedbackStyle.Heavy);
+        }
+        setDpsSubmitting(false);
     };
 
     // ── Persistence Logic ─────────────────────────────────────
@@ -375,22 +432,17 @@ export default function HHGMovePlannerScreen() {
                             <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
                                 <Text className="text-lg font-bold text-slate-900 dark:text-white mb-3">Weight Estimate</Text>
 
-                                {/* Running Total Card */}
-                                <View className="rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 px-4 py-3 mb-3">
-                                    <View className="flex-row items-center justify-between">
-                                        <Text className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-zinc-400">Running Total</Text>
-                                        <View className={`rounded-full px-2 py-0.5 ${usagePercent > 100 ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/40' : usagePercent > 80 ? 'bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/40' : 'bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700/40'}`}>
-                                            <Text className={`text-[11px] font-semibold ${totalToneClass}`}>
-                                                {Math.round(usagePercent)}%
-                                            </Text>
-                                        </View>
-                                    </View>
-                                    <Text className={`mt-1 text-xl font-black ${totalToneClass}`}>{formatLbs(runningTotal)}</Text>
-                                    <Text className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">/ {formatLbs(maxWeightAllowance)} limit</Text>
+                                {/* Animated Weight Ring */}
+                                <View className="rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 px-4 py-5 mb-3">
+                                    <HHGWeightRing
+                                        estimatedWeight={runningTotal}
+                                        maxWeight={maxWeightAllowance}
+                                        isDark={isDark}
+                                    />
 
                                     <ScalePressable
                                         onPress={() => setSheetOpen(true)}
-                                        className="mt-3 rounded-lg border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-900/20 px-3 py-2.5 flex-row items-center justify-center"
+                                        className="mt-4 rounded-lg border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-900/20 px-3 py-2.5 flex-row items-center justify-center"
                                         accessibilityRole="button"
                                         accessibilityLabel="Add HHG item"
                                     >
@@ -466,7 +518,7 @@ export default function HHGMovePlannerScreen() {
                                     </View>
                                     <View className="flex-row justify-between">
                                         <Text className="text-slate-500 dark:text-zinc-400 text-sm">Shipment Type</Text>
-                                        <Text className="text-slate-900 dark:text-white text-sm font-semibold">{hhg.shipmentType === 'PPM' ? 'PPM (DITY)' : 'GBL (Gov. Shipment)'}</Text>
+                                        <Text className="text-slate-900 dark:text-white text-sm font-semibold">{(hhg.shipments?.[0]?.type ?? 'GBL') === 'PPM' ? 'PPM (DITY)' : 'GBL (Gov. Shipment)'}</Text>
                                     </View>
                                     <View className="flex-row justify-between">
                                         <Text className="text-slate-500 dark:text-zinc-400 text-sm">Est. Excess Cost</Text>
@@ -475,14 +527,34 @@ export default function HHGMovePlannerScreen() {
                                         </Text>
                                     </View>
 
-                                    {/* External DPS Link */}
-                                    <Pressable
-                                        onPress={() => Linking.openURL('https://www.move.mil')}
-                                        className="mt-2 flex-row items-center justify-center gap-2 rounded-xl border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-950/30 px-4 py-3"
-                                    >
-                                        <ExternalLink size={16} color={isDark ? '#93c5fd' : '#1d4ed8'} />
-                                        <Text className="text-blue-700 dark:text-blue-300 text-sm font-semibold">Schedule on move.mil →</Text>
-                                    </Pressable>
+                                    {/* In-App DPS Submission */}
+                                    {dpsConfirmation ? (
+                                        <View className="mt-2 rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3">
+                                            <View className="flex-row items-center gap-2">
+                                                <CheckCircle size={16} color={isDark ? '#34d399' : '#059669'} />
+                                                <Text className="text-emerald-700 dark:text-emerald-300 text-sm font-semibold">Move Scheduled</Text>
+                                            </View>
+                                            <Text className="text-emerald-600 dark:text-emerald-400 text-xs mt-1">Confirmation: {dpsConfirmation}</Text>
+                                        </View>
+                                    ) : (
+                                        <Pressable
+                                            onPress={handleDPSSubmit}
+                                            disabled={dpsSubmitting || runningTotal === 0}
+                                            className={`mt-2 flex-row items-center justify-center gap-2 rounded-xl px-4 py-3 ${dpsSubmitting || runningTotal === 0
+                                                ? 'bg-slate-100 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/40'
+                                                : 'bg-blue-600 dark:bg-blue-700 active:bg-blue-700 dark:active:bg-blue-800'
+                                                }`}
+                                        >
+                                            {dpsSubmitting ? (
+                                                <Loader2 size={16} color={isDark ? '#93c5fd' : '#1d4ed8'} />
+                                            ) : (
+                                                <Send size={16} color={runningTotal === 0 ? (isDark ? '#64748b' : '#94a3b8') : '#ffffff'} />
+                                            )}
+                                            <Text className={`text-sm font-semibold ${runningTotal === 0 ? 'text-slate-400 dark:text-zinc-500' : 'text-white'}`}>
+                                                {dpsSubmitting ? 'Submitting to DPS...' : 'Submit Move Request'}
+                                            </Text>
+                                        </Pressable>
+                                    )}
                                 </View>
                             </View>
                         </Animated.ScrollView>
@@ -505,7 +577,7 @@ export default function HHGMovePlannerScreen() {
                                 <View className="items-center flex-1">
                                     <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">Type</Text>
                                     <Text className="text-sm font-bold text-slate-900 dark:text-white">
-                                        {hhg.shipmentType === 'PPM' ? 'PPM' : 'GBL'}
+                                        {(hhg.shipments?.[0]?.type ?? 'GBL') === 'PPM' ? 'PPM' : 'GBL'}
                                     </Text>
                                 </View>
                                 <View className="items-center flex-1">
@@ -607,24 +679,126 @@ export default function HHGMovePlannerScreen() {
                 </Animated.View>
             )}
 
-            {/* ── Add Item Sheet Modal ─────────────────────────── */}
+            {/* ── Add Item Sheet Modal (Room-Based Catalogue) ──── */}
             <Modal visible={sheetOpen} transparent animationType="fade" onRequestClose={() => setSheetOpen(false)}>
                 <View className="flex-1 justify-end bg-black/45">
                     <Pressable className="flex-1" onPress={() => setSheetOpen(false)} />
                     <Animated.View
                         entering={FadeInUp.duration(220)}
                         className="rounded-t-3xl bg-white dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-700 px-4 pt-4"
-                        style={{ paddingBottom: Math.max(insets.bottom, 16), maxHeight: '72%' }}
+                        style={{ paddingBottom: Math.max(insets.bottom, 16), maxHeight: '80%' }}
                     >
                         <View className="items-center mb-3">
                             <View className="h-1.5 w-12 rounded-full bg-slate-300 dark:bg-zinc-700" />
                         </View>
-                        <Text className="text-lg font-bold text-slate-900 dark:text-white">Common HHG Items</Text>
-                        <Text className="mt-1 text-xs text-slate-500 dark:text-zinc-400">Select a template to add it to your estimate.</Text>
-                        <View className="mt-3 flex-1">
+
+                        {/* Header with Quick Estimate + Custom Entry toggles */}
+                        <View className="flex-row items-center justify-between mb-2">
+                            <Text className="text-lg font-bold text-slate-900 dark:text-white">Add Items</Text>
+                            <View className="flex-row gap-2">
+                                <ScalePressable
+                                    onPress={() => { setShowQuickEstimate(!showQuickEstimate); setShowCustomEntry(false); }}
+                                    className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 border ${showQuickEstimate
+                                        ? 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700'
+                                        : 'border-slate-200 dark:border-zinc-700'
+                                        }`}
+                                >
+                                    <Zap size={12} color={isDark ? '#fbbf24' : '#d97706'} />
+                                    <Text className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">Quick</Text>
+                                </ScalePressable>
+                                <ScalePressable
+                                    onPress={() => { setShowCustomEntry(!showCustomEntry); setShowQuickEstimate(false); }}
+                                    className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 border ${showCustomEntry
+                                        ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700'
+                                        : 'border-slate-200 dark:border-zinc-700'
+                                        }`}
+                                >
+                                    <PenLine size={12} color={isDark ? '#93c5fd' : '#1d4ed8'} />
+                                    <Text className="text-[11px] font-semibold text-blue-700 dark:text-blue-300">Custom</Text>
+                                </ScalePressable>
+                            </View>
+                        </View>
+
+                        {/* Quick Estimate Panel */}
+                        {showQuickEstimate && (
+                            <View className="mb-3 gap-2">
+                                <Text className="text-xs text-slate-500 dark:text-zinc-400">Estimate by home size:</Text>
+                                <View className="flex-row gap-2">
+                                    {Object.keys(QUICK_ESTIMATE_PRESETS).map((key) => (
+                                        <ScalePressable
+                                            key={key}
+                                            onPress={() => handleQuickEstimate(key)}
+                                            className="flex-1 rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/20 py-3 items-center"
+                                        >
+                                            <Home size={16} color={isDark ? '#fbbf24' : '#d97706'} />
+                                            <Text className="text-sm font-bold text-amber-700 dark:text-amber-300 mt-1">{key}</Text>
+                                            <Text className="text-[10px] text-amber-600/70 dark:text-amber-400/70 mt-0.5">
+                                                ~{formatLbs(getQuickEstimateWeight(key))}
+                                            </Text>
+                                        </ScalePressable>
+                                    ))}
+                                </View>
+                            </View>
+                        )}
+
+                        {/* Custom Item Entry */}
+                        {showCustomEntry && (
+                            <View className="mb-3 rounded-xl border border-blue-200 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/20 p-3">
+                                <TextInput
+                                    value={customDesc}
+                                    onChangeText={setCustomDesc}
+                                    placeholder="Item description"
+                                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                    className="text-sm text-slate-900 dark:text-white mb-2 border-b border-slate-200 dark:border-zinc-700 pb-2"
+                                />
+                                <View className="flex-row items-center gap-2">
+                                    <TextInput
+                                        value={customWeight}
+                                        onChangeText={setCustomWeight}
+                                        keyboardType="number-pad"
+                                        placeholder="Weight (lbs)"
+                                        placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                        className="flex-1 text-sm text-slate-900 dark:text-white"
+                                    />
+                                    <ScalePressable
+                                        onPress={handleAddCustomItem}
+                                        className="bg-blue-600 rounded-lg px-4 py-2"
+                                    >
+                                        <Text className="text-white text-xs font-bold">Add</Text>
+                                    </ScalePressable>
+                                </View>
+                            </View>
+                        )}
+
+                        {/* Room Tab Bar */}
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            className="mb-3"
+                            contentContainerStyle={{ gap: 6 }}
+                        >
+                            {HHG_ROOMS.map((room) => (
+                                <Pressable
+                                    key={room}
+                                    onPress={() => setSelectedRoom(room)}
+                                    className={`px-3 py-1.5 rounded-full border ${selectedRoom === room
+                                        ? 'bg-blue-600 dark:bg-blue-700 border-blue-600 dark:border-blue-700'
+                                        : 'border-slate-200 dark:border-zinc-700'
+                                        }`}
+                                >
+                                    <Text className={`text-xs font-semibold ${selectedRoom === room
+                                        ? 'text-white'
+                                        : 'text-slate-600 dark:text-zinc-300'
+                                        }`}>{room}</Text>
+                                </Pressable>
+                            ))}
+                        </ScrollView>
+
+                        {/* Items for Selected Room */}
+                        <View className="flex-1">
                             <FlashList<HHGTemplate>
-                                data={COMMON_ITEMS}
-                                keyExtractor={(item, index) => `${item.category}-${item.description}-${index}`}
+                                data={HHG_CATALOGUE.filter(t => t.room === selectedRoom)}
+                                keyExtractor={(item, index) => `${item.room}-${item.description}-${index}`}
                                 renderItem={({ item }) => (
                                     <ScalePressable
                                         onPress={() => handleAddTemplate(item)}

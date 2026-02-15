@@ -98,10 +98,11 @@ export default function HHGEstimatorScreen() {
   const initialItemsRef = useRef<HHGItem[]>([]);
 
   useEffect(() => {
-    const cloned = (hhg.items || []).map((item) => ({ ...item }));
+    const allItems = (hhg.shipments || []).flatMap(s => s.items);
+    const cloned = allItems.map((item) => ({ ...item }));
     setItems(cloned);
     initialItemsRef.current = cloned;
-  }, [hhg.items]);
+  }, [hhg.shipments]);
 
   const maxWeightAllowance = hhg.maxWeightAllowance || 0;
 
@@ -330,8 +331,8 @@ export default function HHGEstimatorScreen() {
           onPress={handleSaveEstimate}
           disabled={saving}
           className={`rounded-xl px-4 py-3.5 items-center ${saving
-              ? 'bg-slate-300 dark:bg-slate-700'
-              : 'bg-blue-600 dark:bg-blue-700'
+            ? 'bg-slate-300 dark:bg-slate-700'
+            : 'bg-blue-600 dark:bg-blue-700'
             }`}
           accessibilityRole="button"
           accessibilityLabel="Save HHG estimate"

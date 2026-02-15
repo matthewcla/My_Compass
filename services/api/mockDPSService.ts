@@ -5,8 +5,11 @@ import type {
     DPSMoveRequest,
     ExcessWeightEstimate,
     HHGShipmentType,
+    NTSStorageConfirmation,
+    NTSStorageRequest,
     PickupWindow,
     PPMIncentiveEstimate,
+    StorageFacility,
 } from '@/types/pcs';
 import type { IDPSService } from './interfaces/IDPSService';
 
@@ -70,7 +73,7 @@ export const mockDPSService: IDPSService = {
         await new Promise((r) => setTimeout(r, 300));
 
         // Transit time varies by shipment type
-        const transitDays = shipmentType === 'GBL' ? 21 : 14; // PPM is self-driven
+        const transitDays = shipmentType === 'GBL' ? 21 : shipmentType === 'PPM' ? 14 : 0;
         const now = new Date();
 
         return {
@@ -157,6 +160,73 @@ export const mockDPSService: IDPSService = {
                 incentivePercentage: PPM_INCENTIVE_RATE,
                 estimatedIncentive: incentive,
                 weightMoved: weightLbs,
+            },
+            meta: { requestId: randomId(), timestamp: new Date().toISOString() },
+        };
+    },
+
+    async getStorageFacilities(
+        zip: string,
+    ): Promise<ApiResult<StorageFacility[]>> {
+        await new Promise((r) => setTimeout(r, 300));
+
+        const facilities: StorageFacility[] = [
+            {
+                id: 'sf-1',
+                name: 'JPPSO Mid-Atlantic Storage',
+                address: '1968 Gilbert St, Norfolk, VA',
+                zip: '23511',
+                capacityLabel: 'AVAILABLE',
+            },
+            {
+                id: 'sf-2',
+                name: 'Military Storage Solutions',
+                address: '4200 Azalea Garden Rd, Norfolk, VA',
+                zip: '23518',
+                capacityLabel: 'AVAILABLE',
+            },
+            {
+                id: 'sf-3',
+                name: 'SecureStore Government (Overflow)',
+                address: '780 Industrial Park Dr, Chesapeake, VA',
+                zip: '23320',
+                capacityLabel: 'LIMITED',
+            },
+        ];
+
+        return {
+            success: true,
+            data: facilities,
+            meta: { requestId: randomId(), timestamp: new Date().toISOString() },
+        };
+    },
+
+    async createStorageRequest(
+        request: NTSStorageRequest,
+    ): Promise<ApiResult<NTSStorageConfirmation>> {
+        await new Promise((r) => setTimeout(r, 500));
+
+        const now = new Date();
+
+        return {
+            success: true,
+            data: {
+                confirmationNumber: `NTS-${Date.now().toString(36).toUpperCase()}`,
+                facility: {
+                    id: request.facilityId,
+                    name: 'JPPSO Mid-Atlantic Storage',
+                    address: '1968 Gilbert St, Norfolk, VA',
+                    zip: request.originZip,
+                    capacityLabel: 'AVAILABLE',
+                },
+                scheduledPickup: {
+                    id: `nts-pw-1`,
+                    startDate: addDays(now, 14),
+                    endDate: addDays(now, 17),
+                    isPreferred: true,
+                    capacityLabel: 'AVAILABLE',
+                },
+                createdAt: now.toISOString(),
             },
             meta: { requestId: randomId(), timestamp: new Date().toISOString() },
         };

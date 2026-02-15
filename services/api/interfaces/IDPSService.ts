@@ -5,8 +5,11 @@ import type {
     DPSMoveRequest,
     ExcessWeightEstimate,
     HHGShipmentType,
+    NTSStorageConfirmation,
+    NTSStorageRequest,
     PickupWindow,
     PPMIncentiveEstimate,
+    StorageFacility,
 } from '@/types/pcs';
 
 /**
@@ -47,4 +50,15 @@ export interface IDPSService {
         destinationZip: string,
         weightLbs: number,
     ): Promise<ApiResult<PPMIncentiveEstimate>>;
+
+    /** Get available government storage facilities near a zip code. */
+    getStorageFacilities(
+        zip: string,
+    ): Promise<ApiResult<StorageFacility[]>>;
+
+    /** Submit an NTS storage request. */
+    createStorageRequest(
+        request: NTSStorageRequest,
+    ): Promise<ApiResult<NTSStorageConfirmation>>;
 }
+

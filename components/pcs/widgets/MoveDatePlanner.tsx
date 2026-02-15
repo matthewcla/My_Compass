@@ -12,6 +12,8 @@ const formatDate = (iso: string) => {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
+const EMPTY_SHIPMENTS: any[] = [];
+
 interface MoveDatePlannerProps {
     originZip?: string;
     destinationZip?: string;
@@ -19,9 +21,11 @@ interface MoveDatePlannerProps {
 
 export function MoveDatePlanner({ originZip = '23604', destinationZip = '92134' }: MoveDatePlannerProps) {
     const estimatedWeight = usePCSStore((s) => s.financials.hhg.estimatedWeight);
-    const selectedWindowId = usePCSStore((s) => s.financials.hhg.selectedPickupWindowId);
-    const shipmentType = usePCSStore((s) => s.financials.hhg.shipmentType ?? 'GBL');
-    const updateHHGPlan = usePCSStore((s) => s.updateHHGPlan);
+    const shipments = usePCSStore((s) => s.financials.hhg.shipments) ?? EMPTY_SHIPMENTS;
+    const firstShipment = shipments[0];
+    const selectedWindowId = firstShipment?.selectedPickupWindowId ?? null;
+    const shipmentType = (firstShipment?.type as 'GBL' | 'PPM') ?? 'GBL';
+    const updateShipment = usePCSStore((s) => s.updateShipment);
 
     const [windows, setWindows] = useState<PickupWindow[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,10 +46,10 @@ export function MoveDatePlanner({ originZip = '23604', destinationZip = '92134' 
             if (isApiSuccess(pickupResult)) {
                 setWindows(pickupResult.data);
                 // Auto-select preferred window if none selected
-                if (!selectedWindowId) {
+                if (!selectedWindowId && firstShipment) {
                     const preferred = pickupResult.data.find((w) => w.isPreferred) || pickupResult.data[0];
                     if (preferred) {
-                        updateHHGPlan({ selectedPickupWindowId: preferred.id });
+                        updateShipment(firstShipment.id, { selectedPickupWindowId: preferred.id });
                     }
                 }
             }
@@ -60,7 +64,9 @@ export function MoveDatePlanner({ originZip = '23604', destinationZip = '92134' 
     }, [originZip, destinationZip, estimatedWeight, shipmentType]);
 
     const handleSelectWindow = (windowId: string) => {
-        updateHHGPlan({ selectedPickupWindowId: windowId });
+        if (firstShipment) {
+            updateShipment(firstShipment.id, { selectedPickupWindowId: windowId });
+        }
     };
 
     if (loading) {

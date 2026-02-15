@@ -26,7 +26,9 @@ export function HHGCostProjection({ onShipmentTypeChange }: HHGCostProjectionPro
     const hhg = usePCSStore((s) => s.financials.hhg);
     const updateHHGPlan = usePCSStore((s) => s.updateHHGPlan);
 
-    const [selectedType, setSelectedType] = useState<ShipmentType>(hhg.shipmentType ?? 'GBL');
+    const [selectedType, setSelectedType] = useState<ShipmentType>(
+        (hhg.shipments?.[0]?.type as ShipmentType) ?? 'GBL'
+    );
 
     const hasDependents = (profile?.dependents || 0) > 0;
     const maxWeight = getHHGWeightAllowance(profile?.rank || 'E-1', hasDependents);
@@ -58,8 +60,12 @@ export function HHGCostProjection({ onShipmentTypeChange }: HHGCostProjectionPro
 
     const handleTypeSelect = (type: ShipmentType) => {
         setSelectedType(type);
+        // Update the first shipment's type, or just update excess cost
+        const firstShipment = hhg.shipments?.[0];
+        if (firstShipment) {
+            usePCSStore.getState().updateShipment(firstShipment.id, { type });
+        }
         updateHHGPlan({
-            shipmentType: type,
             estimatedExcessCost: type === 'GBL' ? analysis.gbl.excessCost : Math.max(0, -analysis.ppm.net),
         });
         onShipmentTypeChange?.(type);

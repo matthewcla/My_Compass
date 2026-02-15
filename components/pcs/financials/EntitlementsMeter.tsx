@@ -3,7 +3,7 @@ import { useCurrentProfile } from '@/store/useDemoStore';
 import { calculatePCSEntitlements } from '@/utils/financialMath';
 import { Minus, Plus } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View, useColorScheme } from 'react-native';
 import Animated, {
   useAnimatedProps,
   useSharedValue,
@@ -26,6 +26,8 @@ const clamp = (value: number, min: number, max: number): number =>
 
 export const EntitlementsMeter = () => {
   const user = useCurrentProfile();
+  const colorScheme = useColorScheme() ?? 'light';
+  const isDark = colorScheme === 'dark';
   const financialProfile = user?.financialProfile;
   const demoUser = user as DemoUser | null;
 
@@ -158,8 +160,8 @@ export const EntitlementsMeter = () => {
             */}
             <Text
               className={`text-2xl font-black ${netBalance >= 0
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-slate-500 dark:text-slate-400'
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-slate-500 dark:text-slate-400'
                 }`}
             >
               {netBalance >= 0 ? '+' : '-'}
@@ -223,7 +225,7 @@ export const EntitlementsMeter = () => {
               accessibilityRole="button"
               accessibilityLabel="Decrease dependents"
             >
-              <Minus size={16} color="#0F172A" />
+              <Minus size={16} color={isDark ? '#e2e8f0' : '#0F172A'} />
             </Pressable>
             <Pressable
               onPress={() => adjustDependents(1)}
@@ -231,7 +233,7 @@ export const EntitlementsMeter = () => {
               accessibilityRole="button"
               accessibilityLabel="Increase dependents"
             >
-              <Plus size={16} color="#0F172A" />
+              <Plus size={16} color={isDark ? '#e2e8f0' : '#0F172A'} />
             </Pressable>
           </View>
         </View>
@@ -252,7 +254,7 @@ export const EntitlementsMeter = () => {
               accessibilityRole="button"
               accessibilityLabel="Decrease estimated mileage"
             >
-              <Minus size={16} color="#0F172A" />
+              <Minus size={16} color={isDark ? '#e2e8f0' : '#0F172A'} />
             </Pressable>
             <Pressable
               onPress={() => adjustMileage(100)}
@@ -260,7 +262,7 @@ export const EntitlementsMeter = () => {
               accessibilityRole="button"
               accessibilityLabel="Increase estimated mileage"
             >
-              <Plus size={16} color="#0F172A" />
+              <Plus size={16} color={isDark ? '#e2e8f0' : '#0F172A'} />
             </Pressable>
           </View>
         </View>

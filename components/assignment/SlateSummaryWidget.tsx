@@ -8,6 +8,9 @@ interface SlateSummaryWidgetProps {
     onPress?: () => void;
 }
 
+const TOTAL_SLOTS = 7;
+const SLOT_INDICES = Array.from({ length: TOTAL_SLOTS }, (_, i) => i);
+
 export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps) {
     const { applications, slateDeadline, userApplicationIds } = useAssignmentStore();
 
@@ -24,8 +27,6 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
             submittedCount++;
         }
     });
-
-    const totalSlots = 7;
 
     // Logic: Calculate Time Remaining
     const now = new Date();
@@ -65,7 +66,7 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
 
                 {/* Visuals: The Slots */}
                 <View className="flex-row items-center space-x-2 mb-6">
-                    {Array.from({ length: totalSlots }).map((_, index) => {
+                    {SLOT_INDICES.map((index) => {
                         const isFilled = index < filledCount;
                         // Solid Blue circle (bg-blue-600) vs Empty Gray ring (border-2 border-slate-200)
                         return (

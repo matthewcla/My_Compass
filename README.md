@@ -1,25 +1,89 @@
-# My Compass App
+# My Compass
 
-## Calendar & Scanner Feature
+> **Offline-first career management for Navy service members.** A universal React Native app (iOS, Android, Web) built with Expo.
 
-### Dependencies
+---
 
-| Package | Purpose |
-| :--- | :--- |
-| `react-native-vision-camera` | Camera access and QR code scanning on native devices |
-| `jsqr` | QR code decoding for Web / fallback |
-| `expo-haptics` | Haptic feedback on scan success and interactions |
+## Quick Start
 
-### Testing QR Scanning
+```bash
+npm install
+npx expo start
+```
 
-#### On Simulator / Emulator
-The native camera module is not supported in the iOS Simulator or Android Emulator. The app provides a fallback interface:
-1. Open the Scanner from the Calendar screen.
-2. The view will display "Camera Unavailable".
-3. Tap the **Simulate Scan** button to trigger a successful scan event with mock data.
+Press **i** for iOS Simulator, **a** for Android Emulator, or **w** for Web.
 
-#### Generating a Test QR Code (For Physical Devices)
-To test the scanner on a physical device:
-1. Use any QR code generator (e.g., [qr-code-generator.com](https://www.qr-code-generator.com/)).
-2. Create a QR code containing any text string (e.g., `event_123` or `MOCK_QR_DATA`).
-3. Scan the code using the app's scanner.
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | React Native (Expo SDK 54) |
+| Navigation | Expo Router (file-based) |
+| Styling | NativeWind (Tailwind for RN) |
+| State | Zustand + AsyncStorage persistence |
+| Storage | expo-sqlite (local), Supabase (remote) |
+| Icons | lucide-react-native |
+| Animations | react-native-reanimated |
+
+---
+
+## Project Structure
+
+```
+app/                  # Routes (Expo Router file-based)
+├── (tabs)/           # Bottom tab navigator
+│   ├── (hub)/        #   Home Hub & Menu
+│   ├── (admin)/      #   Admin (leave, pay, requests)
+│   ├── (assignment)/ #   Assignment cycle & slating
+│   ├── (career)/     #   Billet discovery & manifests
+│   ├── (pcs)/        #   PCS landing, financials, move
+│   ├── (calendar)/   #   Career events calendar
+│   ├── (profile)/    #   Profile & preferences
+│   └── inbox/        #   Messages & notifications
+├── leave/            # Leave request wizard (modal)
+├── pcs-wizard/       # PCS segment & HHG wizards (modal)
+└── travel-claim/     # DD 1351-2 travel voucher (modal)
+
+components/           # Reusable UI components
+├── dashboard/        #   Home Hub cards
+├── pcs/              #   PCS: UCT, widgets, financials, wizard steps
+├── assignment/       #   Billet discovery & slating widgets
+├── travel-claim/     #   Expense cards, receipt uploader
+├── wizard/           #   Leave wizard HUD & cards
+├── ui/               #   Shared primitives (GlassView, FAB, etc.)
+└── ...
+
+store/                # Zustand stores
+services/             # API services & SQLite storage layer
+types/                # TypeScript types & Zod schemas
+utils/                # Utility functions
+hooks/                # Custom React hooks
+constants/            # App constants & phase definitions
+config/               # Environment & feature flags
+docs/                 # Developer documentation library
+scripts/              # Build & dev scripts
+```
+
+---
+
+## Key Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/README.md](docs/README.md) | **Full documentation index** — design standards, security, debt register, feature inventory |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Coding constitution — tech stack rules, anti-hallucination list, Navy conventions |
+| [CLAUDE.md](CLAUDE.md) | AI agent instructions — conventions and constraints |
+| [_AI_CONTEXT.xml](_AI_CONTEXT.xml) | System kernel — Zero Trust, PII protection, platform strategy |
+| [TIMELINE.md](TIMELINE.md) | UCT implementation plan with agent prompts |
+
+---
+
+## Design Philosophy
+
+- **Glass Cockpit** — high-density situational awareness, no clutter
+- **Tactical Wizard** — single-scroll, continuous-step form flows
+- **Smart Stack** — context-aware widget injection per lifecycle phase
+- **Offline-First** — works without network (ship-grade reliability)
+- **Navy Terminology** — Leave (not Vacation), Detailer (not Recruiter), PRD (not End Date)

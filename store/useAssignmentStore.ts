@@ -634,11 +634,12 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
 
         // Persist: Save all remaining apps to update ranks
-        for (const app of remainingApps) {
-            await storage.saveApplication(updatedApplications[app.id]);
+        if (remainingApps.length > 0) {
+            await storage.saveApplications(remainingApps);
         }
-        // Note: We cannot "delete" the demoted app from storage yet via interface. 
-        // Ideally we should have storage.deleteApplication(appId).
+
+        // Delete the demoted app from storage
+        await storage.deleteApplication(appId);
     },
 
     recoverBillet: (billetId: string, userId: string) => {
@@ -689,9 +690,12 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             await storage.removeAssignmentDecision(userId, billetIdToRemove);
         }
 
+        // Delete the withdrawn application
+        await storage.deleteApplication(appId);
+
         // Persist updated apps
-        for (const app of remainingApps) {
-            await storage.saveApplication(updatedApplications[app.id]);
+        if (remainingApps.length > 0) {
+            await storage.saveApplications(remainingApps);
         }
     },
 

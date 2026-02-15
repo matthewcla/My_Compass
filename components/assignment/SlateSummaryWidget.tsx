@@ -8,6 +8,9 @@ interface SlateSummaryWidgetProps {
     onPress?: () => void;
 }
 
+const TOTAL_SLOTS = 7;
+const SLOT_INDICES = Array.from({ length: TOTAL_SLOTS }, (_, i) => i);
+
 export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps) {
     const { applications, slateDeadline, userApplicationIds } = useAssignmentStore();
 
@@ -15,12 +18,15 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
     const filledCount = userApplicationIds.length;
 
     // Logic: Calculate Counts based on status
-    const draftCount = Object.values(applications).filter(app => app.status === 'draft').length;
-    const submittedCount = Object.values(applications).filter(app =>
-        ['submitted', 'confirmed'].includes(app.status)
-    ).length;
-
-    const totalSlots = 7;
+    let draftCount = 0;
+    let submittedCount = 0;
+    Object.values(applications).forEach(app => {
+        if (app.status === 'draft') {
+            draftCount++;
+        } else if (['submitted', 'confirmed'].includes(app.status)) {
+            submittedCount++;
+        }
+    });
 
     // Logic: Calculate Time Remaining
     const now = new Date();
@@ -60,7 +66,7 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
 
                 {/* Visuals: The Slots */}
                 <View className="flex-row items-center space-x-2 mb-6">
-                    {Array.from({ length: totalSlots }).map((_, index) => {
+                    {SLOT_INDICES.map((index) => {
                         const isFilled = index < filledCount;
                         // Solid Blue circle (bg-blue-600) vs Empty Gray ring (border-2 border-slate-200)
                         return (

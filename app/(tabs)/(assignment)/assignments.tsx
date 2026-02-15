@@ -10,6 +10,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TEST_USER_ID = 'test-user-001';
 
+// Stable no-op function for background cards
+const NO_OP = () => { };
+
 export default function AssignmentsScreen() {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -96,7 +99,7 @@ export default function AssignmentsScreen() {
               <BilletSwipeCard
                 key={nextBilletId}
                 billet={billets[nextBilletId]}
-                onSwipe={() => { }} // Background card shouldn't fire
+                onSwipe={NO_OP} // Background card shouldn't fire
                 active={false}
                 index={1}
               />

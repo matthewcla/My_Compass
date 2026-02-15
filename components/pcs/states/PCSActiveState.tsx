@@ -1,3 +1,4 @@
+import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSHeroBanner } from '@/components/pcs/PCSHeroBanner';
 import { UnifiedContextualTrack } from '@/components/pcs/track/UnifiedContextualTrack';
 import React from 'react';
@@ -18,6 +19,10 @@ export function PCSActiveState() {
             exiting={FadeOut.duration(200)}
         >
             <View style={{ paddingTop: 24 }}>
+                {/* OBLISERV Banner — top-level alert above the hero */}
+                <View style={{ paddingHorizontal: 16 }}>
+                    <ObliservBanner variant="full" />
+                </View>
                 <PCSHeroBanner />
                 <UnifiedContextualTrack />
             </View>

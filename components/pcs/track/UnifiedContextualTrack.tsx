@@ -1,10 +1,8 @@
 import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
-import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { TrackChecklistItem } from '@/components/pcs/track/TrackChecklistItem';
 import { TrackNode } from '@/components/pcs/track/TrackNode';
 import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
 import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
-import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
 import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
 import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
 import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
@@ -21,12 +19,7 @@ import { View } from 'react-native';
 // Widgets are only rendered inside the ACTIVE node.
 
 function Phase1Widgets() {
-    return (
-        <View className="space-y-4 mt-4">
-            <ObliservBanner variant="widget" />
-            <GainingCommandCard variant="widget" />
-        </View>
-    );
+    return null;
 }
 
 function Phase2Widgets() {

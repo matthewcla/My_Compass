@@ -1,16 +1,18 @@
+import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
 import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { ChevronRight, MapPin, Zap } from 'lucide-react-native';
+import { ChevronRight, Mail, MapPin, MessageSquare, Phone, User, Zap } from 'lucide-react-native';
 import React, { useMemo } from 'react';
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { Linking, Platform, Pressable, Text, useColorScheme, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 /**
  * PCS Hero Banner — "Where Am I?"
  *
  * Glanceable card answering a Sailor's three key PCS questions:
- * 1. Where am I going and when do I report?
+ * 1. Where am I going, when do I report, and who is my sponsor?
  * 2. Am I on track? (progress %)
  * 3. What's my next action?
  */
@@ -58,6 +60,36 @@ export function PCSHeroBanner() {
     if (!stats || !activeOrder) return null;
 
     const { completed, total, progress, daysRemaining, reportFormatted, nextAction } = stats;
+    const sponsor = activeOrder.sponsor ?? null;
+    const homePort = activeOrder.gainingCommand.homePort;
+
+    // Sponsor contact helpers
+    const sanitizePhone = (v?: string) => (v?.trim() || '').replace(/[^+\d]/g, '');
+    const phone = sanitizePhone(sponsor?.phone);
+    const email = (sponsor?.email || '').trim();
+    const callUrl = phone ? `tel:${phone}` : '';
+    const textUrl = phone ? `sms:${phone}` : '';
+    const emailUrl = email ? `mailto:${email}` : '';
+    const hasContactActions = Boolean(callUrl || textUrl || emailUrl);
+
+    const sponsorDisplayName = useMemo(() => {
+        const n = sponsor?.name?.trim();
+        const r = sponsor?.rank?.trim();
+        if (!n && !r) return 'Sponsor';
+        return [r, n].filter(Boolean).join(' ');
+    }, [sponsor?.name, sponsor?.rank]);
+
+    const handleContactAction = async (url: string) => {
+        if (!url) return;
+        if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
+        }
+        try {
+            await Linking.openURL(url);
+        } catch {
+            // Ignore Linking failures
+        }
+    };
 
     // Urgency color: green → amber → red
     const urgencyColor =
@@ -87,6 +119,12 @@ export function PCSHeroBanner() {
                         {activeOrder.gainingCommand.name}
                     </Text>
 
+                    {homePort && (
+                        <Text className="text-sm text-slate-400 font-medium mb-1" numberOfLines={1}>
+                            {homePort}
+                        </Text>
+                    )}
+
                     <View className="flex-row items-center justify-between">
                         <Text className="text-sm text-slate-400 font-medium">
                             Report NLT {reportFormatted}
@@ -99,6 +137,67 @@ export function PCSHeroBanner() {
                                 {daysRemaining} days
                             </Text>
                         </View>
+                    </View>
+                </View>
+
+                {/* ── Sponsor Section ── */}
+                <View className="px-5 pt-3 pb-2 border-b border-slate-200/30 dark:border-slate-700/30">
+                    <View className="flex-row items-center">
+                        <View className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center mr-2.5">
+                            <User size={14} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
+                        </View>
+
+                        {sponsor ? (
+                            <View className="flex-1">
+                                <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                                    {sponsorDisplayName}
+                                </Text>
+                                <Text className="text-xs text-slate-500 dark:text-slate-400">
+                                    Command Sponsor
+                                </Text>
+                            </View>
+                        ) : (
+                            <View className="flex-1">
+                                <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                                    No sponsor assigned yet
+                                </Text>
+                            </View>
+                        )}
+
+                        {hasContactActions && (
+                            <View className="flex-row gap-1.5">
+                                {callUrl ? (
+                                    <ScalePressable
+                                        onPress={() => handleContactAction(callUrl)}
+                                        className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-900/20 items-center justify-center"
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Call Sponsor"
+                                    >
+                                        <Phone size={14} color={isDark ? '#86efac' : '#15803d'} strokeWidth={2.2} />
+                                    </ScalePressable>
+                                ) : null}
+                                {textUrl ? (
+                                    <ScalePressable
+                                        onPress={() => handleContactAction(textUrl)}
+                                        className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 items-center justify-center"
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Text Sponsor"
+                                    >
+                                        <MessageSquare size={14} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
+                                    </ScalePressable>
+                                ) : null}
+                                {emailUrl ? (
+                                    <ScalePressable
+                                        onPress={() => handleContactAction(emailUrl)}
+                                        className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Email Sponsor"
+                                    >
+                                        <Mail size={14} color={isDark ? '#cbd5e1' : '#475569'} strokeWidth={2.2} />
+                                    </ScalePressable>
+                                ) : null}
+                            </View>
+                        )}
                     </View>
                 </View>
 

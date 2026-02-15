@@ -57,6 +57,14 @@ export interface PCSSegment {
   status: PCSSegmentStatus;
 }
 
+export interface SponsorContact {
+  name?: string;
+  rank?: string;
+  phone?: string;
+  email?: string;
+  photoUrl?: string;
+}
+
 export interface PCSOrder {
   orderNumber: string;
   gainingCommand: {
@@ -64,12 +72,15 @@ export interface PCSOrder {
     uic: string;
     address?: string;
     zip?: string;
+    homePort?: string;
     quarterdeckPhone?: string;
     psdPhone?: string;
     oodPhone?: string;
     uniformOfDay?: string;
     quarterdeckLocation?: { latitude: number; longitude: number };
+    crestUrl?: string;
   };
+  sponsor?: SponsorContact | null;
   segments: PCSSegment[];
   reportNLT: string;
   isOconus: boolean;

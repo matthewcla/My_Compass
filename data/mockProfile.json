@@ -11,8 +11,27 @@
     "emergencyContact": {
         "name": "Sarah Wilson",
         "phone": "757-555-0211",
-        "relationship": "Spouse"
+        "relationship": "Spouse",
+        "address": {
+            "street": "1234 Shore Dr",
+            "city": "Virginia Beach",
+            "state": "VA",
+            "zip": "23451"
+        }
     },
+    "homeAddress": {
+        "street": "1234 Shore Dr",
+        "city": "Virginia Beach",
+        "state": "VA",
+        "zip": "23451"
+    },
+    "mailingAddress": {
+        "street": "1234 Shore Dr",
+        "city": "Virginia Beach",
+        "state": "VA",
+        "zip": "23451"
+    },
+    "hasNextDutyStationResidence": false,
     "maritalStatus": "married",
     "uic": "21545",
     "dutyStation": {
@@ -31,14 +50,26 @@
             "name": "Sarah Wilson",
             "relationship": "spouse",
             "dob": "1992-04-15",
-            "efmpEnrolled": false
+            "efmpEnrolled": false,
+            "address": {
+                "street": "1234 Shore Dr",
+                "city": "Virginia Beach",
+                "state": "VA",
+                "zip": "23451"
+            }
         },
         {
             "id": "dep-002",
             "name": "Emily Wilson",
             "relationship": "child",
             "dob": "2019-08-22",
-            "efmpEnrolled": false
+            "efmpEnrolled": false,
+            "address": {
+                "street": "1234 Shore Dr",
+                "city": "Virginia Beach",
+                "state": "VA",
+                "zip": "23451"
+            }
         }
     ],
     "housing": {
@@ -55,6 +86,43 @@
             "licensePlate": "VET-2021"
         }
     ],
+    "beneficiaries": [
+        {
+            "id": "ben-001",
+            "name": "Sarah Wilson",
+            "relationship": "Spouse",
+            "percentage": 75,
+            "address": {
+                "street": "1234 Shore Dr",
+                "city": "Virginia Beach",
+                "state": "VA",
+                "zip": "23451"
+            }
+        },
+        {
+            "id": "ben-002",
+            "name": "Emily Wilson",
+            "relationship": "Child",
+            "percentage": 25,
+            "address": {
+                "street": "1234 Shore Dr",
+                "city": "Virginia Beach",
+                "state": "VA",
+                "zip": "23451"
+            }
+        }
+    ],
+    "padd": {
+        "name": "Sarah Wilson",
+        "relationship": "Spouse",
+        "phone": "757-555-0211",
+        "address": {
+            "street": "1234 Shore Dr",
+            "city": "Virginia Beach",
+            "state": "VA",
+            "zip": "23451"
+        }
+    },
     "bloodType": "O+",
     "shirtSize": "L",
     "efmpEnrolled": false,

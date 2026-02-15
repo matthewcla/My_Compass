@@ -3,7 +3,7 @@ import { UCTPhaseConfig } from '@/types/pcs';
 export const UCT_PHASES: UCTPhaseConfig[] = [
   {
     phase: 1,
-    title: 'Orders & OBLISERV',
+    title: 'Member Screening',
     description: 'Verify orders, confirm OBLISERV, complete screenings.',
   },
   {

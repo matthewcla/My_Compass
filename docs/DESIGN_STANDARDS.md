@@ -87,16 +87,7 @@ Every flow screen must display a **two-line header** above the status bar (or ab
 2. **Title** — `fontSize: 20`, `fontWeight: 800`, `letterSpacing: -0.5`, primary color (`text-slate-900 dark:text-white`)
    - Human-readable flow name (e.g., `Profile Confirmation`, `HHG Estimator`, `Leave Request`)
 
-**Current flow registry:**
-
-| Screen | Subtitle | Title | Phase |
-|--------|----------|-------|-------|
-| Profile Confirmation | `PHASE 1` | Profile Confirmation | 1 |
-| Advance Basic Pay | `PHASE 2` | Advance Basic Pay | 2 |
-| HHG Estimator | `PHASE 2` | HHG Estimator | 2 |
-| PCS Travel Plan | `PHASE 3` | PCS Travel Plan | 3 |
-| Travel Claim | `PHASE 4` | Travel Claim | 4 |
-| Leave Request | `ADMIN FLOW` | Leave Request | — |
+**Flow registry:** See [§2.2.2 Flow Type Registry](#flow-type-registry) below for the complete listing with flow-type classification.
 
 **Implementation example:**
 ```tsx
@@ -108,6 +99,144 @@ Every flow screen must display a **two-line header** above the status bar (or ab
       className="text-slate-900 dark:text-white ml-8 mb-1">
     HHG Estimator
 </Text>
+```
+
+#### 2.2.2 Flow Type Taxonomy
+
+Every flow in My Compass belongs to one of the following **five types**. Each type has a distinct purpose, UI pattern, and set of required design elements. When building a new flow, identify its type first and follow the corresponding standard.
+
+---
+
+##### Type 1: Confirmation Flow
+
+**Purpose:** Review and confirm pre-existing data section-by-section up-or-down. No data entry — only verification.
+
+**Reference:** [profile-confirmation.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/app/pcs-wizard/profile-confirmation.tsx)
+
+**Required Design Elements:**
+1. **Multi-step status bar** with icon-per-section (e.g., `ProfileStatusBar`) — `React.memo` wrapped
+2. **Tri-state icons:** `confirmed_complete` (green) · `confirmed_partial` (amber) · `skipped` (red) · `unvisited` (gray baseline)
+3. **Scroll-tracked sections** with `onLayout` coordinate capture + `handleScroll` active-step detection
+4. **Per-section "Confirm Section" button** — if complete → auto-scroll to next section; if incomplete → `Alert` and stay
+5. **Bidirectional skip/revert logic** — forward scroll marks unvisited as skipped; backward scroll reverts skipped (after target) to unvisited; sections before target retain their state
+6. **Programmatic scroll guard** (`isProgrammaticScroll` ref) to suppress `handleScroll` during icon-tap animated scrolls
+7. **Footer with completion counter** (e.g., `✓ 3/5 Sections`) — final action disabled until all sections acknowledged
+8. **Read-only data display** — fields are shown, not editable inline (edits happen in source screens)
+
+**Examples:** Profile Confirmation
+
+---
+
+##### Type 2: Request Flow
+
+**Purpose:** Multi-step wizard for submitting a formal request or claim. Requires data entry, validation, and submission.
+
+**Reference:** [leave/request.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/app/leave/request.tsx)
+
+**Required Design Elements:**
+1. **`WizardStatusBar`** with sequential step progress (step icons or numbered dots)
+2. **Embedded step components** receiving `embedded={true}` prop for contextual rendering
+3. **Auto-save drafts** via 800ms debounced store persistence
+4. **Exit confirmation modal** (Save Draft / Discard / Cancel) using `BlurView` overlay
+5. **Validation per step** — block forward navigation on invalid data; surface field-level errors inline
+6. **Floating HUD footer** with contextual data + primary action (Submit / Next)
+7. **Success celebration** — full-screen overlay with `CheckCircle` animation, auto-navigate after 2.5s
+8. **Signature ritual** (when applicable) — `SignatureButton` component for formal acknowledgment
+
+**Examples:** Leave Request, Travel Claim
+
+---
+
+##### Type 3: Estimator Flow
+
+**Purpose:** Calculator-style flow that accepts inputs and produces financial or logistical estimates. No formal submission — results are informational or feed into downstream flows.
+
+**Reference:** [pcs-wizard/[segmentId]/index.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/app/pcs-wizard/[segmentId]/index.tsx)
+
+**Required Design Elements:**
+1. **Input sections** with clear labels and units (e.g., weight in lbs, distance in miles)
+2. **Real-time calculation** — results update as inputs change (no "Calculate" button)
+3. **Result card** — prominent, visually distinct display of the estimate (use `GlassView` or elevated card)
+4. **Breakdown view** — itemized line items showing how the total was derived
+5. **Store persistence** — estimates save to Zustand store for use by downstream flows
+6. **Warning indicators** — visual alerts when inputs exceed limits (e.g., over weight allowance)
+
+**Examples:** HHG Estimator, Advance Basic Pay
+
+---
+
+##### Type 4: Document Generation Flow
+
+**Purpose:** Capture specific data fields required to populate an official military form (NAVPERS, DD, SF, etc.). The flow maps user inputs to form fields and produces a reviewable document.
+
+**Required Design Elements:**
+1. **Background prerequisite check** — the triggering condition (e.g., OBLISERV required) must be computed automatically in the store, not by the user
+2. **Form-field mapping header** — clearly display which official form is being populated (e.g., "NAVPERS 1070/621 — Agreement to Extend Enlistment")
+3. **Pre-populated fields** — auto-fill any data already in user/PCS stores; only prompt for missing fields
+4. **Section-by-section data capture** — group fields by form section with clear labels matching the official form
+5. **Review & Sign step** — summary of all captured data in form layout before submission
+6. **Signature ritual** — `SignatureButton` for formal digital acknowledgment
+7. **PDF preview/export** (future) — generate the completed form for download or submission
+
+**Examples:** OBLISERV Extension (NAVPERS 1070/621), Reenlistment Contract (NAVPERS 1070/601)
+
+---
+
+##### Type 5: Screening Flow
+
+**Purpose:** Compliance checklist for eligibility requirements. Each item is independently completable with status tracking.
+
+**Required Design Elements:**
+1. **Sub-checklist** — each screening requirement is an independently toggleable item
+2. **Category grouping** — items grouped by domain (Medical, Dental, Security, etc.)
+3. **External link integration** — items may link to external systems (NSIPS, AHLTA, etc.) via `Linking.openURL`
+4. **Status rollup** — overall screening status derived from individual item completion
+5. **Conditional visibility** — flow only appears in checklist when applicable (e.g., OCONUS orders, sea duty)
+6. **Completion auto-marks** the parent checklist item when all sub-items are done
+
+**Examples:** Overseas Screening, Sea Duty Screening
+
+---
+
+##### Flow Type Registry
+
+| Screen | Subtitle | Title | Phase | Flow Type |
+|--------|----------|-------|-------|-----------|
+| Profile Confirmation | `PHASE 1` | Profile Confirmation | 1 | Confirmation |
+| OBLISERV Extension | `PHASE 1` | OBLISERV Check | 1 | Document Generation |
+| Overseas Screening | `PHASE 1` | Overseas Screening | 1 | Screening |
+| Sea Duty Screening | `PHASE 1` | Sea Duty Screening | 1 | Screening |
+| Advance Basic Pay | `PHASE 2` | Advance Basic Pay | 2 | Estimator |
+| HHG Estimator | `PHASE 2` | HHG Estimator | 2 | Estimator |
+| PCS Travel Plan | `PHASE 3` | PCS Travel Plan | 3 | Request |
+| Travel Claim | `PHASE 4` | Travel Claim | 4 | Request |
+| Gaining Command Check-In | `PHASE 4` | Check-In | 4 | Confirmation |
+| Leave Request | `ADMIN FLOW` | Leave Request | — | Request |
+
+#### 2.2.3 Flow Close Control Standard
+
+Every flow must provide a **single close/back control** using the `ChevronLeft` icon (`<`), positioned in the **top-right corner of the flow header**, implemented as a `Pressable` with `rounded-full` hit target.
+
+**Standard:**
+- **Icon:** `ChevronLeft` from `lucide-react-native`, size `24`
+- **Placement:** Top-right of the flow header, aligned with the subtitle/title row
+- **Action:** Calls `router.back()` or triggers exit confirmation modal (for flows with draft state)
+- **Style:** `p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800`
+
+**Anti-patterns:**
+- ❌ `X` icon for flow dismissal — never use
+- ❌ Close/exit buttons in footers — footers are for primary actions only
+- ❌ Multiple close affordances on the same screen
+
+**Reference implementation:** [obliserv-request.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/app/pcs-wizard/obliserv-request.tsx) (lines 164–169)
+
+```tsx
+<Pressable
+    onPress={() => router.back()}
+    className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+>
+    <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+</Pressable>
 ```
 
 ### 2.3 Smart Stack (Widget Pattern)

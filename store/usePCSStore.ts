@@ -11,6 +11,16 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { useDemoStore } from './useDemoStore';
 import { useUserStore } from './useUserStore';
 
+/**
+ * Returns the active user — demo persona when demo mode is on, real user otherwise.
+ * Safe to call from inside Zustand stores (uses getState, not hooks).
+ */
+const getActiveUser = () => {
+  const demo = useDemoStore.getState();
+  if (demo.isDemoMode && demo.selectedUser) return demo.selectedUser;
+  return useUserStore.getState().user;
+};
+
 // Simple UUID generator
 const generateUUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -89,6 +99,19 @@ interface Financials {
     required: boolean;
     eaos: string;
     status: 'PENDING' | 'COMPLETE';
+    intent?: 'reenlist' | 'extend' | null;
+    // Extension-specific (NAVPERS 1070/621)
+    extensionMonths?: number;
+    reasonForExtension?: string;
+    // Reenlistment-specific (NAVPERS 1070/601)
+    reenlistmentTermYears?: number;
+    reenlistmentStartDate?: string;
+    placeOfReenlistment?: string;
+    leaveDaysSellBack?: number;
+    // Shared
+    promises?: string;
+    newExpirationDate?: string;
+    submittedAt?: string;
   };
   // Added to store calculated entitlements
   totalMalt: number;
@@ -194,14 +217,8 @@ export const usePCSStore = create<PCSState>()(
           actionRoute: '/pcs-wizard/profile-confirmation',
           helpText: 'Verify your rank, dependents, and contact info are current in the system.',
         });
-        checklist.push({
-          id: generateUUID(),
-          label: 'OBLISERV Check',
-          status: 'NOT_STARTED',
-          category: 'PRE_TRAVEL',
-          uctPhase: 1,
-          helpText: 'If your EAOS doesn\u2019t extend 36 months past your report date, you\u2019ll need to extend or reenlist before orders release.',
-        });
+
+
 
         // Phase 1: Conditional Screenings
         if (order.isOconus) {
@@ -234,14 +251,6 @@ export const usePCSStore = create<PCSState>()(
           category: 'FINANCE',
           uctPhase: 2,
           helpText: 'Review your estimated entitlements: DLA, MALT, per diem, and advance pay eligibility.',
-        });
-        checklist.push({
-          id: generateUUID(),
-          label: 'Update NSIPS Dependency Data (Page 2)',
-          status: 'NOT_STARTED',
-          category: 'PRE_TRAVEL',
-          uctPhase: 2,
-          helpText: 'Your DLA and travel entitlements are calculated from your NSIPS Page 2 dependency data. Inaccurate data = wrong pay.',
         });
         checklist.push({
           id: generateUUID(),
@@ -372,7 +381,7 @@ export const usePCSStore = create<PCSState>()(
         const { activeOrder, financials } = get();
         if (!activeOrder) return;
 
-        const user = useUserStore.getState().user;
+        const user = getActiveUser();
         if (!user) return;
 
         let totalMalt = 0;
@@ -471,7 +480,7 @@ export const usePCSStore = create<PCSState>()(
 
       checkObliserv: () => {
         const { activeOrder, financials } = get();
-        const user = useUserStore.getState().user;
+        const user = getActiveUser();
 
         if (!activeOrder || !user || !user.eaos) return;
 
@@ -486,6 +495,15 @@ export const usePCSStore = create<PCSState>()(
         // If EAOS is BEFORE the required service date, OBLISERV is required
         const isObliservRequired = eaosDate < requiredServiceDate;
 
+        // Compute what status should be based on requirement
+        // Note: If user submits an extension/reenlistment, obliserv-request.tsx
+        // sets COMPLETE via updateFinancials() directly — not through this function.
+        const expectedStatus = isObliservRequired ? 'PENDING' : 'COMPLETE';
+
+        // Bail early if nothing changed — prevents re-render loops
+        const current = financials.obliserv;
+        if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) return;
+
         set({
           financials: {
             ...financials,
@@ -493,7 +511,7 @@ export const usePCSStore = create<PCSState>()(
               ...financials.obliserv,
               required: isObliservRequired,
               eaos: user.eaos,
-              status: isObliservRequired ? 'PENDING' : 'COMPLETE',
+              status: expectedStatus,
             }
           }
         });

@@ -1,5 +1,4 @@
 import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
-import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
 import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
 import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
@@ -29,7 +28,6 @@ export function PCSPhaseWidgets() {
                 {/* ── ORDERS_NEGOTIATION ──────────────────────────────────── */}
                 {phase === 'ORDERS_NEGOTIATION' && (
                     <>
-                        <ObliservBanner variant="widget" />
                         <GainingCommandCard variant="widget" />
                     </>
                 )}
@@ -63,4 +61,3 @@ export function PCSPhaseWidgets() {
         </Animated.View>
     );
 }
-

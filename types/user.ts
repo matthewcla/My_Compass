@@ -37,10 +37,19 @@ export interface FinancialProfile {
 
 // ─── Reusable sub-schemas ────────────────────────────────
 
+const AddressSchema = z.object({
+    street: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zip: z.string().optional(),
+    country: z.string().optional(),
+});
+
 const EmergencyContactSchema = z.object({
     name: z.string(),
     phone: z.string(),
     relationship: z.string(),
+    address: AddressSchema.optional(),
 });
 
 const DutyStationSchema = z.object({
@@ -56,6 +65,22 @@ const DependentDetailSchema = z.object({
     relationship: z.enum(DEPENDENT_RELATIONSHIPS),
     dob: z.string(),            // ISO date string
     efmpEnrolled: z.boolean().optional(),
+    address: AddressSchema.optional(),
+});
+
+const BeneficiarySchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    relationship: z.string(),
+    address: AddressSchema.optional(),
+    percentage: z.number(),       // 0–100 (death gratuity / unpaid pay)
+});
+
+const PADDSchema = z.object({
+    name: z.string().optional(),
+    relationship: z.string().optional(),
+    address: AddressSchema.optional(),
+    phone: z.string().optional(),
 });
 
 const HousingSchema = z.object({
@@ -107,11 +132,34 @@ export const UserSchema = z.object({
     altPhone: z.string().optional(),
     /** @security PII - STRICTLY FORBIDDEN IN LOGS */
     emergencyContact: EmergencyContactSchema.optional(),
+    /** @security PII */
+    homeAddress: AddressSchema.optional(),
+    mailingAddress: AddressSchema.optional(),
+    /** Whether the member has a residence at their next duty station (they may not yet). */
+    hasNextDutyStationResidence: z.boolean().optional(),
 
     // ── Service Record ───────────────────────────────
     maritalStatus: z.enum(MARITAL_STATUSES).optional(),
     uic: z.string().optional(),     // Current unit identification code
     dutyStation: DutyStationSchema.optional(),
+
+    // ── Service Record (Extended — NAVPERS form support) ─
+    /** @security PII - STRICTLY FORBIDDEN IN LOGS */
+    dob: z.string().optional(),                                // ISO date — Date of Birth
+    branchClass: z.string().optional(),                        // e.g. "USN", "USNR"
+    enlistmentDate: z.string().optional(),                     // ISO date — original enlistment
+    originalTermYears: z.number().optional(),                  // Original contract length
+    serviceStatus: z.enum(['active', 'inactive']).optional(),  // Active / Inactive duty
+    pebd: z.string().optional(),                               // Pay Entry Base Date
+    adsd: z.string().optional(),                               // Active Duty Service Date
+    combatZone: z.boolean().optional(),                        // Currently in combat zone
+    citizenship: z.string().optional(),                        // e.g. "US"
+    homeOfRecord: z.string().optional(),                       // City, State
+    dateOfPaygrade: z.string().optional(),                     // ISO date — date of current paygrade
+    totalActiveService: z.string().optional(),                 // "YY/MM/DD" format
+    totalInactiveService: z.string().optional(),               // "YY/MM/DD" format
+    lastDischargeDate: z.string().optional(),                  // ISO date
+    rado: z.string().optional(),                               // RADO months/days
     /**
      * Projected Rotation Date (PRD).
      * Critical for "Detailing Countdown" logic.
@@ -144,6 +192,12 @@ export const UserSchema = z.object({
     // ── Medical / Check-in ───────────────────────────
     bloodType: z.string().optional(),
     shirtSize: z.string().optional(),
+
+    // ── Page 2 — Beneficiaries & PADD ────────────────
+    /** Death gratuity / unpaid pay beneficiaries. */
+    beneficiaries: z.array(BeneficiarySchema).optional(),
+    /** Person Authorized to Direct Disposition of remains. */
+    padd: PADDSchema.optional(),
     efmpEnrolled: z.boolean().optional(),
 
     // ── Preferences & Meta ───────────────────────────
@@ -163,10 +217,13 @@ export const UserSchema = z.object({
 });
 
 // Export sub-schema types for component props
+export type Address = z.infer<typeof AddressSchema>;
 export type EmergencyContact = z.infer<typeof EmergencyContactSchema>;
 export type DutyStation = z.infer<typeof DutyStationSchema>;
 export type DependentDetail = z.infer<typeof DependentDetailSchema>;
 export type Housing = z.infer<typeof HousingSchema>;
+export type Beneficiary = z.infer<typeof BeneficiarySchema>;
+export type PADD = z.infer<typeof PADDSchema>;
 export type POV = z.infer<typeof POVSchema>;
 
 /**

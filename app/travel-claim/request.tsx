@@ -14,7 +14,7 @@ import { TravelClaim } from '@/types/travelClaim';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Calendar, CheckCircle, CheckCircle2, Fuel, Hotel, Utensils, X } from 'lucide-react-native';
+import { Calendar, CheckCircle, CheckCircle2, ChevronLeft, Fuel, Hotel, Utensils } from 'lucide-react-native';
 import React, { useMemo, useRef, useState } from 'react';
 import {
     Alert,
@@ -313,8 +313,8 @@ export default function TravelClaimRequestScreen() {
                                     Travel Claim
                                 </Text>
                             </View>
-                            <Pressable onPress={() => setShowExitModal(true)} className="p-1 mt-1">
-                                <X size={20} color={themeColors.text} />
+                            <Pressable onPress={() => setShowExitModal(true)} className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+                                <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                             </Pressable>
                         </View>
 

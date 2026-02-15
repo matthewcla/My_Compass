@@ -1,9 +1,10 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import Colors from '@/constants/Colors';
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { usePCSStore } from '@/store/usePCSStore';
 import { useUserStore } from '@/store/useUserStore';
-import type { DependentDetail, POV } from '@/types/user';
+import type { Address, Beneficiary, DependentDetail, POV } from '@/types/user';
 import {
     DEPENDENT_RELATIONSHIPS,
     HOUSING_TYPES,
@@ -17,13 +18,15 @@ import {
     Car,
     Check,
     CheckCircle2,
+    ChevronLeft,
+    Heart,
     Home,
     Phone,
     Plus,
     Shield,
     Trash2,
+    UserCheck,
     Users,
-    X
 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -33,11 +36,10 @@ import {
     NativeSyntheticEvent,
     Platform,
     Pressable,
-    ScrollView,
-    Text,
+    ScrollView, Switch, Text,
     TextInput,
     View,
-    useColorScheme,
+    useColorScheme
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -56,6 +58,8 @@ const PROFILE_STEPS: { id: number; icon: LucideIcon; label: string }[] = [
     { id: 2, icon: Users, label: 'Dependents' },
     { id: 3, icon: Home, label: 'Housing' },
     { id: 4, icon: Car, label: 'Vehicle' },
+    { id: 5, icon: Heart, label: 'Beneficiaries' },
+    { id: 6, icon: UserCheck, label: 'PADD' },
 ];
 
 const TOTAL_STEPS = PROFILE_STEPS.length;
@@ -378,7 +382,7 @@ export default function ProfileConfirmationScreen() {
     const router = useRouter();
 
     // ── Store ──────────────────────────────────────────────
-    const user = useUserStore((s) => s.user);
+    const user = useCurrentProfile();
     const updateUser = useUserStore((s) => s.updateUser);
     const setHeaderVisible = useHeaderStore((s) => s.setVisible);
     const checklist = usePCSStore((s) => s.checklist);
@@ -407,10 +411,11 @@ export default function ProfileConfirmationScreen() {
             if (!user) return false;
             switch (index) {
                 case 0: // Service Record
-                    return !!(user.rank && user.dutyStation?.name && user.maritalStatus);
+                    return !!(user.rank && user.dutyStation?.name);
                 case 1: // Contact
                     return !!(user.email && user.phone && user.emergencyContact?.name && user.emergencyContact?.phone);
-                case 2: // Dependents — complete if count matches and all have name + dob
+                case 2: // Dependents — complete if marital status set, count matches, all have name + dob
+                    if (!user.maritalStatus) return false;
                     const deps = user.dependentDetails || [];
                     if ((user.dependents || 0) > 0 && deps.length === 0) return false;
                     return deps.every((d) => d.name && d.dob);
@@ -420,6 +425,12 @@ export default function ProfileConfirmationScreen() {
                     const vehicles = user.vehicles || [];
                     if (vehicles.length === 0) return false;
                     return vehicles.every((v) => v.make && v.model && v.year);
+                case 5: // Beneficiaries — at least one with name + percentage
+                    const bens = user.beneficiaries || [];
+                    if (bens.length === 0) return false;
+                    return bens.every((b) => b.name && b.percentage > 0);
+                case 6: // PADD — name is required
+                    return !!(user.padd?.name);
                 default:
                     return false;
             }
@@ -586,6 +597,23 @@ export default function ProfileConfirmationScreen() {
         updateUser({ dependentDetails: [...current, newDep], dependents: current.length + 1 });
     };
 
+    const handleMaritalStatusChange = (value: string) => {
+        u('maritalStatus', value);
+        const current = user?.dependentDetails || [];
+        const hasSpouse = current.some((d) => d.relationship === 'spouse');
+        if (value === 'married' && !hasSpouse) {
+            // Auto-add a blank spouse entry
+            const spouseDep: DependentDetail = { id: uuid(), name: '', relationship: 'spouse', dob: '' };
+            updateUser({ dependentDetails: [spouseDep, ...current], dependents: current.length + 1 });
+        } else if (value !== 'married' && hasSpouse) {
+            // Remove any auto-added blank spouse (only remove if name is still empty)
+            const cleaned = current.filter((d) => !(d.relationship === 'spouse' && !d.name));
+            if (cleaned.length !== current.length) {
+                updateUser({ dependentDetails: cleaned, dependents: cleaned.length });
+            }
+        }
+    };
+
     const removeDependent = (id: string) => {
         const current = user?.dependentDetails || [];
         const updated = current.filter((d) => d.id !== id);
@@ -612,6 +640,41 @@ export default function ProfileConfirmationScreen() {
     const updateVehicle = (id: string, patch: Partial<POV>) => {
         const current = user?.vehicles || [];
         updateUser({ vehicles: current.map((v) => (v.id === id ? { ...v, ...patch } : v)) });
+    };
+
+    // ── Beneficiary management ─────────────────────────────
+    const addBeneficiary = () => {
+        const current = user?.beneficiaries || [];
+        const newBen: Beneficiary = { id: uuid(), name: '', relationship: '', percentage: 0 };
+        updateUser({ beneficiaries: [...current, newBen] });
+    };
+
+    const removeBeneficiary = (id: string) => {
+        const current = user?.beneficiaries || [];
+        updateUser({ beneficiaries: current.filter((b) => b.id !== id) });
+    };
+
+    const updateBeneficiary = (id: string, patch: Partial<Beneficiary>) => {
+        const current = user?.beneficiaries || [];
+        updateUser({ beneficiaries: current.map((b) => (b.id === id ? { ...b, ...patch } : b)) });
+    };
+
+    // ── Address helpers ────────────────────────────────────
+    const updateAddress = (root: string, field: keyof Address, value: string) => {
+        const current = (user as any)?.[root] || {};
+        updateUser({ [root]: { ...current, [field]: value } } as any);
+    };
+
+    // ── PADD management ───────────────────────────────────
+    const updatePADD = (field: string, value: any) => {
+        const current = user?.padd || {};
+        updateUser({ padd: { ...current, [field]: value } } as any);
+    };
+
+    const updatePADDAddress = (field: keyof Address, value: string) => {
+        const current = user?.padd || {};
+        const addr = current.address || {};
+        updateUser({ padd: { ...current, address: { ...addr, [field]: value } } } as any);
     };
 
     // ── Final confirm ──────────────────────────────────────
@@ -671,13 +734,9 @@ export default function ProfileConfirmationScreen() {
                             </View>
                             <Pressable
                                 onPress={() => router.back()}
-                                style={{
-                                    width: 36, height: 36, borderRadius: 18,
-                                    backgroundColor: isDark ? '#27272A' : '#F1F5F9',
-                                    alignItems: 'center', justifyContent: 'center',
-                                }}
+                                className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
                             >
-                                <X size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                                <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                             </Pressable>
                         </View>
 
@@ -743,12 +802,7 @@ export default function ProfileConfirmationScreen() {
                                 <Field label="PRD" value={user.prd ? new Date(user.prd).toLocaleDateString() : ''} readOnly />
                                 <Field label="EAOS" value={user.eaos ? new Date(user.eaos).toLocaleDateString() : ''} readOnly />
                                 <Field label="SEAOS" value={user.seaos ? new Date(user.seaos).toLocaleDateString() : ''} readOnly />
-                                <PickerRow
-                                    label="Marital Status"
-                                    options={MARITAL_STATUSES}
-                                    selected={user.maritalStatus}
-                                    onSelect={(v) => u('maritalStatus', v)}
-                                />
+
                                 <SectionConfirmButton state={sectionStates[0]} onConfirm={() => confirmSection(0)} />
                             </View>
 
@@ -814,6 +868,136 @@ export default function ProfileConfirmationScreen() {
                                     onChangeText={(v) => updateNested('emergencyContact', 'relationship', v)}
                                     placeholder="e.g. Spouse, Parent"
                                 />
+
+                                {/* Home Address */}
+                                <Text
+                                    style={{
+                                        fontSize: 13, fontWeight: '700',
+                                        color: isDark ? '#CBD5E1' : '#334155',
+                                        marginTop: 8, marginBottom: 8,
+                                    }}
+                                >
+                                    Home Address
+                                </Text>
+                                <Field
+                                    label="Street"
+                                    value={user.homeAddress?.street || ''}
+                                    onChangeText={(v) => updateAddress('homeAddress', 'street', v)}
+                                    placeholder="123 Main St"
+                                />
+                                <Field
+                                    label="City"
+                                    value={user.homeAddress?.city || ''}
+                                    onChangeText={(v) => updateAddress('homeAddress', 'city', v)}
+                                    placeholder="Virginia Beach"
+                                />
+                                <Field
+                                    label="State"
+                                    value={user.homeAddress?.state || ''}
+                                    onChangeText={(v) => updateAddress('homeAddress', 'state', v)}
+                                    placeholder="VA"
+                                />
+                                <Field
+                                    label="ZIP"
+                                    value={user.homeAddress?.zip || ''}
+                                    onChangeText={(v) => updateAddress('homeAddress', 'zip', v)}
+                                    placeholder="23451"
+                                    keyboardType="numeric"
+                                />
+
+                                {/* Mailing Address */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, marginBottom: 8 }}>
+                                    <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#CBD5E1' : '#334155' }}>
+                                        Mailing Address
+                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                        <Text style={{ fontSize: 12, color: isDark ? '#94A3B8' : '#64748B' }}>Same as home</Text>
+                                        <Switch
+                                            value={JSON.stringify(user.mailingAddress) === JSON.stringify(user.homeAddress) && !!user.homeAddress?.street}
+                                            onValueChange={(on) => {
+                                                if (on) {
+                                                    updateUser({ mailingAddress: { ...user.homeAddress } });
+                                                } else {
+                                                    updateUser({ mailingAddress: { street: '', city: '', state: '', zip: '' } });
+                                                }
+                                            }}
+                                            trackColor={{ false: isDark ? '#3F3F46' : '#CBD5E1', true: '#3B82F6' }}
+                                        />
+                                    </View>
+                                </View>
+                                <Field
+                                    label="Street"
+                                    value={user.mailingAddress?.street || ''}
+                                    onChangeText={(v) => updateAddress('mailingAddress', 'street', v)}
+                                    placeholder="123 Main St"
+                                />
+                                <Field
+                                    label="City"
+                                    value={user.mailingAddress?.city || ''}
+                                    onChangeText={(v) => updateAddress('mailingAddress', 'city', v)}
+                                    placeholder="Virginia Beach"
+                                />
+                                <Field
+                                    label="State"
+                                    value={user.mailingAddress?.state || ''}
+                                    onChangeText={(v) => updateAddress('mailingAddress', 'state', v)}
+                                    placeholder="VA"
+                                />
+                                <Field
+                                    label="ZIP"
+                                    value={user.mailingAddress?.zip || ''}
+                                    onChangeText={(v) => updateAddress('mailingAddress', 'zip', v)}
+                                    placeholder="23451"
+                                    keyboardType="numeric"
+                                />
+
+                                {/* Next Duty Station Residence */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 }}>
+                                    <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#CBD5E1' : '#334155', flex: 1 }}>
+                                        Residence at next duty station?
+                                    </Text>
+                                    <Switch
+                                        value={user.hasNextDutyStationResidence ?? false}
+                                        onValueChange={(v) => u('hasNextDutyStationResidence', v)}
+                                        trackColor={{ false: isDark ? '#3F3F46' : '#CBD5E1', true: '#3B82F6' }}
+                                    />
+                                </View>
+                                <Text style={{ fontSize: 11, color: isDark ? '#64748B' : '#94A3B8', marginBottom: 8 }}>
+                                    Indicate whether you have secured housing at your gaining command.
+                                </Text>
+
+                                {/* Emergency Contact Address */}
+                                <Text
+                                    style={{
+                                        fontSize: 13, fontWeight: '700',
+                                        color: isDark ? '#CBD5E1' : '#334155',
+                                        marginTop: 8, marginBottom: 8,
+                                    }}
+                                >
+                                    Emergency Contact Address
+                                </Text>
+                                <Field
+                                    label="Street"
+                                    value={user.emergencyContact?.address?.street || ''}
+                                    onChangeText={(v) => {
+                                        const ec = user.emergencyContact || { name: '', phone: '', relationship: '' };
+                                        const addr = ec.address || {};
+                                        updateUser({ emergencyContact: { ...ec, address: { ...addr, street: v } } });
+                                    }}
+                                    placeholder="Street address"
+                                />
+                                <Field
+                                    label="City / State / ZIP"
+                                    value={[user.emergencyContact?.address?.city, user.emergencyContact?.address?.state, user.emergencyContact?.address?.zip].filter(Boolean).join(', ') || ''}
+                                    onChangeText={(v) => {
+                                        const ec = user.emergencyContact || { name: '', phone: '', relationship: '' };
+                                        const addr = ec.address || {};
+                                        // Simple single-field capture for city/state/zip
+                                        updateUser({ emergencyContact: { ...ec, address: { ...addr, city: v } } });
+                                    }}
+                                    placeholder="City, State ZIP"
+                                />
+
                                 <SectionConfirmButton state={sectionStates[1]} onConfirm={() => confirmSection(1)} />
                             </View>
 
@@ -830,6 +1014,13 @@ export default function ProfileConfirmationScreen() {
                                 >
                                     Dependents ({user.dependentDetails?.length || 0})
                                 </Text>
+
+                                <PickerRow
+                                    label="Marital Status"
+                                    options={MARITAL_STATUSES}
+                                    selected={user.maritalStatus}
+                                    onSelect={handleMaritalStatusChange}
+                                />
 
                                 {(user.dependentDetails || []).map((dep, idx) => (
                                     <View
@@ -863,6 +1054,12 @@ export default function ProfileConfirmationScreen() {
                                             onSelect={(v) => updateDependent(dep.id, { relationship: v as any })}
                                         />
                                         <Field label="Date of Birth" value={dep.dob} onChangeText={(v) => updateDependent(dep.id, { dob: v })} placeholder="YYYY-MM-DD" />
+                                        <Field
+                                            label="Address"
+                                            value={[dep.address?.street, dep.address?.city, dep.address?.state, dep.address?.zip].filter(Boolean).join(', ') || ''}
+                                            onChangeText={(v) => updateDependent(dep.id, { address: { street: v } })}
+                                            placeholder="Street, City, State ZIP"
+                                        />
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
                                             <Pressable
                                                 onPress={() => updateDependent(dep.id, { efmpEnrolled: !dep.efmpEnrolled })}
@@ -1004,6 +1201,171 @@ export default function ProfileConfirmationScreen() {
                                 <SectionConfirmButton state={sectionStates[4]} onConfirm={() => confirmSection(4)} />
                             </View>
 
+                            {/* ═══ 5. Beneficiaries ═══ */}
+                            <View
+                                onLayout={(e) => handleSectionLayout(5, e.nativeEvent.layout.y)}
+                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(5), paddingLeft: 14 }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 16, fontWeight: '800', letterSpacing: -0.3,
+                                        color: isDark ? '#FFFFFF' : '#0F172A', marginBottom: 4,
+                                    }}
+                                >
+                                    Beneficiaries ({user.beneficiaries?.length || 0})
+                                </Text>
+                                <Text style={{ fontSize: 12, color: isDark ? '#64748B' : '#94A3B8', marginBottom: 12 }}>
+                                    Death gratuity / unpaid pay recipients. Percentages must total 100%.
+                                </Text>
+
+                                {(user.beneficiaries || []).map((ben, idx) => (
+                                    <View
+                                        key={ben.id}
+                                        style={{
+                                            backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+                                            borderRadius: 12, padding: 12, marginBottom: 10,
+                                            borderWidth: 1, borderColor: isDark ? '#2C2C2E' : '#E2E8F0',
+                                        }}
+                                    >
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                            <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#CBD5E1' : '#334155' }}>
+                                                Beneficiary {idx + 1}
+                                            </Text>
+                                            <Pressable
+                                                onPress={() =>
+                                                    Alert.alert('Remove Beneficiary', `Remove ${ben.name || 'this beneficiary'}?`, [
+                                                        { text: 'Cancel', style: 'cancel' },
+                                                        { text: 'Remove', style: 'destructive', onPress: () => removeBeneficiary(ben.id) },
+                                                    ])
+                                                }
+                                            >
+                                                <Trash2 size={16} color="#EF4444" />
+                                            </Pressable>
+                                        </View>
+                                        <Field label="Name" value={ben.name} onChangeText={(v) => updateBeneficiary(ben.id, { name: v })} placeholder="Full name" />
+                                        <Field label="Relationship" value={ben.relationship} onChangeText={(v) => updateBeneficiary(ben.id, { relationship: v })} placeholder="e.g. Spouse, Child" />
+                                        <Field
+                                            label="Percentage (%)"
+                                            value={ben.percentage ? String(ben.percentage) : ''}
+                                            onChangeText={(v) => updateBeneficiary(ben.id, { percentage: parseInt(v) || 0 })}
+                                            placeholder="e.g. 50"
+                                            keyboardType="numeric"
+                                        />
+                                        <Field
+                                            label="Address"
+                                            value={[ben.address?.street, ben.address?.city, ben.address?.state, ben.address?.zip].filter(Boolean).join(', ') || ''}
+                                            onChangeText={(v) => updateBeneficiary(ben.id, { address: { street: v } })}
+                                            placeholder="Street, City, State ZIP"
+                                        />
+                                    </View>
+                                ))}
+
+                                {/* Percentage total indicator */}
+                                {(user.beneficiaries?.length || 0) > 0 && (() => {
+                                    const total = (user.beneficiaries || []).reduce((sum, b) => sum + (b.percentage || 0), 0);
+                                    const isValid = total === 100;
+                                    return (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                            {isValid
+                                                ? <CheckCircle2 size={14} color="#22C55E" />
+                                                : <AlertTriangle size={14} color="#F59E0B" />
+                                            }
+                                            <Text style={{ fontSize: 12, fontWeight: '600', color: isValid ? '#22C55E' : '#F59E0B' }}>
+                                                Total: {total}% {isValid ? '✓' : '(must equal 100%)'}
+                                            </Text>
+                                        </View>
+                                    );
+                                })()}
+
+                                <ScalePressable onPress={addBeneficiary}>
+                                    <View
+                                        style={{
+                                            flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                            paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed',
+                                            borderColor: isDark ? '#3F3F46' : '#CBD5E1',
+                                        }}
+                                    >
+                                        <Plus size={16} color={isDark ? '#60A5FA' : '#3B82F6'} />
+                                        <Text style={{ fontSize: 14, fontWeight: '600', color: isDark ? '#60A5FA' : '#3B82F6' }}>
+                                            Add Beneficiary
+                                        </Text>
+                                    </View>
+                                </ScalePressable>
+                                <SectionConfirmButton state={sectionStates[5]} onConfirm={() => confirmSection(5)} />
+                            </View>
+
+                            {/* ═══ 6. PADD ═══ */}
+                            <View
+                                onLayout={(e) => handleSectionLayout(6, e.nativeEvent.layout.y)}
+                                style={{ marginBottom: 24, borderLeftWidth: 3, borderLeftColor: sectionBorderColor(6), paddingLeft: 14 }}
+                            >
+                                <Text
+                                    style={{
+                                        fontSize: 16, fontWeight: '800', letterSpacing: -0.3,
+                                        color: isDark ? '#FFFFFF' : '#0F172A', marginBottom: 4,
+                                    }}
+                                >
+                                    Person Authorized to Direct Disposition
+                                </Text>
+                                <Text style={{ fontSize: 12, color: isDark ? '#64748B' : '#94A3B8', marginBottom: 12 }}>
+                                    Individual responsible for directing disposition of remains.
+                                </Text>
+                                <Field
+                                    label="Name"
+                                    value={user.padd?.name || ''}
+                                    onChangeText={(v) => updatePADD('name', v)}
+                                    placeholder="Full name"
+                                />
+                                <Field
+                                    label="Relationship"
+                                    value={user.padd?.relationship || ''}
+                                    onChangeText={(v) => updatePADD('relationship', v)}
+                                    placeholder="e.g. Spouse, Parent"
+                                />
+                                <Field
+                                    label="Phone"
+                                    value={user.padd?.phone || ''}
+                                    onChangeText={(v) => updatePADD('phone', v)}
+                                    placeholder="Phone number"
+                                    keyboardType="phone-pad"
+                                />
+                                <Text
+                                    style={{
+                                        fontSize: 13, fontWeight: '700',
+                                        color: isDark ? '#CBD5E1' : '#334155',
+                                        marginTop: 8, marginBottom: 8,
+                                    }}
+                                >
+                                    PADD Address
+                                </Text>
+                                <Field
+                                    label="Street"
+                                    value={user.padd?.address?.street || ''}
+                                    onChangeText={(v) => updatePADDAddress('street', v)}
+                                    placeholder="Street address"
+                                />
+                                <Field
+                                    label="City"
+                                    value={user.padd?.address?.city || ''}
+                                    onChangeText={(v) => updatePADDAddress('city', v)}
+                                    placeholder="City"
+                                />
+                                <Field
+                                    label="State"
+                                    value={user.padd?.address?.state || ''}
+                                    onChangeText={(v) => updatePADDAddress('state', v)}
+                                    placeholder="VA"
+                                />
+                                <Field
+                                    label="ZIP"
+                                    value={user.padd?.address?.zip || ''}
+                                    onChangeText={(v) => updatePADDAddress('zip', v)}
+                                    placeholder="23451"
+                                    keyboardType="numeric"
+                                />
+                                <SectionConfirmButton state={sectionStates[6]} onConfirm={() => confirmSection(6)} />
+                            </View>
+
 
                         </ScrollView>
                     </KeyboardAvoidingView>
@@ -1051,7 +1413,7 @@ export default function ProfileConfirmationScreen() {
                                     alignItems: 'center', justifyContent: 'center',
                                 }}
                             >
-                                <X size={24} color={isDark ? '#94A3B8' : '#64748B'} />
+                                <ChevronLeft size={24} color={isDark ? '#94A3B8' : '#64748B'} />
                             </Pressable>
 
                             <Pressable

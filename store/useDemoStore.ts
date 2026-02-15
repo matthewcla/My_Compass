@@ -78,6 +78,14 @@ export const useDemoStore = create<DemoState>()(
     {
       name: 'demo-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      // When rehydrating, replace the stale persisted selectedUser with the
+      // fresh version from DEMO_USERS so newly-added fields always appear.
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          const fresh = DEMO_USERS.find((u) => u.id === state.selectedUser?.id);
+          if (fresh) state.selectedUser = fresh;
+        }
+      },
     }
   )
 );

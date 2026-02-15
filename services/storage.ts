@@ -418,7 +418,39 @@ class SQLiteStorage implements IStorageService {
 
   async saveApplications(apps: Application[]): Promise<void> {
     await this.withWriteTransaction(async (runner) => {
-      for (const app of apps) {
+      // Chunk size to avoid SQLite variable limit
+      const CHUNK_SIZE = 50;
+
+      for (let i = 0; i < apps.length; i += CHUNK_SIZE) {
+        const chunk = apps.slice(i, i + CHUNK_SIZE);
+        if (chunk.length === 0) continue;
+
+        const placeholders = chunk.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+        const values: any[] = [];
+
+        for (const app of chunk) {
+          values.push(
+            app.id,
+            app.billetId,
+            app.userId,
+            app.status,
+            JSON.stringify(app.statusHistory),
+            null, // optimisticLockToken (Removed from schema)
+            null, // lockRequestedAt (Removed from schema)
+            null, // lockExpiresAt (Removed from schema)
+            app.personalStatement || null,
+            app.preferenceRank || null,
+            app.submittedAt || null,
+            app.serverConfirmedAt || null,
+            app.serverRejectionReason || null,
+            app.createdAt,
+            app.updatedAt,
+            app.lastSyncTimestamp,
+            app.syncStatus,
+            app.localModifiedAt || null
+          );
+        }
+
         await runner.runAsync(
           `INSERT OR REPLACE INTO applications (
             id, billet_id, user_id, status, status_history,
@@ -426,25 +458,8 @@ class SQLiteStorage implements IStorageService {
             personal_statement, preference_rank, submitted_at,
             server_confirmed_at, server_rejection_reason,
             created_at, updated_at, last_sync_timestamp, sync_status, local_modified_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-          app.id,
-          app.billetId,
-          app.userId,
-          app.status,
-          JSON.stringify(app.statusHistory),
-          null, // optimisticLockToken (Removed from schema)
-          null, // lockRequestedAt (Removed from schema)
-          null, // lockExpiresAt (Removed from schema)
-          app.personalStatement || null,
-          app.preferenceRank || null,
-          app.submittedAt || null,
-          app.serverConfirmedAt || null,
-          app.serverRejectionReason || null,
-          app.createdAt,
-          app.updatedAt,
-          app.lastSyncTimestamp,
-          app.syncStatus,
-          app.localModifiedAt || null
+          ) VALUES ${placeholders};`,
+          ...values
         );
       }
     });
@@ -841,11 +856,30 @@ class SQLiteStorage implements IStorageService {
         );
       }
 
-      const placeholders = messages.map(() => '?').join(', ');
-      await runner.runAsync(
-        `DELETE FROM inbox_messages WHERE id NOT IN (${placeholders});`,
-        ...messages.map((msg) => msg.id)
-      );
+      // Robust sync: Fetch all existing IDs to determine deletions
+      // This avoids "too many variables" error with DELETE ... NOT IN (...) for large datasets
+      const existingRows = await runner.getAllAsync<{ id: string }>('SELECT id FROM inbox_messages');
+      const existingIds = new Set(existingRows.map((row) => row.id));
+      const newIds = new Set(messages.map((msg) => msg.id));
+
+      const idsToDelete: string[] = [];
+      for (const id of existingIds) {
+        if (!newIds.has(id)) {
+          idsToDelete.push(id);
+        }
+      }
+
+      if (idsToDelete.length > 0) {
+        const DELETE_CHUNK_SIZE = 50;
+        for (let i = 0; i < idsToDelete.length; i += DELETE_CHUNK_SIZE) {
+          const chunk = idsToDelete.slice(i, i + DELETE_CHUNK_SIZE);
+          const placeholders = chunk.map(() => '?').join(', ');
+          await runner.runAsync(
+            `DELETE FROM inbox_messages WHERE id IN (${placeholders});`,
+            ...chunk
+          );
+        }
+      }
     });
   }
 

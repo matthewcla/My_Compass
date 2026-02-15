@@ -24,7 +24,8 @@ function createMockRunner() {
         async getAllAsync(sql, ...args) {
             this.callCount++;
             await new Promise(resolve => setTimeout(resolve, 0.1));
-            return Promise.resolve([]);
+            // Simulate existing records that need to be deleted
+            return Promise.resolve(Array.from({ length: 100 }).map((_, i) => ({ id: `old-${i}` })));
         }
     };
 }
@@ -101,12 +102,29 @@ async function saveInboxMessagesAfter(messages, runner) {
         );
     }
 
-    // Existing DELETE logic (simplified, assuming < 999 items)
-    const placeholders = messages.map(() => '?').join(', ');
-    await runner.runAsync(
-        `DELETE FROM inbox_messages WHERE id NOT IN (${placeholders});`,
-        ...messages.map((msg) => msg.id)
-    );
+    // New Robust Sync Logic
+    const existingRows = await runner.getAllAsync('SELECT id FROM inbox_messages');
+    const existingIds = new Set(existingRows.map((row) => row.id));
+    const newIds = new Set(messages.map((msg) => msg.id));
+
+    const idsToDelete = [];
+    for (const id of existingIds) {
+        if (!newIds.has(id)) {
+            idsToDelete.push(id);
+        }
+    }
+
+    if (idsToDelete.length > 0) {
+        const DELETE_CHUNK_SIZE = 50;
+        for (let i = 0; i < idsToDelete.length; i += DELETE_CHUNK_SIZE) {
+            const chunk = idsToDelete.slice(i, i + DELETE_CHUNK_SIZE);
+            const placeholders = chunk.map(() => '?').join(', ');
+            await runner.runAsync(
+                `DELETE FROM inbox_messages WHERE id IN (${placeholders});`,
+                ...chunk
+            );
+        }
+    }
 }
 
 async function runBenchmark() {

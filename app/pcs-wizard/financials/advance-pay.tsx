@@ -1,19 +1,21 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TextInput, Pressable, Platform, KeyboardAvoidingView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { AdvancePayVisualizer } from '@/components/pcs/financials/AdvancePayVisualizer';
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
-import { ChevronLeft, Plus, Minus, Check, DollarSign, Calendar, Clock, AlertCircle } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { AlertCircle, Calendar, Check, ChevronLeft, Clock, DollarSign, Minus, Plus } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '@/constants/Colors';
-import { useColorScheme } from 'react-native';
-
-const BASE_PAY = 3199; // Mocked E-5 Basic Pay
 
 export default function AdvancePayScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme() ?? 'light';
   const isDark = colorScheme === 'dark';
+
+  const user = useCurrentProfile();
+  const BASE_PAY = user?.financialProfile?.basePay || 3800;
+  const payGrade = user?.financialProfile?.payGrade || 'E-6';
 
   const { financials, resetPCS } = usePCSStore(); // Accessing store, though we only update on save
   // Ideally we might want to load existing values if editing, but for now we start fresh or from default
@@ -62,20 +64,26 @@ export default function AdvancePayScreen() {
       {/* Header */}
       <View
         style={{ paddingTop: insets.top }}
-        className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pb-4 px-4 shadow-sm z-10"
+        className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pb-2 px-4 shadow-sm z-10"
       >
-        <View className="flex-row items-center justify-between mb-4 mt-2">
-          <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+        <View className="flex-row items-start justify-between mb-1 mt-2">
+          <View className="flex-1">
+            <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-400 dark:text-gray-500">
+              PHASE 2
+            </Text>
+            <Text style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }} className="text-slate-900 dark:text-white">
+              Advance Basic Pay
+            </Text>
+          </View>
+          <Pressable onPress={() => router.back()} className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
             <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
           </Pressable>
-          <Text className="text-lg font-bold text-slate-900 dark:text-white">Advance Basic Pay</Text>
-          <View className="w-10" />
         </View>
 
         <View className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-row items-start gap-3">
           <InfoIcon size={20} color={isDark ? '#60a5fa' : '#2563eb'} style={{ marginTop: 2 }} />
           <Text className="flex-1 text-sm text-blue-800 dark:text-blue-200 font-medium leading-5">
-            Based on your E-5 Basic Pay of <Text className="font-bold">${BASE_PAY.toLocaleString()}</Text>.
+            Based on your {payGrade} Basic Pay of <Text className="font-bold">${BASE_PAY.toLocaleString()}</Text>.
             Request up to 3 months of pay to cover immediate PCS expenses.
           </Text>
         </View>
@@ -98,11 +106,10 @@ export default function AdvancePayScreen() {
                   <Pressable
                     key={m}
                     onPress={() => setAmountMonths(m)}
-                    className={`flex-1 py-3 rounded-xl border-2 items-center justify-center ${
-                      amountMonths === m
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                    }`}
+                    className={`flex-1 py-3 rounded-xl border-2 items-center justify-center ${amountMonths === m
+                      ? 'bg-blue-600 border-blue-600'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                      }`}
                   >
                     <Text className={`font-bold ${amountMonths === m ? 'text-white' : 'text-slate-600 dark:text-slate-300'}`}>
                       {m} Month{m > 1 ? 's' : ''}
@@ -157,7 +164,7 @@ export default function AdvancePayScreen() {
 
             {isRepaymentJustificationRequired && (
               <View className="mt-4">
-                 <Text className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">
+                <Text className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">
                   Justification for Extended Repayment <Text className="text-red-500">*</Text>
                 </Text>
                 <TextInput
@@ -182,13 +189,11 @@ export default function AdvancePayScreen() {
                 <Pressable
                   key={t}
                   onPress={() => setTiming(t)}
-                  className={`flex-1 py-2.5 rounded-lg items-center justify-center ${
-                    timing === t ? 'bg-white dark:bg-slate-700 shadow-sm' : ''
-                  }`}
+                  className={`flex-1 py-2.5 rounded-lg items-center justify-center ${timing === t ? 'bg-white dark:bg-slate-700 shadow-sm' : ''
+                    }`}
                 >
-                  <Text className={`text-xs font-bold ${
-                    timing === t ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'
-                  }`}>
+                  <Text className={`text-xs font-bold ${timing === t ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'
+                    }`}>
                     {t === 'EARLY' ? 'Early (Pre)' : t === 'LATE' ? 'Late (Post)' : 'Standard'}
                   </Text>
                 </Pressable>
@@ -213,6 +218,15 @@ export default function AdvancePayScreen() {
             )}
           </View>
 
+          <View className="mb-8">
+            <AdvancePayVisualizer
+              monthsRequested={amountMonths}
+              onMonthsRequestedChange={setAmountMonths}
+              repaymentTerm={repaymentMonths}
+              onRepaymentTermChange={setRepaymentMonths}
+            />
+          </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -224,9 +238,8 @@ export default function AdvancePayScreen() {
         <Pressable
           onPress={handleGenerateRequest}
           disabled={!canSubmit}
-          className={`w-full py-4 rounded-xl flex-row items-center justify-center gap-2 ${
-            canSubmit ? 'bg-blue-600 active:bg-blue-700' : 'bg-slate-200 dark:bg-slate-800'
-          }`}
+          className={`w-full py-4 rounded-xl flex-row items-center justify-center gap-2 ${canSubmit ? 'bg-blue-600 active:bg-blue-700' : 'bg-slate-200 dark:bg-slate-800'
+            }`}
         >
           <Text className={`font-bold text-lg ${canSubmit ? 'text-white' : 'text-slate-400 dark:text-slate-600'}`}>
             Generate Request
@@ -252,7 +265,7 @@ function SectionLabel({ icon, label }: { icon: React.ReactNode, label: string })
 function InfoIcon(props: any) {
   return (
     <View className="bg-blue-100 dark:bg-blue-900 rounded-full p-0.5">
-       <AlertCircle {...props} />
+      <AlertCircle {...props} />
     </View>
   )
 }

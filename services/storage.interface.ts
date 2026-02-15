@@ -1,6 +1,7 @@
 import { CareerEvent } from '@/types/career';
 import { DashboardData } from '@/types/dashboard';
 import { InboxMessage } from '@/types/inbox';
+import { HistoricalPCSOrder, PCSDocument } from '@/types/pcs';
 import {
   Application,
   Billet,
@@ -69,4 +70,16 @@ export interface IStorageService {
   // Career Events
   saveCareerEvents(events: CareerEvent[]): Promise<void>;
   getCareerEvents(): Promise<CareerEvent[]>;
+
+  // Historical PCS Orders (Digital Sea Bag)
+  saveHistoricalPCSOrder(order: HistoricalPCSOrder): Promise<void>;
+  getUserHistoricalPCSOrders(userId: string): Promise<HistoricalPCSOrder[]>;
+  getHistoricalPCSOrder(id: string): Promise<HistoricalPCSOrder | null>;
+  deleteHistoricalPCSOrder(id: string): Promise<void>;
+
+  // PCS Documents
+  savePCSDocument(doc: PCSDocument): Promise<void>;
+  getPCSDocument(docId: string): Promise<PCSDocument | null>;
+  getPCSDocuments(pcsOrderId: string): Promise<PCSDocument[]>;
+  deletePCSDocument(docId: string): Promise<void>;
 }

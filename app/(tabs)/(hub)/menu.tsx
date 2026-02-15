@@ -1,1 +1,1 @@
-export { default } from '@/src/screens/MenuHubScreen';
+export { default } from '@/components/MenuHubScreen';

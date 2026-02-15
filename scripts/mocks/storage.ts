@@ -137,6 +137,18 @@ class MockStorage implements IStorageService {
     async getCareerEvents(): Promise<CareerEvent[]> {
         return this.careerEvents;
     }
+
+    // Historical PCS Orders
+    async saveHistoricalPCSOrder(_order: any): Promise<void> { }
+    async getUserHistoricalPCSOrders(_userId: string): Promise<any[]> { return []; }
+    async getHistoricalPCSOrder(_id: string): Promise<null> { return null; }
+    async deleteHistoricalPCSOrder(_id: string): Promise<void> { }
+
+    // PCS Documents
+    async savePCSDocument(_doc: any): Promise<void> { }
+    async getPCSDocument(_docId: string): Promise<null> { return null; }
+    async getPCSDocuments(_pcsOrderId: string): Promise<any[]> { return []; }
+    async deletePCSDocument(_docId: string): Promise<void> { }
 }
 
 export const storage = new MockStorage();

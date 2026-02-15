@@ -4,11 +4,134 @@
     "displayName": "IT1 Matthew Wilson",
     "email": "matthew.wilson.mil@us.navy.mil",
     "rank": "E-6",
+    "rating": "IT",
     "title": "IT1",
-    "dependents": 2,
+    "phone": "757-555-0142",
+    "altPhone": "757-555-0198",
+    "emergencyContact": {
+        "name": "Sarah Wilson",
+        "phone": "757-555-0211",
+        "relationship": "Spouse",
+        "address": {
+            "street": "1234 Shore Dr",
+            "city": "Virginia Beach",
+            "state": "VA",
+            "zip": "23451"
+        }
+    },
+    "homeAddress": {
+        "street": "1234 Shore Dr",
+        "city": "Virginia Beach",
+        "state": "VA",
+        "zip": "23451"
+    },
+    "mailingAddress": {
+        "street": "1234 Shore Dr",
+        "city": "Virginia Beach",
+        "state": "VA",
+        "zip": "23451"
+    },
+    "hasNextDutyStationResidence": false,
+    "maritalStatus": "married",
     "uic": "21545",
-    "unit": "USS Gerald R. Ford",
-    "status": "Active",
+    "dutyStation": {
+        "name": "USS Gerald R. Ford (CVN-78)",
+        "address": "Naval Station Norfolk, 1530 Gilbert St",
+        "zip": "23511",
+        "type": "AFLOAT"
+    },
+    "prd": "2026-09-01T00:00:00.000Z",
+    "seaos": "2027-03-01T00:00:00.000Z",
+    "eaos": "2027-06-01T00:00:00.000Z",
+    "dependents": 2,
+    "dependentDetails": [
+        {
+            "id": "dep-001",
+            "name": "Sarah Wilson",
+            "relationship": "spouse",
+            "dob": "1992-04-15",
+            "efmpEnrolled": false,
+            "address": {
+                "street": "1234 Shore Dr",
+                "city": "Virginia Beach",
+                "state": "VA",
+                "zip": "23451"
+            }
+        },
+        {
+            "id": "dep-002",
+            "name": "Emily Wilson",
+            "relationship": "child",
+            "dob": "2019-08-22",
+            "efmpEnrolled": false,
+            "address": {
+                "street": "1234 Shore Dr",
+                "city": "Virginia Beach",
+                "state": "VA",
+                "zip": "23451"
+            }
+        }
+    ],
+    "housing": {
+        "type": "off_base",
+        "address": "1234 Shore Dr, Virginia Beach, VA",
+        "zip": "23451"
+    },
+    "vehicles": [
+        {
+            "id": "veh-001",
+            "make": "Toyota",
+            "model": "Tacoma",
+            "year": 2021,
+            "licensePlate": "VET-2021"
+        }
+    ],
+    "beneficiaries": [
+        {
+            "id": "ben-001",
+            "name": "Sarah Wilson",
+            "relationship": "Spouse",
+            "percentage": 75,
+            "address": {
+                "street": "1234 Shore Dr",
+                "city": "Virginia Beach",
+                "state": "VA",
+                "zip": "23451"
+            }
+        },
+        {
+            "id": "ben-002",
+            "name": "Emily Wilson",
+            "relationship": "Child",
+            "percentage": 25,
+            "address": {
+                "street": "1234 Shore Dr",
+                "city": "Virginia Beach",
+                "state": "VA",
+                "zip": "23451"
+            }
+        }
+    ],
+    "padd": {
+        "name": "Sarah Wilson",
+        "relationship": "Spouse",
+        "phone": "757-555-0211",
+        "address": {
+            "street": "1234 Shore Dr",
+            "city": "Virginia Beach",
+            "state": "VA",
+            "zip": "23451"
+        }
+    },
+    "bloodType": "O+",
+    "shirtSize": "L",
+    "efmpEnrolled": false,
+    "financialProfile": {
+        "payGrade": "E-6",
+        "basePay": 3849,
+        "hasDependents": true,
+        "dependentsCount": 2
+    },
     "preferences": {
         "regions": [
             "Mid-Atlantic"
@@ -19,6 +142,5 @@
     },
     "privacyMode": false,
     "lastSyncTimestamp": "2026-01-26T22:24:00.000Z",
-    "syncStatus": "synced",
-    "eaos": "2027-06-01T00:00:00.000Z"
+    "syncStatus": "synced"
 }

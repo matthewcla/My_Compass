@@ -129,14 +129,11 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
     /**
      * TEST 3: The Zombie Draft
      *
-     * VULNERABILITY: withdrawApplication() does not clear the realDecisions
+     * SCENARIO: withdrawApplication() must clear the realDecisions
      * entry that originally put the billet on the slate.
      *
      * EXPECTED BEHAVIOR: After withdrawal, the billet should NOT appear in
      * the Manifest (realDecisions should be cleared).
-     *
-     * ACTUAL (BUG): The realDecisions['super'] entry persists, causing the
-     * billet to reappear in the Manifest as if the user is still interested.
      */
     it('The Zombie Draft: withdrawn billet should NOT persist in realDecisions', async () => {
         const billetStack = useAssignmentStore.getState().billetStack;
@@ -162,7 +159,6 @@ describe('🔥 ANTIGRAVITY CHAOS SUITE: useAssignmentStore', () => {
         expect(finalState.applications[appId]).toBeUndefined();
 
         // ASSERTION: realDecisions should also be cleared
-        // BUG: This will likely FAIL because withdrawApplication doesn't touch realDecisions
         expect(finalState.realDecisions[targetBilletId]).toBeUndefined();
     });
 

@@ -1,6 +1,18 @@
 export type PCSSegmentType = 'ORIGIN' | 'INTERMEDIATE' | 'DESTINATION';
 export type PCSSegmentMode = 'POV' | 'AIR' | 'MIXED' | 'GOV_VEHICLE';
 export type PCSSegmentStatus = 'LOCKED' | 'PLANNING' | 'COMPLETE';
+export type PCSPhase = 'DORMANT' | 'ORDERS_NEGOTIATION' | 'TRANSIT_LEAVE' | 'CHECK_IN';
+export type TRANSITSubPhase = 'PLANNING' | 'ACTIVE_TRAVEL';
+
+/**
+ * PCS Route information for travel distance calculations.
+ * Used for MALT, per diem, and advance pay calculations.
+ */
+export interface PCSRoute {
+  losingZip: string;
+  gainingZip: string;
+  estimatedMileage: number;
+}
 
 export interface PCSStop {
   id: string;
@@ -8,6 +20,13 @@ export interface PCSStop {
   arrivalDate: string;
   departureDate: string;
   reason: 'LEISURE' | 'OFFICIAL';
+}
+
+export interface HHGItem {
+  id: string;
+  category: 'FURNITURE' | 'APPLIANCES' | 'ELECTRONICS' | 'BOXES' | 'VEHICLE' | 'OUTDOOR' | 'KIDS' | 'OTHER';
+  description: string;
+  estimatedWeight: number;
 }
 
 export interface PCSSegment {
@@ -38,16 +57,44 @@ export interface PCSSegment {
   status: PCSSegmentStatus;
 }
 
+export interface SponsorContact {
+  name?: string;
+  rank?: string;
+  phone?: string;
+  email?: string;
+  photoUrl?: string;
+}
+
 export interface PCSOrder {
   orderNumber: string;
   gainingCommand: {
     name: string;
     uic: string;
+    address?: string;
+    zip?: string;
+    homePort?: string;
+    quarterdeckPhone?: string;
+    psdPhone?: string;
+    oodPhone?: string;
+    uniformOfDay?: string;
+    quarterdeckLocation?: { latitude: number; longitude: number };
+    crestUrl?: string;
   };
+  sponsor?: SponsorContact | null;
   segments: PCSSegment[];
   reportNLT: string;
   isOconus: boolean;
   isSeaDuty: boolean;
+}
+
+export type UCTPhase = 1 | 2 | 3 | 4;
+
+export type UCTNodeStatus = 'COMPLETED' | 'ACTIVE' | 'LOCKED';
+
+export interface UCTPhaseConfig {
+  phase: UCTPhase;
+  title: string;
+  description: string;
 }
 
 export interface ChecklistItem {
@@ -56,4 +103,209 @@ export interface ChecklistItem {
   segmentId?: string;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE';
   category: 'PRE_TRAVEL' | 'FINANCE' | 'SCREENING';
+  uctPhase: UCTPhase;
+  completedAt?: string;
+  actionRoute?: string;
+  helpText?: string;
+}
+
+/**
+ * Liquidation tracking for PCS travel claims.
+ * Tracks the payment status from submission through NPPSC processing.
+ */
+export type LiquidationStatus = 'NOT_STARTED' | 'SUBMITTED' | 'CPPA_REVIEW' | 'NPPSC_AUDIT' | 'PAID';
+
+export interface LiquidationStep {
+  status: LiquidationStatus;
+  label: string;
+  estimatedDate?: string;
+  completedDate?: string;
+}
+
+export interface LiquidationTracking {
+  claimId: string | null;
+  currentStatus: LiquidationStatus;
+  steps: LiquidationStep[];
+  estimatedPaymentDate: string | null;
+  actualPaymentAmount: number | null;
+  submittedAt: string | null;
+}
+
+// =============================================================================
+// PCS DOCUMENT ARCHIVE — "The Digital Sea Bag"
+// =============================================================================
+
+/**
+ * Document categories for archived PCS documents.
+ * Maps to the standard Navy PCS paperwork lifecycle.
+ */
+export type DocumentCategory =
+  | 'ORDERS'          // Stamped official orders PDF
+  | 'TRAVEL_VOUCHER'  // DD 1351-2 (liquidated claim)
+  | 'W2'              // Annual W-2 tax form
+  | 'RECEIPT'          // Individual expense receipts
+  | 'OTHER';           // Miscellaneous documents
+
+/**
+ * A single document associated with a historical PCS move.
+ * Stored locally with encrypted metadata in SQLite.
+ */
+export interface PCSDocument {
+  id: string;
+  pcsOrderId: string;
+  category: DocumentCategory;
+  filename: string;
+  displayName: string;
+  localUri: string;
+  originalUrl?: string;
+  sizeBytes: number;
+  uploadedAt: string;
+  metadata?: Record<string, string>;
+}
+
+/**
+ * A completed PCS move, archived for long-term reference.
+ * Created when an active PCS order transitions to DORMANT
+ * (all segments COMPLETE + 90-day post-arrival window).
+ *
+ * This is what sailors see in the "Digital Sea Bag" — a searchable
+ * record of past moves with all associated documents.
+ */
+export interface HistoricalPCSOrder {
+  id: string;
+  orderNumber: string;
+  userId: string;
+
+  originCommand: string;
+  originLocation: string;
+  gainingCommand: string;
+  gainingLocation: string;
+
+  departureDate: string;
+  arrivalDate: string;
+  fiscalYear: number;
+
+  totalMalt: number;
+  totalPerDiem: number;
+  totalReimbursement: number;
+
+  documents: PCSDocument[];
+
+  status: 'ACTIVE' | 'ARCHIVED';
+  archivedAt?: string;
+
+  isOconus: boolean;
+  isSeaDuty: boolean;
+}
+
+// ─── DPS / HHG Move Planning Types ────────────────────────────────
+
+export type HHGShipmentType = 'GBL' | 'PPM' | 'NTS';
+
+/** Storage facility type: NTS = long-term government storage, SIT = short-term at origin/destination. */
+export type StorageType = 'NTS' | 'SIT_ORIGIN' | 'SIT_DESTINATION';
+
+/** A single "lot" of HHG being moved or stored. */
+export interface HHGShipment {
+  id: string;
+  type: HHGShipmentType;
+  label: string;
+  items: HHGItem[];
+  estimatedWeight: number;
+  originZip: string;
+  destinationZip: string | null;  // null for NTS
+
+  storage?: {
+    facility: StorageType;
+    maxDaysSIT: number;           // 90 days per JTR
+    estimatedStartDate: string;
+    estimatedEndDate?: string;
+  };
+
+  dpsConfirmation?: DPSMoveConfirmation | null;
+  selectedPickupWindowId: string | null;
+  status: 'DRAFT' | 'SUBMITTED' | 'CONFIRMED';
+}
+
+export interface StorageFacility {
+  id: string;
+  name: string;
+  address: string;
+  zip: string;
+  capacityLabel: 'AVAILABLE' | 'LIMITED' | 'FULL';
+}
+
+export interface NTSStorageRequest {
+  originZip: string;
+  facilityId: string;
+  estimatedWeight: number;
+  estimatedStartDate: string;
+  memberName: string;
+  ordersNumber: string;
+}
+
+export interface NTSStorageConfirmation {
+  confirmationNumber: string;
+  facility: StorageFacility;
+  scheduledPickup: PickupWindow;
+  createdAt: string;
+}
+
+export interface PickupWindow {
+  id: string;
+  startDate: string;
+  endDate: string;
+  isPreferred: boolean;
+  capacityLabel: 'AVAILABLE' | 'LIMITED' | 'WAITLIST';
+}
+
+export interface DeliveryEstimate {
+  estimatedDeliveryStart: string;
+  estimatedDeliveryEnd: string;
+  transitDays: number;
+  shipmentType: HHGShipmentType;
+}
+
+export interface DPSMoveRequest {
+  originZip: string;
+  destinationZip: string;
+  estimatedWeight: number;
+  shipmentType: HHGShipmentType;
+  requestedPickupWindowId: string;
+  memberName: string;
+  ordersNumber: string;
+}
+
+export interface DPSMoveConfirmation {
+  confirmationNumber: string;
+  scheduledPickup: PickupWindow;
+  estimatedDelivery: DeliveryEstimate;
+  createdAt: string;
+}
+
+export interface ExcessWeightEstimate {
+  excessLbs: number;
+  costPerLb: number;
+  totalCost: number;
+  warningMessage: string;
+}
+
+export interface PPMIncentiveEstimate {
+  gblEquivalentCost: number;
+  incentivePercentage: number;
+  estimatedIncentive: number;
+  weightMoved: number;
+}
+
+// ─── Moving Cost Projection Model ─────────────────────────────────
+
+export interface MovingCostsBreakdown {
+  securityDeposit: number;
+  firstLastRent: number;
+  temporaryLodging: number;
+  fuelEstimate: number;
+  mealsEstimate: number;
+  miscellaneous: number;
+  hhgExcessCost: number;
+  totalEstimated: number;
 }

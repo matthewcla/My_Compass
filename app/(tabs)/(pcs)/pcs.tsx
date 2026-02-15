@@ -1,13 +1,15 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { PCSChecklist } from '@/components/pcs/PCSChecklist';
-import { ProfileConfirmationCard } from '@/components/pcs/ProfileConfirmationCard';
-import { SegmentTimeline } from '@/components/pcs/SegmentTimeline';
+import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
+import { PCSActiveState } from '@/components/pcs/states/PCSActiveState';
+import { PCSArchiveState } from '@/components/pcs/states/PCSArchiveState';
+import { ContextualFAB } from '@/components/ui/ContextualFAB';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useDemoStore } from '@/store/useDemoStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
-import { usePCSStore } from '@/store/usePCSStore';
-import React, { useEffect } from 'react';
+import { selectHasActiveOrders, usePCSStore } from '@/store/usePCSStore';
+import React, { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -15,8 +17,19 @@ export default function PcsScreen() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    const { initializeOrders, activeOrder } = usePCSStore();
+    const { initializeOrders } = usePCSStore();
+    const hasActiveOrders = usePCSStore(selectHasActiveOrders);
     const resetHeader = useHeaderStore((state) => state.resetHeader);
+
+    // Dev override: force context track for testing
+    const isDemoMode = useDemoStore((s) => s.isDemoMode);
+    const pcsContextOverride = useDemoStore((s) => s.pcsContextOverride);
+
+    const showActiveContext = useMemo(() => {
+        if (isDemoMode && pcsContextOverride === 'ACTIVE') return true;
+        if (isDemoMode && pcsContextOverride === 'ARCHIVE') return false;
+        return hasActiveOrders;
+    }, [isDemoMode, pcsContextOverride, hasActiveOrders]);
 
     useEffect(() => {
         // Clear stale header store state from the previous screen
@@ -24,10 +37,10 @@ export default function PcsScreen() {
     }, [resetHeader]);
 
     useEffect(() => {
-        if (!activeOrder) {
+        if (!hasActiveOrders) {
             initializeOrders();
         }
-    }, [activeOrder, initializeOrders]);
+    }, [hasActiveOrders, initializeOrders]);
 
     return (
         <ScreenGradient>
@@ -53,7 +66,7 @@ export default function PcsScreen() {
                     scrollEnabled,
                     scrollEventThrottle,
                     contentContainerStyle
-                }) => (
+                }) => showActiveContext ? (
                     <Animated.ScrollView
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
@@ -65,14 +78,31 @@ export default function PcsScreen() {
                         contentContainerStyle={contentContainerStyle}
                         showsVerticalScrollIndicator={false}
                     >
-                        <View style={{ paddingTop: 24 }}>
-                            <ProfileConfirmationCard />
-                            <SegmentTimeline />
-                            <PCSChecklist />
-                        </View>
+                        <Animated.View>
+                            <PCSActiveState />
+                            <PCSDevPanel />
+                        </Animated.View>
                     </Animated.ScrollView>
-                )}
+                ) : (
+                        <PCSArchiveState
+                            listProps={{
+                                onScroll,
+                                onScrollBeginDrag,
+                                onScrollEndDrag,
+                                onLayout,
+                                onContentSizeChange,
+                                scrollEnabled,
+                                scrollEventThrottle,
+                                clipToPadding: false,
+                                contentContainerStyle,
+                            }}
+                            footer={<PCSDevPanel />}
+                        />
+                    )}
             </CollapsibleScaffold>
+
+            {/* FAB positioned outside ScrollView, inside ScreenGradient */}
+            <ContextualFAB />
         </ScreenGradient>
     );
 }

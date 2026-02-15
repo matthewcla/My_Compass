@@ -1,10 +1,10 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
+import { DemoPhase } from '@/constants/DemoData';
 import { useDemoStore } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
-import { DemoPhase } from '@/constants/DemoData';
 import { useRouter } from 'expo-router';
-import { Calendar, Timer, Map as MapIcon } from 'lucide-react-native';
+import { Calendar, Map as MapIcon, Timer } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -16,7 +16,7 @@ interface StatusCardProps {
 export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
-    const iconColor = isDark ? '#60A5FA' : '#2563EB'; // blue-400 : blue-600
+    const iconColor = isDark ? '#fbbf24' : '#fbbf24'; // Gold for both, on Navy bg
 
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
     const selectedUser = useDemoStore((state) => state.selectedUser);
@@ -113,21 +113,24 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className="border-l-4 border-blue-600 dark:border-blue-400 pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-row items-center justify-between shadow-sm"
+                // Changed Blue-600 to Slate-900 (Navy)
+                className="border-l-4 border-slate-900 dark:border-slate-700 pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-row items-center justify-between shadow-sm"
             >
                 <View className="flex-row items-center gap-4 flex-1">
-                    <View className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full">
-                        <Calendar size={24} color={iconColor} />
+                    {/* Changed Blue-100 to Slate-100/Slate-800 */}
+                    <View className="bg-slate-100 dark:bg-slate-800 p-3 rounded-full">
+                        <Calendar size={24} color={isDark ? '#fbbf24' : '#0f172a'} />
                     </View>
                     <View className="flex-1">
-                        <Text className="text-blue-900 dark:text-blue-100 text-base font-bold leading-none mb-1">
+                        {/* Changed Blue-900 to Slate-900 */}
+                        <Text className="text-slate-900 dark:text-slate-100 text-base font-bold leading-none mb-1">
                             Cycle {nextCycle} Status
                         </Text>
                         <View className="flex-row items-baseline gap-1">
-                            <Text className="text-blue-950 dark:text-white text-2xl font-black">
+                            <Text className="text-slate-950 dark:text-white text-2xl font-black">
                                 {daysUntilOpen}
                             </Text>
-                            <Text className="text-blue-700 dark:text-blue-300 text-sm font-medium">
+                            <Text className="text-slate-600 dark:text-slate-400 text-sm font-medium">
                                 days until open
                             </Text>
                         </View>
@@ -135,8 +138,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 </View>
 
                 <View className="items-end">
-                    <View className="bg-blue-100 dark:bg-blue-900 px-3 py-1.5 rounded-full mb-1">
-                        <Text className="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+                    {/* Changed Blue-100/Blue-700 to Slate-900/Amber-400 (Gold Pill) */}
+                    <View className="bg-slate-900 dark:bg-slate-800 px-3 py-1.5 rounded-full mb-1 border border-slate-800 dark:border-slate-700">
+                        <Text className="text-xs font-bold text-amber-400 uppercase tracking-wide">
                             Prep Mode
                         </Text>
                     </View>

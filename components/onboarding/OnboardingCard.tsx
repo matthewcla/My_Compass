@@ -18,7 +18,9 @@ const OnboardingCard = () => {
     };
 
     const handlePress = (item: string) => {
-        console.log(`Navigate to ${item}`);
+        if (__DEV__) {
+            console.log(`Navigate to ${item}`);
+        }
         // Navigation logic can be added here later
     };
 

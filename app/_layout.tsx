@@ -6,9 +6,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
 import '../ignoreWarnings';
+
+// Suppress strict-mode warnings from Layout animations reading shared values during render
+configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false });
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
@@ -17,6 +21,7 @@ import { SessionProvider } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
+import { usePCSStore } from '@/store/usePCSStore';
 import { View } from 'react-native';
 
 export {
@@ -79,6 +84,9 @@ export default function RootLayout() {
 
     void initStorage();
 
+    // Initialize PCS Cache
+    usePCSStore.getState().initializeOrdersCache();
+
     return () => {
       cancelled = true;
     };
@@ -122,21 +130,21 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SessionProvider>
-            <AuthGuard />
-            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
-            <View
-              className="flex-1 bg-white dark:bg-black"
-              onLayout={onLayoutRootView}
-              style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
-            >
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-                <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
-                <Stack.Screen name="leave" />
-                <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
-              </Stack>
-              <SpotlightOverlay />
-            </View>
+          <AuthGuard />
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
+          <View
+            className="flex-1 bg-white dark:bg-black"
+            onLayout={onLayoutRootView}
+            style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
+          >
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+              <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+              <Stack.Screen name="leave" />
+              <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
+            </Stack>
+            <SpotlightOverlay />
+          </View>
         </SessionProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

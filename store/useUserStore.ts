@@ -55,7 +55,7 @@ type UserStore = UserState & UserActions;
  * Loaded from data/mockProfile.json for offline-first development
  */
 const MOCK_USER: User = {
-    ...mockProfileData,
+    ...(mockProfileData as unknown as User),
     rank: 'E-6',
     rating: 'IT',
     syncStatus: mockProfileData.syncStatus as SyncStatus,
@@ -180,3 +180,21 @@ export const useUserId = () => useUserStore((state) => state.user?.id);
 export const useUserDisplayName = () => useUserStore((state) => state.user?.displayName);
 export const useUserRank = () => useUserStore((state) => state.user?.rank);
 export const useIsHydrating = () => useUserStore((state) => state.isHydrating);
+
+/**
+ * Selector hooks for PCS Financial Profile data
+ */
+export const useFinancialProfile = () => useUserStore((state) => state.user?.financialProfile);
+export const useUserDependents = () => useUserStore((state) => state.user?.dependents);
+export const useBasePay = () => useUserStore((state) => state.user?.financialProfile?.basePay);
+export const usePayGrade = () => useUserStore((state) => state.user?.financialProfile?.payGrade || state.user?.rank);
+
+// PCS Profile selectors
+export const useUserDependentDetails = () => useUserStore((state) => state.user?.dependentDetails);
+export const useUserHousing = () => useUserStore((state) => state.user?.housing);
+export const useUserDutyStation = () => useUserStore((state) => state.user?.dutyStation);
+export const useUserVehicles = () => useUserStore((state) => state.user?.vehicles);
+export const useUserEmergencyContact = () => useUserStore((state) => state.user?.emergencyContact);
+export const useUserMaritalStatus = () => useUserStore((state) => state.user?.maritalStatus);
+export const useUserEFMP = () => useUserStore((state) => state.user?.efmpEnrolled);
+

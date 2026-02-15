@@ -2,6 +2,7 @@ import { ScalePressable } from '@/components/ScalePressable';
 import { HHGCostProjection } from '@/components/pcs/financials/HHGCostProjection';
 import { HHGWeightRing } from '@/components/pcs/widgets/HHGWeightRing';
 import { MoveDatePlanner } from '@/components/pcs/widgets/MoveDatePlanner';
+import { ShipmentCreationModal } from '@/components/pcs/widgets/ShipmentCreationModal';
 import { HHGWizardStatusBar } from '@/components/pcs/wizard/HHGWizardStatusBar';
 import { services } from '@/services/api/serviceRegistry';
 import { useHeaderStore } from '@/store/useHeaderStore';
@@ -15,15 +16,19 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
+    ArrowRight,
     CheckCircle,
     ChevronLeft,
     Home,
     Loader2,
+    MapPin,
     Package,
     PenLine,
     Plus,
     Send,
     Trash2,
+    Truck,
+    Warehouse,
     Weight,
     Zap
 } from 'lucide-react-native';
@@ -91,11 +96,13 @@ export default function HHGMovePlannerScreen() {
     const setHeaderVisible = useHeaderStore((state) => state.setVisible);
 
     const hhg = usePCSStore((s) => s.financials.hhg);
-    const addHHGItem = usePCSStore((s) => s.addHHGItem);
-    const removeHHGItem = usePCSStore((s) => s.removeHHGItem);
+    const addItemToShipment = usePCSStore((s) => s.addItemToShipment);
+    const removeItemFromShipment = usePCSStore((s) => s.removeItemFromShipment);
     const setChecklistItemStatus = usePCSStore((s) => s.setChecklistItemStatus);
     const checklist = usePCSStore((s) => s.checklist);
     const activeOrder = usePCSStore((s) => s.activeOrder);
+    const addShipmentAction = usePCSStore((s) => s.addShipment);
+    const updateShipment = usePCSStore((s) => s.updateShipment);
 
     // ── Hide Global Header ────────────────────────────────────
     useFocusEffect(
@@ -115,6 +122,10 @@ export default function HHGMovePlannerScreen() {
     const [showSuccess, setShowSuccess] = useState(false);
     const initialItemsRef = useRef<HHGItem[]>([]);
 
+    // Multi-shipment
+    const [activeShipmentId, setActiveShipmentId] = useState<string | null>(null);
+    const [showCreateShipment, setShowCreateShipment] = useState(false);
+
     // Catalogue UI
     const [selectedRoom, setSelectedRoom] = useState<string>('Living Room');
     const [showCustomEntry, setShowCustomEntry] = useState(false);
@@ -131,9 +142,31 @@ export default function HHGMovePlannerScreen() {
     const scrollViewRef = useRef<any>(null);
     const sectionCoords = useRef<number[]>([]);
 
+    // ── Derived Shipment State ────────────────────────────────
+    const shipments = useMemo(() => hhg.shipments || [], [hhg.shipments]);
+    const activeShipment = useMemo(
+        () => shipments.find(s => s.id === activeShipmentId) ?? shipments[0] ?? null,
+        [shipments, activeShipmentId],
+    );
+
+    // Ensure we always track a real shipment; create a default if none exist
     useEffect(() => {
-        const allItems = (hhg.shipments || []).flatMap(s => s.items);
-        const cloned = allItems.map((item) => ({ ...item }));
+        if (shipments.length === 0) {
+            addShipmentAction('GBL', 'Main Shipment', '');
+        }
+    }, [shipments.length]);
+
+    // Sync activeShipmentId to first shipment if unset
+    useEffect(() => {
+        if (!activeShipmentId && shipments.length > 0) {
+            setActiveShipmentId(shipments[0].id);
+        }
+    }, [activeShipmentId, shipments]);
+
+    // Load items for active shipment
+    useEffect(() => {
+        if (!activeShipment) return;
+        const cloned = activeShipment.items.map((item) => ({ ...item }));
         setItems(cloned);
         initialItemsRef.current = cloned;
 
@@ -142,7 +175,7 @@ export default function HHGMovePlannerScreen() {
         if (hhgTask && hhgTask.status === 'NOT_STARTED') {
             setChecklistItemStatus(hhgTask.id, 'IN_PROGRESS');
         }
-    }, []);
+    }, [activeShipment?.id]);
 
     // ── Auto-Save via Debounced Persistence ───────────────────
     useEffect(() => {
@@ -160,7 +193,11 @@ export default function HHGMovePlannerScreen() {
         () => items.reduce((sum, item) => sum + item.estimatedWeight, 0),
         [items],
     );
-    const usagePercent = maxWeightAllowance > 0 ? (runningTotal / maxWeightAllowance) * 100 : 0;
+    const aggregateWeight = useMemo(
+        () => shipments.reduce((sum, s) => sum + s.items.reduce((iSum, i) => iSum + i.estimatedWeight, 0), 0),
+        [shipments],
+    );
+    const usagePercent = maxWeightAllowance > 0 ? (aggregateWeight / maxWeightAllowance) * 100 : 0;
     const totalToneClass = getTotalToneClass(usagePercent);
 
     // ── Scroll Handlers ───────────────────────────────────────
@@ -296,23 +333,25 @@ export default function HHGMovePlannerScreen() {
     // ── Persistence Logic ─────────────────────────────────────
 
     const persistItemsToStore = () => {
+        if (!activeShipment) return;
+        const shipmentId = activeShipment.id;
         const initialItems = initialItemsRef.current;
         const initialMap = new Map(initialItems.map((item) => [item.id, item]));
         const localPersistedIds = new Set(items.filter((i) => isPersistedId(i.id)).map((i) => i.id));
 
         initialItems.forEach((item) => {
-            if (!localPersistedIds.has(item.id)) removeHHGItem(item.id);
+            if (!localPersistedIds.has(item.id)) removeItemFromShipment(shipmentId, item.id);
         });
 
         items.forEach((item) => {
             const initialItem = initialMap.get(item.id);
             if (!initialItem) {
-                addHHGItem({ category: item.category, description: item.description, estimatedWeight: item.estimatedWeight });
+                addItemToShipment(shipmentId, { category: item.category, description: item.description, estimatedWeight: item.estimatedWeight });
                 return;
             }
             if (!areItemsEqual(initialItem, item)) {
-                removeHHGItem(initialItem.id);
-                addHHGItem({ category: item.category, description: item.description, estimatedWeight: item.estimatedWeight });
+                removeItemFromShipment(shipmentId, initialItem.id);
+                addItemToShipment(shipmentId, { category: item.category, description: item.description, estimatedWeight: item.estimatedWeight });
             }
         });
 
@@ -428,6 +467,186 @@ export default function HHGMovePlannerScreen() {
                             keyboardShouldPersistTaps="handled"
                             keyboardDismissMode="interactive"
                         >
+                            {/* ── Shipment Tabs ──────────────────────── */}
+                            <View className="mb-4">
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-4 px-4">
+                                    <View className="flex-row gap-2">
+                                        {shipments.map((s) => {
+                                            const isActive = s.id === activeShipment?.id;
+                                            const TypeIcon = s.type === 'NTS' ? Warehouse : s.type === 'PPM' ? Package : Truck;
+                                            return (
+                                                <ScalePressable
+                                                    key={s.id}
+                                                    onPress={() => {
+                                                        persistItemsToStore();
+                                                        setActiveShipmentId(s.id);
+                                                    }}
+                                                    className={`rounded-xl border px-3 py-2 flex-row items-center ${isActive
+                                                        ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700'
+                                                        : 'border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50'
+                                                        }`}
+                                                >
+                                                    <TypeIcon size={14} color={isActive ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#94a3b8' : '#64748b')} />
+                                                    <Text className={`ml-1.5 text-xs font-semibold ${isActive ? 'text-blue-700 dark:text-blue-300' : 'text-slate-600 dark:text-zinc-300'
+                                                        }`}>{s.label}</Text>
+                                                    <View className={`ml-2 rounded-full px-1.5 py-0.5 ${isActive ? 'bg-blue-200/50 dark:bg-blue-800/40' : 'bg-slate-100 dark:bg-zinc-700/50'
+                                                        }`}>
+                                                        <Text className={`text-[9px] font-bold ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-zinc-400'
+                                                            }`}>{s.type}</Text>
+                                                    </View>
+                                                </ScalePressable>
+                                            );
+                                        })}
+                                        {/* Add Shipment Button */}
+                                        <ScalePressable
+                                            onPress={() => setShowCreateShipment(true)}
+                                            className="rounded-xl border border-dashed border-slate-300 dark:border-zinc-600 px-3 py-2 flex-row items-center"
+                                        >
+                                            <Plus size={14} color={isDark ? '#94a3b8' : '#64748b'} />
+                                            <Text className="ml-1 text-xs font-semibold text-slate-500 dark:text-zinc-400">Add Lot</Text>
+                                        </ScalePressable>
+                                    </View>
+                                </ScrollView>
+
+                                {/* Origin → Destination card */}
+                                {activeShipment && (
+                                    <View className="mt-3 rounded-xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 px-3 py-3">
+                                        <View className="flex-row items-center gap-2">
+                                            {/* Origin */}
+                                            <View className="flex-1">
+                                                <View className="flex-row items-center mb-1">
+                                                    <MapPin size={12} color={isDark ? '#94a3b8' : '#64748b'} />
+                                                    <Text className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                                                        {activeShipment.type === 'NTS' ? 'Storage ZIP' : 'Origin'}
+                                                    </Text>
+                                                </View>
+                                                <TextInput
+                                                    value={activeShipment.originZip}
+                                                    onChangeText={(text) => updateShipment(activeShipment.id, { originZip: text })}
+                                                    placeholder="ZIP"
+                                                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                                    keyboardType="number-pad"
+                                                    maxLength={5}
+                                                    className="text-base font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-zinc-800/60 rounded-lg px-2.5 py-2 border border-slate-200 dark:border-zinc-700"
+                                                />
+                                            </View>
+
+                                            {/* Arrow */}
+                                            <View className="pt-4">
+                                                <ArrowRight size={18} color={isDark ? '#64748b' : '#94a3b8'} />
+                                            </View>
+
+                                            {/* Destination */}
+                                            <View className="flex-1">
+                                                <View className="flex-row items-center mb-1">
+                                                    <MapPin size={12} color={isDark ? '#94a3b8' : '#64748b'} />
+                                                    <Text className="ml-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                                                        Destination
+                                                    </Text>
+                                                </View>
+                                                <TextInput
+                                                    value={activeShipment.type === 'NTS' ? '' : (activeShipment.destinationZip ?? '')}
+                                                    onChangeText={(text) => updateShipment(activeShipment.id, { destinationZip: text })}
+                                                    placeholder={activeShipment.type === 'NTS' ? 'N/A' : 'ZIP'}
+                                                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                                    keyboardType="number-pad"
+                                                    maxLength={5}
+                                                    editable={activeShipment.type !== 'NTS'}
+                                                    className={`text-base font-bold rounded-lg px-2.5 py-2 border ${activeShipment.type === 'NTS'
+                                                        ? 'text-slate-400 dark:text-zinc-600 bg-slate-100 dark:bg-zinc-800/30 border-slate-100 dark:border-zinc-800'
+                                                        : 'text-slate-900 dark:text-white bg-slate-50 dark:bg-zinc-800/60 border-slate-200 dark:border-zinc-700'
+                                                        }`}
+                                                />
+                                            </View>
+                                        </View>
+
+                                        {/* SIT Toggle — only for GBL/PPM */}
+                                        {activeShipment.type !== 'NTS' && (
+                                            <View className="mt-3 pt-3 border-t border-slate-100 dark:border-zinc-700/50">
+                                                <Pressable
+                                                    onPress={() => {
+                                                        if (activeShipment.storage) {
+                                                            // Remove SIT
+                                                            updateShipment(activeShipment.id, { storage: undefined });
+                                                        } else {
+                                                            // Add SIT with defaults
+                                                            updateShipment(activeShipment.id, {
+                                                                storage: {
+                                                                    facility: 'SIT_DESTINATION',
+                                                                    maxDaysSIT: 90,
+                                                                    estimatedStartDate: new Date().toISOString().split('T')[0],
+                                                                },
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="flex-row items-center justify-between"
+                                                >
+                                                    <View className="flex-row items-center">
+                                                        <Warehouse size={14} color={isDark ? '#94a3b8' : '#64748b'} />
+                                                        <Text className="ml-2 text-sm font-semibold text-slate-700 dark:text-zinc-200">
+                                                            Temporary Storage (SIT)
+                                                        </Text>
+                                                    </View>
+                                                    <View className={`w-11 h-6 rounded-full flex-row items-center px-0.5 ${activeShipment.storage
+                                                            ? 'bg-blue-600 dark:bg-blue-700 justify-end'
+                                                            : 'bg-slate-300 dark:bg-zinc-700 justify-start'
+                                                        }`}>
+                                                        <View className="w-5 h-5 rounded-full bg-white shadow" />
+                                                    </View>
+                                                </Pressable>
+
+                                                {activeShipment.storage && (
+                                                    <View className="mt-3 flex-row gap-2">
+                                                        {/* SIT Location */}
+                                                        <View className="flex-1">
+                                                            <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                                                                SIT Location
+                                                            </Text>
+                                                            <View className="flex-row gap-1.5">
+                                                                {(['SIT_ORIGIN', 'SIT_DESTINATION'] as const).map((loc) => {
+                                                                    const isActive = activeShipment.storage?.facility === loc;
+                                                                    return (
+                                                                        <ScalePressable
+                                                                            key={loc}
+                                                                            onPress={() => updateShipment(activeShipment.id, {
+                                                                                storage: { ...activeShipment.storage!, facility: loc },
+                                                                            })}
+                                                                            className={`flex-1 rounded-lg border px-2 py-2 items-center ${isActive
+                                                                                    ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700'
+                                                                                    : 'border-slate-200 dark:border-zinc-700'
+                                                                                }`}
+                                                                        >
+                                                                            <Text className={`text-xs font-semibold ${isActive ? 'text-blue-700 dark:text-blue-300' : 'text-slate-600 dark:text-zinc-300'
+                                                                                }`}>{loc === 'SIT_ORIGIN' ? 'Origin' : 'Destination'}</Text>
+                                                                        </ScalePressable>
+                                                                    );
+                                                                })}
+                                                            </View>
+                                                        </View>
+
+                                                        {/* Max Days */}
+                                                        <View className="w-20">
+                                                            <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1">
+                                                                Max Days
+                                                            </Text>
+                                                            <TextInput
+                                                                value={`${activeShipment.storage?.maxDaysSIT ?? 90}`}
+                                                                onChangeText={(text) => updateShipment(activeShipment.id, {
+                                                                    storage: { ...activeShipment.storage!, maxDaysSIT: parseInt(text, 10) || 90 },
+                                                                })}
+                                                                keyboardType="number-pad"
+                                                                maxLength={3}
+                                                                className="text-sm font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-zinc-800/60 rounded-lg px-2.5 py-2 border border-slate-200 dark:border-zinc-700 text-center"
+                                                            />
+                                                        </View>
+                                                    </View>
+                                                )}
+                                            </View>
+                                        )}
+                                    </View>
+                                )}
+                            </View>
+
                             {/* ── Section 1: Weight Estimate ─────────── */}
                             <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
                                 <Text className="text-lg font-bold text-slate-900 dark:text-white mb-3">Weight Estimate</Text>
@@ -569,15 +788,15 @@ export default function HHGMovePlannerScreen() {
                             {/* HUD Summary Row */}
                             <View className="flex-row justify-between mb-3">
                                 <View className="items-center flex-1">
-                                    <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">Weight</Text>
+                                    <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Weight</Text>
                                     <Text className={`text-sm font-bold ${totalToneClass}`}>
-                                        {formatLbs(runningTotal)}
+                                        {formatLbs(aggregateWeight)}
                                     </Text>
                                 </View>
                                 <View className="items-center flex-1">
-                                    <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">Type</Text>
+                                    <Text className="text-xs text-slate-500 dark:text-slate-400 font-medium">Shipments</Text>
                                     <Text className="text-sm font-bold text-slate-900 dark:text-white">
-                                        {(hhg.shipments?.[0]?.type ?? 'GBL') === 'PPM' ? 'PPM' : 'GBL'}
+                                        {shipments.length}
                                     </Text>
                                 </View>
                                 <View className="items-center flex-1">
@@ -854,6 +1073,13 @@ export default function HHGMovePlannerScreen() {
                     </View>
                 </View>
             </Modal>
+
+            {/* ── Shipment Creation Modal ────────────────────── */}
+            <ShipmentCreationModal
+                visible={showCreateShipment}
+                onClose={() => setShowCreateShipment(false)}
+                onCreated={(id) => setActiveShipmentId(id)}
+            />
         </View>
     );
 }

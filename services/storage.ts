@@ -808,21 +808,36 @@ class SQLiteStorage implements IStorageService {
         return;
       }
 
-      for (const msg of messages) {
+      // Chunk size to avoid SQLite variable limit (default usually 999 or 32766)
+      const CHUNK_SIZE = 50;
+
+      for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
+        const chunk = messages.slice(i, i + CHUNK_SIZE);
+        if (chunk.length === 0) continue;
+
+        const placeholders = chunk.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+        const values: any[] = [];
+
+        for (const msg of chunk) {
+          values.push(
+            msg.id,
+            msg.type,
+            msg.subject,
+            msg.body,
+            msg.timestamp,
+            msg.isRead ? 1 : 0,
+            msg.isPinned ? 1 : 0,
+            JSON.stringify(msg.metadata || {}),
+            new Date().toISOString(),
+            'synced'
+          );
+        }
+
         await runner.runAsync(
           `INSERT OR REPLACE INTO inbox_messages (
             id, type, subject, body, timestamp, is_read, is_pinned, metadata, last_sync_timestamp, sync_status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-          msg.id,
-          msg.type,
-          msg.subject,
-          msg.body,
-          msg.timestamp,
-          msg.isRead ? 1 : 0,
-          msg.isPinned ? 1 : 0,
-          JSON.stringify(msg.metadata || {}),
-          new Date().toISOString(),
-          'synced'
+          ) VALUES ${placeholders};`,
+          ...values
         );
       }
 

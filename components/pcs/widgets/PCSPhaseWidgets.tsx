@@ -1,9 +1,6 @@
-import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
 import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
 import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
 import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
-import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
-import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
 import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
 import { ReceiptScannerWidget } from '@/components/pcs/widgets/ReceiptScannerWidget';
 import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
@@ -33,13 +30,7 @@ export function PCSPhaseWidgets() {
                 )}
 
                 {/* ── TRANSIT_LEAVE · PLANNING (Phase 2) ─────────────────── */}
-                {phase === 'TRANSIT_LEAVE' && subPhase === 'PLANNING' && (
-                    <>
-                        <AllowancesCard variant="widget" />
-                        <LeaveImpactWidget />
-                        <HHGWeightGaugeWidget />
-                    </>
-                )}
+                {/* Phase 2 widgets now live inside task flows */}
 
                 {/* ── TRANSIT_LEAVE · ACTIVE_TRAVEL (Phase 3) ────────────── */}
                 {phase === 'TRANSIT_LEAVE' && subPhase === 'ACTIVE_TRAVEL' && (

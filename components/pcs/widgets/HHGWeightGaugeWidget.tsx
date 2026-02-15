@@ -1,6 +1,6 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { useColorScheme } from '@/components/useColorScheme';
 import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
 import { usePCSStore } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
 import { Link } from 'expo-router';
@@ -126,13 +126,12 @@ export function HHGWeightGaugeWidget() {
 
               <View className="absolute inset-0 items-center justify-center">
                 <Text
-                  className={`text-3xl font-bold ${
-                    rawPercentage > 100
+                  className={`text-3xl font-bold ${rawPercentage > 100
                       ? 'text-red-500 dark:text-red-400'
                       : rawPercentage > 80
                         ? 'text-amber-500 dark:text-amber-400'
                         : 'text-emerald-500 dark:text-emerald-400'
-                  }`}
+                    }`}
                 >
                   {displayPercentage}%
                 </Text>
@@ -177,7 +176,7 @@ export function HHGWeightGaugeWidget() {
         </>
       )}
 
-      <Link href="/pcs-wizard/hhg-estimator" asChild>
+      <Link href="/pcs-wizard/hhg-move-planner" asChild>
         <ScalePressable
           onPress={handleEstimatePress}
           className="rounded-lg border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 items-center"

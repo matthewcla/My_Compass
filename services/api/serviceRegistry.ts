@@ -1,20 +1,23 @@
 import type { IAssignmentService } from './interfaces/IAssignmentService';
 import type { ICareerService } from './interfaces/ICareerService';
-import type { IUserService } from './interfaces/IUserService';
-import type { IPCSService } from './interfaces/IPCSService';
+import type { IDPSService } from './interfaces/IDPSService';
 import type { IInboxService } from './interfaces/IInboxService';
 import type { ILeaveService } from './interfaces/ILeaveService';
+import type { IPCSService } from './interfaces/IPCSService';
+import type { IUserService } from './interfaces/IUserService';
 
 import { mockAssignmentService } from './mockAssignmentService';
 import { mockCareerService } from './mockCareerService';
-import { mockUserService } from './mockUserService';
-import { mockPCSService } from './mockPCSService';
+import { mockDPSService } from './mockDPSService';
 import { mockInboxService } from './mockInboxService';
 import { mockLeaveService } from './mockLeaveService';
+import { mockPCSService } from './mockPCSService';
+import { mockUserService } from './mockUserService';
 
 export interface ServiceRegistry {
     assignment: IAssignmentService;
     career: ICareerService;
+    dps: IDPSService;
     user: IUserService;
     pcs: IPCSService;
     inbox: IInboxService;
@@ -24,6 +27,7 @@ export interface ServiceRegistry {
 export const services: ServiceRegistry = {
     assignment: mockAssignmentService,
     career: mockCareerService,
+    dps: mockDPSService,
     user: mockUserService,
     pcs: mockPCSService,
     inbox: mockInboxService,

@@ -197,3 +197,66 @@ export interface HistoricalPCSOrder {
   isOconus: boolean;
   isSeaDuty: boolean;
 }
+
+// ─── DPS / HHG Move Planning Types ────────────────────────────────
+
+export type HHGShipmentType = 'GBL' | 'PPM';
+
+export interface PickupWindow {
+  id: string;
+  startDate: string;
+  endDate: string;
+  isPreferred: boolean;
+  capacityLabel: 'AVAILABLE' | 'LIMITED' | 'WAITLIST';
+}
+
+export interface DeliveryEstimate {
+  estimatedDeliveryStart: string;
+  estimatedDeliveryEnd: string;
+  transitDays: number;
+  shipmentType: HHGShipmentType;
+}
+
+export interface DPSMoveRequest {
+  originZip: string;
+  destinationZip: string;
+  estimatedWeight: number;
+  shipmentType: HHGShipmentType;
+  requestedPickupWindowId: string;
+  memberName: string;
+  ordersNumber: string;
+}
+
+export interface DPSMoveConfirmation {
+  confirmationNumber: string;
+  scheduledPickup: PickupWindow;
+  estimatedDelivery: DeliveryEstimate;
+  createdAt: string;
+}
+
+export interface ExcessWeightEstimate {
+  excessLbs: number;
+  costPerLb: number;
+  totalCost: number;
+  warningMessage: string;
+}
+
+export interface PPMIncentiveEstimate {
+  gblEquivalentCost: number;
+  incentivePercentage: number;
+  estimatedIncentive: number;
+  weightMoved: number;
+}
+
+// ─── Moving Cost Projection Model ─────────────────────────────────
+
+export interface MovingCostsBreakdown {
+  securityDeposit: number;
+  firstLastRent: number;
+  temporaryLodging: number;
+  fuelEstimate: number;
+  mealsEstimate: number;
+  miscellaneous: number;
+  hhgExcessCost: number;
+  totalEstimated: number;
+}

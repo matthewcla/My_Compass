@@ -1,12 +1,8 @@
-import { AllowancesCard } from '@/components/pcs/financials/AllowancesCard';
 import { TrackChecklistItem } from '@/components/pcs/track/TrackChecklistItem';
 import { TrackNode } from '@/components/pcs/track/TrackNode';
 import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
 import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
-import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
-import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
 import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
-import { PCSFinancialSnapshot } from '@/components/pcs/widgets/PCSFinancialSnapshot';
 import { ReceiptScannerWidget } from '@/components/pcs/widgets/ReceiptScannerWidget';
 import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
 import { UCT_PHASES } from '@/constants/UCTPhases';
@@ -16,21 +12,17 @@ import React, { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 
 // ─── Widget Sets Per Phase ─────────────────────────────────────
-// Widgets are only rendered inside the ACTIVE node.
+// Widgets render inside their respective task flows, not inline.
+// Only Phase 3 & 4 retain inline widgets (transit/check-in context).
 
 function Phase1Widgets() {
     return null;
 }
 
 function Phase2Widgets() {
-    return (
-        <View className="space-y-4 mt-4">
-            <PCSFinancialSnapshot />
-            <AllowancesCard variant="widget" />
-            <LeaveImpactWidget />
-            <HHGWeightGaugeWidget />
-        </View>
-    );
+    // Phase 2 widgets now live inside the Financial Review and
+    // HHG Move Planner flows — not inline in the track.
+    return null;
 }
 
 function Phase3Widgets() {

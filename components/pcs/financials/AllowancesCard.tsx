@@ -64,7 +64,7 @@ export const AllowancesCard = ({ variant = 'full' }: AllowancesCardProps) => {
         </Text>
 
         {/* Primary CTA */}
-        <Link href="/pcs-wizard/financials/advance-pay" asChild>
+        <Link href="/pcs-wizard/financial-review" asChild>
           <ScalePressable
             onPress={handleCTA}
             className="bg-emerald-600 dark:bg-emerald-700 px-4 py-3 rounded-lg items-center"
@@ -144,7 +144,7 @@ export const AllowancesCard = ({ variant = 'full' }: AllowancesCardProps) => {
             </Text>
           </View>
 
-          <Link href="/pcs-wizard/financials/advance-pay" asChild>
+          <Link href="/pcs-wizard/financial-review" asChild>
             <ScalePressable
               className="flex-row items-center bg-blue-50 px-3 py-2 rounded-lg active:bg-blue-100 border border-blue-100"
               accessibilityRole="button"

@@ -1,5 +1,5 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, HHGItem, LiquidationStatus, LiquidationStep, LiquidationTracking, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
+import { ChecklistItem, HHGItem, LiquidationStatus, LiquidationStep, LiquidationTracking, MovingCostsBreakdown, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
@@ -121,7 +121,11 @@ interface Financials {
     estimatedWeight: number;
     isOverLimit: boolean;
     items: HHGItem[];
+    shipmentType: 'GBL' | 'PPM' | null;
+    selectedPickupWindowId: string | null;
+    estimatedExcessCost: number;
   };
+  movingCosts: MovingCostsBreakdown | null;
   liquidation: LiquidationTracking | null;
 }
 
@@ -147,6 +151,8 @@ interface PCSState {
   updateHHGItem: (id: string, updates: Partial<HHGItem>) => void;
   removeHHGItem: (id: string) => void;
   clearHHGItems: () => void;
+  updateHHGPlan: (updates: { shipmentType?: 'GBL' | 'PPM' | null; selectedPickupWindowId?: string | null; estimatedExcessCost?: number }) => void;
+  updateMovingCosts: (updates: Partial<MovingCostsBreakdown>) => void;
 
   // Liquidation Actions
   initializeLiquidation: (claimId: string) => void;
@@ -192,7 +198,11 @@ export const usePCSStore = create<PCSState>()(
           estimatedWeight: 0,
           isOverLimit: false,
           items: [],
+          shipmentType: null,
+          selectedPickupWindowId: null,
+          estimatedExcessCost: 0,
         },
+        movingCosts: null,
         liquidation: null,
       },
       cachedOrders: null,
@@ -262,29 +272,21 @@ export const usePCSStore = create<PCSState>()(
         // Phase 2: Logistics & Finances
         checklist.push({
           id: generateUUID(),
-          label: 'Financial Review',
-          status: 'NOT_STARTED',
-          category: 'FINANCE',
-          uctPhase: 2,
-          helpText: 'Review your estimated entitlements: DLA, MALT, per diem, and advance pay eligibility.',
-        });
-        checklist.push({
-          id: generateUUID(),
-          label: 'Schedule Household Goods (DPS)',
+          label: 'Plan & Schedule HHG Move',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 2,
-          actionRoute: '/pcs-wizard/hhg-estimator',
-          helpText: 'Book your household goods pickup through DPS. The earlier you book, the more flexibility on dates.',
+          actionRoute: '/pcs-wizard/hhg-move-planner',
+          helpText: 'Estimate your shipment weight, compare GBL vs. PPM costs, and schedule your pickup through DPS.',
         });
         checklist.push({
           id: generateUUID(),
-          label: 'Submit DLA / Advance Pay Request',
+          label: 'Financial Review & DLA Request',
           status: 'NOT_STARTED',
           category: 'FINANCE',
           uctPhase: 2,
-          actionRoute: '/pcs-wizard/financials/advance-pay',
-          helpText: 'DLA partially reimburses relocation costs. Advance Pay provides up to 3 months\u2019 base pay before your move.',
+          actionRoute: '/pcs-wizard/financial-review',
+          helpText: 'Review entitlements, project moving costs vs. what the Navy covers, and decide on DLA + advance pay.',
         });
 
         // Phase 3: Transit & Leave — Segment Planning
@@ -387,7 +389,11 @@ export const usePCSStore = create<PCSState>()(
               estimatedWeight: 0,
               isOverLimit: false,
               items: [],
+              shipmentType: null,
+              selectedPickupWindowId: null,
+              estimatedExcessCost: 0,
             },
+            movingCosts: null,
             liquidation: null,
           }
         });
@@ -691,6 +697,48 @@ export const usePCSStore = create<PCSState>()(
                 estimatedWeight: 0,
                 isOverLimit: false,
               },
+            },
+          };
+        });
+      },
+
+      updateHHGPlan: (updates) => {
+        set((state) => ({
+          financials: {
+            ...state.financials,
+            hhg: {
+              ...state.financials.hhg,
+              ...updates,
+            },
+          },
+        }));
+      },
+
+      updateMovingCosts: (updates) => {
+        set((state) => {
+          const current = state.financials.movingCosts ?? {
+            securityDeposit: 0,
+            firstLastRent: 0,
+            temporaryLodging: 0,
+            fuelEstimate: 0,
+            mealsEstimate: 0,
+            miscellaneous: 0,
+            hhgExcessCost: 0,
+            totalEstimated: 0,
+          };
+          const merged = { ...current, ...updates };
+          merged.totalEstimated =
+            merged.securityDeposit +
+            merged.firstLastRent +
+            merged.temporaryLodging +
+            merged.fuelEstimate +
+            merged.mealsEstimate +
+            merged.miscellaneous +
+            merged.hhgExcessCost;
+          return {
+            financials: {
+              ...state.financials,
+              movingCosts: merged,
             },
           };
         });

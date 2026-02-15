@@ -1,34 +1,26 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
-import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
+import { useActiveOrder } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
-import { ChevronRight, Mail, MapPin, MessageSquare, Phone, User, Zap } from 'lucide-react-native';
+
+import { Mail, MapPin, MessageSquare, Phone, User } from 'lucide-react-native';
 import React, { useMemo } from 'react';
-import { Linking, Platform, Pressable, Text, useColorScheme, View } from 'react-native';
+import { Linking, Platform, Text, useColorScheme, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 /**
  * PCS Hero Banner — "Where Am I?"
  *
- * Glanceable card answering a Sailor's three key PCS questions:
- * 1. Where am I going, when do I report, and who is my sponsor?
- * 2. Am I on track? (progress %)
- * 3. What's my next action?
+ * Glanceable card answering a Sailor's key PCS question:
+ * Where am I going, when do I report, and who is my sponsor?
  */
 export function PCSHeroBanner() {
     const activeOrder = useActiveOrder();
-    const checklist = usePCSStore((s) => s.checklist);
-    const router = useRouter();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
     const stats = useMemo(() => {
-        if (!activeOrder || checklist.length === 0) return null;
-
-        const completed = checklist.filter((c) => c.status === 'COMPLETE').length;
-        const total = checklist.length;
-        const progress = total > 0 ? completed / total : 0;
+        if (!activeOrder) return null;
 
         // Days until report NLT
         const reportDate = new Date(activeOrder.reportNLT);
@@ -45,21 +37,12 @@ export function PCSHeroBanner() {
             year: 'numeric',
         });
 
-        // Next action: first incomplete item (prefer items with actionRoute)
-        const nextAction = checklist
-            .filter((c) => c.status !== 'COMPLETE')
-            .sort((a, b) => {
-                if (a.actionRoute && !b.actionRoute) return -1;
-                if (!a.actionRoute && b.actionRoute) return 1;
-                return 0;
-            })[0] ?? null;
-
-        return { completed, total, progress, daysRemaining, reportFormatted, nextAction };
-    }, [activeOrder, checklist]);
+        return { daysRemaining, reportFormatted };
+    }, [activeOrder]);
 
     if (!stats || !activeOrder) return null;
 
-    const { completed, total, progress, daysRemaining, reportFormatted, nextAction } = stats;
+    const { daysRemaining, reportFormatted } = stats;
     const sponsor = activeOrder.sponsor ?? null;
     const homePort = activeOrder.gainingCommand.homePort;
 
@@ -111,7 +94,7 @@ export function PCSHeroBanner() {
                     <View className="flex-row items-center mb-2">
                         <MapPin size={16} color="#C9A227" />
                         <Text className="text-xs font-semibold uppercase tracking-widest text-slate-400 ml-2">
-                            PCS Destination
+                            {homePort || 'PCS Destination'}
                         </Text>
                     </View>
 
@@ -119,11 +102,7 @@ export function PCSHeroBanner() {
                         {activeOrder.gainingCommand.name}
                     </Text>
 
-                    {homePort && (
-                        <Text className="text-sm text-slate-400 font-medium mb-1" numberOfLines={1}>
-                            {homePort}
-                        </Text>
-                    )}
+
 
                     <View className="flex-row items-center justify-between">
                         <Text className="text-sm text-slate-400 font-medium">
@@ -201,48 +180,6 @@ export function PCSHeroBanner() {
                     </View>
                 </View>
 
-                {/* ── Progress bar section ── */}
-                <View className="px-5 pt-4 pb-3">
-                    <View className="flex-row items-center justify-between mb-2">
-                        <Text className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                            {completed} of {total} tasks complete
-                        </Text>
-                        <Text className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                            {Math.round(progress * 100)}%
-                        </Text>
-                    </View>
-
-                    {/* Track */}
-                    <View className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                        <View
-                            className="h-full rounded-full bg-blue-600 dark:bg-blue-500"
-                            style={{ width: `${Math.round(progress * 100)}%` }}
-                        />
-                    </View>
-                </View>
-
-                {/* ── Next Action CTA ── */}
-                {nextAction && (
-                    <Pressable
-                        onPress={() => {
-                            if (nextAction.actionRoute) {
-                                router.push(nextAction.actionRoute as any);
-                            }
-                        }}
-                        className="mx-5 mb-4 mt-1 flex-row items-center bg-blue-50 dark:bg-blue-900/30 rounded-xl px-4 py-3 border border-blue-100 dark:border-blue-800/50"
-                    >
-                        <Zap size={16} color={isDark ? '#60A5FA' : '#2563EB'} />
-                        <Text
-                            className="flex-1 text-sm font-semibold text-blue-700 dark:text-blue-300 ml-2"
-                            numberOfLines={1}
-                        >
-                            {nextAction.label}
-                        </Text>
-                        {nextAction.actionRoute && (
-                            <ChevronRight size={16} color={isDark ? '#60A5FA' : '#2563EB'} />
-                        )}
-                    </Pressable>
-                )}
             </GlassView>
         </Animated.View>
     );

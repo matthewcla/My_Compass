@@ -15,10 +15,15 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
     const filledCount = userApplicationIds.length;
 
     // Logic: Calculate Counts based on status
-    const draftCount = Object.values(applications).filter(app => app.status === 'draft').length;
-    const submittedCount = Object.values(applications).filter(app =>
-        ['submitted', 'confirmed'].includes(app.status)
-    ).length;
+    let draftCount = 0;
+    let submittedCount = 0;
+    Object.values(applications).forEach(app => {
+        if (app.status === 'draft') {
+            draftCount++;
+        } else if (['submitted', 'confirmed'].includes(app.status)) {
+            submittedCount++;
+        }
+    });
 
     const totalSlots = 7;
 

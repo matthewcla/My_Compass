@@ -3,8 +3,9 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
 import { usePCSPhase, usePCSStore } from '@/store/usePCSStore';
 import { AssignmentPhase } from '@/types/pcs';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Anchor, Calendar, FileCheck, Map as MapIcon, Timer } from 'lucide-react-native';
+import { Anchor, Calendar, FileCheck, Map as MapIcon, Star, Timer } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -155,7 +156,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 </CardShell>
             );
 
-        // ── Billet Selected ─────────────────────────────────────────
+        // ── You've Been Selected (Celebratory) ────────────────────
         case 'selected': {
             const selGainingCommand = activeOrder?.gainingCommand.name || 'Awaiting assignment details';
             const selReportNLT = activeOrder?.reportNLT
@@ -165,35 +166,58 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const obliservBlocked = obliserv.required && obliserv.status !== 'COMPLETE';
 
             return (
-                <CardShell borderColor="border-blue-500 dark:border-blue-400" isDark={isDark}>
-                    <View className="flex-row items-center gap-4 flex-1">
-                        <IconBubble bg="bg-blue-100 dark:bg-blue-900/30">
-                            <Anchor size={24} color={isDark ? '#60a5fa' : '#1d4ed8'} />
-                        </IconBubble>
-                        <View className="flex-1">
-                            <Headline>Billet Selected</Headline>
-                            <Detail>{selGainingCommand}</Detail>
-                            {selReportNLT && (
-                                <Text className="text-blue-700 dark:text-blue-300 text-[11px] font-semibold mt-0.5">
-                                    Report by {selReportNLT}
-                                </Text>
-                            )}
-                        </View>
-                    </View>
-
-                    {obliservBlocked ? (
-                        <TouchableOpacity
-                            onPress={() => router.push('/pcs-wizard/obliserv-check' as any)}
-                            className="bg-red-600 dark:bg-red-700 px-3 py-2 rounded-lg border border-red-500 dark:border-red-600"
+                <View className="flex flex-col gap-2 my-2">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-amber-400 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(251,191,36,0.08)', 'rgba(251,191,36,0.02)']
+                                : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
                         >
-                            <CTAText>Extend{'\n'}to Accept</CTAText>
-                        </TouchableOpacity>
-                    ) : (
-                        <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
-                            <PillText color="text-green-800 dark:text-green-200">✓ Obligation Met</PillText>
-                        </Pill>
-                    )}
-                </CardShell>
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <View className="w-12 h-12 rounded-full overflow-hidden items-center justify-center">
+                                        <LinearGradient
+                                            colors={['#FDE68A', '#F59E0B']}
+                                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                                        />
+                                        <Star size={24} color={isDark ? '#78350F' : '#FFFFFF'} fill={isDark ? '#78350F' : '#FFFFFF'} />
+                                    </View>
+                                    <View className="flex-1">
+                                        <Text className="text-amber-900 dark:text-amber-100 text-lg font-black leading-tight mb-0.5">
+                                            You've Been Selected!!!
+                                        </Text>
+                                        <Detail>{selGainingCommand}</Detail>
+                                        {selReportNLT && (
+                                            <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold mt-0.5">
+                                                Report by {selReportNLT}
+                                            </Text>
+                                        )}
+                                    </View>
+                                </View>
+
+                                {obliservBlocked ? (
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/pcs-wizard/obliserv-check' as any)}
+                                        className="bg-red-600 dark:bg-red-700 px-3 py-2.5 rounded-lg border border-red-500 dark:border-red-600 ml-3"
+                                    >
+                                        <CTAText>Extend{'\n'}to Accept</CTAText>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
+                                        <PillText color="text-green-800 dark:text-green-200">✓ Obligation Met</PillText>
+                                    </Pill>
+                                )}
+                            </View>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
             );
         }
 

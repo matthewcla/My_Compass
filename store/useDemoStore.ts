@@ -1,6 +1,6 @@
 import { DEMO_USERS, DemoPhase, DemoUser } from '@/constants/DemoData';
 import { useUserStore } from '@/store/useUserStore';
-import { LiquidationStatus, PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
+import { AssignmentPhase, LiquidationStatus, PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
 import { User } from '@/types/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
@@ -19,7 +19,6 @@ export interface DemoScenario {
 }
 
 export const DEMO_SCENARIOS: DemoScenario[] = [
-  { id: 'orders', label: 'Orders Received', icon: '📋', context: 'ACTIVE', phase: 'ORDERS_NEGOTIATION', uctPhase: 1 },
   { id: 'planning', label: 'Planning Move', icon: '📦', context: 'ACTIVE', phase: 'TRANSIT_LEAVE', subPhase: 'PLANNING', uctPhase: 2 },
   { id: 'enroute', label: 'En Route', icon: '✈️', context: 'ACTIVE', phase: 'TRANSIT_LEAVE', subPhase: 'ACTIVE_TRAVEL', uctPhase: 3 },
   { id: 'arrived', label: 'Arrived On-Station', icon: '⚓', context: 'ACTIVE', phase: 'CHECK_IN', uctPhase: 4 },
@@ -35,6 +34,7 @@ interface DemoState {
   uctPhaseOverride: UCTPhase | null;
   pcsContextOverride: 'ACTIVE' | 'ARCHIVE' | null;
   activeDemoScenarioId: string | null;
+  assignmentPhaseOverride: AssignmentPhase | null;
 
   toggleDemoMode: () => void;
   setSelectedUser: (user: DemoUser) => void;
@@ -45,6 +45,7 @@ interface DemoState {
   setPcsContextOverride: (context: 'ACTIVE' | 'ARCHIVE' | null) => void;
   applyDemoScenario: (scenario: DemoScenario) => void;
   clearDemoScenario: () => void;
+  setAssignmentPhaseOverride: (phase: AssignmentPhase | null) => void;
   updateSelectedUser: (updates: Partial<DemoUser>) => void;
   advanceLiquidationStatus: () => void;
   loadMockHistoricalOrders: () => void;
@@ -61,6 +62,7 @@ export const useDemoStore = create<DemoState>()(
       uctPhaseOverride: null,
       pcsContextOverride: null,
       activeDemoScenarioId: null,
+      assignmentPhaseOverride: null,
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
       setSelectedUser: (user) => set({ selectedUser: user }),
@@ -72,6 +74,30 @@ export const useDemoStore = create<DemoState>()(
       setPcsSubPhaseOverride: (subPhase) => set({ pcsSubPhaseOverride: subPhase, activeDemoScenarioId: null }),
       setUctPhaseOverride: (phase) => set({ uctPhaseOverride: phase, activeDemoScenarioId: null }),
       setPcsContextOverride: (context) => set({ pcsContextOverride: context, activeDemoScenarioId: null }),
+
+      setAssignmentPhaseOverride: (phase) => set((state) => {
+        if (phase === 'ORDERS_RELEASED') {
+          // Auto-activate PCS with Orders Received settings
+          return {
+            assignmentPhaseOverride: phase,
+            selectedPhase: DemoPhase.MY_PCS,
+            pcsContextOverride: 'ACTIVE',
+            pcsPhaseOverride: 'ORDERS_NEGOTIATION',
+            uctPhaseOverride: 1,
+            activeDemoScenarioId: 'orders',
+          };
+        }
+        // Deselecting or selecting non-PCS phases: clear PCS overrides
+        return {
+          assignmentPhaseOverride: phase,
+          selectedPhase: phase ? DemoPhase.MVP : state.selectedPhase,
+          pcsContextOverride: phase ? null : state.pcsContextOverride,
+          pcsPhaseOverride: phase ? null : state.pcsPhaseOverride,
+          uctPhaseOverride: phase ? null : state.uctPhaseOverride,
+          pcsSubPhaseOverride: phase ? null : state.pcsSubPhaseOverride,
+          activeDemoScenarioId: phase ? null : state.activeDemoScenarioId,
+        };
+      }),
 
       applyDemoScenario: (scenario) => set({
         pcsContextOverride: scenario.context,

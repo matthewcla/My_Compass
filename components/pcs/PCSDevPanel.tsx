@@ -2,7 +2,7 @@ import { useScrollContext } from '@/components/navigation/ScrollControlContext';
 import { DEMO_USERS, DemoPhase } from '@/constants/DemoData';
 import { DEMO_SCENARIOS, useDemoStore } from '@/store/useDemoStore';
 import { usePCSArchiveStore } from '@/store/usePCSArchiveStore';
-import { PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
+import { AssignmentPhase } from '@/types/pcs';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -27,32 +27,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
-// ── Display Labels ──────────────────────────────────────────────────────────
-
-const PCS_PHASES: PCSPhase[] = ['ORDERS_NEGOTIATION', 'TRANSIT_LEAVE', 'CHECK_IN'];
-
-const PCS_PHASE_LABELS: Record<PCSPhase, string> = {
-    DORMANT: 'DORMANT',
-    ORDERS_NEGOTIATION: 'PRE-TRANSFER',
-    TRANSIT_LEAVE: 'IN TRANSIT',
-    CHECK_IN: 'ARRIVED ONSTA',
-};
-
-const TRANSIT_SUB_PHASES: TRANSITSubPhase[] = ['PLANNING', 'ACTIVE_TRAVEL'];
-
-const TRANSIT_SUB_LABELS: Record<TRANSITSubPhase, string> = {
-    PLANNING: 'PLANNING',
-    ACTIVE_TRAVEL: 'EN ROUTE',
-};
-
-const UCT_PHASES: UCTPhase[] = [1, 2, 3, 4];
-
-const VIEW_MODES = ['ACTIVE', 'ARCHIVE'] as const;
-
-const VIEW_MODE_LABELS: Record<typeof VIEW_MODES[number], string> = {
-    ACTIVE: 'Active Orders',
-    ARCHIVE: 'Sea Bag',
-};
+const ASSIGNMENT_PHASES: { key: AssignmentPhase; label: string }[] = [
+    { key: 'DISCOVERY', label: 'Discovery' },
+    { key: 'ON_RAMP', label: 'On-Ramp' },
+    { key: 'NEGOTIATION', label: 'Negotiation' },
+    { key: 'SELECTION', label: 'Selection' },
+    { key: 'OBLISERV', label: 'Obliserv' },
+    { key: 'ORDERS_PROCESSING', label: 'Processing' },
+    { key: 'ORDERS_RELEASED', label: 'Released' },
+];
 
 /**
  * Floating demo panel for the PCS landing page.
@@ -75,19 +58,14 @@ export function PCSDevPanel() {
     const selectedPhase = useDemoStore((state) => state.selectedPhase);
     const setSelectedPhase = useDemoStore((state) => state.setSelectedPhase);
 
+    const assignmentPhaseOverride = useDemoStore((state) => state.assignmentPhaseOverride);
+    const setAssignmentPhaseOverride = useDemoStore((state) => state.setAssignmentPhaseOverride);
+
     const activeDemoScenarioId = useDemoStore((state) => state.activeDemoScenarioId);
     const applyDemoScenario = useDemoStore((state) => state.applyDemoScenario);
     const clearDemoScenario = useDemoStore((state) => state.clearDemoScenario);
 
-    // Individual overrides (for advanced panel)
-    const pcsPhaseOverride = useDemoStore((state) => state.pcsPhaseOverride);
-    const setPcsPhaseOverride = useDemoStore((state) => state.setPcsPhaseOverride);
-    const pcsSubPhaseOverride = useDemoStore((state) => state.pcsSubPhaseOverride);
-    const setPcsSubPhaseOverride = useDemoStore((state) => state.setPcsSubPhaseOverride);
-    const uctPhaseOverride = useDemoStore((state) => state.uctPhaseOverride);
-    const setUctPhaseOverride = useDemoStore((state) => state.setUctPhaseOverride);
-    const pcsContextOverride = useDemoStore((state) => state.pcsContextOverride);
-    const setPcsContextOverride = useDemoStore((state) => state.setPcsContextOverride);
+
 
     // Archive data
     const seedDemoArchiveData = usePCSArchiveStore((state) => state.seedDemoArchiveData);
@@ -98,10 +76,6 @@ export function PCSDevPanel() {
     const isDark = colorScheme === 'dark';
 
     const [panelOpen, setPanelOpen] = useState(false);
-    const [showAdvanced, setShowAdvanced] = useState(false);
-
-    // Reanimated height for Advanced section (replaces LayoutAnimation)
-    const advancedProgress = useSharedValue(0);
 
     // Sync position with GlobalTabBar's scroll-to-hide animation.
     // Clamp so the beaker settles ~24px above the safe area (not off-screen).
@@ -135,11 +109,7 @@ export function PCSDevPanel() {
         ],
     }));
 
-    const advancedStyle = useAnimatedStyle(() => ({
-        opacity: advancedProgress.value,
-        maxHeight: advancedProgress.value * 400,
-        overflow: 'hidden' as const,
-    }));
+
 
     if (!enableDevSettings) return null;
 
@@ -148,7 +118,7 @@ export function PCSDevPanel() {
 
     const borderColor = isDark ? '#27272A' : '#E2E8F0';
     const chipBg = isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)';
-    const showSubPhase = pcsPhaseOverride === 'TRANSIT_LEAVE';
+
 
     const openPanel = () => {
         setPanelOpen(true);
@@ -156,21 +126,8 @@ export function PCSDevPanel() {
     };
 
     const closePanel = () => {
-        // Set state immediately — the beaker icon appears instantly.
-        // No animation callbacks needed; the panel simply unmounts.
         setPanelOpen(false);
-        setShowAdvanced(false);
-        advancedProgress.value = 0;
         panelProgress.value = 0;
-    };
-
-    const toggleAdvanced = () => {
-        const next = !showAdvanced;
-        setShowAdvanced(next);
-        advancedProgress.value = withTiming(next ? 1 : 0, {
-            duration: 280,
-            easing: Easing.out(Easing.cubic),
-        });
     };
 
     // Find active scenario emoji for the badge
@@ -180,10 +137,14 @@ export function PCSDevPanel() {
 
     // ── Status Chips ────────────────────────────────────────────────────
     const statusParts: string[] = [];
-    if (pcsContextOverride) statusParts.push(VIEW_MODE_LABELS[pcsContextOverride]);
-    if (pcsPhaseOverride) statusParts.push(PCS_PHASE_LABELS[pcsPhaseOverride]);
-    if (pcsSubPhaseOverride) statusParts.push(TRANSIT_SUB_LABELS[pcsSubPhaseOverride]);
-    if (uctPhaseOverride) statusParts.push(`UCT ${uctPhaseOverride}`);
+    if (assignmentPhaseOverride) {
+        const label = ASSIGNMENT_PHASES.find(p => p.key === assignmentPhaseOverride)?.label;
+        if (label) statusParts.push(label);
+    }
+    if (activeDemoScenarioId) {
+        const scenario = DEMO_SCENARIOS.find(s => s.id === activeDemoScenarioId);
+        if (scenario) statusParts.push(scenario.label);
+    }
 
 
 
@@ -288,25 +249,29 @@ export function PCSDevPanel() {
                                 })}
                             </ScrollView>
 
-                            {/* ── App Phase Selector ────────────────────────── */}
+                            {/* ── My Assignments ────────────────────────── */}
                             <View style={{ height: 1, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E2E8F0', marginVertical: 8 }} />
-                            <Text style={sectionLabel(isDark)}>App Phase</Text>
-                            <View style={buttonRow}>
-                                {Object.values(DemoPhase).map((phase) => {
-                                    const isActive = selectedPhase === phase;
+                            <Text style={sectionLabel(isDark)}>My Assignments</Text>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ gap: 8, paddingHorizontal: 2 }}
+                            >
+                                {ASSIGNMENT_PHASES.map(({ key, label }) => {
+                                    const isActive = assignmentPhaseOverride === key;
                                     return (
                                         <TouchableOpacity
-                                            key={phase}
-                                            onPress={() => setSelectedPhase(phase)}
-                                            style={overrideBtn(isActive, isDark, borderColor, 'amber')}
+                                            key={key}
+                                            onPress={() => setAssignmentPhaseOverride(isActive ? null : key)}
+                                            style={overrideBtn(isActive, isDark, borderColor, 'purple')}
                                         >
                                             <Text style={overrideBtnText(isActive, isDark)}>
-                                                {phase.replace('_', ' ')}
+                                                {label}
                                             </Text>
                                         </TouchableOpacity>
                                     );
                                 })}
-                            </View>
+                            </ScrollView>
 
                             {/* ── PCS-Specific Controls ───────────────────────── */}
                             {isPCSActive && (
@@ -410,124 +375,7 @@ export function PCSDevPanel() {
                                             </Text>
                                         </TouchableOpacity>
 
-                                        {/* Advanced Toggle */}
-                                        <TouchableOpacity
-                                            onPress={toggleAdvanced}
-                                            style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                gap: 3,
-                                                paddingHorizontal: 14,
-                                                paddingVertical: 12,
-                                                borderRadius: 8,
-                                                borderWidth: 1,
-                                                borderColor: isDark ? '#374151' : '#CBD5E1',
-                                                backgroundColor: isDark ? 'rgba(55, 65, 81, 0.3)' : '#F8FAFC',
-                                            }}
-                                        >
-                                            <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#94A3B8' : '#64748B' }}>
-                                                Advanced
-                                            </Text>
-                                            <Ionicons
-                                                name={showAdvanced ? 'chevron-up' : 'chevron-down'}
-                                                size={10}
-                                                color={isDark ? '#94A3B8' : '#64748B'}
-                                            />
-                                        </TouchableOpacity>
                                     </View>
-
-                                    {/* ── Advanced Overrides (Collapsible) ─────────────────── */}
-                                    <Animated.View style={[{ marginTop: 10 }, advancedStyle]}>
-                                        {showAdvanced && (
-                                            <View>
-                                                {/* View Mode */}
-                                                <Text style={sectionLabel(isDark)}>View</Text>
-                                                <View style={buttonRow}>
-                                                    {VIEW_MODES.map((mode) => {
-                                                        const isActive = pcsContextOverride === mode;
-                                                        return (
-                                                            <TouchableOpacity
-                                                                key={mode}
-                                                                onPress={() => setPcsContextOverride(isActive ? null : mode)}
-                                                                style={overrideBtn(isActive, isDark, borderColor, 'emerald')}
-                                                            >
-                                                                <Text style={overrideBtnText(isActive, isDark)}>
-                                                                    {VIEW_MODE_LABELS[mode]}
-                                                                </Text>
-                                                            </TouchableOpacity>
-                                                        );
-                                                    })}
-                                                </View>
-
-                                                {/* Travel Phase */}
-                                                <Text style={sectionLabel(isDark)}>Travel Phase</Text>
-                                                <View style={buttonRow}>
-                                                    {PCS_PHASES.map((phase) => {
-                                                        const isActive = pcsPhaseOverride === phase;
-                                                        return (
-                                                            <TouchableOpacity
-                                                                key={phase}
-                                                                onPress={() => {
-                                                                    if (pcsContextOverride !== 'ACTIVE') setPcsContextOverride('ACTIVE');
-                                                                    setPcsPhaseOverride(isActive ? null : phase);
-                                                                }}
-                                                                style={overrideBtn(isActive, isDark, borderColor, 'blue')}
-                                                            >
-                                                                <Text style={overrideBtnText(isActive, isDark)}>
-                                                                    {PCS_PHASE_LABELS[phase]}
-                                                                </Text>
-                                                            </TouchableOpacity>
-                                                        );
-                                                    })}
-                                                </View>
-
-                                                {/* In Transit Sub-Phase */}
-                                                {showSubPhase && (
-                                                    <>
-                                                        <Text style={sectionLabel(isDark)}>Sub-Phase</Text>
-                                                        <View style={buttonRow}>
-                                                            {TRANSIT_SUB_PHASES.map((sub) => {
-                                                                const isActive = pcsSubPhaseOverride === sub;
-                                                                return (
-                                                                    <TouchableOpacity
-                                                                        key={sub}
-                                                                        onPress={() => setPcsSubPhaseOverride(isActive ? null : sub)}
-                                                                        style={overrideBtn(isActive, isDark, borderColor, 'amber')}
-                                                                    >
-                                                                        <Text style={overrideBtnText(isActive, isDark)}>
-                                                                            {TRANSIT_SUB_LABELS[sub]}
-                                                                        </Text>
-                                                                    </TouchableOpacity>
-                                                                );
-                                                            })}
-                                                        </View>
-                                                    </>
-                                                )}
-
-                                                {/* UCT Phase */}
-                                                <Text style={sectionLabel(isDark)}>UCT Phase</Text>
-                                                <View style={buttonRow}>
-                                                    {UCT_PHASES.map((phase) => {
-                                                        const isActive = uctPhaseOverride === phase;
-                                                        return (
-                                                            <TouchableOpacity
-                                                                key={phase}
-                                                                onPress={() => {
-                                                                    if (pcsContextOverride !== 'ACTIVE') setPcsContextOverride('ACTIVE');
-                                                                    setUctPhaseOverride(isActive ? null : phase);
-                                                                }}
-                                                                style={overrideBtn(isActive, isDark, borderColor, 'purple')}
-                                                            >
-                                                                <Text style={overrideBtnText(isActive, isDark)}>
-                                                                    Phase {phase}
-                                                                </Text>
-                                                            </TouchableOpacity>
-                                                        );
-                                                    })}
-                                                </View>
-                                            </View>
-                                        )}
-                                    </Animated.View>
                                 </>
                             )}
 

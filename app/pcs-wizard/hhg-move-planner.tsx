@@ -1038,6 +1038,7 @@ export default function HHGMovePlannerScreen() {
                                 )}
                                 // @ts-expect-error: FlashList type definitions
                                 estimatedItemSize={76}
+                                showsVerticalScrollIndicator={false}
                                 keyboardShouldPersistTaps="handled"
                             />
                         </View>

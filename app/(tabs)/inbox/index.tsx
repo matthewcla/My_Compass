@@ -234,6 +234,7 @@ export default function InboxScreen() {
                         bounces={true}
                         alwaysBounceVertical={true}
                         overScrollMode="always"
+                        showsVerticalScrollIndicator={false}
                         renderItem={renderMessageItem}
                         renderSectionHeader={renderSectionHeader}
                         keyExtractor={item => item.id}

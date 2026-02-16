@@ -181,6 +181,7 @@ export const SmartBenchPanel: React.FC<SmartBenchPanelProps> = ({ items, onSelec
                             )}
                             numColumns={2}
                             keyExtractor={(item) => item.billet.id}
+                            showsVerticalScrollIndicator={false}
                             contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 20, paddingTop: 10 }}
                             columnWrapperStyle={{ justifyContent: 'space-between' }}
                         />

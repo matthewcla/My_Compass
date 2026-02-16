@@ -84,6 +84,7 @@ export default function TravelClaimHistory() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View className="items-center justify-center py-20">
             <View className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center mb-4">

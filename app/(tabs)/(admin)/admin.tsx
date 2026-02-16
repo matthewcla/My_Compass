@@ -151,6 +151,7 @@ export default function AdminScreen() {
                     paddingBottom: 24,
                     paddingHorizontal: 20
                 }}
+                showsVerticalScrollIndicator={false}
                 data={requestsList}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}

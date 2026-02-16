@@ -329,6 +329,7 @@ export default function HubDashboard() {
 
                         estimatedItemSize={150}
                         style={{ flex: 1 }}
+                        showsVerticalScrollIndicator={false}
                         scrollEventThrottle={scrollEventThrottle}
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}

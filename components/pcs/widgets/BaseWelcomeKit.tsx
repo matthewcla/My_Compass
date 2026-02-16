@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Mail,
   MapPin,
+  MessageSquare,
   Phone,
   Shirt,
   User,
@@ -200,70 +201,68 @@ export function BaseWelcomeKit() {
             </ScalePressable>
           )}
 
-          {/* Command Sponsor — Elevated Card */}
+          {/* Command Sponsor — Compact Inline (matches Hero Banner) */}
           {hasSponsor && (
             <View style={{ gap: 10 }}>
               <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-500 dark:text-slate-400">
                 Command Sponsor
               </Text>
 
-              <View className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3.5 border border-amber-200 dark:border-amber-800/40">
-                {/* Sponsor identity */}
-                <View className="flex-row items-center mb-2.5">
-                  <View className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/40 items-center justify-center mr-2.5">
-                    <User size={20} color={isDark ? '#fcd34d' : '#b45309'} strokeWidth={2.2} />
+              <View className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700">
+                <View className="flex-row items-center">
+                  <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center mr-3">
+                    <User size={18} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                   </View>
+
                   <View className="flex-1">
                     {sponsor?.name && (
-                      <Text className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                      <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
                         {sponsor.name}
                       </Text>
                     )}
-
+                    <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Command Sponsor
+                    </Text>
                   </View>
-                </View>
 
-                {/* Contact actions */}
-                <View style={{ gap: 6 }}>
-                  {sponsor?.phone && (
-                    <ScalePressable
-                      onPress={() => handlePhonePress(sponsor.phone!)}
-                      className="flex-row items-center justify-between bg-amber-100/60 dark:bg-amber-900/30 rounded-md px-3 py-2.5"
-                      style={{ minHeight: 44 }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Call ${sponsor.name}`}
-                    >
-                      <View className="flex-row items-center">
-                        <Phone size={14} color={isDark ? '#fcd34d' : '#92400e'} strokeWidth={2.2} />
-                        <Text className="ml-2 text-xs font-semibold text-amber-800 dark:text-amber-300">
-                          Call
-                        </Text>
-                      </View>
-                      <Text className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                        {sponsor.phone}
-                      </Text>
-                    </ScalePressable>
-                  )}
-
-                  {sponsor?.email && (
-                    <ScalePressable
-                      onPress={() => handleEmailPress(sponsor.email!)}
-                      className="flex-row items-center justify-between bg-amber-100/60 dark:bg-amber-900/30 rounded-md px-3 py-2.5"
-                      style={{ minHeight: 44 }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Email ${sponsor.name}`}
-                    >
-                      <View className="flex-row items-center">
-                        <Mail size={14} color={isDark ? '#fcd34d' : '#92400e'} strokeWidth={2.2} />
-                        <Text className="ml-2 text-xs font-semibold text-amber-800 dark:text-amber-300">
-                          Email
-                        </Text>
-                      </View>
-                      <Text className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                        {sponsor.email}
-                      </Text>
-                    </ScalePressable>
-                  )}
+                  {/* Compact contact icon buttons */}
+                  <View className="flex-row gap-1.5">
+                    {sponsor?.phone && (
+                      <ScalePressable
+                        onPress={() => handlePhonePress(sponsor.phone!)}
+                        className="w-9 h-9 rounded-full bg-green-50 dark:bg-green-900/20 items-center justify-center"
+                        accessibilityRole="button"
+                        accessibilityLabel={`Call ${sponsor.name}`}
+                      >
+                        <Phone size={15} color={isDark ? '#86efac' : '#15803d'} strokeWidth={2.2} />
+                      </ScalePressable>
+                    )}
+                    {sponsor?.phone && (
+                      <ScalePressable
+                        onPress={() => {
+                          if (Platform.OS !== 'web') {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
+                          }
+                          Linking.openURL(`sms:${sponsor.phone}`).catch(() => undefined);
+                        }}
+                        className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/20 items-center justify-center"
+                        accessibilityRole="button"
+                        accessibilityLabel={`Text ${sponsor.name}`}
+                      >
+                        <MessageSquare size={15} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
+                      </ScalePressable>
+                    )}
+                    {sponsor?.email && (
+                      <ScalePressable
+                        onPress={() => handleEmailPress(sponsor.email!)}
+                        className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
+                        accessibilityRole="button"
+                        accessibilityLabel={`Email ${sponsor.name}`}
+                      >
+                        <Mail size={15} color={isDark ? '#cbd5e1' : '#475569'} strokeWidth={2.2} />
+                      </ScalePressable>
+                    )}
+                  </View>
                 </View>
               </View>
             </View>

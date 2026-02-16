@@ -4,6 +4,7 @@ import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { MenuTile } from '@/components/menu/MenuTile';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
+import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
@@ -324,6 +325,9 @@ export default function HubDashboard() {
                     />
                 )}
             </CollapsibleScaffold>
+
+            {/* Floating demo panel — outside CollapsibleScaffold */}
+            <PCSDevPanel />
 
             {/* Quick Leave Overlay (Replaces Native Modal to fix Navigation Context loss) */}
             {quickDraft && (

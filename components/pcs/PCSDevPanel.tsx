@@ -32,7 +32,6 @@ const ASSIGNMENT_PHASES: { key: AssignmentPhase; label: string }[] = [
     { key: 'ON_RAMP', label: 'On-Ramp' },
     { key: 'NEGOTIATION', label: 'Negotiation' },
     { key: 'SELECTION', label: 'Selection' },
-    { key: 'OBLISERV', label: 'Obliserv' },
     { key: 'ORDERS_PROCESSING', label: 'Processing' },
     { key: 'ORDERS_RELEASED', label: 'Released' },
 ];

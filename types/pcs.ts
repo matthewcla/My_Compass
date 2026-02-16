@@ -8,7 +8,6 @@ export type AssignmentPhase =
   | 'ON_RAMP'
   | 'NEGOTIATION'
   | 'SELECTION'
-  | 'OBLISERV'
   | 'ORDERS_PROCESSING'
   | 'ORDERS_RELEASED';
 export type TRANSITSubPhase = 'PLANNING' | 'ACTIVE_TRAVEL';

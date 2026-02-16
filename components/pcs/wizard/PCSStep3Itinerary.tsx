@@ -169,7 +169,7 @@ export function PCSStep3Itinerary({ embedded = false }: PCSStep3ItineraryProps) 
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView>
+                        <ScrollView showsVerticalScrollIndicator={false}>
                             <View className="space-y-4">
                                 <View>
                                     <Text className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Location (City, State)</Text>

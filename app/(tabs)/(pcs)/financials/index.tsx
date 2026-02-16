@@ -42,6 +42,7 @@ export default function FinancialSummaryScreen() {
       <ScrollView
         className="flex-1 bg-slate-50 p-4"
         contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
       >
         <View className="mb-6">
           <EntitlementsMeter />

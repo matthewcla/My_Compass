@@ -35,7 +35,7 @@ export default function TravelClaimDetail() {
                 )
             }} />
 
-            <ScrollView contentContainerStyle={{ padding: 16 }}>
+            <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
                 {/* Header Card */}
                 <View className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 mb-4">
                     <View className="flex-row items-center gap-3 mb-4">

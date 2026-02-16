@@ -77,6 +77,7 @@ export default function ProfileScreen() {
         <ScreenGradient>
             <ScrollView
                 className="flex-1"
+                showsVerticalScrollIndicator={false}
             >
                 {/* <ScreenHeader
                     title="PROFILE"

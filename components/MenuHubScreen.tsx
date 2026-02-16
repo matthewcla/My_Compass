@@ -1,10 +1,7 @@
 import OnboardingCard from '@/components/onboarding/OnboardingCard';
 import { ScreenGradient } from '@/components/ScreenGradient';
-import { DEMO_USERS, DemoPhase } from '@/constants/DemoData';
 import { useSession } from '@/lib/ctx';
-import { useDemoStore } from '@/store/useDemoStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
-import Constants from 'expo-constants';
 
 import { usePathname, useSegments } from 'expo-router';
 import {
@@ -14,7 +11,7 @@ import {
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React from 'react';
-import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
@@ -52,16 +49,7 @@ export default function MenuHubScreen() {
     }
   }, [openSpotlight]);
 
-  // Check if developer settings should be shown
-  const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings ?? __DEV__;
 
-  // Demo Store
-  const isDemoMode = useDemoStore((state) => state.isDemoMode);
-  const selectedUser = useDemoStore((state) => state.selectedUser);
-  const selectedPhase = useDemoStore((state) => state.selectedPhase);
-  const toggleDemoMode = useDemoStore((state) => state.toggleDemoMode);
-  const setSelectedUser = useDemoStore((state) => state.setSelectedUser);
-  const setSelectedPhase = useDemoStore((state) => state.setSelectedPhase);
 
   return (
     <ScreenGradient>
@@ -122,89 +110,8 @@ export default function MenuHubScreen() {
           </TouchableOpacity>
         </MotiView>
 
-        {/* Developer Settings */}
-        {enableDevSettings && (
-          <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 500, delay: 400 }}
-            style={{ marginTop: 32, paddingBottom: 20 }}
-          >
-            <View className="flex-row items-center justify-between mb-4">
-              <Text style={{ color: theme.subText }} className="font-semibold uppercase text-xs tracking-widest">
-                Developer Settings
-              </Text>
-              <Switch
-                value={isDemoMode}
-                onValueChange={toggleDemoMode}
-                trackColor={{ false: theme.border, true: '#F59E0B' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
 
-            {isDemoMode && (
-              <View
-                style={{
-                  backgroundColor: isDark ? 'rgba(245, 158, 11, 0.1)' : '#FFFBEB',
-                  borderColor: isDark ? 'rgba(245, 158, 11, 0.3)' : '#FCD34D',
-                }}
-                className="rounded-2xl p-4 border border-dashed"
-              >
-                <Text className="text-amber-500 font-bold text-xs uppercase tracking-wider mb-4 text-center">
-                  Simulation Active
-                </Text>
 
-                {/* User Selector */}
-                <View className="mb-4">
-                  <Text style={{ color: theme.text }} className="font-medium mb-2 text-sm">Select Persona</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-                    {DEMO_USERS.map((u) => (
-                      <TouchableOpacity
-                        key={u.id}
-                        onPress={() => setSelectedUser(u)}
-                        className={`px-3 py-2 rounded-lg border mr-2 ${selectedUser.id === u.id ? 'bg-amber-500 border-amber-600' : 'bg-transparent border-gray-200'}`}
-                        style={{ borderColor: selectedUser.id === u.id ? '#D97706' : theme.border }}
-                      >
-                        <Text
-                          style={{ color: selectedUser.id === u.id ? '#FFFFFF' : theme.subText }}
-                          className="text-xs font-semibold"
-                        >
-                          {u.title} {u.displayName}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-
-                {/* Phase Selector */}
-                <View className="mb-4">
-                  <Text style={{ color: theme.text }} className="font-medium mb-2 text-sm">Select Phase</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {Object.values(DemoPhase).map((phase) => (
-                      <TouchableOpacity
-                        key={phase}
-                        onPress={() => setSelectedPhase(phase)}
-                        className={`px-3 py-2 rounded-lg border ${selectedPhase === phase ? 'bg-amber-500 border-amber-600' : 'bg-transparent border-gray-200'}`}
-                        style={{ borderColor: selectedPhase === phase ? '#D97706' : theme.border }}
-                      >
-                        <Text
-                          style={{ color: selectedPhase === phase ? '#FFFFFF' : theme.subText }}
-                          className="text-xs font-semibold"
-                        >
-                          {phase}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                <Text style={{ color: theme.subText }} className="text-center text-xs mt-2">
-                  Simulating: <Text style={{ color: theme.text }} className="font-bold">{selectedUser.title} {selectedUser.displayName} ({selectedUser.rank})</Text>
-                </Text>
-              </View>
-            )}
-          </MotiView>
-        )}
 
       </ScrollView>
 

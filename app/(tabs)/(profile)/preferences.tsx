@@ -79,6 +79,7 @@ export default function ProfilePreferences() {
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+                showsVerticalScrollIndicator={false}
             >
                 {/* Privacy Section */}
                 <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 mb-6 shadow-sm">

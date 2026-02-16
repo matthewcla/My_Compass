@@ -34,6 +34,7 @@ export default function AssignmentDashboard() {
         <ScreenGradient>
             <ScrollView
                 className="flex-1"
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
                     padding: 16,
                     paddingTop: 10,

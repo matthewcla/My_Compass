@@ -4,7 +4,7 @@ import { TravelStep5Review } from '@/components/travel-claim/steps/TravelStep5Re
 import { SignatureButton } from '@/components/ui/SignatureButton';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { usePCSStore } from '@/store/usePCSStore';
-import type { ReceiptCategory } from '@/types/pcs';
+import type { PCSSegment, ReceiptCategory } from '@/types/pcs';
 import type { Expense, TravelClaim } from '@/types/travelClaim';
 import { bridgeReceiptsToExpenses } from '@/utils/receiptBridge';
 import { scanReceipt } from '@/utils/receiptOCR';
@@ -19,7 +19,9 @@ import {
     CheckCircle,
     CheckCircle2,
     ChevronLeft,
-    Receipt
+    Pencil,
+    Receipt,
+    Trash2
 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -31,6 +33,7 @@ import {
     Platform,
     Pressable,
     Text,
+    TextInput,
     View,
     useColorScheme,
 } from 'react-native';
@@ -141,11 +144,13 @@ export default function TravelClaimRequestScreen() {
     const initSettlement = usePCSStore((state) => state.initSettlement);
     const updateSettlement = usePCSStore((state) => state.updateSettlement);
     const submitSettlement = usePCSStore((state) => state.submitSettlement);
+    const activeOrder = usePCSStore((state) => state.activeOrder);
 
     // Local State
     const [activeStep, setActiveStep] = useState(0);
     const [showExitModal, setShowExitModal] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
 
     const scrollViewRef = useRef<any>(null);
     const sectionCoords = useRef<number[]>([]);
@@ -194,27 +199,28 @@ export default function TravelClaimRequestScreen() {
         }
     };
 
-    // --- Field Update Handler ---
-    const handleUpdate = useCallback((field: string, value: any) => {
+    // --- Segment Override Handler ---
+    const handleSegmentOverride = useCallback((segmentId: string, overrides: Partial<PCSSegment>) => {
         if (!draft) return;
 
-        const fieldMap: Record<string, keyof TravelClaim> = {
-            'pcsOrderId': 'orderNumber',
-            'startDate': 'departureDate',
-            'endDate': 'returnDate',
-            'travelMode': 'travelMode',
-            'actualMileage': 'maltMiles',
-        };
-
-        const targetField = fieldMap[field];
-
-        // Ignore transient fields
-        if (!targetField && ['originZip', 'destinationZip', 'estimatedMileage'].includes(field)) {
-            return;
+        // Translate segment overrides into TravelClaim patch
+        const patch: Partial<TravelClaim> = {};
+        if (overrides.dates) {
+            if (overrides.dates.projectedDeparture) patch.departureDate = overrides.dates.projectedDeparture;
+            if (overrides.dates.projectedArrival) patch.returnDate = overrides.dates.projectedArrival;
         }
+        if (overrides.userPlan?.mode) {
+            patch.travelMode = overrides.userPlan.mode.toLowerCase() as any;
+        }
+        if (Object.keys(patch).length > 0) {
+            updateSettlement(patch);
+        }
+    }, [draft, updateSettlement]);
 
-        const resolvedField = targetField || (field as keyof TravelClaim);
-        updateSettlement({ [resolvedField]: value } as Partial<TravelClaim>);
+    // --- Mileage Update Handler ---
+    const handleMileageUpdate = useCallback((mileage: number) => {
+        if (!draft) return;
+        updateSettlement({ maltMiles: mileage });
     }, [draft, updateSettlement]);
 
     // --- Expense Handlers ---
@@ -387,6 +393,7 @@ export default function TravelClaimRequestScreen() {
                             onScroll={handleScroll}
                             scrollEventThrottle={16}
                             keyboardShouldPersistTaps="handled"
+                            showsVerticalScrollIndicator={false}
                         >
                             {/* ── Step 1: Verify Trip (pre-filled from orders) ── */}
                             <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
@@ -395,20 +402,12 @@ export default function TravelClaimRequestScreen() {
                                         <Text className="text-xs font-bold text-blue-600 dark:text-blue-400">1</Text>
                                     </View>
                                     <Text className="text-base font-bold text-slate-900 dark:text-white">Verify Trip Details</Text>
-                                    <View className="ml-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full px-2 py-0.5">
-                                        <Text className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">PRE-FILLED</Text>
-                                    </View>
                                 </View>
                                 <TravelStep1TripDetails
-                                    pcsOrderId={draft.orderNumber}
-                                    startDate={draft.departureDate}
-                                    endDate={draft.returnDate}
-                                    travelMode={({ pov: 'POV', commercial_air: 'AIR', gov_vehicle: 'GOV_VEHICLE', mixed: 'MIXED', rail: 'POV' } as const)[draft.travelMode]}
-                                    originZip={''}
-                                    destinationZip={''}
-                                    estimatedMileage={draft.maltMiles}
+                                    segments={activeOrder?.segments ?? []}
                                     actualMileage={draft.maltMiles}
-                                    onUpdate={(field, val) => handleUpdate(field as string, val)}
+                                    onSegmentOverride={handleSegmentOverride}
+                                    onMileageUpdate={handleMileageUpdate}
                                     embedded
                                 />
                             </View>
@@ -456,7 +455,7 @@ export default function TravelClaimRequestScreen() {
                                                     className="bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-700/50 mb-2 p-3"
                                                 >
                                                     <View className="flex-row items-center justify-between">
-                                                        <View className="flex-1">
+                                                        <View className="flex-1 mr-2">
                                                             <Text className="text-sm font-medium text-slate-800 dark:text-slate-200">
                                                                 {expense.description || expense.expenseType}
                                                             </Text>
@@ -469,9 +468,55 @@ export default function TravelClaimRequestScreen() {
                                                                 </View>
                                                             )}
                                                         </View>
-                                                        <Text className="text-base font-bold text-slate-900 dark:text-white">
-                                                            ${expense.amount.toFixed(2)}
-                                                        </Text>
+                                                        <View className="flex-row items-center gap-2">
+                                                            {/* Inline Amount Edit */}
+                                                            {editingExpenseId === expense.id ? (
+                                                                <TextInput
+                                                                    autoFocus
+                                                                    keyboardType="decimal-pad"
+                                                                    defaultValue={expense.amount.toFixed(2)}
+                                                                    onBlur={() => setEditingExpenseId(null)}
+                                                                    onSubmitEditing={(e: NativeSyntheticEvent<{ text: string }>) => {
+                                                                        const val = parseFloat(e.nativeEvent.text);
+                                                                        if (!isNaN(val) && val >= 0) {
+                                                                            handleUpdateExpenseAmount(expense.id, val);
+                                                                        }
+                                                                        setEditingExpenseId(null);
+                                                                    }}
+                                                                    className="text-base font-bold text-slate-900 dark:text-white min-w-[80px] text-right border-b-2 border-blue-500 py-0.5"
+                                                                    returnKeyType="done"
+                                                                />
+                                                            ) : (
+                                                                <Pressable
+                                                                    onPress={() => setEditingExpenseId(expense.id)}
+                                                                    hitSlop={8}
+                                                                    className="flex-row items-center gap-1 active:opacity-60"
+                                                                >
+                                                                    <Text className="text-base font-bold text-slate-900 dark:text-white">
+                                                                        ${expense.amount.toFixed(2)}
+                                                                    </Text>
+                                                                    <Pencil size={12} color={isDark ? '#64748b' : '#94a3b8'} />
+                                                                </Pressable>
+                                                            )}
+
+                                                            {/* Delete */}
+                                                            <Pressable
+                                                                hitSlop={8}
+                                                                onPress={() => {
+                                                                    Alert.alert(
+                                                                        'Remove Expense',
+                                                                        `Delete "${expense.description || expense.expenseType}"?`,
+                                                                        [
+                                                                            { text: 'Cancel', style: 'cancel' },
+                                                                            { text: 'Delete', style: 'destructive', onPress: () => handleRemoveExpense(expense.id) },
+                                                                        ]
+                                                                    );
+                                                                }}
+                                                                className="p-1.5 rounded-full active:bg-red-100 dark:active:bg-red-900/20"
+                                                            >
+                                                                <Trash2 size={14} color={isDark ? '#ef4444' : '#dc2626'} />
+                                                            </Pressable>
+                                                        </View>
                                                     </View>
                                                 </View>
                                             ))}

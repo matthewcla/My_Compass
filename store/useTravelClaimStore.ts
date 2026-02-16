@@ -2,6 +2,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * useTravelClaimStore.ts — Travel Claim State Management (Zustand)
  * ─────────────────────────────────────────────────────────────────────────────
+ * @deprecated All settlement logic now lives in usePCSStore (initSettlement,
+ * updateSettlement, submitSettlement). This store is retained for its test
+ * suite and as a reference. Do not import in new code.
  *
  * Mirrors the Leave store pattern (useLeaveStore.ts) with:
  *   • Optimistic updates for submit

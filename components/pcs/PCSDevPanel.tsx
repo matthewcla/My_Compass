@@ -1,4 +1,5 @@
 import { useScrollContext } from '@/components/navigation/ScrollControlContext';
+import { DEMO_USERS, DemoPhase } from '@/constants/DemoData';
 import { DEMO_SCENARIOS, useDemoStore } from '@/store/useDemoStore';
 import { usePCSArchiveStore } from '@/store/usePCSArchiveStore';
 import { PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
@@ -7,13 +8,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import React, { useState } from 'react';
 import {
-    LayoutAnimation,
+    Dimensions,
     Platform,
     Pressable,
     ScrollView,
+    Switch,
     Text,
     TouchableOpacity,
-    UIManager,
     View,
     useColorScheme,
 } from 'react-native';
@@ -25,10 +26,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 // ── Display Labels ──────────────────────────────────────────────────────────
 
@@ -66,6 +64,11 @@ const VIEW_MODE_LABELS: Record<typeof VIEW_MODES[number], string> = {
 export function PCSDevPanel() {
     const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings ?? __DEV__;
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
+    const toggleDemoMode = useDemoStore((state) => state.toggleDemoMode);
+    const selectedUser = useDemoStore((state) => state.selectedUser);
+    const setSelectedUser = useDemoStore((state) => state.setSelectedUser);
+    const selectedPhase = useDemoStore((state) => state.selectedPhase);
+    const setSelectedPhase = useDemoStore((state) => state.setSelectedPhase);
 
     const activeDemoScenarioId = useDemoStore((state) => state.activeDemoScenarioId);
     const applyDemoScenario = useDemoStore((state) => state.applyDemoScenario);
@@ -91,6 +94,9 @@ export function PCSDevPanel() {
 
     const [panelOpen, setPanelOpen] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
+
+    // Reanimated height for Advanced section (replaces LayoutAnimation)
+    const advancedProgress = useSharedValue(0);
 
     // Sync position with GlobalTabBar's scroll-to-hide animation.
     // Clamp so the beaker settles ~24px above the safe area (not off-screen).
@@ -124,7 +130,16 @@ export function PCSDevPanel() {
         ],
     }));
 
-    if (!enableDevSettings || !isDemoMode) return null;
+    const advancedStyle = useAnimatedStyle(() => ({
+        opacity: advancedProgress.value,
+        maxHeight: advancedProgress.value * 400,
+        overflow: 'hidden' as const,
+    }));
+
+    if (!enableDevSettings) return null;
+
+    // Whether PCS-specific controls should be shown
+    const isPCSActive = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
 
     const borderColor = isDark ? '#27272A' : '#E2E8F0';
     const chipBg = isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)';
@@ -136,14 +151,24 @@ export function PCSDevPanel() {
     };
 
     const closePanel = () => {
-        setPanelOpen(false);
-        setShowAdvanced(false);
-        panelProgress.value = 0;
+        panelProgress.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.cubic) }, () => {
+            // Clean up after animation completes
+        });
+        advancedProgress.value = withTiming(0, { duration: 150 });
+        // Delay state change slightly so animation is visible
+        setTimeout(() => {
+            setPanelOpen(false);
+            setShowAdvanced(false);
+        }, 210);
     };
 
     const toggleAdvanced = () => {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setShowAdvanced(!showAdvanced);
+        const next = !showAdvanced;
+        setShowAdvanced(next);
+        advancedProgress.value = withTiming(next ? 1 : 0, {
+            duration: 280,
+            easing: Easing.out(Easing.cubic),
+        });
     };
 
     // Find active scenario emoji for the badge
@@ -200,6 +225,23 @@ export function PCSDevPanel() {
                     }}
                 >
                     <Ionicons name="flask" size={22} color={isDark ? '#60A5FA' : '#3B82F6'} />
+                    {activeScenario && (
+                        <View style={{
+                            position: 'absolute',
+                            top: -2,
+                            right: -2,
+                            minWidth: 20,
+                            height: 20,
+                            borderRadius: 10,
+                            backgroundColor: isDark ? '#065F46' : '#059669',
+                            borderWidth: 1.5,
+                            borderColor: isDark ? 'rgba(15, 23, 42, 0.96)' : '#EFF6FF',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <Text style={{ fontSize: 10 }}>{activeScenario.icon}</Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             </Animated.View>
         );
@@ -249,8 +291,8 @@ export function PCSDevPanel() {
                     }),
                 }, panelStyle, tabBarSyncStyle]}
             >
-                <View style={{ padding: 16 }}>
-                    {/* ── Title + Close ────────────────────────────────────── */}
+                <ScrollView style={{ padding: 16, maxHeight: SCREEN_HEIGHT * 0.55 }} showsVerticalScrollIndicator={false}>
+                    {/* ── Title ────────────────────────────────────── */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
                         <Text
                             style={{
@@ -261,224 +303,309 @@ export function PCSDevPanel() {
                                 letterSpacing: 1.2,
                             }}
                         >
-                            Demo Scenarios
+                            Developer Settings
                         </Text>
                     </View>
 
-                    {/* ── Scenario Preset Chips ────────────────────────────── */}
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ gap: 8, paddingHorizontal: 2 }}
-                    >
-                        {DEMO_SCENARIOS.map((scenario) => {
-                            const isActive = activeDemoScenarioId === scenario.id;
-                            return (
+                    {/* ── Demo Mode Toggle ────────────────────────────── */}
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingVertical: 8,
+                        paddingHorizontal: 4,
+                        marginBottom: 8,
+                        borderBottomWidth: 1,
+                        borderStyle: 'dashed',
+                        borderBottomColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#BFDBFE',
+                    }}>
+                        <Text style={{
+                            fontSize: 11,
+                            fontWeight: '700',
+                            color: isDemoMode ? (isDark ? '#FBBF24' : '#D97706') : (isDark ? '#94A3B8' : '#64748B'),
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.8,
+                        }}>
+                            {isDemoMode ? '⚡ Simulation Active' : 'Demo Mode'}
+                        </Text>
+                        <Switch
+                            value={isDemoMode}
+                            onValueChange={toggleDemoMode}
+                            trackColor={{ false: isDark ? '#374151' : '#E2E8F0', true: '#F59E0B' }}
+                            thumbColor="#FFFFFF"
+                        />
+                    </View>
+
+                    {/* ── Persona Selector ────────────────────────────── */}
+                    {isDemoMode && (
+                        <>
+                            <Text style={sectionLabel(isDark)}>Persona</Text>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ gap: 10, paddingHorizontal: 2, marginBottom: 4 }}
+                            >
+                                {DEMO_USERS.map((u) => {
+                                    const isActive = selectedUser.id === u.id;
+                                    return (
+                                        <TouchableOpacity
+                                            key={u.id}
+                                            onPress={() => setSelectedUser(u)}
+                                            style={overrideBtn(isActive, isDark, borderColor, 'amber')}
+                                        >
+                                            <Text style={overrideBtnText(isActive, isDark)}>
+                                                {u.title} {u.displayName}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </ScrollView>
+
+                            {/* ── App Phase Selector ────────────────────────── */}
+                            <View style={{ height: 1, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E2E8F0', marginVertical: 8 }} />
+                            <Text style={sectionLabel(isDark)}>App Phase</Text>
+                            <View style={buttonRow}>
+                                {Object.values(DemoPhase).map((phase) => {
+                                    const isActive = selectedPhase === phase;
+                                    return (
+                                        <TouchableOpacity
+                                            key={phase}
+                                            onPress={() => setSelectedPhase(phase)}
+                                            style={overrideBtn(isActive, isDark, borderColor, 'amber')}
+                                        >
+                                            <Text style={overrideBtnText(isActive, isDark)}>
+                                                {phase.replace('_', ' ')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        </>
+                    )}
+
+                    {/* ── PCS-Specific Controls ───────────────────────── */}
+                    {isPCSActive && (
+                        <>
+                            <View style={{ height: 1, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E2E8F0', marginVertical: 8 }} />
+                            <Text style={[sectionLabel(isDark), { marginTop: 4 }]}>PCS Scenarios</Text>
+
+                            {/* ── Scenario Preset Chips ────────────────────────────── */}
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}
+                            >
+                                {DEMO_SCENARIOS.map((scenario) => {
+                                    const isActive = activeDemoScenarioId === scenario.id;
+                                    return (
+                                        <TouchableOpacity
+                                            key={scenario.id}
+                                            onPress={() => {
+                                                if (isActive) {
+                                                    clearDemoScenario();
+                                                } else {
+                                                    applyDemoScenario(scenario);
+                                                }
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                gap: 5,
+                                                paddingHorizontal: 14,
+                                                paddingVertical: 14,
+                                                borderRadius: 20,
+                                                borderWidth: 1,
+                                                backgroundColor: isActive
+                                                    ? (isDark ? '#065F46' : '#059669')
+                                                    : chipBg,
+                                                borderColor: isActive
+                                                    ? '#059669'
+                                                    : borderColor,
+                                            }}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Text style={{ fontSize: 13 }}>{scenario.icon}</Text>
+                                            <Text
+                                                style={{
+                                                    fontSize: 11,
+                                                    fontWeight: '600',
+                                                    color: isActive
+                                                        ? '#FFFFFF'
+                                                        : (isDark ? '#94A3B8' : '#475569'),
+                                                }}
+                                            >
+                                                {scenario.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </ScrollView>
+
+                            {/* ── PCS Data Actions ──────────────────────────────────── */}
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    gap: 8,
+                                    justifyContent: 'center',
+                                    marginTop: 10,
+                                    paddingTop: 8,
+                                    borderTopWidth: 1,
+                                    borderStyle: 'dashed',
+                                    borderTopColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#BFDBFE',
+                                }}
+                            >
                                 <TouchableOpacity
-                                    key={scenario.id}
-                                    onPress={() => {
-                                        if (isActive) {
-                                            clearDemoScenario();
-                                        } else {
-                                            applyDemoScenario(scenario);
-                                        }
+                                    onPress={seedDemoArchiveData}
+                                    style={{
+                                        paddingHorizontal: 14,
+                                        paddingVertical: 12,
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: isDark ? '#166534' : '#86EFAC',
+                                        backgroundColor: isDark ? 'rgba(22, 101, 52, 0.3)' : '#F0FDF4',
                                     }}
+                                >
+                                    <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#86EFAC' : '#166534' }}>
+                                        Load Sea Bag ({archiveCount})
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={clearArchiveData}
+                                    style={{
+                                        paddingHorizontal: 14,
+                                        paddingVertical: 12,
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: isDark ? '#991B1B' : '#FCA5A5',
+                                        backgroundColor: isDark ? 'rgba(153, 27, 27, 0.3)' : '#FEF2F2',
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#FCA5A5' : '#991B1B' }}>
+                                        Clear Sea Bag
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {/* Advanced Toggle */}
+                                <TouchableOpacity
+                                    onPress={toggleAdvanced}
                                     style={{
                                         flexDirection: 'row',
                                         alignItems: 'center',
-                                        gap: 5,
+                                        gap: 3,
                                         paddingHorizontal: 14,
-                                        paddingVertical: 14,
-                                        borderRadius: 20,
+                                        paddingVertical: 12,
+                                        borderRadius: 8,
                                         borderWidth: 1,
-                                        backgroundColor: isActive
-                                            ? (isDark ? '#065F46' : '#059669')
-                                            : chipBg,
-                                        borderColor: isActive
-                                            ? '#059669'
-                                            : borderColor,
+                                        borderColor: isDark ? '#374151' : '#CBD5E1',
+                                        backgroundColor: isDark ? 'rgba(55, 65, 81, 0.3)' : '#F8FAFC',
                                     }}
-                                    activeOpacity={0.7}
                                 >
-                                    <Text style={{ fontSize: 13 }}>{scenario.icon}</Text>
-                                    <Text
-                                        style={{
-                                            fontSize: 11,
-                                            fontWeight: '600',
-                                            color: isActive
-                                                ? '#FFFFFF'
-                                                : (isDark ? '#94A3B8' : '#475569'),
-                                        }}
-                                    >
-                                        {scenario.label}
+                                    <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#94A3B8' : '#64748B' }}>
+                                        Advanced
                                     </Text>
+                                    <Ionicons
+                                        name={showAdvanced ? 'chevron-up' : 'chevron-down'}
+                                        size={10}
+                                        color={isDark ? '#94A3B8' : '#64748B'}
+                                    />
                                 </TouchableOpacity>
-                            );
-                        })}
-                    </ScrollView>
-
-                    {/* ── Data Actions ─────────────────────────────────────── */}
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            gap: 8,
-                            justifyContent: 'center',
-                            marginTop: 10,
-                            paddingTop: 8,
-                            borderTopWidth: 1,
-                            borderStyle: 'dashed',
-                            borderTopColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#BFDBFE',
-                        }}
-                    >
-                        <TouchableOpacity
-                            onPress={seedDemoArchiveData}
-                            style={{
-                                paddingHorizontal: 14,
-                                paddingVertical: 12,
-                                borderRadius: 8,
-                                borderWidth: 1,
-                                borderColor: isDark ? '#166534' : '#86EFAC',
-                                backgroundColor: isDark ? 'rgba(22, 101, 52, 0.3)' : '#F0FDF4',
-                            }}
-                        >
-                            <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#86EFAC' : '#166534' }}>
-                                Load Sea Bag ({archiveCount})
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={clearArchiveData}
-                            style={{
-                                paddingHorizontal: 14,
-                                paddingVertical: 12,
-                                borderRadius: 8,
-                                borderWidth: 1,
-                                borderColor: isDark ? '#991B1B' : '#FCA5A5',
-                                backgroundColor: isDark ? 'rgba(153, 27, 27, 0.3)' : '#FEF2F2',
-                            }}
-                        >
-                            <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#FCA5A5' : '#991B1B' }}>
-                                Clear Sea Bag
-                            </Text>
-                        </TouchableOpacity>
-
-                        {/* Advanced Toggle */}
-                        <TouchableOpacity
-                            onPress={toggleAdvanced}
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                gap: 3,
-                                paddingHorizontal: 14,
-                                paddingVertical: 12,
-                                borderRadius: 8,
-                                borderWidth: 1,
-                                borderColor: isDark ? '#374151' : '#CBD5E1',
-                                backgroundColor: isDark ? 'rgba(55, 65, 81, 0.3)' : '#F8FAFC',
-                            }}
-                        >
-                            <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#94A3B8' : '#64748B' }}>
-                                Advanced
-                            </Text>
-                            <Ionicons
-                                name={showAdvanced ? 'chevron-down' : 'chevron-up'}
-                                size={10}
-                                color={isDark ? '#94A3B8' : '#64748B'}
-                            />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* ── Advanced Overrides (Collapsible) ─────────────────── */}
-                    {showAdvanced && (
-                        <View style={{ marginTop: 10 }}>
-                            {/* View Mode */}
-                            <Text style={sectionLabel(isDark)}>View</Text>
-                            <View style={buttonRow}>
-                                {VIEW_MODES.map((mode) => {
-                                    const isActive = pcsContextOverride === mode;
-                                    return (
-                                        <TouchableOpacity
-                                            key={mode}
-                                            onPress={() => setPcsContextOverride(isActive ? null : mode)}
-                                            style={overrideBtn(isActive, isDark, borderColor, 'emerald')}
-                                        >
-                                            <Text style={overrideBtnText(isActive, isDark)}>
-                                                {VIEW_MODE_LABELS[mode]}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
                             </View>
 
-                            {/* Travel Phase */}
-                            <Text style={sectionLabel(isDark)}>Travel Phase</Text>
-                            <View style={buttonRow}>
-                                {PCS_PHASES.map((phase) => {
-                                    const isActive = pcsPhaseOverride === phase;
-                                    return (
-                                        <TouchableOpacity
-                                            key={phase}
-                                            onPress={() => {
-                                                if (pcsContextOverride !== 'ACTIVE') setPcsContextOverride('ACTIVE');
-                                                setPcsPhaseOverride(isActive ? null : phase);
-                                            }}
-                                            style={overrideBtn(isActive, isDark, borderColor, 'blue')}
-                                        >
-                                            <Text style={overrideBtnText(isActive, isDark)}>
-                                                {PCS_PHASE_LABELS[phase]}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
+                            {/* ── Advanced Overrides (Collapsible) ─────────────────── */}
+                            <Animated.View style={[{ marginTop: 10 }, advancedStyle]}>
+                                {showAdvanced && (
+                                    <View>
+                                        {/* View Mode */}
+                                        <Text style={sectionLabel(isDark)}>View</Text>
+                                        <View style={buttonRow}>
+                                            {VIEW_MODES.map((mode) => {
+                                                const isActive = pcsContextOverride === mode;
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={mode}
+                                                        onPress={() => setPcsContextOverride(isActive ? null : mode)}
+                                                        style={overrideBtn(isActive, isDark, borderColor, 'emerald')}
+                                                    >
+                                                        <Text style={overrideBtnText(isActive, isDark)}>
+                                                            {VIEW_MODE_LABELS[mode]}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+                                        </View>
 
-                            {/* In Transit Sub-Phase */}
-                            {showSubPhase && (
-                                <>
-                                    <Text style={sectionLabel(isDark)}>Sub-Phase</Text>
-                                    <View style={buttonRow}>
-                                        {TRANSIT_SUB_PHASES.map((sub) => {
-                                            const isActive = pcsSubPhaseOverride === sub;
-                                            return (
-                                                <TouchableOpacity
-                                                    key={sub}
-                                                    onPress={() => setPcsSubPhaseOverride(isActive ? null : sub)}
-                                                    style={overrideBtn(isActive, isDark, borderColor, 'amber')}
-                                                >
-                                                    <Text style={overrideBtnText(isActive, isDark)}>
-                                                        {TRANSIT_SUB_LABELS[sub]}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            );
-                                        })}
+                                        {/* Travel Phase */}
+                                        <Text style={sectionLabel(isDark)}>Travel Phase</Text>
+                                        <View style={buttonRow}>
+                                            {PCS_PHASES.map((phase) => {
+                                                const isActive = pcsPhaseOverride === phase;
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={phase}
+                                                        onPress={() => {
+                                                            if (pcsContextOverride !== 'ACTIVE') setPcsContextOverride('ACTIVE');
+                                                            setPcsPhaseOverride(isActive ? null : phase);
+                                                        }}
+                                                        style={overrideBtn(isActive, isDark, borderColor, 'blue')}
+                                                    >
+                                                        <Text style={overrideBtnText(isActive, isDark)}>
+                                                            {PCS_PHASE_LABELS[phase]}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+                                        </View>
+
+                                        {/* In Transit Sub-Phase */}
+                                        {showSubPhase && (
+                                            <>
+                                                <Text style={sectionLabel(isDark)}>Sub-Phase</Text>
+                                                <View style={buttonRow}>
+                                                    {TRANSIT_SUB_PHASES.map((sub) => {
+                                                        const isActive = pcsSubPhaseOverride === sub;
+                                                        return (
+                                                            <TouchableOpacity
+                                                                key={sub}
+                                                                onPress={() => setPcsSubPhaseOverride(isActive ? null : sub)}
+                                                                style={overrideBtn(isActive, isDark, borderColor, 'amber')}
+                                                            >
+                                                                <Text style={overrideBtnText(isActive, isDark)}>
+                                                                    {TRANSIT_SUB_LABELS[sub]}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        );
+                                                    })}
+                                                </View>
+                                            </>
+                                        )}
+
+                                        {/* UCT Phase */}
+                                        <Text style={sectionLabel(isDark)}>UCT Phase</Text>
+                                        <View style={buttonRow}>
+                                            {UCT_PHASES.map((phase) => {
+                                                const isActive = uctPhaseOverride === phase;
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={phase}
+                                                        onPress={() => {
+                                                            if (pcsContextOverride !== 'ACTIVE') setPcsContextOverride('ACTIVE');
+                                                            setUctPhaseOverride(isActive ? null : phase);
+                                                        }}
+                                                        style={overrideBtn(isActive, isDark, borderColor, 'purple')}
+                                                    >
+                                                        <Text style={overrideBtnText(isActive, isDark)}>
+                                                            Phase {phase}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+                                        </View>
                                     </View>
-                                </>
-                            )}
-
-                            {/* UCT Phase */}
-                            <Text style={sectionLabel(isDark)}>UCT Phase</Text>
-                            <View style={buttonRow}>
-                                {UCT_PHASES.map((phase) => {
-                                    const isActive = uctPhaseOverride === phase;
-                                    return (
-                                        <TouchableOpacity
-                                            key={phase}
-                                            onPress={() => {
-                                                if (pcsContextOverride !== 'ACTIVE') setPcsContextOverride('ACTIVE');
-                                                setUctPhaseOverride(isActive ? null : phase);
-                                            }}
-                                            style={overrideBtn(isActive, isDark, borderColor, 'purple')}
-                                        >
-                                            <Text style={overrideBtnText(isActive, isDark)}>
-                                                Phase {phase}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-                        </View>
+                                )}
+                            </Animated.View>
+                        </>
                     )}
 
-                    {/* ── Status Badge ─────────────────────────────────────── */}
                     {statusParts.length > 0 && (
                         <View style={{
                             flexDirection: 'row',
@@ -555,7 +682,7 @@ export function PCSDevPanel() {
                             Reset Session Memory
                         </Text>
                     </TouchableOpacity>
-                </View>
+                </ScrollView>
             </Animated.View>
         </>
     );
@@ -584,7 +711,7 @@ const sectionLabel = (isDark: boolean) => ({
 const buttonRow = {
     flexDirection: 'row' as const,
     flexWrap: 'wrap' as const,
-    gap: 6,
+    gap: 10,
     justifyContent: 'center' as const,
 };
 

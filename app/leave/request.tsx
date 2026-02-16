@@ -471,6 +471,7 @@ export default function LeaveRequestScreen() {
                             scrollEventThrottle={16}
                             keyboardShouldPersistTaps="handled"
                             keyboardDismissMode="interactive"
+                            showsVerticalScrollIndicator={false}
                         >
                             {/* 1. Intent */}
                             <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">

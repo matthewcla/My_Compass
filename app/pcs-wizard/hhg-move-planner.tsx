@@ -466,6 +466,7 @@ export default function HHGMovePlannerScreen() {
                             scrollEventThrottle={16}
                             keyboardShouldPersistTaps="handled"
                             keyboardDismissMode="interactive"
+                            showsVerticalScrollIndicator={false}
                         >
                             {/* ── Shipment Tabs ──────────────────────── */}
                             <View className="mb-4">

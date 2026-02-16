@@ -182,7 +182,7 @@ export default function ObliservRequestScreen() {
             </View>
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
-                <ScrollView className="flex-1 px-4 py-6" contentContainerStyle={{ paddingBottom: 100 }}>
+                <ScrollView className="flex-1 px-4 py-6" contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
 
                     {/* ═══ Auto-populated Profile Data ═══ */}
                     <View className="mb-8">

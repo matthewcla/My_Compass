@@ -144,6 +144,10 @@ export default function HubDashboard() {
     // Show standalone receipt capture on Home Hub during Phase 3 only.
     // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
     if (pcsPhase === 'TRANSIT_LEAVE') sections.push('receiptCapture');
+    // Surface Mission Brief on Home Hub during Phases 1–2 only
+    if (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE') {
+        sections.push('missionBrief');
+    }
     // Surface Phase 4 urgency widgets on the Home Hub — tiered by urgency
     if (pcsPhase === 'CHECK_IN') {
         sections.push('tierRightNow');
@@ -246,6 +250,10 @@ export default function HubDashboard() {
             case 'liquidationTracker': {
                 const { LiquidationTrackerWidget } = require('@/components/pcs/widgets/LiquidationTrackerWidget');
                 return <LiquidationTrackerWidget />;
+            }
+            case 'missionBrief': {
+                const { PCSMissionBrief } = require('@/components/pcs/widgets/PCSMissionBrief');
+                return <PCSMissionBrief />;
             }
             case 'leave':
                 return (

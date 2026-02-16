@@ -3,6 +3,7 @@ import { DEMO_SCENARIOS, useDemoStore } from '@/store/useDemoStore';
 import { usePCSArchiveStore } from '@/store/usePCSArchiveStore';
 import { PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import React, { useState } from 'react';
 import {
@@ -111,6 +112,18 @@ export function PCSDevPanel() {
         easing: Easing.out(Easing.cubic),
     };
 
+    // Animated styles — MUST be declared before any early returns (hooks rule)
+    const scrimStyle = useAnimatedStyle(() => ({
+        opacity: panelProgress.value,
+    }));
+
+    const panelStyle = useAnimatedStyle(() => ({
+        opacity: panelProgress.value,
+        transform: [
+            { translateY: (1 - panelProgress.value) * 30 },
+        ],
+    }));
+
     if (!enableDevSettings || !isDemoMode) return null;
 
     const borderColor = isDark ? '#27272A' : '#E2E8F0';
@@ -145,17 +158,7 @@ export function PCSDevPanel() {
     if (pcsSubPhaseOverride) statusParts.push(TRANSIT_SUB_LABELS[pcsSubPhaseOverride]);
     if (uctPhaseOverride) statusParts.push(`UCT ${uctPhaseOverride}`);
 
-    // Animated styles — must be declared before any early returns (hooks rule)
-    const scrimStyle = useAnimatedStyle(() => ({
-        opacity: panelProgress.value,
-    }));
 
-    const panelStyle = useAnimatedStyle(() => ({
-        opacity: panelProgress.value,
-        transform: [
-            { translateY: (1 - panelProgress.value) * 30 },
-        ],
-    }));
 
     // ── Collapsed State: Small floating icon ────────────────────────────
     if (!panelOpen) {
@@ -505,6 +508,53 @@ export function PCSDevPanel() {
                             ))}
                         </View>
                     )}
+
+                    {/* ── Reset Session Memory ────────────────────────── */}
+                    <TouchableOpacity
+                        onPress={() => {
+                            const { Alert } = require('react-native');
+                            Alert.alert(
+                                'Reset Session Memory',
+                                'This clears all persisted state (PCS, demo, archive) and reloads the app. Continue?',
+                                [
+                                    { text: 'Cancel', style: 'cancel' },
+                                    {
+                                        text: 'Reset',
+                                        style: 'destructive',
+                                        onPress: async () => {
+                                            try {
+                                                await AsyncStorage.clear();
+                                                // Reload the app to apply fresh state
+                                                const { DevSettings } = require('react-native');
+                                                DevSettings?.reload?.();
+                                            } catch (e) {
+                                                console.warn('[DevPanel] Reset failed:', e);
+                                            }
+                                        },
+                                    },
+                                ],
+                            );
+                        }}
+                        style={{
+                            marginTop: 12,
+                            paddingVertical: 10,
+                            borderRadius: 8,
+                            borderWidth: 1,
+                            borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(220, 38, 38, 0.3)',
+                            backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(254, 226, 226, 0.5)',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Text style={{
+                            fontSize: 10,
+                            fontWeight: '700',
+                            color: isDark ? '#FCA5A5' : '#DC2626',
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.8,
+                        }}>
+                            Reset Session Memory
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </Animated.View>
         </>

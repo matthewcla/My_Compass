@@ -156,7 +156,14 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             );
 
         // ── Billet Selected ─────────────────────────────────────────
-        case 'selected':
+        case 'selected': {
+            const selGainingCommand = activeOrder?.gainingCommand.name || 'Awaiting assignment details';
+            const selReportNLT = activeOrder?.reportNLT
+                ? new Date(activeOrder.reportNLT).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                : null;
+            const obliserv = usePCSStore.getState().financials.obliserv;
+            const obliservBlocked = obliserv.required && obliserv.status !== 'COMPLETE';
+
             return (
                 <CardShell borderColor="border-blue-500 dark:border-blue-400" isDark={isDark}>
                     <View className="flex-row items-center gap-4 flex-1">
@@ -165,15 +172,30 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                         </IconBubble>
                         <View className="flex-1">
                             <Headline>Billet Selected</Headline>
-                            <Detail>Awaiting orders — complete admin requirements</Detail>
+                            <Detail>{selGainingCommand}</Detail>
+                            {selReportNLT && (
+                                <Text className="text-blue-700 dark:text-blue-300 text-[11px] font-semibold mt-0.5">
+                                    Report by {selReportNLT}
+                                </Text>
+                            )}
                         </View>
                     </View>
 
-                    <Pill bg="bg-blue-100 dark:bg-blue-900/40" border="border-blue-200 dark:border-blue-700/50">
-                        <PillText color="text-blue-800 dark:text-blue-200">Selected</PillText>
-                    </Pill>
+                    {obliservBlocked ? (
+                        <TouchableOpacity
+                            onPress={() => router.push('/pcs-wizard/obliserv-check' as any)}
+                            className="bg-red-600 dark:bg-red-700 px-3 py-2 rounded-lg border border-red-500 dark:border-red-600"
+                        >
+                            <CTAText>Extend{'\n'}to Accept</CTAText>
+                        </TouchableOpacity>
+                    ) : (
+                        <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
+                            <PillText color="text-green-800 dark:text-green-200">✓ Obligation Met</PillText>
+                        </Pill>
+                    )}
                 </CardShell>
             );
+        }
 
         // ── MNA Negotiation ─────────────────────────────────────────
         case 'negotiation':

@@ -5,12 +5,11 @@ import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import {
-    AlertTriangle,
     Anchor,
     ChevronRight,
     DollarSign,
     MapPin,
-    Zap,
+    Zap
 } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Platform, Text, View } from 'react-native';
@@ -23,7 +22,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
  * - When do I report?
  * - What phase am I in and how far along?
  * - What should I do next?
- * - Are there any blockers (OBLISERV)?
  * - (Phase 2) What's my financial posture?
  */
 
@@ -100,9 +98,6 @@ export function PCSMissionBrief() {
     const homePort = activeOrder!.gainingCommand.homePort;
     const commandName = activeOrder!.gainingCommand.name;
 
-    // OBLISERV blocker
-    const obliserv = financials.obliserv;
-    const hasObliserv = obliserv.required && obliserv.status === 'PENDING';
 
     // Financial snapshot (Phase 2 only)
     const showFinancials = currentPhase === 2;
@@ -195,20 +190,7 @@ export function PCSMissionBrief() {
                         </View>
                     </View>
 
-                    {/* OBLISERV Blocker (conditional) */}
-                    {hasObliserv && (
-                        <View className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3.5 border border-red-200 dark:border-red-800/40 flex-row items-center">
-                            <AlertTriangle size={18} color={isDark ? '#fca5a5' : '#dc2626'} strokeWidth={2.2} />
-                            <View className="ml-2.5 flex-1">
-                                <Text className="text-sm font-bold text-red-800 dark:text-red-300">
-                                    OBLISERV Required
-                                </Text>
-                                <Text className="text-xs text-red-600 dark:text-red-400 mt-0.5">
-                                    Extend or reenlist before orders can execute
-                                </Text>
-                            </View>
-                        </View>
-                    )}
+
 
                     {/* Financial Snapshot (Phase 2 only) */}
                     {showFinancials && (

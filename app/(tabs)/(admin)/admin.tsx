@@ -4,7 +4,7 @@ import { ScreenGradient } from '@/components/ScreenGradient';
 import { SyncStatus } from '@/components/SyncStatusBadge';
 import Colors from '@/constants/Colors';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
-import { useCurrentProfile } from '@/store/useDemoStore';
+import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSStore } from '@/store/usePCSStore';
 import { LeaveRequest } from '@/types/schema';
@@ -28,6 +28,7 @@ export default function AdminScreen() {
         isSyncingRequests
     } = useLeaveStore();
     const obliserv = usePCSStore(state => state.financials.obliserv);
+    const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
 
     useScreenHeader("MY ADMIN", "Leave & Actions", undefined, null, {
         icon: ChevronLeft,
@@ -61,8 +62,8 @@ export default function AdminScreen() {
 
     const renderHeader = () => (
         <View>
-            {/* Pending Actions — OBLISERV */}
-            {obliserv.required && obliserv.status !== 'COMPLETE' && (
+            {/* Pending Actions — OBLISERV (Selection phase only) */}
+            {assignmentPhase === 'SELECTION' && obliserv.required && obliserv.status !== 'COMPLETE' && (
                 <View className="mb-6">
                     <Text className="text-xs font-black tracking-[2px] uppercase text-slate-400 dark:text-slate-500 mb-3">
                         Pending Actions

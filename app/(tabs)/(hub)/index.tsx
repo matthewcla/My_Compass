@@ -145,10 +145,6 @@ export default function HubDashboard() {
     }
 
     const sections = ['menu'];
-    // OBLISERV: Surface on Home Hub during Selection phase if unresolved
-    if (assignmentPhase === 'SELECTION' && obliserv.required && obliserv.status !== 'COMPLETE') {
-        sections.push('obliserv');
-    }
     // Show standalone receipt capture on Home Hub during Phase 3 (ACTIVE_TRAVEL) only.
     // Phase 2 (PLANNING) shares TRANSIT_LEAVE but doesn't need receipt capture yet.
     // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
@@ -331,7 +327,7 @@ export default function HubDashboard() {
                         ItemSeparatorComponent={({ leadingItem }: { leadingItem: string }) => (
                             <View style={{ height: typeof leadingItem === 'string' && leadingItem.startsWith('tier') ? 18 : 24 }} />
                         )}
-                        ListHeaderComponent={<View style={{ height: 24 }} />}
+                        ListHeaderComponent={<View style={{ height: 8 }} />}
 
                         estimatedItemSize={150}
                         style={{ flex: 1 }}

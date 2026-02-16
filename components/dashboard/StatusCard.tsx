@@ -68,7 +68,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
                             </View>
 
-                            <View className="items-end gap-1.5">
+                            <View className="items-end gap-2.5">
                                 <View className="bg-green-100 dark:bg-green-900/40 px-2.5 py-1 rounded-full border border-green-200 dark:border-green-700/50">
                                     <Text className="text-[10px] font-black text-green-800 dark:text-green-200 uppercase tracking-wider">
                                         Day {daysOnStation}

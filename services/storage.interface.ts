@@ -66,6 +66,7 @@ export interface IStorageService {
   saveInboxMessages(messages: InboxMessage[]): Promise<void>;
   getInboxMessages(): Promise<InboxMessage[]>;
   updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void>;
+  updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void>;
 
   // Career Events
   saveCareerEvents(events: CareerEvent[]): Promise<void>;

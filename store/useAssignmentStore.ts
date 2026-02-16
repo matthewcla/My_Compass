@@ -1,4 +1,3 @@
-import { services } from '@/services/api/serviceRegistry';
 import { MOCK_BILLETS } from '@/constants/MockBillets';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
@@ -35,7 +34,7 @@ const generateUUID = () => {
 // STORE TYPES
 // =============================================================================
 
-export type SwipeDirection = 'left' | 'right' | 'up';
+export type SwipeDirection = 'left' | 'right' | 'up' | 'down';
 export type SmartBenchItem = { billet: Billet; type: 'manifest' | 'suggestion' };
 
 export type FilterState = {
@@ -419,7 +418,19 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
-        const { cursor, realDecisions, sandboxDecisions, promoteToSlate, mode } = get();
+        const { cursor, realDecisions, sandboxDecisions, promoteToSlate, mode, billetStack } = get();
+
+        // DEFER: Move billet to back of deck, no decision recorded
+        if (direction === 'down') {
+            const idx = billetStack.indexOf(billetId);
+            if (idx !== -1) {
+                const newStack = [...billetStack];
+                newStack.splice(idx, 1);
+                newStack.push(billetId);
+                set({ billetStack: newStack });
+            }
+            return;
+        }
 
         // 1. Determine Decision based on Direction
         let decision: SwipeDecision = 'nope';

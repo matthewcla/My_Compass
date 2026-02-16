@@ -26,6 +26,7 @@ import {
     TapGestureHandlerEventPayload
 } from 'react-native-gesture-handler';
 import Animated, {
+    Easing,
     Extrapolation,
     interpolate,
     runOnJS,
@@ -42,6 +43,7 @@ const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
 const VELOCITY_THRESHOLD = 800;
 const HEADER_HEIGHT = 224;
 const TRIGGER_BAR_HEIGHT = 50;
+const DISMISS_CONFIG = { duration: 200, easing: Easing.in(Easing.cubic) };
 
 const COLORS = {
     white: '#FFFFFF',
@@ -107,7 +109,7 @@ const DataPill = ({ label, value }: { label: string; value: string }) => (
 // --- Props ---
 interface BilletSwipeCardProps {
     billet: Billet;
-    onSwipe: (direction: 'left' | 'right' | 'up') => void;
+    onSwipe: (direction: 'left' | 'right' | 'up' | 'down') => void;
     active: boolean;
     index: number;
     isSandbox?: boolean;
@@ -123,8 +125,10 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
     const cardHeight = useSharedValue(0);
     const translateX = useSharedValue(0);
     const translateY = useSharedValue(0);
+    const cardScale = useSharedValue(index === 0 ? 1 : 0.95);
+    const cardOffsetY = useSharedValue(index === 0 ? 0 : 20);
 
-    const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up') => {
+    const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
         onSwipe(direction);
     }, [onSwipe]);
 
@@ -140,13 +144,12 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
         cardHeight.value = e.nativeEvent.layout.height;
     }, []);
 
-    // --- TAP GESTURE: Only triggers in bottom trigger zone ---
+    // --- TAP GESTURE: Triggers in top trigger zone (below header) ---
     const tap = Gesture.Tap()
         .maxDuration(300)
         .onEnd((event: GestureUpdateEvent<TapGestureHandlerEventPayload>) => {
             const tapY = event.y;
-            const triggerZoneStart = cardHeight.value - TRIGGER_BAR_HEIGHT;
-            if (tapY >= triggerZoneStart) {
+            if (tapY >= HEADER_HEIGHT && tapY <= HEADER_HEIGHT + TRIGGER_BAR_HEIGHT) {
                 runOnJS(openDrawer)();
             }
         });
@@ -193,84 +196,91 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
             const velocityY = event.velocityY;
 
             // Only trigger actions if we are locked to that axis
+            // Upward swipe (Super Like)
             if (gestureAxis.value === 2 && (velocityY < -VELOCITY_THRESHOLD || translateY.value < -200)) {
-                translateY.value = withTiming(-1000, {}, () => {
+                translateY.value = withTiming(-1000, DISMISS_CONFIG, () => {
                     runOnJS(handleSwipeComplete)('up');
+                });
+                return;
+            }
+
+            // Downward swipe (Defer / Not Ready)
+            if (gestureAxis.value === 2 && (velocityY > VELOCITY_THRESHOLD || translateY.value > 200)) {
+                translateY.value = withTiming(1000, DISMISS_CONFIG, () => {
+                    translateY.value = 0; // Reset before re-render to prevent flash
+                    runOnJS(handleSwipeComplete)('down');
                 });
                 return;
             }
 
             if (gestureAxis.value === 1) {
                 if (velocityX > VELOCITY_THRESHOLD || translateX.value > SWIPE_THRESHOLD) {
-                    translateX.value = withTiming(SCREEN_WIDTH * 1.5, {}, () => {
+                    translateX.value = withTiming(SCREEN_WIDTH * 1.5, DISMISS_CONFIG, () => {
                         runOnJS(handleSwipeComplete)('right');
                     });
                     return;
                 }
 
                 if (velocityX < -VELOCITY_THRESHOLD || translateX.value < -SWIPE_THRESHOLD) {
-                    translateX.value = withTiming(-SCREEN_WIDTH * 1.5, {}, () => {
+                    translateX.value = withTiming(-SCREEN_WIDTH * 1.5, DISMISS_CONFIG, () => {
                         runOnJS(handleSwipeComplete)('left');
                     });
                     return;
                 }
             }
 
-            translateX.value = withSpring(0);
-            translateY.value = withSpring(0);
+            translateX.value = withSpring(0, { damping: 20, stiffness: 200 });
+            translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
         });
 
     const composedGesture = Gesture.Exclusive(tap, pan);
 
     const cardStyle = useAnimatedStyle(() => {
-        const rotate = interpolate(
-            translateX.value,
-            [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-            [-15, 0, 15],
-            Extrapolation.CLAMP
-        );
-
-        const scale = withSpring(index === 0 ? 1 : 0.95);
-        const top = withSpring(index === 0 ? 0 : 20);
+        const rotate = active && gestureAxis.value === 1
+            ? interpolate(
+                translateX.value,
+                [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
+                [-15, 0, 15],
+                Extrapolation.CLAMP
+            )
+            : 0;
 
         return {
             transform: [
                 { translateX: active ? translateX.value : 0 },
-                { translateY: active ? translateY.value : top },
-                { rotate: active ? `${rotate}deg` : '0deg' },
-                { scale },
+                { translateY: active ? translateY.value : cardOffsetY.value },
+                { rotate: `${rotate}deg` },
+                { scale: cardScale.value },
             ],
             zIndex: active ? 100 : 1,
         };
     });
 
-    // Badge Opacity Logic - Mutually exclusive based on direction
+    // Badge Opacity Logic - Mutually exclusive, gated on axis lock
     const likeStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(
-            translateX.value,
-            [0, SCREEN_WIDTH * 0.25],
-            [0, 1],
-            Extrapolation.CLAMP
-        )
+        opacity: gestureAxis.value === 1
+            ? interpolate(translateX.value, [0, SCREEN_WIDTH * 0.25], [0, 1], Extrapolation.CLAMP)
+            : 0
     }));
 
     const nopeStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(
-            translateX.value,
-            [-SCREEN_WIDTH * 0.25, 0],
-            [1, 0],
-            Extrapolation.CLAMP
-        )
+        opacity: gestureAxis.value === 1
+            ? interpolate(translateX.value, [-SCREEN_WIDTH * 0.25, 0], [1, 0], Extrapolation.CLAMP)
+            : 0
     }));
 
-    // Super Like (WOW) Opacity - Driven by vertical swipe
+    // Super Like (WOW) Opacity - Y-axis upward only
     const superLikeStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(
-            translateY.value,
-            [-SCREEN_HEIGHT * 0.2, 0],
-            [1, 0],
-            Extrapolation.CLAMP
-        )
+        opacity: gestureAxis.value === 2 && translateY.value < 0
+            ? interpolate(translateY.value, [-SCREEN_HEIGHT * 0.2, 0], [1, 0], Extrapolation.CLAMP)
+            : 0
+    }));
+
+    // Defer (LATER) Opacity - Y-axis downward only
+    const deferStyle = useAnimatedStyle(() => ({
+        opacity: gestureAxis.value === 2 && translateY.value > 0
+            ? interpolate(translateY.value, [0, SCREEN_HEIGHT * 0.2], [0, 1], Extrapolation.CLAMP)
+            : 0
     }));
 
     return (
@@ -295,6 +305,12 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                 <Animated.View style={[superLikeStyle, { position: 'absolute', top: 55, alignSelf: 'center', zIndex: 50 }]}>
                     <View className="border-4 border-blue-500 rounded-xl px-4 py-2 bg-white/20">
                         <Text className="text-blue-500 font-black text-4xl uppercase tracking-widest">WOW!</Text>
+                    </View>
+                </Animated.View>
+
+                <Animated.View style={[deferStyle, { position: 'absolute', top: 55, alignSelf: 'center', zIndex: 50 }]}>
+                    <View className="border-4 border-amber-500 rounded-xl px-4 py-2 bg-white/20">
+                        <Text className="text-amber-500 font-black text-4xl uppercase tracking-widest">LATER</Text>
                     </View>
                 </Animated.View>
 
@@ -356,6 +372,18 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                             </View>
                         </View>
 
+                        {/* Trigger Bar - Relocated to top of card body */}
+                        <TouchableOpacity
+                            onPress={openDrawer}
+                            activeOpacity={0.9}
+                            className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 justify-center items-center py-3"
+                        >
+                            <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl pointer-events-none">
+                                <Text className="text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-widest text-[13px]">Show Details</Text>
+                                <ChevronUp size={18} color={isDark ? '#60a5fa' : COLORS.blue600} strokeWidth={2.5} />
+                            </View>
+                        </TouchableOpacity>
+
                         {/* Body Content */}
                         <View className="flex-1 p-6 justify-center">
                             <View className="bg-blue-50/50 dark:bg-blue-900/10 border-l-4 border-blue-900 dark:border-blue-500 pl-4 py-6 pr-4 rounded-r-2xl mb-2">
@@ -367,17 +395,8 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                             </View>
                         </View>
 
-                        {/* Trigger Bar - Padded to clear external controls */}
-                        <TouchableOpacity
-                            onPress={openDrawer}
-                            activeOpacity={0.9}
-                            className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 justify-start items-center pt-4 pb-[50px]"
-                        >
-                            <View className="flex-row items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl pointer-events-none">
-                                <Text className="text-blue-600 dark:text-blue-400 font-extrabold uppercase tracking-widest text-[13px]">Show Details</Text>
-                                <ChevronUp size={18} color={isDark ? '#60a5fa' : COLORS.blue600} strokeWidth={2.5} />
-                            </View>
-                        </TouchableOpacity>
+                        {/* Bottom spacer for control bar overlap */}
+                        <View className="pb-[50px]" />
 
                         {/* Drawer Overlay */}
                         {isDrawerOpen && (

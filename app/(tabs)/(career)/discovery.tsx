@@ -90,8 +90,17 @@ export default function DiscoveryScreen() {
     const currentBillet = filteredBillets[deck.step];
 
     // Actions
-    const handleSwipe = useCallback(async (direction: 'left' | 'right' | 'up') => {
+    const handleSwipe = useCallback(async (direction: 'left' | 'right' | 'up' | 'down') => {
         if (!currentBillet) return;
+
+        // Defer: No visual transition — store re-queues the billet
+        if (direction === 'down') {
+            await swipe(currentBillet.id, direction, 'USER_0001');
+            if (mode === 'real') {
+                showFeedback('Deferred. You\'ll see this one again later.', 'info');
+            }
+            return;
+        }
 
         // 1. Visual Transition
         deck.next();

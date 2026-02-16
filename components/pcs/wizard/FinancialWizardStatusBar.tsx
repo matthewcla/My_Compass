@@ -1,5 +1,5 @@
 import Colors from '@/constants/Colors';
-import { Banknote, DollarSign, Gauge, Shield } from 'lucide-react-native';
+import { DollarSign, Gauge } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, Text, View, useColorScheme } from 'react-native';
 
@@ -10,10 +10,8 @@ interface FinancialWizardStatusBarProps {
 }
 
 const STEPS = [
-    { id: 0, icon: Gauge, label: 'Entitle.' },
-    { id: 1, icon: DollarSign, label: 'Costs' },
-    { id: 2, icon: Shield, label: 'DLA' },
-    { id: 3, icon: Banknote, label: 'Advance' },
+    { id: 0, icon: DollarSign, label: 'Costs' },
+    { id: 1, icon: Gauge, label: 'Entitle.' },
 ];
 
 export function FinancialWizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: FinancialWizardStatusBarProps) {

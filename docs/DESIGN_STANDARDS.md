@@ -271,7 +271,58 @@ Every flow header (the sticky container holding the subtitle/title row and, when
 </Animated.View>
 ```
 
+#### 2.2.5 Touch Target Standard
+
+All interactive elements must meet **Apple HIG minimum touch target dimensions** (44pt × 44pt). This is a non-negotiable accessibility and usability requirement.
+
+**Required minimums:**
+
+| Element | Min Height | Min Width | Implementation |
+|---------|-----------|-----------|----------------|
+| Buttons, toggles, switches | 44pt | 44pt | `style={{ minHeight: 44 }}` or `py-3` equivalent |
+| Editable input rows | 56pt (row) | Full width | `Pressable` wrapper + `style={{ minHeight: 56 }}` |
+| Input wells (text fields) | 44pt | 44pt | `py-2.5 px-3` + `style={{ minHeight: 44 }}` |
+| Icon-only actions | 44pt | 44pt | `p-2.5` with hit-slop or `p-3` |
+
+**Input Row Pattern — Full-Row Tap-to-Focus:**
+
+Every row containing a `TextInput` must be wrapped in a `Pressable` that calls `inputRef.focus()` on press. The user should be able to tap **anywhere on the row** to activate the input — not just the small text field.
+
+```tsx
+const inputRefs = useRef<Record<string, TextInput | null>>({});
+
+<Pressable
+    onPress={() => inputRefs.current[field.key]?.focus()}
+    className="rounded-xl border border-zinc-700/40 bg-zinc-800/30 px-4 active:bg-zinc-800/60"
+    style={{ minHeight: 56 }}
+>
+    {/* Label on left, input well on right */}
+    <View className="flex-row items-center justify-between py-3">
+        <Text>Label</Text>
+        <View className="bg-zinc-900 border border-zinc-600/50 rounded-lg px-3 py-2.5"
+              style={{ minHeight: 44 }}>
+            <TextInput
+                ref={(r) => { inputRefs.current[field.key] = r; }}
+                className="text-base font-bold text-white"
+            />
+        </View>
+    </View>
+</Pressable>
+```
+
+**Font size for editable values:** Use `text-base` (16px) minimum for dollar amounts and numeric inputs — never `text-sm` (14px) or smaller. This ensures readability and signals editability.
+
+**Anti-patterns:**
+- ❌ `py-1.5` or `py-1` on interactive elements — too small, fails 44pt minimum
+- ❌ `TextInput` without a `Pressable` row wrapper — forces precise tapping on small target
+- ❌ `text-sm` for editable dollar values — reads as static text, not an input
+- ❌ Input fields visually identical to static text — must have a visible well (background, border, or underline)
+- ❌ `w-16` or `w-20` fixed-width inputs without `minWidth` — may clip large values
+
+**Conforming components:** `MovingCostProjection`, `AdvancePayVisualizer`
+
 ### 2.3 Smart Stack (Widget Pattern)
+
 
 Widgets are small, glanceable components that can render in two modes:
 - `variant="full"` — Full detail view (standalone screen)

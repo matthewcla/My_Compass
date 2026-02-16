@@ -125,6 +125,8 @@ interface Financials {
   };
   movingCosts: MovingCostsBreakdown | null;
   liquidation: LiquidationTracking | null;
+  /** null = not yet answered (defaults to hasDependents). true = accompanied. false = geo-bachelor. */
+  dependentsRelocating: boolean | null;
 }
 
 interface PCSState {
@@ -206,6 +208,7 @@ export const usePCSStore = create<PCSState>()(
         },
         movingCosts: null,
         liquidation: null,
+        dependentsRelocating: null,
       },
       cachedOrders: null,
 
@@ -395,29 +398,20 @@ export const usePCSStore = create<PCSState>()(
             },
             movingCosts: null,
             liquidation: null,
+            dependentsRelocating: null,
           }
         });
       },
 
       recalculateFinancials: () => {
         const { activeOrder, financials } = get();
-        if (!activeOrder) return;
 
         const user = getActiveUser();
         if (!user) return;
 
-        let totalMalt = 0;
-        let totalPerDiem = 0;
-
-        // Sum MALT/Per Diem per segment
-        activeOrder.segments.forEach(segment => {
-          const { malt, perDiem } = calculateSegmentEntitlement(segment);
-          totalMalt += malt;
-          totalPerDiem += perDiem;
-        });
-
-        // DLA Calculation
-        const hasDependents = (user.dependents || 0) > 0;
+        // ── DLA + HHG Weight — only need rank & dependent status ──
+        const profileHasDeps = (user.dependents || 0) > 0;
+        const hasDependents = financials.dependentsRelocating ?? profileHasDeps;
         const dlaRate = getDLARate(user.rank, hasDependents);
 
         // Safe fallback for persisted state that predates multi-shipment migration
@@ -429,12 +423,25 @@ export const usePCSStore = create<PCSState>()(
           estimatedExcessCost: 0,
         };
 
-        // Sum weight across ALL shipments
         const allShipments = currentHhg.shipments ?? [];
         const maxWeight = getHHGWeightAllowance(user.rank || 'E-1', hasDependents);
         const estimatedWeight = allShipments.reduce(
           (sum, s) => sum + s.items.reduce((iSum, i) => iSum + i.estimatedWeight, 0), 0
         );
+
+        // ── MALT / Per Diem — require order segments ──────────────
+        let totalMalt = financials.totalMalt || 0;
+        let totalPerDiem = financials.totalPerDiem || 0;
+
+        if (activeOrder) {
+          totalMalt = 0;
+          totalPerDiem = 0;
+          activeOrder.segments.forEach(segment => {
+            const { malt, perDiem } = calculateSegmentEntitlement(segment);
+            totalMalt += malt;
+            totalPerDiem += perDiem;
+          });
+        }
 
         set({
           financials: {
@@ -489,6 +496,9 @@ export const usePCSStore = create<PCSState>()(
         if (newFinancials.liquidation !== undefined) {
           mergedFinancials.liquidation = newFinancials.liquidation;
         }
+        if (newFinancials.dependentsRelocating !== undefined) {
+          mergedFinancials.dependentsRelocating = newFinancials.dependentsRelocating;
+        }
 
         set({ financials: mergedFinancials });
 
@@ -500,6 +510,11 @@ export const usePCSStore = create<PCSState>()(
 
         // Recalculate if HHG shipments change
         if (newFinancials.hhg && newFinancials.hhg.shipments) {
+          get().recalculateFinancials();
+        }
+
+        // Recalculate if geo-bachelor status changes (affects DLA rate + HHG weight)
+        if (newFinancials.dependentsRelocating !== undefined) {
           get().recalculateFinancials();
         }
       },

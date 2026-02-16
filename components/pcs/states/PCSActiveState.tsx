@@ -19,7 +19,7 @@ export function PCSActiveState() {
             entering={FadeIn.duration(400)}
             exiting={FadeOut.duration(200)}
         >
-            <View style={{ paddingTop: 24 }}>
+            <View style={{ paddingTop: 32 }}>
                 {/* OBLISERV Banner — top-level alert above the hero */}
                 <View style={{ paddingHorizontal: 16 }}>
                     <ObliservBanner variant="full" />

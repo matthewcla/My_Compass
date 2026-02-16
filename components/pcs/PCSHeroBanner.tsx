@@ -87,7 +87,7 @@ export function PCSHeroBanner() {
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className="mx-4 mb-6 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
+                className="mx-4 mb-8 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
             >
                 {/* ── Top section: Destination + Countdown ── */}
                 <View className="bg-[#0A1628] p-5 pb-4">

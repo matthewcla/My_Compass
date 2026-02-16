@@ -185,7 +185,7 @@ export function TrackNode({
 
                 {/* ──── RIGHT COLUMN: Content ──── */}
                 <Animated.View style={[shakeStyle, { flex: 1 }]}>
-                    <Pressable onPress={handlePress} className="pb-6">
+                    <Pressable onPress={handlePress} className="pb-8">
                         {/* Title */}
                         <Text className="text-xl font-black" style={titleStyle}>{title}</Text>
 
@@ -220,7 +220,7 @@ export function TrackNode({
                         {showContent && children && (
                             <Animated.View
                                 entering={FadeIn.delay(150).duration(300)}
-                                className="mt-4"
+                                className="mt-5"
                             >
                                 {status === 'ACTIVE' ? (
                                     /* Glass card for active state */

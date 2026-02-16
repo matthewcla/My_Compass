@@ -79,11 +79,11 @@ export function TrackChecklistItem({ item, onToggle }: TrackChecklistItemProps) 
     <View className="border-b border-slate-100 dark:border-slate-700/50">
       <Pressable
         onPress={handleRowPress}
-        className="flex-row items-center p-3"
+        className="flex-row items-center px-3 py-3.5"
       >
         {/* Status circle */}
         <View
-          className={`w-5 h-5 rounded-full border items-center justify-center mr-3 ${isComplete
+          className={`w-6 h-6 rounded-full border items-center justify-center mr-3 ${isComplete
             ? 'bg-green-500 border-green-500'
             : showActionIndicator
               ? 'border-blue-500'

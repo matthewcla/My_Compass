@@ -6,23 +6,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-// ── Demo Scenario Presets ───────────────────────────────────────────────────
+// ── Unified Lifecycle Steps ─────────────────────────────────────────────────
 
-export interface DemoScenario {
-  id: string;
+export interface LifecycleStep {
+  step: number;
   label: string;
   icon: string;
-  context: 'ACTIVE' | 'ARCHIVE';
-  phase: PCSPhase | null;
-  subPhase?: TRANSITSubPhase | null;
-  uctPhase?: UCTPhase | null;
+  assignment: AssignmentPhase | null;
+  pcs: { phase: PCSPhase | null; sub: TRANSITSubPhase | null; uct: UCTPhase | null; context: 'ACTIVE' | 'ARCHIVE' } | null;
 }
 
-export const DEMO_SCENARIOS: DemoScenario[] = [
-  { id: 'planning', label: 'Planning Move', icon: '📦', context: 'ACTIVE', phase: 'TRANSIT_LEAVE', subPhase: 'PLANNING', uctPhase: 2 },
-  { id: 'enroute', label: 'En Route', icon: '✈️', context: 'ACTIVE', phase: 'TRANSIT_LEAVE', subPhase: 'ACTIVE_TRAVEL', uctPhase: 3 },
-  { id: 'arrived', label: 'Arrived On-Station', icon: '⚓', context: 'ACTIVE', phase: 'CHECK_IN', uctPhase: 4 },
-  { id: 'archive', label: 'Sea Bag', icon: '🎒', context: 'ARCHIVE', phase: null },
+export const LIFECYCLE_STEPS: LifecycleStep[] = [
+  { step: 0, label: 'Discovery', icon: '🔍', assignment: 'DISCOVERY', pcs: null },
+  { step: 1, label: 'On-Ramp', icon: '📋', assignment: 'ON_RAMP', pcs: null },
+  { step: 2, label: 'Negotiation', icon: '🤝', assignment: 'NEGOTIATION', pcs: null },
+  { step: 3, label: 'Selection', icon: '⭐', assignment: 'SELECTION', pcs: null },
+  { step: 4, label: 'Processing', icon: '⏳', assignment: 'ORDERS_PROCESSING', pcs: null },
+  { step: 5, label: 'Orders Released', icon: '📄', assignment: 'ORDERS_RELEASED', pcs: { phase: 'ORDERS_NEGOTIATION', sub: null, uct: 1, context: 'ACTIVE' } },
+  { step: 6, label: 'Plan Move', icon: '📦', assignment: 'ORDERS_RELEASED', pcs: { phase: 'TRANSIT_LEAVE', sub: 'PLANNING', uct: 2, context: 'ACTIVE' } },
+  { step: 7, label: 'En Route', icon: '✈️', assignment: 'ORDERS_RELEASED', pcs: { phase: 'TRANSIT_LEAVE', sub: 'ACTIVE_TRAVEL', uct: 3, context: 'ACTIVE' } },
+  { step: 8, label: 'Arrived', icon: '⚓', assignment: 'ORDERS_RELEASED', pcs: { phase: 'CHECK_IN', sub: null, uct: 4, context: 'ACTIVE' } },
+  { step: 9, label: 'Sea Bag', icon: '🎒', assignment: null, pcs: { phase: null, sub: null, uct: null, context: 'ARCHIVE' } },
 ];
 
 interface DemoState {
@@ -35,6 +39,7 @@ interface DemoState {
   pcsContextOverride: 'ACTIVE' | 'ARCHIVE' | null;
   activeDemoScenarioId: string | null;
   assignmentPhaseOverride: AssignmentPhase | null;
+  lifecycleStep: number;
 
   toggleDemoMode: () => void;
   setSelectedUser: (user: DemoUser) => void;
@@ -43,9 +48,10 @@ interface DemoState {
   setPcsSubPhaseOverride: (subPhase: TRANSITSubPhase | null) => void;
   setUctPhaseOverride: (phase: UCTPhase | null) => void;
   setPcsContextOverride: (context: 'ACTIVE' | 'ARCHIVE' | null) => void;
-  applyDemoScenario: (scenario: DemoScenario) => void;
+  applyDemoScenario: (scenario: { context: 'ACTIVE' | 'ARCHIVE'; phase: PCSPhase | null; subPhase?: TRANSITSubPhase | null; uctPhase?: UCTPhase | null; id: string }) => void;
   clearDemoScenario: () => void;
   setAssignmentPhaseOverride: (phase: AssignmentPhase | null) => void;
+  setLifecycleStep: (step: number) => void;
   updateSelectedUser: (updates: Partial<DemoUser>) => void;
   advanceLiquidationStatus: () => void;
   loadMockHistoricalOrders: () => void;
@@ -63,6 +69,7 @@ export const useDemoStore = create<DemoState>()(
       pcsContextOverride: null,
       activeDemoScenarioId: null,
       assignmentPhaseOverride: null,
+      lifecycleStep: 0,
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
       setSelectedUser: (user) => set({ selectedUser: user }),
@@ -114,6 +121,22 @@ export const useDemoStore = create<DemoState>()(
         uctPhaseOverride: null,
         activeDemoScenarioId: null,
       }),
+
+      setLifecycleStep: (step) => {
+        const clamped = Math.max(0, Math.min(step, LIFECYCLE_STEPS.length - 1));
+        const target = LIFECYCLE_STEPS[clamped];
+        const hasPCS = !!target.pcs;
+        set({
+          lifecycleStep: clamped,
+          assignmentPhaseOverride: target.assignment,
+          selectedPhase: hasPCS ? DemoPhase.MY_PCS : DemoPhase.MVP,
+          pcsContextOverride: target.pcs?.context ?? null,
+          pcsPhaseOverride: target.pcs?.phase ?? null,
+          pcsSubPhaseOverride: target.pcs?.sub ?? null,
+          uctPhaseOverride: target.pcs?.uct ?? null,
+          activeDemoScenarioId: null,
+        });
+      },
 
       advanceLiquidationStatus: () => {
         // Import lazily to avoid circular dependency

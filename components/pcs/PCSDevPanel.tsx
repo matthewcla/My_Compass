@@ -1,8 +1,7 @@
 import { useScrollContext } from '@/components/navigation/ScrollControlContext';
-import { DEMO_USERS, DemoPhase } from '@/constants/DemoData';
-import { DEMO_SCENARIOS, useDemoStore } from '@/store/useDemoStore';
+import { DEMO_USERS } from '@/constants/DemoData';
+import { LIFECYCLE_STEPS, useDemoStore } from '@/store/useDemoStore';
 import { usePCSArchiveStore } from '@/store/usePCSArchiveStore';
-import { AssignmentPhase } from '@/types/pcs';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -27,14 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
-const ASSIGNMENT_PHASES: { key: AssignmentPhase; label: string }[] = [
-    { key: 'DISCOVERY', label: 'Discovery' },
-    { key: 'ON_RAMP', label: 'On-Ramp' },
-    { key: 'NEGOTIATION', label: 'Negotiation' },
-    { key: 'SELECTION', label: 'Selection' },
-    { key: 'ORDERS_PROCESSING', label: 'Processing' },
-    { key: 'ORDERS_RELEASED', label: 'Released' },
-];
+
 
 /**
  * Floating demo panel for the PCS landing page.
@@ -54,15 +46,10 @@ export function PCSDevPanel() {
     }, [enableDevSettings]);
     const selectedUser = useDemoStore((state) => state.selectedUser);
     const setSelectedUser = useDemoStore((state) => state.setSelectedUser);
-    const selectedPhase = useDemoStore((state) => state.selectedPhase);
-    const setSelectedPhase = useDemoStore((state) => state.setSelectedPhase);
 
-    const assignmentPhaseOverride = useDemoStore((state) => state.assignmentPhaseOverride);
-    const setAssignmentPhaseOverride = useDemoStore((state) => state.setAssignmentPhaseOverride);
-
-    const activeDemoScenarioId = useDemoStore((state) => state.activeDemoScenarioId);
-    const applyDemoScenario = useDemoStore((state) => state.applyDemoScenario);
-    const clearDemoScenario = useDemoStore((state) => state.clearDemoScenario);
+    const lifecycleStep = useDemoStore((state) => state.lifecycleStep);
+    const setLifecycleStep = useDemoStore((state) => state.setLifecycleStep);
+    const currentStep = LIFECYCLE_STEPS[lifecycleStep] ?? LIFECYCLE_STEPS[0];
 
 
 
@@ -75,6 +62,7 @@ export function PCSDevPanel() {
     const isDark = colorScheme === 'dark';
 
     const [panelOpen, setPanelOpen] = useState(false);
+    const [stepListOpen, setStepListOpen] = useState(false);
 
     // Sync position with GlobalTabBar's scroll-to-hide animation.
     // Clamp so the beaker settles ~24px above the safe area (not off-screen).
@@ -112,11 +100,7 @@ export function PCSDevPanel() {
 
     if (!enableDevSettings) return null;
 
-    // Whether PCS-specific controls should be shown
-    const isPCSActive = selectedPhase === DemoPhase.MY_PCS;
-
     const borderColor = isDark ? '#27272A' : '#E2E8F0';
-    const chipBg = isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)';
 
 
     const openPanel = () => {
@@ -126,24 +110,9 @@ export function PCSDevPanel() {
 
     const closePanel = () => {
         setPanelOpen(false);
+        setStepListOpen(false);
         panelProgress.value = 0;
     };
-
-    // Find active scenario emoji for the badge
-    const activeScenario = activeDemoScenarioId
-        ? DEMO_SCENARIOS.find(s => s.id === activeDemoScenarioId)
-        : null;
-
-    // ── Status Chips ────────────────────────────────────────────────────
-    const statusParts: string[] = [];
-    if (assignmentPhaseOverride) {
-        const label = ASSIGNMENT_PHASES.find(p => p.key === assignmentPhaseOverride)?.label;
-        if (label) statusParts.push(label);
-    }
-    if (activeDemoScenarioId) {
-        const scenario = DEMO_SCENARIOS.find(s => s.id === activeDemoScenarioId);
-        if (scenario) statusParts.push(scenario.label);
-    }
 
 
 
@@ -248,165 +217,180 @@ export function PCSDevPanel() {
                                 })}
                             </ScrollView>
 
-                            {/* ── My Assignments ────────────────────────── */}
+                            {/* ── Lifecycle Stepper ────────────────────────── */}
                             <View style={{ height: 1, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E2E8F0', marginVertical: 8 }} />
-                            <Text style={sectionLabel(isDark)}>My Assignments</Text>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ gap: 8, paddingHorizontal: 2 }}
-                            >
-                                {ASSIGNMENT_PHASES.map(({ key, label }) => {
-                                    const isActive = assignmentPhaseOverride === key;
-                                    return (
-                                        <TouchableOpacity
-                                            key={key}
-                                            onPress={() => setAssignmentPhaseOverride(isActive ? null : key)}
-                                            style={overrideBtn(isActive, isDark, borderColor, 'purple')}
-                                        >
-                                            <Text style={overrideBtnText(isActive, isDark)}>
-                                                {label}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </ScrollView>
+                            <Text style={sectionLabel(isDark)}>Lifecycle Phase</Text>
 
-                            {/* ── PCS-Specific Controls ───────────────────────── */}
-                            {isPCSActive && (
-                                <>
-                                    <View style={{ height: 1, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E2E8F0', marginVertical: 8 }} />
-                                    <Text style={[sectionLabel(isDark), { marginTop: 4 }]}>PCS Scenarios</Text>
+                            {/* Arrow stepper row */}
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 12,
+                                marginVertical: 4,
+                            }}>
+                                {/* Prev arrow */}
+                                <TouchableOpacity
+                                    onPress={() => setLifecycleStep(lifecycleStep - 1)}
+                                    disabled={lifecycleStep === 0}
+                                    style={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: 18,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.8)',
+                                        opacity: lifecycleStep === 0 ? 0.3 : 1,
+                                    }}
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                >
+                                    <Ionicons name="chevron-back" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                                </TouchableOpacity>
 
-                                    {/* ── Scenario Preset Chips ────────────────────────────── */}
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}
-                                    >
-                                        {DEMO_SCENARIOS.map((scenario) => {
-                                            const isActive = activeDemoScenarioId === scenario.id;
-                                            return (
-                                                <TouchableOpacity
-                                                    key={scenario.id}
-                                                    onPress={() => {
-                                                        if (isActive) {
-                                                            clearDemoScenario();
-                                                        } else {
-                                                            applyDemoScenario(scenario);
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        flexDirection: 'row',
-                                                        alignItems: 'center',
-                                                        gap: 5,
-                                                        paddingHorizontal: 14,
-                                                        paddingVertical: 14,
-                                                        borderRadius: 20,
-                                                        borderWidth: 1,
-                                                        backgroundColor: isActive
-                                                            ? (isDark ? '#065F46' : '#059669')
-                                                            : chipBg,
-                                                        borderColor: isActive
-                                                            ? '#059669'
-                                                            : borderColor,
-                                                    }}
-                                                    activeOpacity={0.7}
-                                                >
-                                                    <Text style={{ fontSize: 13 }}>{scenario.icon}</Text>
-                                                    <Text
-                                                        style={{
-                                                            fontSize: 11,
-                                                            fontWeight: '600',
-                                                            color: isActive
-                                                                ? '#FFFFFF'
-                                                                : (isDark ? '#94A3B8' : '#475569'),
-                                                        }}
-                                                    >
-                                                        {scenario.label}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            );
-                                        })}
-                                    </ScrollView>
+                                {/* Center label — tap to expand list */}
+                                <TouchableOpacity
+                                    onPress={() => setStepListOpen(!stepListOpen)}
+                                    style={{
+                                        flex: 1,
+                                        paddingVertical: 10,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 10,
+                                        backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
+                                        borderWidth: 1,
+                                        borderColor: isDark ? 'rgba(59, 130, 246, 0.3)' : '#BFDBFE',
+                                        alignItems: 'center',
+                                    }}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: '700',
+                                        color: isDark ? '#60A5FA' : '#3B82F6',
+                                    }}>
+                                        {currentStep.icon}  {currentStep.label}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 9,
+                                        fontWeight: '500',
+                                        color: isDark ? '#64748B' : '#94A3B8',
+                                        marginTop: 2,
+                                    }}>
+                                        {lifecycleStep + 1} of {LIFECYCLE_STEPS.length} · tap to jump
+                                    </Text>
+                                </TouchableOpacity>
 
-                                    {/* ── PCS Data Actions ──────────────────────────────────── */}
-                                    <View
-                                        style={{
-                                            flexDirection: 'row',
-                                            gap: 8,
-                                            justifyContent: 'center',
-                                            marginTop: 10,
-                                            paddingTop: 8,
-                                            borderTopWidth: 1,
-                                            borderStyle: 'dashed',
-                                            borderTopColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#BFDBFE',
-                                        }}
-                                    >
-                                        <TouchableOpacity
-                                            onPress={seedDemoArchiveData}
-                                            style={{
-                                                paddingHorizontal: 14,
-                                                paddingVertical: 12,
-                                                borderRadius: 8,
-                                                borderWidth: 1,
-                                                borderColor: isDark ? '#166534' : '#86EFAC',
-                                                backgroundColor: isDark ? 'rgba(22, 101, 52, 0.3)' : '#F0FDF4',
-                                            }}
-                                        >
-                                            <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#86EFAC' : '#166534' }}>
-                                                Load Sea Bag ({archiveCount})
-                                            </Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            onPress={clearArchiveData}
-                                            style={{
-                                                paddingHorizontal: 14,
-                                                paddingVertical: 12,
-                                                borderRadius: 8,
-                                                borderWidth: 1,
-                                                borderColor: isDark ? '#991B1B' : '#FCA5A5',
-                                                backgroundColor: isDark ? 'rgba(153, 27, 27, 0.3)' : '#FEF2F2',
-                                            }}
-                                        >
-                                            <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#FCA5A5' : '#991B1B' }}>
-                                                Clear Sea Bag
-                                            </Text>
-                                        </TouchableOpacity>
+                                {/* Next arrow */}
+                                <TouchableOpacity
+                                    onPress={() => setLifecycleStep(lifecycleStep + 1)}
+                                    disabled={lifecycleStep === LIFECYCLE_STEPS.length - 1}
+                                    style={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: 18,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.8)',
+                                        opacity: lifecycleStep === LIFECYCLE_STEPS.length - 1 ? 0.3 : 1,
+                                    }}
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                >
+                                    <Ionicons name="chevron-forward" size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                                </TouchableOpacity>
+                            </View>
 
-                                    </View>
-                                </>
-                            )}
-
-                            {statusParts.length > 0 && (
+                            {/* Expanded phase list — random access */}
+                            {stepListOpen && (
                                 <View style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'center',
-                                    flexWrap: 'wrap',
-                                    gap: 4,
-                                    marginTop: 8,
+                                    marginTop: 6,
+                                    borderRadius: 10,
+                                    borderWidth: 1,
+                                    borderColor: isDark ? 'rgba(59, 130, 246, 0.2)' : '#E2E8F0',
+                                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.6)',
+                                    overflow: 'hidden',
                                 }}>
-                                    {statusParts.map((part, i) => (
-                                        <View
-                                            key={i}
-                                            style={{
-                                                paddingHorizontal: 6,
-                                                paddingVertical: 2,
-                                                borderRadius: 4,
-                                                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
-                                            }}
-                                        >
-                                            <Text style={{
-                                                fontSize: 9,
-                                                fontWeight: '600',
-                                                color: isDark ? '#60A5FA' : '#3B82F6',
-                                            }}>
-                                                {part}
-                                            </Text>
-                                        </View>
-                                    ))}
+                                    {LIFECYCLE_STEPS.map((s) => {
+                                        const isActive = s.step === lifecycleStep;
+                                        return (
+                                            <TouchableOpacity
+                                                key={s.step}
+                                                onPress={() => {
+                                                    setLifecycleStep(s.step);
+                                                    setStepListOpen(false);
+                                                }}
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    paddingVertical: 10,
+                                                    paddingHorizontal: 14,
+                                                    backgroundColor: isActive
+                                                        ? (isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)')
+                                                        : 'transparent',
+                                                    borderBottomWidth: s.step < LIFECYCLE_STEPS.length - 1 ? 0.5 : 0,
+                                                    borderBottomColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#F1F5F9',
+                                                }}
+                                                activeOpacity={0.6}
+                                            >
+                                                <Text style={{ fontSize: 14, width: 24 }}>{s.icon}</Text>
+                                                <Text style={{
+                                                    flex: 1,
+                                                    fontSize: 12,
+                                                    fontWeight: isActive ? '700' : '500',
+                                                    color: isActive
+                                                        ? (isDark ? '#60A5FA' : '#3B82F6')
+                                                        : (isDark ? '#94A3B8' : '#64748B'),
+                                                }}>
+                                                    {s.label}
+                                                </Text>
+                                                {isActive && (
+                                                    <Ionicons name="checkmark-circle" size={16} color={isDark ? '#60A5FA' : '#3B82F6'} />
+                                                )}
+                                            </TouchableOpacity>
+                                        );
+                                    })}
                                 </View>
                             )}
+
+                            {/* ── PCS Data Actions (Sea Bag) ─────────────────── */}
+                            <View style={{ height: 1, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E2E8F0', marginVertical: 8 }} />
+                            <View
+                                style={{
+                                    flexDirection: 'row',
+                                    gap: 8,
+                                    justifyContent: 'center',
+                                    paddingTop: 4,
+                                }}
+                            >
+                                <TouchableOpacity
+                                    onPress={seedDemoArchiveData}
+                                    style={{
+                                        paddingHorizontal: 14,
+                                        paddingVertical: 12,
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: isDark ? '#166534' : '#86EFAC',
+                                        backgroundColor: isDark ? 'rgba(22, 101, 52, 0.3)' : '#F0FDF4',
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#86EFAC' : '#166534' }}>
+                                        Load Sea Bag ({archiveCount})
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={clearArchiveData}
+                                    style={{
+                                        paddingHorizontal: 14,
+                                        paddingVertical: 12,
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: isDark ? '#991B1B' : '#FCA5A5',
+                                        backgroundColor: isDark ? 'rgba(153, 27, 27, 0.3)' : '#FEF2F2',
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 10, fontWeight: '600', color: isDark ? '#FCA5A5' : '#991B1B' }}>
+                                        Clear Sea Bag
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
 
                             {/* ── Reset Session Memory ────────────────────────── */}
                             <TouchableOpacity
@@ -500,23 +484,22 @@ export function PCSDevPanel() {
                             }}
                         >
                             <Ionicons name="flask" size={22} color={isDark ? '#60A5FA' : '#3B82F6'} />
-                            {activeScenario && (
-                                <View style={{
-                                    position: 'absolute',
-                                    top: -2,
-                                    right: -2,
-                                    minWidth: 20,
-                                    height: 20,
-                                    borderRadius: 10,
-                                    backgroundColor: isDark ? '#065F46' : '#059669',
-                                    borderWidth: 1.5,
-                                    borderColor: isDark ? 'rgba(15, 23, 42, 0.96)' : '#EFF6FF',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}>
-                                    <Text style={{ fontSize: 10 }}>{activeScenario.icon}</Text>
-                                </View>
-                            )}
+                            {/* Step indicator badge */}
+                            <View style={{
+                                position: 'absolute',
+                                top: -2,
+                                right: -2,
+                                minWidth: 20,
+                                height: 20,
+                                borderRadius: 10,
+                                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.8)' : '#3B82F6',
+                                borderWidth: 1.5,
+                                borderColor: isDark ? 'rgba(15, 23, 42, 0.96)' : '#EFF6FF',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <Text style={{ fontSize: 10 }}>{currentStep.icon}</Text>
+                            </View>
                         </TouchableOpacity>
                     </Animated.View>
                 )

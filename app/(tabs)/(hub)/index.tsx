@@ -149,8 +149,8 @@ export default function HubDashboard() {
     // Phase 2 (PLANNING) shares TRANSIT_LEAVE but doesn't need receipt capture yet.
     // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
     if (pcsPhase === 'TRANSIT_LEAVE' && subPhase === 'ACTIVE_TRAVEL') sections.push('receiptCapture');
-    // Surface Mission Brief on Home Hub during Phases 1–2 only
-    if (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE') {
+    // Surface Mission Brief on Home Hub from Selection onward only
+    if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
         sections.push('missionBrief');
     }
     // Surface Phase 4 urgency widgets on the Home Hub — streamlined

@@ -15,7 +15,7 @@ import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeader
 import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
-import { usePCSStore } from '@/store/usePCSStore';
+import { usePCSPhase, usePCSStore } from '@/store/usePCSStore';
 import { useUserStore } from '@/store/useUserStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
@@ -65,6 +65,7 @@ export default function HubDashboard() {
     const isDemoMode = useDemoStore(state => state.isDemoMode);
     const selectedPhase = useDemoStore(state => state.selectedPhase);
     const initializeOrders = usePCSStore(state => state.initializeOrders);
+    const pcsPhase = usePCSPhase();
 
     // Hydrate defaults on mount
     React.useEffect(() => {
@@ -138,7 +139,10 @@ export default function HubDashboard() {
         );
     }
 
-    const sections = ['menu', 'leave'];
+    const sections = ['menu'];
+    // Show receipt capture on Home Hub when UCT Phase 3 (Transit & Leave) is active
+    if (pcsPhase === 'TRANSIT_LEAVE') sections.push('receiptCapture');
+    sections.push('leave');
 
     const renderItem = ({ item }: { item: any }) => {
         const isPCSPhase = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
@@ -187,6 +191,10 @@ export default function HubDashboard() {
                         </View>
                     </View>
                 );
+            case 'receiptCapture': {
+                const { ReceiptScannerWidget } = require('@/components/pcs/widgets/ReceiptScannerWidget');
+                return <ReceiptScannerWidget />;
+            }
             case 'leave':
                 return (
                     <LeaveCard

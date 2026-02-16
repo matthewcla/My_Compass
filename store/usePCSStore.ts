@@ -1,5 +1,5 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, HHGItem, HHGShipment, HHGShipmentType, LiquidationStatus, LiquidationStep, LiquidationTracking, MovingCostsBreakdown, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
+import { ChecklistItem, HHGItem, HHGShipment, HHGShipmentType, LiquidationStatus, LiquidationStep, LiquidationTracking, MovingCostsBreakdown, PCSOrder, PCSPhase, PCSReceipt, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
@@ -133,6 +133,7 @@ interface PCSState {
   activeOrder: PCSOrder | null;
   checklist: ChecklistItem[];
   financials: Financials;
+  receipts: PCSReceipt[];
   currentDraft: PCSSegment | null;
 
   initializeOrders: () => Promise<void>;
@@ -145,6 +146,11 @@ interface PCSState {
   startPlanning: (segmentId: string) => void;
   commitSegment: (segmentId: string) => void;
   updateDraft: (updates: Partial<PCSSegment>) => void;
+
+  // Receipt Vault Actions
+  addReceipt: (receipt: Omit<PCSReceipt, 'id' | 'capturedAt'>) => void;
+  removeReceipt: (id: string) => void;
+  updateReceipt: (id: string, updates: Partial<PCSReceipt>) => void;
 
   // HHG Shipment Actions (multi-shipment)
   addShipment: (type: HHGShipmentType, label: string, originZip: string, destinationZip?: string | null) => void;
@@ -176,6 +182,7 @@ export const usePCSStore = create<PCSState>()(
       activeOrder: null,
       checklist: [],
       currentDraft: null,
+      receipts: [],
       financials: {
         advancePay: {
           requested: false,
@@ -295,17 +302,21 @@ export const usePCSStore = create<PCSState>()(
         });
 
         // Phase 3: Transit & Leave — Segment Planning
-        order.segments.forEach((segment) => {
-          checklist.push({
-            id: generateUUID(),
-            label: `Plan Travel: ${segment.title}`,
-            segmentId: segment.id,
-            status: 'NOT_STARTED',
-            category: 'PRE_TRAVEL',
-            uctPhase: 3,
-            helpText: 'Plan your route, travel mode, and leave requests for this segment.',
+        // Skip ORIGIN segments — they're detachment points, not travel legs
+        order.segments
+          .filter((seg) => seg.type !== 'ORIGIN')
+          .forEach((segment) => {
+            checklist.push({
+              id: generateUUID(),
+              label: `Plan Travel: ${segment.title}`,
+              segmentId: segment.id,
+              status: 'NOT_STARTED',
+              category: 'PRE_TRAVEL',
+              uctPhase: 3,
+              actionRoute: `/pcs-wizard/${segment.id}`,
+              helpText: 'Plan your route, travel mode, and leave for this segment.',
+            });
           });
-        });
 
         // Phase 4: Check-in & Travel Claim
         checklist.push({
@@ -366,6 +377,7 @@ export const usePCSStore = create<PCSState>()(
         set({
           activeOrder: null,
           checklist: [],
+          receipts: [],
           financials: {
             advancePay: {
               requested: false,
@@ -603,6 +615,27 @@ export const usePCSStore = create<PCSState>()(
             ...updates,
           }
         });
+      },
+
+      // ─── Receipt Vault Actions ─────────────────────────────────────
+
+      addReceipt: (receipt) => {
+        const newReceipt: PCSReceipt = {
+          ...receipt,
+          id: generateUUID(),
+          capturedAt: new Date().toISOString(),
+        };
+        set((state) => ({ receipts: [...state.receipts, newReceipt] }));
+      },
+
+      removeReceipt: (id) => {
+        set((state) => ({ receipts: state.receipts.filter(r => r.id !== id) }));
+      },
+
+      updateReceipt: (id, updates) => {
+        set((state) => ({
+          receipts: state.receipts.map(r => r.id === id ? { ...r, ...updates } : r),
+        }));
       },
 
       // ─── Multi-Shipment Actions ───────────────────────────────────

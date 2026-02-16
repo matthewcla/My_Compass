@@ -4,6 +4,18 @@ export type PCSSegmentStatus = 'LOCKED' | 'PLANNING' | 'COMPLETE';
 export type PCSPhase = 'DORMANT' | 'ORDERS_NEGOTIATION' | 'TRANSIT_LEAVE' | 'CHECK_IN';
 export type TRANSITSubPhase = 'PLANNING' | 'ACTIVE_TRAVEL';
 
+export type ReceiptCategory = 'GAS' | 'LODGING' | 'TOLLS' | 'MEALS' | 'OTHER';
+
+export interface PCSReceipt {
+  id: string;
+  imageUri: string;
+  amount: number | null;
+  category: ReceiptCategory;
+  note: string;
+  capturedAt: string;
+  ocrConfidence: 'high' | 'medium' | 'low';
+}
+
 /**
  * PCS Route information for travel distance calculations.
  * Used for MALT, per diem, and advance pay calculations.

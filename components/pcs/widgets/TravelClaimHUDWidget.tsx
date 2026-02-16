@@ -1,14 +1,17 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { useColorScheme } from '@/components/useColorScheme';
 import { GlassView } from '@/components/ui/GlassView';
-import { useActiveOrder } from '@/store/usePCSStore';
+import { useColorScheme } from '@/components/useColorScheme';
+import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
 import { useTravelClaimStore } from '@/store/useTravelClaimStore';
 import { useUserStore } from '@/store/useUserStore';
-import { router } from 'expo-router';
+import { ReceiptCategory } from '@/types/pcs';
+import { scanReceipt } from '@/utils/receiptOCR';
 import * as Haptics from 'expo-haptics';
-import { AlertCircle, ChevronRight, DollarSign, Receipt } from 'lucide-react-native';
-import React, { useMemo } from 'react';
-import { Platform, Text, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
+import { AlertCircle, Camera, ChevronRight, DollarSign, Receipt } from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Alert, Platform, Text, TouchableOpacity, View } from 'react-native';
 
 export function TravelClaimHUDWidget() {
   const activeOrder = useActiveOrder();
@@ -17,6 +20,13 @@ export function TravelClaimHUDWidget() {
   const createDraft = useTravelClaimStore((state) => state.createDraft);
   const colorScheme = useColorScheme() ?? 'light';
   const isDark = colorScheme === 'dark';
+
+  // Receipt capture state (integrated from ReceiptScannerWidget)
+  const receipts = usePCSStore((s) => s.receipts);
+  const addReceipt = usePCSStore((s) => s.addReceipt);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const capturedReceiptCount = receipts.length;
+  const runningTotal = receipts.reduce((sum, r) => sum + (r.amount ?? 0), 0);
 
   const pcsClaimDraft = useMemo(() => {
     return Object.values(travelClaims).find(
@@ -36,6 +46,49 @@ export function TravelClaimHUDWidget() {
     if (!pcsClaimDraft) return 0;
     return pcsClaimDraft.totalClaimAmount || 0;
   }, [pcsClaimDraft]);
+
+  const handleCapture = useCallback(async () => {
+    setIsCapturing(true);
+    try {
+      const permResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permResult.granted) {
+        Alert.alert('Camera Required', 'Please allow camera access to scan receipts.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: 'images',
+        quality: 0.8,
+        allowsEditing: false,
+      });
+
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const imageUri = result.assets[0].uri;
+      let amount: number | null = null;
+      let category: ReceiptCategory = 'OTHER';
+      let confidence: 'high' | 'medium' | 'low' = 'low';
+
+      try {
+        const ocrResult = await scanReceipt(imageUri);
+        amount = ocrResult.extractedAmount;
+        category = ocrResult.detectedCategory;
+        confidence = ocrResult.confidence;
+      } catch {
+        // OCR failed silently
+      }
+
+      addReceipt({ imageUri, amount, category, note: '', ocrConfidence: confidence });
+
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+      }
+    } catch {
+      Alert.alert('Error', 'Could not capture receipt. Please try again.');
+    } finally {
+      setIsCapturing(false);
+    }
+  }, [addReceipt]);
 
   const handlePress = async () => {
     if (Platform.OS !== 'web') {
@@ -126,17 +179,33 @@ export function TravelClaimHUDWidget() {
 
         {/* Stats Row */}
         <View className="flex-row gap-3 mb-3">
-          <View className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-            <View className="flex-row items-center mb-1">
-              <Receipt size={14} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
-              <Text className="ml-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Receipts
-              </Text>
+          {/* Receipts — tappable to capture */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleCapture}
+            disabled={isCapturing}
+            className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700"
+          >
+            <View className="flex-row items-center justify-between mb-1">
+              <View className="flex-row items-center">
+                <Receipt size={14} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
+                <Text className="ml-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Receipts
+                </Text>
+              </View>
+              <Camera size={14} color={isDark ? '#fbbf24' : '#d97706'} strokeWidth={2.2} />
             </View>
-            <Text className="text-2xl font-bold text-slate-900 dark:text-white">
-              {receiptCount}
-            </Text>
-          </View>
+            <View className="flex-row items-baseline">
+              <Text className="text-2xl font-bold text-slate-900 dark:text-white">
+                {capturedReceiptCount}
+              </Text>
+              {runningTotal > 0 && (
+                <Text className="ml-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                  ${runningTotal.toFixed(2)}
+                </Text>
+              )}
+            </View>
+          </TouchableOpacity>
 
           <View className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
             <View className="flex-row items-center mb-1">

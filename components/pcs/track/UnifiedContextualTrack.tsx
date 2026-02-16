@@ -1,8 +1,5 @@
 import { TrackChecklistItem } from '@/components/pcs/track/TrackChecklistItem';
 import { TrackNode } from '@/components/pcs/track/TrackNode';
-import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
-import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
-import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
 import { UCT_PHASES } from '@/constants/UCTPhases';
 import { useActiveOrder, usePCSStore, useUCTPhaseStatus } from '@/store/usePCSStore';
 import { ChecklistItem, UCTNodeStatus, UCTPhase } from '@/types/pcs';
@@ -30,13 +27,9 @@ function Phase3Widgets() {
 }
 
 function Phase4Widgets() {
-    return (
-        <View className="space-y-4 mt-4">
-            <BaseWelcomeKit />
-            <TravelClaimHUDWidget />
-            <LiquidationTrackerWidget />
-        </View>
-    );
+    // Phase 4 widgets live on the Home Hub (ArrivalBriefing, GainingCommandCard,
+    // TravelClaimHUD, LiquidationTracker) and inside the Check-In flow (BaseWelcomeKit).
+    return null;
 }
 
 const PHASE_WIDGETS: Record<UCTPhase, React.ComponentType> = {

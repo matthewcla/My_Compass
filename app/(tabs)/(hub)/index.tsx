@@ -140,8 +140,16 @@ export default function HubDashboard() {
     }
 
     const sections = ['menu'];
-    // Show receipt capture on Home Hub when UCT Phase 3 (Transit & Leave) is active
+    // Show standalone receipt capture on Home Hub during Phase 3 only.
+    // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
     if (pcsPhase === 'TRANSIT_LEAVE') sections.push('receiptCapture');
+    // Surface Phase 4 urgency widgets on the Home Hub
+    if (pcsPhase === 'CHECK_IN') {
+        sections.push('arrivalBriefing');
+        sections.push('gainingCommand');
+        sections.push('travelClaimUrgency');
+        sections.push('liquidationTracker');
+    }
     sections.push('leave');
 
     const renderItem = ({ item }: { item: any }) => {
@@ -194,6 +202,22 @@ export default function HubDashboard() {
             case 'receiptCapture': {
                 const { ReceiptScannerWidget } = require('@/components/pcs/widgets/ReceiptScannerWidget');
                 return <ReceiptScannerWidget />;
+            }
+            case 'arrivalBriefing': {
+                const { ArrivalBriefingWidget } = require('@/components/pcs/widgets/ArrivalBriefingWidget');
+                return <ArrivalBriefingWidget />;
+            }
+            case 'gainingCommand': {
+                const { GainingCommandCard } = require('@/components/pcs/widgets/GainingCommandCard');
+                return <GainingCommandCard variant="widget" />;
+            }
+            case 'travelClaimUrgency': {
+                const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
+                return <TravelClaimHUDWidget />;
+            }
+            case 'liquidationTracker': {
+                const { LiquidationTrackerWidget } = require('@/components/pcs/widgets/LiquidationTrackerWidget');
+                return <LiquidationTrackerWidget />;
             }
             case 'leave':
                 return (

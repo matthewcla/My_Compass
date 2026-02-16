@@ -120,3 +120,15 @@
 | **Components** | `BilletSwipeCard`, `SailorSwipeCard`, `DiscoveryEntryWidget` |
 | **Store** | `useAssignmentStore` — swipe decisions |
 | **Status** | ✅ Tinder-style swipe cards with match scoring |
+
+---
+
+## 11. Gaining Command Check-In
+
+| Property | Detail |
+|----------|--------|
+| **User Path** | My PCS → UCT Phase 4 → "Complete Gaining Command Check-In" |
+| **Route** | `/pcs-wizard/check-in` |
+| **Components** | `DepartmentCard` (8 departments: Admin, PSD, Medical, Dental, Supply, Disbursing, Security, Division) |
+| **Store** | `usePCSStore` — marks "Complete Gaining Command Check-In" as COMPLETE on submit |
+| **Status** | ✅ Type 1 Confirmation flow with department sign-off tracking, progress bar, document reminders, and success overlay |

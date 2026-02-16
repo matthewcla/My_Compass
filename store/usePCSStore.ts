@@ -325,6 +325,7 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 4,
+          actionRoute: '/pcs-wizard/check-in',
           helpText: 'Report to your new command\u2019s quarterdeck with your orders. This starts your check-in sheet.',
         });
         checklist.push({
@@ -335,6 +336,24 @@ export const usePCSStore = create<PCSState>()(
           uctPhase: 4,
           actionRoute: '/travel-claim/request',
           helpText: 'Your travel voucher for reimbursement. File within 5 business days of arrival for fastest payout.',
+        });
+
+        checklist.push({
+          id: generateUUID(),
+          label: 'Confirm Updated Profile',
+          status: 'NOT_STARTED',
+          category: 'PRE_TRAVEL',
+          uctPhase: 4,
+          actionRoute: '/pcs-wizard/profile-confirmation',
+          helpText: 'Verify your new address, housing, and contact info are current after your move.',
+        });
+        checklist.push({
+          id: generateUUID(),
+          label: 'Report for Duty to Division',
+          status: 'NOT_STARTED',
+          category: 'PRE_TRAVEL',
+          uctPhase: 4,
+          helpText: 'Check in with your division officer and get assigned to a watch section.',
         });
 
         set({ activeOrder: order, checklist });

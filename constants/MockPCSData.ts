@@ -1,4 +1,4 @@
-import { HistoricalPCSOrder, PCSDocument, PCSOrder, PCSSegment } from '@/types/pcs';
+import { HistoricalPCSOrder, PCSOrder, PCSSegment } from '@/types/pcs';
 
 const NOW = new Date();
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -105,6 +105,12 @@ export const MOCK_PCS_ORDERS: PCSOrder = {
     uniformOfDay: 'NWU Type III',
     quarterdeckLocation: { latitude: 35.2916, longitude: 139.6683 },
   },
+  sponsor: {
+    name: 'ET1 Marcus Rivera',
+    rank: 'E-6',
+    phone: '+81-80-5555-1234',
+    email: 'marcus.rivera@navy.mil',
+  },
   segments: [SEGMENT_1, SEGMENT_2, SEGMENT_3],
   reportNLT: SEGMENT_3.dates.nlt,
   isOconus: true,
@@ -181,6 +187,12 @@ export const MOCK_PCS_ORDERS_PERSONA_B: PCSOrder = {
     oodPhone: '+1-619-437-0000',
     uniformOfDay: 'NWU Type III',
     quarterdeckLocation: { latitude: 32.6811, longitude: -117.1565 },
+  },
+  sponsor: {
+    name: 'LT Sarah Chen',
+    rank: 'O-3',
+    phone: '+1-619-555-8821',
+    email: 'sarah.chen@navy.mil',
   },
   segments: [SEGMENT_B1, SEGMENT_B2],
   reportNLT: SEGMENT_B2.dates.nlt,
@@ -267,6 +279,12 @@ export const MOCK_PCS_ORDERS_PERSONA_C: PCSOrder = {
     oodPhone: '+1-860-694-0000',
     uniformOfDay: 'NWU Type I',
     quarterdeckLocation: { latitude: 41.3831, longitude: -72.0829 },
+  },
+  sponsor: {
+    name: 'ETC(SS) James Kowalski',
+    rank: 'E-7',
+    phone: '+1-860-555-4470',
+    email: 'james.kowalski@navy.mil',
   },
   segments: [SEGMENT_C1, SEGMENT_C2],
   reportNLT: SEGMENT_C2.dates.nlt,

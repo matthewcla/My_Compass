@@ -91,12 +91,12 @@ export function ArrivalBriefingWidget() {
                     borderWidth: 1,
                     borderColor: isDark ? '#334155' : '#E2E8F0',
                     borderRadius: 16,
-                    padding: 16,
+                    padding: 20,
                     marginBottom: 4,
                 }}
             >
                 {/* Header */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <CalendarClock size={18} color={isDark ? '#60A5FA' : '#2563EB'} />
                         <Text
@@ -170,7 +170,7 @@ export function ArrivalBriefingWidget() {
                                 </View>
 
                                 {/* Right: content */}
-                                <View style={{ flex: 1, paddingBottom: isLast ? 0 : 12 }}>
+                                <View style={{ flex: 1, paddingBottom: isLast ? 0 : 16 }}>
                                     <Text
                                         style={{
                                             fontSize: 11,

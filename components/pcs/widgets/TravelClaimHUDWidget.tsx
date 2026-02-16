@@ -118,9 +118,9 @@ export function TravelClaimHUDWidget() {
       </View>
 
       {/* Content */}
-      <View className="p-4">
+      <View className="p-5">
         {/* Urgency Banner */}
-        <View className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 mb-3 border border-amber-200 dark:border-amber-800/40">
+        <View className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 mb-4 border border-amber-200 dark:border-amber-800/40">
           <View className="flex-row items-start">
             <AlertCircle size={16} color={isDark ? '#fcd34d' : '#d97706'} strokeWidth={2.2} />
             <Text className="ml-2 flex-1 text-xs leading-5 text-amber-700 dark:text-amber-300">
@@ -130,7 +130,7 @@ export function TravelClaimHUDWidget() {
         </View>
 
         {/* Stats Row */}
-        <View className="flex-row gap-3 mb-3">
+        <View className="flex-row gap-3 mb-4">
           {/* Receipts — tappable to capture */}
           <TouchableOpacity
             activeOpacity={0.7}

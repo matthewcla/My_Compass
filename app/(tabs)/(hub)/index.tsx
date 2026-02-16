@@ -149,7 +149,6 @@ export default function HubDashboard() {
         sections.push('baseWelcomeKit');
         sections.push('arrivalBriefing');
         sections.push('tierThisWeek');
-        sections.push('gainingCommand');
         sections.push('travelClaimUrgency');
         sections.push('tierTracking');
         sections.push('liquidationTracker');
@@ -208,29 +207,22 @@ export default function HubDashboard() {
                 return <ReceiptScannerWidget />;
             }
             case 'tierRightNow':
-                return (
-                    <View className="mt-2 mb-1">
-                        <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-500 dark:text-slate-400">
-                            ⚓ Right Now
-                        </Text>
-                    </View>
-                );
             case 'tierThisWeek':
+            case 'tierTracking': {
+                const tierLabel = item === 'tierRightNow' ? '⚓  Right Now'
+                    : item === 'tierThisWeek' ? '📋  This Week'
+                        : '📡  Tracking';
                 return (
-                    <View className="mt-2 mb-1">
-                        <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-500 dark:text-slate-400">
-                            📋 This Week
-                        </Text>
+                    <View className="flex-row items-center mt-1 mb-0.5">
+                        <View className="bg-slate-800/60 dark:bg-slate-700/40 rounded-full px-3 py-1.5 border border-slate-600/30 dark:border-slate-500/20">
+                            <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-300 dark:text-slate-300">
+                                {tierLabel}
+                            </Text>
+                        </View>
+                        <View className="flex-1 h-px bg-slate-700/30 dark:bg-slate-600/20 ml-3" />
                     </View>
                 );
-            case 'tierTracking':
-                return (
-                    <View className="mt-2 mb-1">
-                        <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-500 dark:text-slate-400">
-                            📡 Tracking
-                        </Text>
-                    </View>
-                );
+            }
             case 'baseWelcomeKit': {
                 const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
                 return <BaseWelcomeKit />;
@@ -238,10 +230,6 @@ export default function HubDashboard() {
             case 'arrivalBriefing': {
                 const { ArrivalBriefingWidget } = require('@/components/pcs/widgets/ArrivalBriefingWidget');
                 return <ArrivalBriefingWidget />;
-            }
-            case 'gainingCommand': {
-                const { GainingCommandCard } = require('@/components/pcs/widgets/GainingCommandCard');
-                return <GainingCommandCard variant="widget" />;
             }
             case 'travelClaimUrgency': {
                 const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
@@ -318,7 +306,9 @@ export default function HubDashboard() {
                         ref={listRef}
                         data={sections}
                         renderItem={renderItem}
-                        ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
+                        ItemSeparatorComponent={({ leadingItem }: { leadingItem: string }) => (
+                            <View style={{ height: typeof leadingItem === 'string' && leadingItem.startsWith('tier') ? 18 : 24 }} />
+                        )}
                         ListHeaderComponent={<View style={{ height: 24 }} />}
 
                         estimatedItemSize={150}

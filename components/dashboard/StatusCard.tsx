@@ -2,10 +2,10 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { DemoPhase } from '@/constants/DemoData';
 import { useDemoStore } from '@/store/useDemoStore';
-import { usePCSStore } from '@/store/usePCSStore';
+import { usePCSPhase, usePCSStore } from '@/store/usePCSStore';
 import { useRouter } from 'expo-router';
-import { Calendar, Map as MapIcon, Timer } from 'lucide-react-native';
-import React from 'react';
+import { Anchor, Calendar, Map as MapIcon, Timer } from 'lucide-react-native';
+import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 interface StatusCardProps {
@@ -16,16 +16,79 @@ interface StatusCardProps {
 export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
-    const iconColor = isDark ? '#fbbf24' : '#fbbf24'; // Gold for both, on Navy bg
 
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
     const selectedUser = useDemoStore((state) => state.selectedUser);
     const selectedPhase = useDemoStore((state) => state.selectedPhase);
     const activeOrder = usePCSStore((state) => state.activeOrder);
+    const pcsPhase = usePCSPhase();
     const router = useRouter();
+
+    // Days on station (Phase 4 only)
+    const daysOnStation = useMemo(() => {
+        if (!activeOrder?.reportNLT) return 0;
+        const report = new Date(activeOrder.reportNLT);
+        const today = new Date();
+        report.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        const diff = Math.floor((today.getTime() - report.getTime()) / (1000 * 60 * 60 * 24));
+        return Math.max(1, diff + 1); // Day 1 = report date
+    }, [activeOrder?.reportNLT]);
 
     if (isDemoMode) {
         if (selectedPhase === DemoPhase.MY_PCS) {
+            // ── Phase 4: "Welcome Aboard" variant ──────────────────
+            if (pcsPhase === 'CHECK_IN') {
+                const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
+                const uniformOfDay = activeOrder?.gainingCommand.uniformOfDay?.trim() || null;
+
+                return (
+                    <View className="flex flex-col gap-2 my-2">
+                        <GlassView
+                            intensity={80}
+                            tint={isDark ? 'dark' : 'light'}
+                            className="border-l-4 border-green-500 dark:border-green-400 pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-row items-center justify-between shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        >
+                            <View className="flex-row items-center gap-4 flex-1">
+                                <View className="bg-green-100 dark:bg-green-900/30 p-3 rounded-full">
+                                    <Anchor size={24} color={isDark ? '#4ade80' : '#15803d'} />
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="text-slate-900 dark:text-slate-100 text-base font-bold leading-none mb-1">
+                                        Welcome Aboard
+                                    </Text>
+                                    <Text className="text-slate-600 dark:text-slate-400 text-xs font-medium leading-tight" numberOfLines={1}>
+                                        {gainingCommand}
+                                    </Text>
+                                    {uniformOfDay && (
+                                        <Text className="text-green-700 dark:text-green-300 text-[11px] font-semibold mt-1">
+                                            👔 {uniformOfDay}
+                                        </Text>
+                                    )}
+                                </View>
+                            </View>
+
+                            <View className="items-end gap-1.5">
+                                <View className="bg-green-100 dark:bg-green-900/40 px-2.5 py-1 rounded-full border border-green-200 dark:border-green-700/50">
+                                    <Text className="text-[10px] font-black text-green-800 dark:text-green-200 uppercase tracking-wider">
+                                        Day {daysOnStation}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => router.push('/pcs-wizard/check-in' as any)}
+                                    className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg border border-green-500 dark:border-green-600"
+                                >
+                                    <Text className="text-[10px] font-bold text-white text-center uppercase tracking-wide">
+                                        Check In
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </GlassView>
+                    </View>
+                );
+            }
+
+            // ── Phases 1-3: "Orders Received" variant ──────────────
             const destination = activeOrder?.segments.find(s => s.type === 'DESTINATION');
             const nltDate = destination?.dates.nlt ? new Date(destination.dates.nlt).toLocaleDateString() : 'TBD';
             const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';

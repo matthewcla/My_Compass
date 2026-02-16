@@ -143,11 +143,15 @@ export default function HubDashboard() {
     // Show standalone receipt capture on Home Hub during Phase 3 only.
     // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
     if (pcsPhase === 'TRANSIT_LEAVE') sections.push('receiptCapture');
-    // Surface Phase 4 urgency widgets on the Home Hub
+    // Surface Phase 4 urgency widgets on the Home Hub — tiered by urgency
     if (pcsPhase === 'CHECK_IN') {
+        sections.push('tierRightNow');
+        sections.push('baseWelcomeKit');
         sections.push('arrivalBriefing');
+        sections.push('tierThisWeek');
         sections.push('gainingCommand');
         sections.push('travelClaimUrgency');
+        sections.push('tierTracking');
         sections.push('liquidationTracker');
     }
     sections.push('leave');
@@ -203,6 +207,34 @@ export default function HubDashboard() {
                 const { ReceiptScannerWidget } = require('@/components/pcs/widgets/ReceiptScannerWidget');
                 return <ReceiptScannerWidget />;
             }
+            case 'tierRightNow':
+                return (
+                    <View className="mt-2 mb-1">
+                        <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-500 dark:text-slate-400">
+                            ⚓ Right Now
+                        </Text>
+                    </View>
+                );
+            case 'tierThisWeek':
+                return (
+                    <View className="mt-2 mb-1">
+                        <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-500 dark:text-slate-400">
+                            📋 This Week
+                        </Text>
+                    </View>
+                );
+            case 'tierTracking':
+                return (
+                    <View className="mt-2 mb-1">
+                        <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-500 dark:text-slate-400">
+                            📡 Tracking
+                        </Text>
+                    </View>
+                );
+            case 'baseWelcomeKit': {
+                const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
+                return <BaseWelcomeKit />;
+            }
             case 'arrivalBriefing': {
                 const { ArrivalBriefingWidget } = require('@/components/pcs/widgets/ArrivalBriefingWidget');
                 return <ArrivalBriefingWidget />;
@@ -253,8 +285,9 @@ export default function HubDashboard() {
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
+                minTopBarHeight={70}
                 topBar={
-                    <View className="bg-slate-50 dark:bg-slate-950 pb-2">
+                    <View className="bg-slate-50 dark:bg-slate-950">
                         <View className="px-4 pt-2">
                             <StatusCard
                                 nextCycle={data?.cycle?.cycleId ?? '24-02'}

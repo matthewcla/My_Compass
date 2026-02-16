@@ -1,3 +1,4 @@
+import { useScrollContext } from '@/components/navigation/ScrollControlContext';
 import { DEMO_SCENARIOS, useDemoStore } from '@/store/useDemoStore';
 import { usePCSArchiveStore } from '@/store/usePCSArchiveStore';
 import { PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
@@ -21,6 +22,7 @@ import Animated, {
     useSharedValue,
     withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -89,6 +91,18 @@ export function PCSDevPanel() {
     const [panelOpen, setPanelOpen] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
 
+    // Sync position with GlobalTabBar's scroll-to-hide animation.
+    // Clamp so the beaker settles ~24px above the safe area (not off-screen).
+    const { translateY: tabBarTranslateY } = useScrollContext();
+    const insets = useSafeAreaInsets();
+    const BEAKER_RESTING_BOTTOM = 108; // collapsed-state `bottom` value
+    const BEAKER_MIN_BOTTOM = 24 + insets.bottom; // comfortable floor above safe area
+    const maxBeakerSlide = Math.max(BEAKER_RESTING_BOTTOM - BEAKER_MIN_BOTTOM, 0);
+
+    const tabBarSyncStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: Math.min(tabBarTranslateY.value, maxBeakerSlide) }],
+    }));
+
     // Reanimated shared values for smooth panel animation
     const panelProgress = useSharedValue(0);
 
@@ -149,34 +163,44 @@ export function PCSDevPanel() {
     // ── Collapsed State: Small floating icon ────────────────────────────
     if (!panelOpen) {
         return (
-            <TouchableOpacity
-                onPress={openPanel}
-                activeOpacity={0.8}
-                style={{
+            <Animated.View
+                pointerEvents="box-none"
+                style={[{
                     position: 'absolute',
-                    bottom: 108,
-                    right: 16,
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.15)',
-                    borderWidth: 1,
-                    borderColor: isDark ? 'rgba(59, 130, 246, 0.4)' : '#93C5FD',
-                    ...Platform.select({
-                        ios: {
-                            shadowColor: '#3B82F6',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 6,
-                        },
-                        android: { elevation: 6 },
-                    }),
-                }}
+                    bottom: 0,
+                    right: 0,
+                    left: 0,
+                }, tabBarSyncStyle]}
             >
-                <Ionicons name="flask" size={22} color={isDark ? '#60A5FA' : '#3B82F6'} />
-            </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={openPanel}
+                    activeOpacity={0.8}
+                    style={{
+                        position: 'absolute',
+                        bottom: 108,
+                        right: 16,
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.15)',
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(59, 130, 246, 0.4)' : '#93C5FD',
+                        ...Platform.select({
+                            ios: {
+                                shadowColor: '#3B82F6',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.3,
+                                shadowRadius: 6,
+                            },
+                            android: { elevation: 6 },
+                        }),
+                    }}
+                >
+                    <Ionicons name="flask" size={22} color={isDark ? '#60A5FA' : '#3B82F6'} />
+                </TouchableOpacity>
+            </Animated.View>
         );
     }
 
@@ -222,7 +246,7 @@ export function PCSDevPanel() {
                         },
                         android: { elevation: 12 },
                     }),
-                }, panelStyle]}
+                }, panelStyle, tabBarSyncStyle]}
             >
                 <View style={{ padding: 16 }}>
                     {/* ── Title + Close ────────────────────────────────────── */}

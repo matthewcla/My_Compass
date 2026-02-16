@@ -171,7 +171,7 @@ export default function HHGMovePlannerScreen() {
         initialItemsRef.current = cloned;
 
         // Auto-mark in-progress when flow is opened
-        const hhgTask = checklist.find((c) => c.label === 'Plan & Schedule HHG Move');
+        const hhgTask = checklist.find((c) => c.label === 'Household Goods Move Planner');
         if (hhgTask && hhgTask.status === 'NOT_STARTED') {
             setChecklistItemStatus(hhgTask.id, 'IN_PROGRESS');
         }
@@ -382,7 +382,7 @@ export default function HHGMovePlannerScreen() {
         persistItemsToStore();
 
         // Mark complete
-        const hhgTask = checklist.find((c) => c.label === 'Plan & Schedule HHG Move');
+        const hhgTask = checklist.find((c) => c.label === 'Household Goods Move Planner');
         if (hhgTask) setChecklistItemStatus(hhgTask.id, 'COMPLETE');
 
         triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);
@@ -588,8 +588,8 @@ export default function HHGMovePlannerScreen() {
                                                         </Text>
                                                     </View>
                                                     <View className={`w-11 h-6 rounded-full flex-row items-center px-0.5 ${activeShipment.storage
-                                                            ? 'bg-blue-600 dark:bg-blue-700 justify-end'
-                                                            : 'bg-slate-300 dark:bg-zinc-700 justify-start'
+                                                        ? 'bg-blue-600 dark:bg-blue-700 justify-end'
+                                                        : 'bg-slate-300 dark:bg-zinc-700 justify-start'
                                                         }`}>
                                                         <View className="w-5 h-5 rounded-full bg-white shadow" />
                                                     </View>
@@ -612,8 +612,8 @@ export default function HHGMovePlannerScreen() {
                                                                                 storage: { ...activeShipment.storage!, facility: loc },
                                                                             })}
                                                                             className={`flex-1 rounded-lg border px-2 py-2 items-center ${isActive
-                                                                                    ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700'
-                                                                                    : 'border-slate-200 dark:border-zinc-700'
+                                                                                ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700'
+                                                                                : 'border-slate-200 dark:border-zinc-700'
                                                                                 }`}
                                                                         >
                                                                             <Text className={`text-xs font-semibold ${isActive ? 'text-blue-700 dark:text-blue-300' : 'text-slate-600 dark:text-zinc-300'

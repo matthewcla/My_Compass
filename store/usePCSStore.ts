@@ -277,7 +277,7 @@ export const usePCSStore = create<PCSState>()(
         // Phase 2: Logistics & Finances
         checklist.push({
           id: generateUUID(),
-          label: 'Plan & Schedule HHG Move',
+          label: 'Household Goods Move Planner',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 2,
@@ -286,7 +286,7 @@ export const usePCSStore = create<PCSState>()(
         });
         checklist.push({
           id: generateUUID(),
-          label: 'Financial Review & DLA Request',
+          label: 'Financial Review & Requests',
           status: 'NOT_STARTED',
           category: 'FINANCE',
           uctPhase: 2,

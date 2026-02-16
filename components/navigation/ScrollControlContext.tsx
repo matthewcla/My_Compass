@@ -1,8 +1,6 @@
 import {
     clamp,
-    COLLAPSE_ACTIVATION_OFFSET,
     COLLAPSED_EPSILON,
-    computeCollapseDistanceFromScrollY,
     computeProgressiveReservedBottomInset,
     isCollapsedAtThreshold
 } from '@/components/navigation/collapseMath';
@@ -117,7 +115,17 @@ export function useScrollControl() {
         reservedBottomInset,
     } = context;
 
+    const prevScrollY = useSharedValue(0);
+    const isDragging = useSharedValue(false);
+
     const onScroll = useAnimatedScrollHandler({
+        onBeginDrag: (event) => {
+            prevScrollY.value = event.contentOffset.y;
+            isDragging.value = true;
+        },
+        onEndDrag: () => {
+            isDragging.value = false;
+        },
         onScroll: (event) => {
             const currentScrollY = event.contentOffset.y;
 
@@ -127,6 +135,7 @@ export function useScrollControl() {
                 translateY.value = 0;
                 isTabBarCollapsed.value = false;
                 reservedBottomInset.value = Math.round(Math.max(collapsedInset, 0));
+                prevScrollY.value = 0;
                 return;
             }
 
@@ -136,14 +145,21 @@ export function useScrollControl() {
                     isTabBarCollapsed.value = false;
                 }
                 reservedBottomInset.value = Math.round(maxHeight);
+                prevScrollY.value = Math.max(currentScrollY, 0);
                 return;
             }
 
-            const collapseTarget = computeCollapseDistanceFromScrollY({
-                currentScrollY,
-                maxDistance: maxHeight,
-                activationOffset: COLLAPSE_ACTIVATION_OFFSET,
-            });
+            // Delta-based: direction-aware collapse
+            const delta = currentScrollY - prevScrollY.value;
+            prevScrollY.value = currentScrollY;
+
+            // During momentum (not actively dragging), ignore negative deltas
+            // to prevent iOS bottom-bounce from undoing collapse
+            if (delta < 0 && !isDragging.value) {
+                return;
+            }
+
+            const collapseTarget = clamp(translateY.value + delta, 0, maxHeight);
 
             translateY.value = collapseTarget;
 
@@ -159,7 +175,7 @@ export function useScrollControl() {
             });
             reservedBottomInset.value = Math.round(nextReservedInset);
         },
-    }, [isTabBarCollapsed, reservedBottomInset, tabBarCollapsedInset, tabBarMaxHeight, translateY]);
+    }, [isDragging, isTabBarCollapsed, prevScrollY, reservedBottomInset, tabBarCollapsedInset, tabBarMaxHeight, translateY]);
 
     return {
         onScroll,

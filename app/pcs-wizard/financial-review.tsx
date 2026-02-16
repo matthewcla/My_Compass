@@ -100,7 +100,7 @@ export default function FinancialReviewScreen() {
 
     // Auto-mark in-progress when flow opens
     useEffect(() => {
-        const task = checklist.find((c) => c.label === 'Financial Review & DLA Request');
+        const task = checklist.find((c) => c.label === 'Financial Review & Requests');
         if (task && task.status === 'NOT_STARTED') {
             setChecklistItemStatus(task.id, 'IN_PROGRESS');
         }
@@ -166,7 +166,7 @@ export default function FinancialReviewScreen() {
         }));
 
         // Mark complete
-        const task = checklist.find((c) => c.label === 'Financial Review & DLA Request');
+        const task = checklist.find((c) => c.label === 'Financial Review & Requests');
         if (task) setChecklistItemStatus(task.id, 'COMPLETE');
 
         triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);

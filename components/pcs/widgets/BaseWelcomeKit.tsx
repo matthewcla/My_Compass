@@ -151,7 +151,7 @@ export function BaseWelcomeKit() {
             </View>
             {/* Status chip — CHECK IN (tappable) */}
             <ScalePressable
-              onPress={() => router.push('/pcs-wizard/check-in' as any)}
+              onPress={() => router.push('/pcs/check-in' as any)}
               className="bg-green-600/90 dark:bg-green-700/80 rounded-lg px-2.5 py-1.5 ml-2"
               accessibilityRole="button"
               accessibilityLabel="Go to check-in flow"

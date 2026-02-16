@@ -28,7 +28,7 @@ function Phase3Widgets() {
 
 function Phase4Widgets() {
     // Phase 4 widgets live on the Home Hub (ArrivalBriefing, GainingCommandCard,
-    // TravelClaimHUD, LiquidationTracker) and inside the Check-In flow (BaseWelcomeKit).
+    // TravelClaimHUD, LiquidationTracker) on the Home Hub.
     return null;
 }
 

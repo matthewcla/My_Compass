@@ -6,17 +6,16 @@ import { PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Dimensions,
     Platform,
     Pressable,
     ScrollView,
-    Switch,
     Text,
     TouchableOpacity,
     View,
-    useColorScheme,
+    useColorScheme
 } from 'react-native';
 import Animated, {
     Easing,
@@ -64,7 +63,13 @@ const VIEW_MODE_LABELS: Record<typeof VIEW_MODES[number], string> = {
 export function PCSDevPanel() {
     const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings ?? __DEV__;
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
-    const toggleDemoMode = useDemoStore((state) => state.toggleDemoMode);
+
+    // Auto-enable demo mode in dev builds — no manual toggle needed
+    useEffect(() => {
+        if (enableDevSettings && !isDemoMode) {
+            useDemoStore.getState().toggleDemoMode();
+        }
+    }, [enableDevSettings]);
     const selectedUser = useDemoStore((state) => state.selectedUser);
     const setSelectedUser = useDemoStore((state) => state.setSelectedUser);
     const selectedPhase = useDemoStore((state) => state.selectedPhase);
@@ -139,7 +144,7 @@ export function PCSDevPanel() {
     if (!enableDevSettings) return null;
 
     // Whether PCS-specific controls should be shown
-    const isPCSActive = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
+    const isPCSActive = selectedPhase === DemoPhase.MY_PCS;
 
     const borderColor = isDark ? '#27272A' : '#E2E8F0';
     const chipBg = isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)';
@@ -231,7 +236,8 @@ export function PCSDevPanel() {
                     >
                         <ScrollView style={{ padding: 16, maxHeight: SCREEN_HEIGHT * 0.55 }} showsVerticalScrollIndicator={false}>
                             {/* ── Title ────────────────────────────────────── */}
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                                <View style={{ width: 28 }} />
                                 <Text
                                     style={{
                                         color: isDark ? '#60A5FA' : '#3B82F6',
@@ -243,83 +249,64 @@ export function PCSDevPanel() {
                                 >
                                     Developer Settings
                                 </Text>
-                            </View>
-
-                            {/* ── Demo Mode Toggle ────────────────────────────── */}
-                            <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                paddingVertical: 8,
-                                paddingHorizontal: 4,
-                                marginBottom: 8,
-                                borderBottomWidth: 1,
-                                borderStyle: 'dashed',
-                                borderBottomColor: isDark ? 'rgba(59, 130, 246, 0.15)' : '#BFDBFE',
-                            }}>
-                                <Text style={{
-                                    fontSize: 11,
-                                    fontWeight: '700',
-                                    color: isDemoMode ? (isDark ? '#FBBF24' : '#D97706') : (isDark ? '#94A3B8' : '#64748B'),
-                                    textTransform: 'uppercase',
-                                    letterSpacing: 0.8,
-                                }}>
-                                    {isDemoMode ? '⚡ Simulation Active' : 'Demo Mode'}
-                                </Text>
-                                <Switch
-                                    value={isDemoMode}
-                                    onValueChange={toggleDemoMode}
-                                    trackColor={{ false: isDark ? '#374151' : '#E2E8F0', true: '#F59E0B' }}
-                                    thumbColor="#FFFFFF"
-                                />
+                                <TouchableOpacity
+                                    onPress={closePanel}
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    style={{
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: 14,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: isDark ? 'rgba(51,65,85,0.5)' : 'rgba(226,232,240,0.8)',
+                                    }}
+                                >
+                                    <Ionicons name="close" size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                                </TouchableOpacity>
                             </View>
 
                             {/* ── Persona Selector ────────────────────────────── */}
-                            {isDemoMode && (
-                                <>
-                                    <Text style={sectionLabel(isDark)}>Persona</Text>
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        contentContainerStyle={{ gap: 10, paddingHorizontal: 2, marginBottom: 4 }}
-                                    >
-                                        {DEMO_USERS.map((u) => {
-                                            const isActive = selectedUser.id === u.id;
-                                            return (
-                                                <TouchableOpacity
-                                                    key={u.id}
-                                                    onPress={() => setSelectedUser(u)}
-                                                    style={overrideBtn(isActive, isDark, borderColor, 'amber')}
-                                                >
-                                                    <Text style={overrideBtnText(isActive, isDark)}>
-                                                        {u.title} {u.displayName}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            );
-                                        })}
-                                    </ScrollView>
+                            <Text style={sectionLabel(isDark)}>Persona</Text>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ gap: 10, paddingHorizontal: 2, marginBottom: 4 }}
+                            >
+                                {DEMO_USERS.map((u) => {
+                                    const isActive = selectedUser.id === u.id;
+                                    return (
+                                        <TouchableOpacity
+                                            key={u.id}
+                                            onPress={() => setSelectedUser(u)}
+                                            style={overrideBtn(isActive, isDark, borderColor, 'amber')}
+                                        >
+                                            <Text style={overrideBtnText(isActive, isDark)}>
+                                                {u.title} {u.displayName}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </ScrollView>
 
-                                    {/* ── App Phase Selector ────────────────────────── */}
-                                    <View style={{ height: 1, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E2E8F0', marginVertical: 8 }} />
-                                    <Text style={sectionLabel(isDark)}>App Phase</Text>
-                                    <View style={buttonRow}>
-                                        {Object.values(DemoPhase).map((phase) => {
-                                            const isActive = selectedPhase === phase;
-                                            return (
-                                                <TouchableOpacity
-                                                    key={phase}
-                                                    onPress={() => setSelectedPhase(phase)}
-                                                    style={overrideBtn(isActive, isDark, borderColor, 'amber')}
-                                                >
-                                                    <Text style={overrideBtnText(isActive, isDark)}>
-                                                        {phase.replace('_', ' ')}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            );
-                                        })}
-                                    </View>
-                                </>
-                            )}
+                            {/* ── App Phase Selector ────────────────────────── */}
+                            <View style={{ height: 1, backgroundColor: isDark ? 'rgba(59, 130, 246, 0.1)' : '#E2E8F0', marginVertical: 8 }} />
+                            <Text style={sectionLabel(isDark)}>App Phase</Text>
+                            <View style={buttonRow}>
+                                {Object.values(DemoPhase).map((phase) => {
+                                    const isActive = selectedPhase === phase;
+                                    return (
+                                        <TouchableOpacity
+                                            key={phase}
+                                            onPress={() => setSelectedPhase(phase)}
+                                            style={overrideBtn(isActive, isDark, borderColor, 'amber')}
+                                        >
+                                            <Text style={overrideBtnText(isActive, isDark)}>
+                                                {phase.replace('_', ' ')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
 
                             {/* ── PCS-Specific Controls ───────────────────────── */}
                             {isPCSActive && (
@@ -623,67 +610,70 @@ export function PCSDevPanel() {
                         </ScrollView>
                     </Animated.View>
                 </>
-            )}
+            )
+            }
 
             {/* Beaker icon — ALWAYS rendered, never conditionally hidden */}
-            {!panelOpen && (
-                <Animated.View
-                    pointerEvents="box-none"
-                    style={[{
-                        position: 'absolute',
-                        top: 0,
-                        bottom: 0,
-                        right: 0,
-                        left: 0,
-                    }, tabBarSyncStyle]}
-                >
-                    <TouchableOpacity
-                        onPress={openPanel}
-                        activeOpacity={0.8}
-                        style={{
+            {
+                !panelOpen && (
+                    <Animated.View
+                        pointerEvents="box-none"
+                        style={[{
                             position: 'absolute',
-                            bottom: 108,
-                            right: 16,
-                            width: 48,
-                            height: 48,
-                            borderRadius: 24,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.15)',
-                            borderWidth: 1,
-                            borderColor: isDark ? 'rgba(59, 130, 246, 0.4)' : '#93C5FD',
-                            ...Platform.select({
-                                ios: {
-                                    shadowColor: '#3B82F6',
-                                    shadowOffset: { width: 0, height: 2 },
-                                    shadowOpacity: 0.3,
-                                    shadowRadius: 6,
-                                },
-                                android: { elevation: 6 },
-                            }),
-                        }}
+                            top: 0,
+                            bottom: 0,
+                            right: 0,
+                            left: 0,
+                        }, tabBarSyncStyle]}
                     >
-                        <Ionicons name="flask" size={22} color={isDark ? '#60A5FA' : '#3B82F6'} />
-                        {activeScenario && (
-                            <View style={{
+                        <TouchableOpacity
+                            onPress={openPanel}
+                            activeOpacity={0.8}
+                            style={{
                                 position: 'absolute',
-                                top: -2,
-                                right: -2,
-                                minWidth: 20,
-                                height: 20,
-                                borderRadius: 10,
-                                backgroundColor: isDark ? '#065F46' : '#059669',
-                                borderWidth: 1.5,
-                                borderColor: isDark ? 'rgba(15, 23, 42, 0.96)' : '#EFF6FF',
+                                bottom: 108,
+                                right: 16,
+                                width: 48,
+                                height: 48,
+                                borderRadius: 24,
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                            }}>
-                                <Text style={{ fontSize: 10 }}>{activeScenario.icon}</Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                </Animated.View>
-            )}
+                                backgroundColor: isDark ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.15)',
+                                borderWidth: 1,
+                                borderColor: isDark ? 'rgba(59, 130, 246, 0.4)' : '#93C5FD',
+                                ...Platform.select({
+                                    ios: {
+                                        shadowColor: '#3B82F6',
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.3,
+                                        shadowRadius: 6,
+                                    },
+                                    android: { elevation: 6 },
+                                }),
+                            }}
+                        >
+                            <Ionicons name="flask" size={22} color={isDark ? '#60A5FA' : '#3B82F6'} />
+                            {activeScenario && (
+                                <View style={{
+                                    position: 'absolute',
+                                    top: -2,
+                                    right: -2,
+                                    minWidth: 20,
+                                    height: 20,
+                                    borderRadius: 10,
+                                    backgroundColor: isDark ? '#065F46' : '#059669',
+                                    borderWidth: 1.5,
+                                    borderColor: isDark ? 'rgba(15, 23, 42, 0.96)' : '#EFF6FF',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}>
+                                    <Text style={{ fontSize: 10 }}>{activeScenario.icon}</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </Animated.View>
+                )
+            }
         </>
     );
 }

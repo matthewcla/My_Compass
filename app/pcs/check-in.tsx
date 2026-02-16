@@ -1,7 +1,7 @@
-import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
 import { ScalePressable } from '@/components/ScalePressable';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { usePCSStore } from '@/store/usePCSStore';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -21,9 +21,9 @@ import {
 import React, { useCallback, useMemo, useState } from 'react';
 import {
     Platform,
-    Pressable,
     ScrollView,
     Text,
+    TouchableOpacity,
     View,
     useColorScheme,
 } from 'react-native';
@@ -125,7 +125,8 @@ function DepartmentCard({
 
     return (
         <Animated.View entering={FadeInUp.delay(index * 60).springify()}>
-            <Pressable
+            <TouchableOpacity
+                activeOpacity={0.7}
                 onPress={onToggle}
                 style={{
                     backgroundColor: checked
@@ -257,7 +258,7 @@ function DepartmentCard({
                         </Text>
                     </Animated.View>
                 )}
-            </Pressable>
+            </TouchableOpacity>
         </Animated.View>
     );
 }
@@ -293,7 +294,7 @@ export default function CheckInScreen() {
     const allDone = completedCount === DEPARTMENTS.length;
 
     const checkInItem = useMemo(
-        () => checklist.find((c) => c.label === 'Complete Gaining Command Check-In'),
+        () => checklist.find((c) => c.label === 'Complete Check-In'),
         [checklist]
     );
 
@@ -338,9 +339,22 @@ export default function CheckInScreen() {
                                 paddingTop: 8,
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
+                                gap: 12,
                             }}
                         >
+                            <TouchableOpacity
+                                onPress={() => router.back()}
+                                style={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: 18,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: isDark ? 'rgba(51,65,85,0.5)' : 'rgba(241,245,249,0.8)',
+                                }}
+                            >
+                                <ChevronLeft size={22} color={isDark ? '#e2e8f0' : '#1e293b'} />
+                            </TouchableOpacity>
                             <View>
                                 <Text
                                     style={{
@@ -363,12 +377,6 @@ export default function CheckInScreen() {
                                     Command Check-In
                                 </Text>
                             </View>
-                            <Pressable
-                                onPress={() => router.back()}
-                                className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
-                            >
-                                <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
-                            </Pressable>
                         </View>
 
                         {/* Progress Bar */}
@@ -427,8 +435,7 @@ export default function CheckInScreen() {
                         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 140 }}
                         showsVerticalScrollIndicator={false}
                     >
-                        {/* Welcome Kit — quarterdeck directions, uniform, command info */}
-                        <BaseWelcomeKit />
+
 
                         {/* Intro text */}
                         <Animated.View entering={FadeIn.delay(200)}>
@@ -519,48 +526,59 @@ export default function CheckInScreen() {
                                 left: 0,
                                 right: 0,
                                 bottom: 0,
-                                backgroundColor: 'rgba(0,0,0,0.7)',
-                                alignItems: 'center',
-                                justifyContent: 'center',
                             }}
                         >
-                            <Animated.View entering={ZoomIn.springify()}>
-                                <View
-                                    style={{
-                                        width: 120,
-                                        height: 120,
-                                        borderRadius: 60,
-                                        backgroundColor: '#22C55E',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginBottom: 16,
-                                    }}
-                                >
-                                    <Check size={60} color="white" strokeWidth={3} />
-                                </View>
-                            </Animated.View>
-                            <Animated.View entering={FadeIn.delay(300)}>
-                                <Text
-                                    style={{
-                                        fontSize: 22,
-                                        fontWeight: '800',
-                                        color: 'white',
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    Check-In Complete
-                                </Text>
-                                <Text
-                                    style={{
-                                        fontSize: 14,
-                                        color: '#94A3B8',
-                                        textAlign: 'center',
-                                        marginTop: 4,
-                                    }}
-                                >
-                                    Welcome aboard, Shipmate
-                                </Text>
-                            </Animated.View>
+                            <BlurView
+                                intensity={40}
+                                tint="dark"
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: 'rgba(0,0,0,0.4)',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Animated.View entering={ZoomIn.springify()}>
+                                    <View
+                                        style={{
+                                            width: 120,
+                                            height: 120,
+                                            borderRadius: 60,
+                                            backgroundColor: '#22C55E',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            marginBottom: 16,
+                                        }}
+                                    >
+                                        <Check size={60} color="white" strokeWidth={3} />
+                                    </View>
+                                </Animated.View>
+                                <Animated.View entering={FadeIn.delay(300)}>
+                                    <Text
+                                        style={{
+                                            fontSize: 22,
+                                            fontWeight: '800',
+                                            color: 'white',
+                                            textAlign: 'center',
+                                        }}
+                                    >
+                                        Check-In Complete
+                                    </Text>
+                                    <Text
+                                        style={{
+                                            fontSize: 14,
+                                            color: '#94A3B8',
+                                            textAlign: 'center',
+                                            marginTop: 4,
+                                        }}
+                                    >
+                                        Welcome aboard, Shipmate
+                                    </Text>
+                                </Animated.View>
+                            </View>
                         </View>
                     )}
                 </View>

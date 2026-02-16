@@ -75,7 +75,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </Text>
                                 </View>
                                 <TouchableOpacity
-                                    onPress={() => router.push('/pcs-wizard/check-in' as any)}
+                                    onPress={() => router.push('/pcs/check-in' as any)}
                                     className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg border border-green-500 dark:border-green-600"
                                 >
                                     <Text className="text-[10px] font-bold text-white text-center uppercase tracking-wide">

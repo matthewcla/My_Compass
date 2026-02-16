@@ -16,7 +16,7 @@ import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeader
 import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
-import { usePCSPhase, usePCSStore } from '@/store/usePCSStore';
+import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
 import { useUserStore } from '@/store/useUserStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
@@ -67,6 +67,7 @@ export default function HubDashboard() {
     const selectedPhase = useDemoStore(state => state.selectedPhase);
     const initializeOrders = usePCSStore(state => state.initializeOrders);
     const pcsPhase = usePCSPhase();
+    const subPhase = useSubPhase();
 
     // Hydrate defaults on mount
     React.useEffect(() => {
@@ -141,19 +142,18 @@ export default function HubDashboard() {
     }
 
     const sections = ['menu'];
-    // Show standalone receipt capture on Home Hub during Phase 3 only.
+    // Show standalone receipt capture on Home Hub during Phase 3 (ACTIVE_TRAVEL) only.
+    // Phase 2 (PLANNING) shares TRANSIT_LEAVE but doesn't need receipt capture yet.
     // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
-    if (pcsPhase === 'TRANSIT_LEAVE') sections.push('receiptCapture');
+    if (pcsPhase === 'TRANSIT_LEAVE' && subPhase === 'ACTIVE_TRAVEL') sections.push('receiptCapture');
     // Surface Mission Brief on Home Hub during Phases 1–2 only
     if (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE') {
         sections.push('missionBrief');
     }
-    // Surface Phase 4 urgency widgets on the Home Hub — tiered by urgency
+    // Surface Phase 4 urgency widgets on the Home Hub — streamlined
     if (pcsPhase === 'CHECK_IN') {
-        sections.push('tierRightNow');
-        sections.push('baseWelcomeKit');
-        sections.push('arrivalBriefing');
         sections.push('tierThisWeek');
+        sections.push('baseWelcomeKit');
         sections.push('travelClaimUrgency');
         // Only show liquidation widget when there's an active liquidation to track
         const liquidation = usePCSStore.getState().financials.liquidation;
@@ -235,13 +235,10 @@ export default function HubDashboard() {
                     </View>
                 );
             }
+
             case 'baseWelcomeKit': {
                 const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
                 return <BaseWelcomeKit />;
-            }
-            case 'arrivalBriefing': {
-                const { ArrivalBriefingWidget } = require('@/components/pcs/widgets/ArrivalBriefingWidget');
-                return <ArrivalBriefingWidget />;
             }
             case 'travelClaimUrgency': {
                 const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');

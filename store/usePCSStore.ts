@@ -341,9 +341,10 @@ export const usePCSStore = create<PCSState>()(
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 4,
-          actionRoute: '/pcs-wizard/check-in',
+          actionRoute: '/pcs/check-in',
           helpText: 'Report to your new command\u2019s quarterdeck with your orders. This starts your check-in sheet.',
         });
+
         checklist.push({
           id: generateUUID(),
           label: 'File Travel Claim',
@@ -353,16 +354,16 @@ export const usePCSStore = create<PCSState>()(
           actionRoute: '/travel-claim/request',
           helpText: 'Your travel voucher for reimbursement. File within 5 business days of arrival for fastest payout.',
         });
-
         checklist.push({
           id: generateUUID(),
-          label: 'Confirm Updated Profile',
+          label: 'Establish Housing & Update Profile',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 4,
           actionRoute: '/pcs-wizard/profile-confirmation',
-          helpText: 'Verify your new address, housing, and contact info are current after your move.',
+          helpText: 'Secure housing at your new duty station and verify your address, BAH, and contact info are current.',
         });
+
 
 
         set({ activeOrder: order, checklist });

@@ -2,8 +2,6 @@ import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
-import { useTravelClaimStore } from '@/store/useTravelClaimStore';
-import { useUserStore } from '@/store/useUserStore';
 import { ReceiptCategory } from '@/types/pcs';
 import { scanReceipt } from '@/utils/receiptOCR';
 import * as Haptics from 'expo-haptics';
@@ -15,11 +13,14 @@ import { Alert, Platform, Text, TouchableOpacity, View } from 'react-native';
 
 export function TravelClaimHUDWidget() {
   const activeOrder = useActiveOrder();
-  const user = useUserStore((state) => state.user);
-  const travelClaims = useTravelClaimStore((state) => state.travelClaims);
-  const createDraft = useTravelClaimStore((state) => state.createDraft);
   const colorScheme = useColorScheme() ?? 'light';
   const isDark = colorScheme === 'dark';
+
+  // Travel claim settlement state — from unified PCS store
+  const draft = usePCSStore((s) => s.travelClaim.draft);
+  const settlementStatus = usePCSStore((s) => s.travelClaim.status);
+  const initSettlement = usePCSStore((s) => s.initSettlement);
+  const financials = usePCSStore((s) => s.financials);
 
   // Receipt capture state (integrated from ReceiptScannerWidget)
   const receipts = usePCSStore((s) => s.receipts);
@@ -28,24 +29,13 @@ export function TravelClaimHUDWidget() {
   const capturedReceiptCount = receipts.length;
   const runningTotal = receipts.reduce((sum, r) => sum + (r.amount ?? 0), 0);
 
-  const pcsClaimDraft = useMemo(() => {
-    return Object.values(travelClaims).find(
-      (c) => c.travelType === 'pcs' && ['draft', 'pending'].includes(c.status)
-    );
-  }, [travelClaims]);
-
-  const receiptCount = useMemo(() => {
-    if (!pcsClaimDraft) return 0;
-    return pcsClaimDraft.expenses.reduce(
-      (acc, e) => acc + (e.receipts?.length || 0),
-      0
-    );
-  }, [pcsClaimDraft]);
+  const hasDraft = !!draft && ['draft', 'pending'].includes(draft.status);
 
   const estimatedPayout = useMemo(() => {
-    if (!pcsClaimDraft) return 0;
-    return pcsClaimDraft.totalClaimAmount || 0;
-  }, [pcsClaimDraft]);
+    if (draft) return draft.totalClaimAmount || 0;
+    // Fallback: entitlement estimates from Phase 2
+    return (financials.totalMalt || 0) + (financials.totalPerDiem || 0) + (financials.dla.estimatedAmount || 0);
+  }, [draft, financials]);
 
   const handleCapture = useCallback(async () => {
     setIsCapturing(true);
@@ -95,49 +85,11 @@ export function TravelClaimHUDWidget() {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
     }
 
-    if (pcsClaimDraft) {
-      router.push(`/travel-claim/request?draftId=${pcsClaimDraft.id}`);
-    } else {
-      // Create new draft
-      if (!user || !activeOrder) return;
-
-      const claimId = `tc-pcs-${Date.now()}`;
-      const newClaim = {
-        id: claimId,
-        userId: user.id,
-        orderNumber: activeOrder.orderNumber,
-        travelType: 'pcs' as const,
-        departureDate: activeOrder.segments[0]?.dates.projectedDeparture || '',
-        returnDate: activeOrder.segments[activeOrder.segments.length - 1]?.dates.projectedArrival || '',
-        departureLocation: activeOrder.segments[0]?.location.name || '',
-        destinationLocation: activeOrder.gainingCommand.name,
-        isOconus: activeOrder.isOconus,
-        travelMode: 'pov' as const,
-        maltAmount: 0,
-        maltMiles: 0,
-        dlaAmount: 0,
-        tleDays: 0,
-        tleAmount: 0,
-        perDiemDays: [],
-        expenses: [],
-        totalExpenses: 0,
-        totalEntitlements: 0,
-        totalClaimAmount: 0,
-        advanceAmount: 0,
-        netPayable: 0,
-        status: 'draft' as const,
-        statusHistory: [],
-        approvalChain: [],
-        memberCertification: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        syncStatus: 'pending_upload' as const,
-        lastSyncTimestamp: new Date().toISOString(),
-      };
-
-      await createDraft(newClaim);
-      router.push(`/travel-claim/request?draftId=${claimId}`);
+    // Initialize settlement if not already started, then navigate
+    if (!hasDraft) {
+      initSettlement();
     }
+    router.push('/travel-claim/request');
   };
 
   if (!activeOrder) return null;
@@ -225,10 +177,10 @@ export function TravelClaimHUDWidget() {
           onPress={handlePress}
           className="bg-blue-600 dark:bg-blue-500 rounded-lg p-3.5 flex-row items-center justify-between"
           accessibilityRole="button"
-          accessibilityLabel={pcsClaimDraft ? 'Continue Travel Claim' : 'Start Travel Claim'}
+          accessibilityLabel={hasDraft ? 'Continue Settlement' : 'Settle Travel Claim'}
         >
           <Text className="text-base font-bold text-white">
-            {pcsClaimDraft ? 'Continue Claim' : 'Start Travel Claim'}
+            {hasDraft ? 'Continue Settlement' : 'Settle Travel Claim'}
           </Text>
           <ChevronRight size={20} color="#ffffff" strokeWidth={2.5} />
         </ScalePressable>

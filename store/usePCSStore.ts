@@ -1,8 +1,10 @@
 import { services } from '@/services/api/serviceRegistry';
 import { ChecklistItem, HHGItem, HHGShipment, HHGShipmentType, LiquidationStatus, LiquidationStep, LiquidationTracking, MovingCostsBreakdown, PCSOrder, PCSPhase, PCSReceipt, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
+import type { TravelClaim } from '@/types/travelClaim';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
+import { bridgeReceiptsToExpenses } from '@/utils/receiptBridge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useMemo } from 'react';
@@ -129,12 +131,20 @@ interface Financials {
   dependentsRelocating: boolean | null;
 }
 
+// ─── Travel Claim Settlement Slice ────────────────────────────────────
+
+interface TravelClaimSlice {
+  draft: TravelClaim | null;
+  status: 'idle' | 'settling' | 'submitted';
+}
+
 interface PCSState {
   activeOrder: PCSOrder | null;
   checklist: ChecklistItem[];
   financials: Financials;
   receipts: PCSReceipt[];
   currentDraft: PCSSegment | null;
+  travelClaim: TravelClaimSlice;
 
   initializeOrders: () => Promise<void>;
   updateSegmentStatus: (segmentId: string, status: PCSSegmentStatus) => void;
@@ -151,6 +161,11 @@ interface PCSState {
   addReceipt: (receipt: Omit<PCSReceipt, 'id' | 'capturedAt'>) => void;
   removeReceipt: (id: string) => void;
   updateReceipt: (id: string, updates: Partial<PCSReceipt>) => void;
+
+  // Travel Claim Settlement Actions
+  initSettlement: () => void;
+  updateSettlement: (patch: Partial<TravelClaim>) => void;
+  submitSettlement: () => void;
 
   // HHG Shipment Actions (multi-shipment)
   addShipment: (type: HHGShipmentType, label: string, originZip: string, destinationZip?: string | null) => void;
@@ -217,6 +232,7 @@ export const usePCSStore = create<PCSState>()(
         liquidation: null,
         dependentsRelocating: null,
       },
+      travelClaim: { draft: null, status: 'idle' },
       cachedOrders: null,
 
       initializeOrders: async () => {
@@ -655,6 +671,129 @@ export const usePCSStore = create<PCSState>()(
         set((state) => ({
           receipts: state.receipts.map(r => r.id === id ? { ...r, ...updates } : r),
         }));
+      },
+
+      // ─── Travel Claim Settlement Actions ────────────────────────────
+
+      initSettlement: () => {
+        const { activeOrder, financials, receipts } = get();
+        if (!activeOrder) return;
+
+        const user = getActiveUser();
+        if (!user) return;
+
+        const claimId = `tc-pcs-${Date.now()}`;
+        const now = new Date().toISOString();
+
+        // Bridge Phase 3 receipts → Expense line items
+        const bridgedExpenses = bridgeReceiptsToExpenses(receipts, claimId);
+
+        // Calculate totals from bridged expenses
+        const totalExpenses = bridgedExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+        const firstSeg = activeOrder.segments[0];
+        const lastSeg = activeOrder.segments[activeOrder.segments.length - 1];
+
+        const draft: TravelClaim = {
+          id: claimId,
+          userId: user.id,
+          orderNumber: activeOrder.orderNumber,
+          travelType: 'pcs',
+          status: 'draft',
+
+          // Trip details — pre-filled from orders
+          departureDate: firstSeg?.dates.projectedDeparture || now,
+          returnDate: lastSeg?.dates.projectedArrival || now,
+          departureLocation: firstSeg?.location.name || '',
+          destinationLocation: activeOrder.gainingCommand.name,
+          isOconus: activeOrder.isOconus,
+          travelMode: (firstSeg?.userPlan.mode?.toLowerCase() as any) || 'pov',
+
+          // Entitlements — pre-filled from Phase 2 financial review
+          maltAmount: financials.totalMalt || 0,
+          maltMiles: 0, // Sailor confirms actual mileage
+          dlaAmount: financials.dla.estimatedAmount || 0,
+          tleDays: 0,
+          tleAmount: 0,
+
+          // Per diem — defaults, Sailor adjusts during settlement
+          perDiemDays: [],
+
+          // Expenses — bridged from Phase 3 receipts
+          expenses: bridgedExpenses,
+
+          // Totals
+          totalExpenses,
+          totalEntitlements: (financials.totalMalt || 0) + (financials.totalPerDiem || 0) + (financials.dla.estimatedAmount || 0),
+          totalClaimAmount: 0,
+          advanceAmount: financials.advancePay.requested ? financials.advancePay.amount : 0,
+          netPayable: 0,
+
+          // Status
+          statusHistory: [],
+          approvalChain: [],
+          memberCertification: false,
+
+          // Timestamps
+          createdAt: now,
+          updatedAt: now,
+          lastSyncTimestamp: now,
+          syncStatus: 'pending_upload',
+        };
+
+        // Recalculate claim amount
+        draft.totalClaimAmount = draft.totalEntitlements + totalExpenses;
+        draft.netPayable = draft.totalClaimAmount - draft.advanceAmount;
+
+        set({ travelClaim: { draft, status: 'settling' } });
+      },
+
+      updateSettlement: (patch) => {
+        set((state) => {
+          if (!state.travelClaim.draft) return state;
+
+          const updated = {
+            ...state.travelClaim.draft,
+            ...patch,
+            updatedAt: new Date().toISOString(),
+          };
+
+          // Recalculate totals when expenses change
+          if (patch.expenses) {
+            updated.totalExpenses = updated.expenses.reduce((sum, e) => sum + e.amount, 0);
+          }
+          updated.totalClaimAmount = updated.totalEntitlements + updated.totalExpenses;
+          updated.netPayable = updated.totalClaimAmount - updated.advanceAmount;
+
+          return { travelClaim: { draft: updated, status: 'settling' } };
+        });
+      },
+
+      submitSettlement: () => {
+        const { travelClaim } = get();
+        if (!travelClaim.draft) return;
+
+        const now = new Date().toISOString();
+        const submittedDraft: TravelClaim = {
+          ...travelClaim.draft,
+          status: 'pending',
+          submittedAt: now,
+          updatedAt: now,
+          memberCertification: true,
+          statusHistory: [
+            ...travelClaim.draft.statusHistory,
+            { status: 'pending', timestamp: now },
+          ],
+        };
+
+        set({ travelClaim: { draft: submittedDraft, status: 'submitted' } });
+
+        // Mark the checklist item complete
+        const task = get().checklist.find((c) => c.label === 'File DD 1351-2 Travel Claim');
+        if (task) get().setChecklistItemStatus(task.id, 'COMPLETE');
+
+        // Trigger liquidation tracking
+        get().initializeLiquidation(submittedDraft.id);
       },
 
       // ─── Multi-Shipment Actions ───────────────────────────────────

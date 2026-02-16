@@ -152,7 +152,7 @@ export default function ObliservRequestScreen() {
                             style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
                             className="text-slate-400 dark:text-gray-500"
                         >
-                            PHASE 1
+                            SELECTION
                         </Text>
                         <Text
                             style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}

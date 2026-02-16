@@ -100,7 +100,7 @@ This table shows which implemented widgets and features are active or dormant at
 
 | Widget | Discovery | On-Ramp | Negotiation | Selection | Processing | PCS Ph1 | PCS Ph2 | PCS Ph3 | PCS Ph4 |
 |--------|-----------|---------|-------------|-----------|------------|---------|---------|---------|---------|
-| StatusCard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| StatusCard *(phase-aware variants)* | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | StatsCard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | LeaveCard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | DiscoveryCard | ✅ | ✅ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
@@ -132,7 +132,7 @@ This table shows which implemented widgets and features are active or dormant at
 
 | Widget | Discovery | On-Ramp | Negotiation | Selection | Processing | PCS Ph1 | PCS Ph2 | PCS Ph3 | PCS Ph4 |
 |--------|-----------|---------|-------------|-----------|------------|---------|---------|---------|---------|
-| ObliservBanner *(conditional)* | ⚪ | ⚪ | ⚪ | ✅ | ⚪ | ✅ | ⚪ | ⚪ | ⚪ |
+| ObliservBanner *(conditional, Home Hub + My Admin)* | ⚪ | ⚪ | ⚪ | ✅ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |
 | HHGWeightGaugeWidget | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ✅ | ⚪ | ⚪ |
 | PCSFinancialSnapshot | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ✅ | ⚪ | ⚪ |
 | LeaveImpactWidget | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ✅ | ⚪ |

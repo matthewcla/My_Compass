@@ -156,7 +156,7 @@ export default function ObliservCheckScreen() {
                                     color: isDark ? '#64748B' : '#94A3B8',
                                 }}
                             >
-                                PHASE 1
+                                SELECTION
                             </Text>
                             <Text
                                 style={{

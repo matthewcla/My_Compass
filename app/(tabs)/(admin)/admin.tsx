@@ -1,10 +1,12 @@
 import { LeaveBalanceCard } from '@/components/LeaveBalanceCard';
+import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { SyncStatus } from '@/components/SyncStatusBadge';
 import Colors from '@/constants/Colors';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useCurrentProfile } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
+import { usePCSStore } from '@/store/usePCSStore';
 import { LeaveRequest } from '@/types/schema';
 import { Link, useRouter } from 'expo-router';
 import { Calendar, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
@@ -25,6 +27,7 @@ export default function AdminScreen() {
         fetchLeaveData,
         isSyncingRequests
     } = useLeaveStore();
+    const obliserv = usePCSStore(state => state.financials.obliserv);
 
     useScreenHeader("MY ADMIN", "Leave & Actions", undefined, null, {
         icon: ChevronLeft,
@@ -58,6 +61,16 @@ export default function AdminScreen() {
 
     const renderHeader = () => (
         <View>
+            {/* Pending Actions — OBLISERV */}
+            {obliserv.required && obliserv.status !== 'COMPLETE' && (
+                <View className="mb-6">
+                    <Text className="text-xs font-black tracking-[2px] uppercase text-slate-400 dark:text-slate-500 mb-3">
+                        Pending Actions
+                    </Text>
+                    <ObliservBanner variant="full" />
+                </View>
+            )}
+
             {/* Balance Card */}
             {leaveBalance ? (
                 <LeaveBalanceCard

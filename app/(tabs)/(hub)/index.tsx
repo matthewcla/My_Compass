@@ -4,6 +4,7 @@ import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { MenuTile } from '@/components/menu/MenuTile';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
+import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -65,7 +66,9 @@ export default function HubDashboard() {
 
     const isDemoMode = useDemoStore(state => state.isDemoMode);
     const selectedPhase = useDemoStore(state => state.selectedPhase);
+    const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
     const initializeOrders = usePCSStore(state => state.initializeOrders);
+    const obliserv = usePCSStore(state => state.financials.obliserv);
     const pcsPhase = usePCSPhase();
     const subPhase = useSubPhase();
 
@@ -142,6 +145,10 @@ export default function HubDashboard() {
     }
 
     const sections = ['menu'];
+    // OBLISERV: Surface on Home Hub during Selection phase if unresolved
+    if (assignmentPhase === 'SELECTION' && obliserv.required && obliserv.status !== 'COMPLETE') {
+        sections.push('obliserv');
+    }
     // Show standalone receipt capture on Home Hub during Phase 3 (ACTIVE_TRAVEL) only.
     // Phase 2 (PLANNING) shares TRANSIT_LEAVE but doesn't need receipt capture yet.
     // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
@@ -252,6 +259,8 @@ export default function HubDashboard() {
                 const { PCSMissionBrief } = require('@/components/pcs/widgets/PCSMissionBrief');
                 return <PCSMissionBrief />;
             }
+            case 'obliserv':
+                return <ObliservBanner variant="widget" />;
             case 'leave':
                 return (
                     <LeaveCard

@@ -4,11 +4,9 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useActiveOrder } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+
 import {
   Building2,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
   ClipboardList,
   Mail,
   MapPin,
@@ -16,7 +14,7 @@ import {
   Shirt,
   User,
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { Linking, Platform, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -34,7 +32,6 @@ export function BaseWelcomeKit() {
   const colorScheme = useColorScheme() ?? 'light';
   const isDark = colorScheme === 'dark';
   const router = useRouter();
-  const [tipsExpanded, setTipsExpanded] = useState(false);
 
   if (!activeOrder) return null;
 
@@ -48,8 +45,27 @@ export function BaseWelcomeKit() {
 
   const sponsor = activeOrder.sponsor;
   const hasLocation = quarterdeckLocation?.latitude && quarterdeckLocation?.longitude;
-  const hasUniform = uniformOfDay?.trim();
   const hasSponsor = sponsor?.phone || sponsor?.email;
+
+  // Day 1: override uniform to seasonal dress uniform
+  const daysOnStation = useMemo(() => {
+    if (!activeOrder?.reportNLT) return 0;
+    const report = new Date(activeOrder.reportNLT);
+    const today = new Date();
+    report.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.floor((today.getTime() - report.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(1, diff + 1);
+  }, [activeOrder?.reportNLT]);
+
+  const displayUniform = useMemo(() => {
+    if (daysOnStation === 1) {
+      const month = new Date().getMonth(); // 0-indexed
+      // Oct(9)–Mar(2) = Blues, Apr(3)–Sep(8) = Whites
+      return month >= 3 && month <= 8 ? 'Service Dress Whites' : 'Service Dress Blues';
+    }
+    return uniformOfDay?.trim() || null;
+  }, [daysOnStation, uniformOfDay]);
 
   // ── Handlers ──────────────────────────────────────────────────
 
@@ -96,25 +112,12 @@ export function BaseWelcomeKit() {
     }
 
     try {
-      await Linking.openURL(`mailto:${email}`);
+      await Linking.openURL(`mailto:${email}?subject=${encodeURIComponent('My Check-In')}`);
     } catch {
       // Silently fail
     }
   };
 
-  const handleCheckInPress = async () => {
-    if (Platform.OS !== 'web') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
-    }
-    router.push('/pcs-wizard/check-in' as any);
-  };
-
-  const toggleTips = () => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
-    }
-    setTipsExpanded((prev) => !prev);
-  };
 
   return (
     <Animated.View entering={FadeInDown.delay(50).springify()}>
@@ -145,28 +148,33 @@ export function BaseWelcomeKit() {
                 </Text>
               )}
             </View>
-            {/* Status chip — CHECK IN */}
-            <View className="bg-green-600/90 dark:bg-green-700/80 rounded-lg px-2.5 py-1.5 ml-2">
+            {/* Status chip — CHECK IN (tappable) */}
+            <ScalePressable
+              onPress={() => router.push('/pcs-wizard/check-in' as any)}
+              className="bg-green-600/90 dark:bg-green-700/80 rounded-lg px-2.5 py-1.5 ml-2"
+              accessibilityRole="button"
+              accessibilityLabel="Go to check-in flow"
+            >
               <Text className="text-[11px] font-black text-white tracking-wide">
                 CHECK IN
               </Text>
-            </View>
+            </ScalePressable>
           </View>
         </View>
 
         {/* Content */}
         <View className="p-5" style={{ gap: 14 }}>
           {/* Uniform of the Day */}
-          {hasUniform && (
+          {displayUniform && (
             <View className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700">
               <View className="flex-row items-center">
                 <Shirt size={18} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                 <Text className="ml-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Uniform of the Day
+                  {daysOnStation === 1 ? 'Report In' : 'Uniform of the Day'}
                 </Text>
               </View>
               <Text className="mt-1.5 text-base font-bold text-slate-900 dark:text-white">
-                {uniformOfDay}
+                {displayUniform}
               </Text>
             </View>
           )}
@@ -231,7 +239,7 @@ export function BaseWelcomeKit() {
                           Call
                         </Text>
                       </View>
-                      <Text className="text-xs text-amber-600 dark:text-amber-400">
+                      <Text className="text-sm font-bold text-amber-700 dark:text-amber-300">
                         {sponsor.phone}
                       </Text>
                     </ScalePressable>
@@ -251,7 +259,7 @@ export function BaseWelcomeKit() {
                           Email
                         </Text>
                       </View>
-                      <Text className="text-xs text-amber-600 dark:text-amber-400">
+                      <Text className="text-sm font-bold text-amber-700 dark:text-amber-300">
                         {sponsor.email}
                       </Text>
                     </ScalePressable>
@@ -276,58 +284,31 @@ export function BaseWelcomeKit() {
                   Quarterdeck
                 </Text>
               </View>
-              <Text className="text-xs text-blue-600 dark:text-blue-400">{quarterdeckPhone}</Text>
+              <Text className="text-sm font-bold text-blue-700 dark:text-blue-300">{quarterdeckPhone}</Text>
             </ScalePressable>
           )}
 
-          {/* Reporting Instructions (Collapsible) */}
-          <View>
-            <ScalePressable
-              onPress={toggleTips}
-              className="flex-row items-center justify-between py-1"
-              accessibilityRole="button"
-              accessibilityLabel={tipsExpanded ? 'Collapse reporting instructions' : 'Expand reporting instructions'}
-            >
-              <View className="flex-row items-center">
-                <ClipboardList size={16} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
-                <Text className="ml-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Reporting Instructions
-                </Text>
-              </View>
-              {tipsExpanded
-                ? <ChevronUp size={16} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
-                : <ChevronDown size={16} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
-              }
-            </ScalePressable>
-
-            {tipsExpanded && (
-              <Animated.View entering={FadeInDown.duration(200)}>
-                <View className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 mt-2 border border-slate-200 dark:border-slate-700">
-                  {REPORT_TIPS.map((tip, i) => (
-                    <View key={i} className="flex-row items-start" style={{ marginBottom: i < REPORT_TIPS.length - 1 ? 8 : 0 }}>
-                      <Text className="text-xs text-slate-400 dark:text-slate-500 mr-2 mt-px">•</Text>
-                      <Text className="text-sm text-slate-700 dark:text-slate-300 flex-1">
-                        {tip}
-                      </Text>
-                    </View>
-                  ))}
+          {/* Reporting Instructions */}
+          <View className="bg-blue-50/50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200/60 dark:border-blue-800/30">
+            <View className="flex-row items-center mb-3">
+              <ClipboardList size={18} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
+              <Text className="ml-2 text-xs font-bold uppercase tracking-[1.4px] text-blue-800 dark:text-blue-300">
+                Reporting Instructions
+              </Text>
+            </View>
+            <View style={{ gap: 8 }}>
+              {REPORT_TIPS.map((tip, i) => (
+                <View key={i} className="flex-row items-start">
+                  <View className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 items-center justify-center mr-2.5 mt-px">
+                    <Text className="text-[10px] font-black text-blue-700 dark:text-blue-300">{i + 1}</Text>
+                  </View>
+                  <Text className="text-sm font-medium text-slate-800 dark:text-slate-200 flex-1">
+                    {tip}
+                  </Text>
                 </View>
-              </Animated.View>
-            )}
+              ))}
+            </View>
           </View>
-
-          {/* Check In CTA */}
-          <ScalePressable
-            onPress={handleCheckInPress}
-            className="bg-blue-600 dark:bg-blue-500 rounded-lg p-3.5 flex-row items-center justify-between"
-            accessibilityRole="button"
-            accessibilityLabel="Begin Command Check-In"
-          >
-            <Text className="text-base font-bold text-white">
-              Begin Check-In
-            </Text>
-            <ChevronRight size={20} color="#ffffff" strokeWidth={2.5} />
-          </ScalePressable>
         </View>
       </GlassView>
     </Animated.View>

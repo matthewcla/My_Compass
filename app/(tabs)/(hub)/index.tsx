@@ -151,9 +151,16 @@ export default function HubDashboard() {
         sections.push('arrivalBriefing');
         sections.push('tierThisWeek');
         sections.push('travelClaimUrgency');
-        sections.push('tierTracking');
-        sections.push('liquidationTracker');
+        // Only show liquidation widget when there's an active liquidation to track
+        const liquidation = usePCSStore.getState().financials.liquidation;
+        const hasActiveLiquidation = liquidation && liquidation.currentStatus !== 'NOT_STARTED';
+        if (hasActiveLiquidation) {
+            sections.push('tierTracking');
+            sections.push('liquidationTracker');
+        }
     }
+    // Tracking header always visible above leave
+    sections.push('tierTracking');
     sections.push('leave');
 
     const renderItem = ({ item }: { item: any }) => {

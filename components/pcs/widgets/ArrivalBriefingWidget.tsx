@@ -69,7 +69,7 @@ export function ArrivalBriefingWidget() {
         today.setHours(0, 0, 0, 0);
         report.setHours(0, 0, 0, 0);
         const diff = Math.floor((today.getTime() - report.getTime()) / (1000 * 60 * 60 * 24));
-        return Math.max(0, diff);
+        return Math.max(1, diff + 1); // Day 1 = report date
     }, [activeOrder?.reportNLT]);
 
     // Check which timeline steps are completed via matching checklist items

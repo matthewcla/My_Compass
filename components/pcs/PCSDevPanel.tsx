@@ -20,7 +20,7 @@ import Animated, {
     Easing,
     useAnimatedStyle,
     useSharedValue,
-    withTiming,
+    withTiming
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -123,12 +123,9 @@ export function PCSDevPanel() {
     };
 
     const closePanel = () => {
-        panelProgress.value = withTiming(0, ANIM_CONFIG);
-        // Delay state change so exit animation plays
-        setTimeout(() => {
-            setPanelOpen(false);
-            setShowAdvanced(false);
-        }, ANIM_CONFIG.duration);
+        setPanelOpen(false);
+        setShowAdvanced(false);
+        panelProgress.value = 0;
     };
 
     const toggleAdvanced = () => {
@@ -167,6 +164,7 @@ export function PCSDevPanel() {
                 pointerEvents="box-none"
                 style={[{
                     position: 'absolute',
+                    top: 0,
                     bottom: 0,
                     right: 0,
                     left: 0,
@@ -262,13 +260,6 @@ export function PCSDevPanel() {
                         >
                             Demo Scenarios
                         </Text>
-                        <TouchableOpacity
-                            onPress={closePanel}
-                            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                            style={{ position: 'absolute', right: 0 }}
-                        >
-                            <Ionicons name="close-circle" size={20} color={isDark ? '#475569' : '#94A3B8'} />
-                        </TouchableOpacity>
                     </View>
 
                     {/* ── Scenario Preset Chips ────────────────────────────── */}

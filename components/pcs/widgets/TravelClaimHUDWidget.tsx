@@ -108,7 +108,7 @@ export function TravelClaimHUDWidget() {
           </View>
           <View className="flex-1">
             <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-500 dark:text-slate-300">
-              DD 1351-2 Travel Claim
+              Travel Claim
             </Text>
             <Text className="mt-0.5 text-base font-bold text-slate-900 dark:text-white">
               File Within 5 Days

@@ -337,7 +337,7 @@ export const usePCSStore = create<PCSState>()(
         // Phase 4: Check-in & Travel Claim
         checklist.push({
           id: generateUUID(),
-          label: 'Complete Gaining Command Check-In',
+          label: 'Complete Check-In',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 4,
@@ -346,7 +346,7 @@ export const usePCSStore = create<PCSState>()(
         });
         checklist.push({
           id: generateUUID(),
-          label: 'File DD 1351-2 Travel Claim',
+          label: 'File Travel Claim',
           status: 'NOT_STARTED',
           category: 'FINANCE',
           uctPhase: 4,
@@ -363,14 +363,7 @@ export const usePCSStore = create<PCSState>()(
           actionRoute: '/pcs-wizard/profile-confirmation',
           helpText: 'Verify your new address, housing, and contact info are current after your move.',
         });
-        checklist.push({
-          id: generateUUID(),
-          label: 'Report for Duty to Division',
-          status: 'NOT_STARTED',
-          category: 'PRE_TRAVEL',
-          uctPhase: 4,
-          helpText: 'Check in with your division officer and get assigned to a watch section.',
-        });
+
 
         set({ activeOrder: order, checklist });
 
@@ -789,7 +782,7 @@ export const usePCSStore = create<PCSState>()(
         set({ travelClaim: { draft: submittedDraft, status: 'submitted' } });
 
         // Mark the checklist item complete
-        const task = get().checklist.find((c) => c.label === 'File DD 1351-2 Travel Claim');
+        const task = get().checklist.find((c) => c.label === 'File Travel Claim');
         if (task) get().setChecklistItemStatus(task.id, 'COMPLETE');
 
         // Trigger liquidation tracking

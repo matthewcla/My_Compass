@@ -103,6 +103,7 @@ export const MOCK_PCS_ORDERS: PCSOrder = {
     psdPhone: '+81-46-816-5678',
     oodPhone: '+81-46-816-0000',
     uniformOfDay: 'NWU Type III',
+    homePort: 'Yokosuka, Japan',
     quarterdeckLocation: { latitude: 35.2916, longitude: 139.6683 },
   },
   sponsor: {
@@ -186,6 +187,7 @@ export const MOCK_PCS_ORDERS_PERSONA_B: PCSOrder = {
     psdPhone: '+1-619-437-3456',
     oodPhone: '+1-619-437-0000',
     uniformOfDay: 'NWU Type III',
+    homePort: 'Coronado, CA',
     quarterdeckLocation: { latitude: 32.6811, longitude: -117.1565 },
   },
   sponsor: {
@@ -278,6 +280,7 @@ export const MOCK_PCS_ORDERS_PERSONA_C: PCSOrder = {
     psdPhone: '+1-860-694-3456',
     oodPhone: '+1-860-694-0000',
     uniformOfDay: 'NWU Type I',
+    homePort: 'Groton, CT',
     quarterdeckLocation: { latitude: 41.3831, longitude: -72.0829 },
   },
   sponsor: {

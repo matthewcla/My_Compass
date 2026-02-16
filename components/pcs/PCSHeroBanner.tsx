@@ -94,7 +94,7 @@ export function PCSHeroBanner() {
                     <View className="flex-row items-center mb-2">
                         <MapPin size={16} color="#C9A227" />
                         <Text className="text-xs font-semibold uppercase tracking-widest text-slate-400 ml-2">
-                            {homePort || 'PCS Destination'}
+                            {homePort || 'Command Location'}
                         </Text>
                     </View>
 

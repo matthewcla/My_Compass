@@ -37,10 +37,10 @@ const TIMELINE_STEPS: TimelineStep[] = [
     },
     {
         id: 'claim',
-        label: 'File DD 1351-2 travel claim',
+        label: 'File travel claim',
         timeframe: 'Days 1–5',
         icon: FileText,
-        checklistLabel: 'File DD 1351-2 Travel Claim',
+        checklistLabel: 'File Travel Claim',
     },
     {
         id: 'housing',

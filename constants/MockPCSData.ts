@@ -295,17 +295,130 @@ export const MOCK_PCS_ORDERS_PERSONA_C: PCSOrder = {
   isSeaDuty: true,
 };
 
+// =============================================================================
+// PERSONA D: "THE IT PROFESSIONAL" - E-6, Norfolk → Pensacola with Dependents
+// =============================================================================
+
+const SEGMENT_D1: PCSSegment = {
+  id: 'seg-d1-origin',
+  type: 'ORIGIN',
+  title: 'Detach USS Gerald R. Ford',
+  location: {
+    name: 'USS Gerald R. Ford (CVN-78)',
+    uic: '09561',
+    zip: '23511',
+    type: 'DUTY_STATION',
+  },
+  dates: {
+    projectedArrival: getDate(-365 * 2.5), // Arrived ~2.5 years ago
+    projectedDeparture: getDate(30),        // Departing in 30 days
+    nlt: getDate(30),
+  },
+  entitlements: {
+    authorizedTravelDays: 3,
+    proceedDays: 0,
+    leaveDays: 0,
+  },
+  userPlan: {
+    mode: 'POV',
+    isAccompanied: true,
+  },
+  status: 'PLANNING',
+};
+
+const SEGMENT_D2: PCSSegment = {
+  id: 'seg-d2-enroute',
+  type: 'INTERMEDIATE',
+  title: 'En-Route Leave — Raleigh, NC',
+  location: {
+    name: 'Raleigh, NC (Family Visit)',
+    uic: '00000',
+    zip: '27601',
+    type: 'TAD',
+  },
+  dates: {
+    projectedArrival: getDate(33),
+    projectedDeparture: getDate(40),
+    nlt: getDate(45),
+  },
+  entitlements: {
+    authorizedTravelDays: 0,
+    proceedDays: 0,
+    leaveDays: 7,
+  },
+  userPlan: {
+    mode: 'POV',
+    isAccompanied: true,
+  },
+  status: 'PLANNING',
+};
+
+const SEGMENT_D3: PCSSegment = {
+  id: 'seg-d3-dest',
+  type: 'DESTINATION',
+  title: 'Report to CETTC Corry Station',
+  location: {
+    name: 'Center for Information Warfare Training (CETTC)',
+    uic: '62500',
+    zip: '32508',
+    type: 'DUTY_STATION',
+  },
+  dates: {
+    projectedArrival: getDate(42),
+    projectedDeparture: getDate(42 + 365 * 3),
+    nlt: getDate(50),
+  },
+  entitlements: {
+    authorizedTravelDays: 2,
+    proceedDays: 4,
+    leaveDays: 14,
+  },
+  userPlan: {
+    mode: 'POV',
+    isAccompanied: true,
+  },
+  status: 'LOCKED',
+};
+
+export const MOCK_PCS_ORDERS_PERSONA_D: PCSOrder = {
+  orderNumber: 'ORD-2026-004',
+  gainingCommand: {
+    name: 'CETTC Corry Station',
+    uic: '62500',
+    address: 'Center for Information Warfare Training, 640 Roberts Ave, Pensacola, FL 32508',
+    zip: '32508',
+    quarterdeckPhone: '+1-850-452-6100',
+    psdPhone: '+1-850-452-6200',
+    oodPhone: '+1-850-452-6000',
+    uniformOfDay: 'NWU Type III',
+    homePort: 'Pensacola, FL',
+    quarterdeckLocation: { latitude: 30.3958, longitude: -87.2925 },
+  },
+  sponsor: {
+    name: 'ITC(IW) Robert Delgado',
+    rank: 'E-7',
+    phone: '+1-850-555-3847',
+    email: 'robert.delgado@navy.mil',
+  },
+  segments: [SEGMENT_D1, SEGMENT_D2, SEGMENT_D3],
+  reportNLT: SEGMENT_D3.dates.nlt,
+  isOconus: false,
+  isSeaDuty: false,
+};
+
 /**
  * Get PCS order by persona/user ID
  */
 export const getPCSOrderByUserId = (userId: string): PCSOrder => {
   switch (userId) {
     case 'demo-user-1':
-      return MOCK_PCS_ORDERS; // Persona A - Family Move
+      return MOCK_PCS_ORDERS; // Persona A - Family Move (AT1 Trent)
     case 'demo-user-2':
-      return MOCK_PCS_ORDERS_PERSONA_B; // Persona B - Single Sailor
+      return MOCK_PCS_ORDERS_PERSONA_B; // Persona B - Single Sailor (LT Navarro)
     case 'demo-user-3':
-      return MOCK_PCS_ORDERS_PERSONA_C; // Persona C - Career Sailor
+      return MOCK_PCS_ORDERS_PERSONA_C; // Persona C - Career Sailor (ETN1 Hargrove)
+    case 'demo-user-4':
+      return MOCK_PCS_ORDERS_PERSONA_D; // Persona D - IT Professional (IT1 Wilson)
     default:
       return MOCK_PCS_ORDERS; // Default fallback
   }

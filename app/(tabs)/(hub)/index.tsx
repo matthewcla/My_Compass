@@ -20,7 +20,7 @@ import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
-import { useUserStore } from '@/store/useUserStore';
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
@@ -43,7 +43,7 @@ const AnimatedFlashList = (Platform.OS === 'web'
 export default function HubDashboard() {
     const router = useRouter();
     const { isLoading: isSessionLoading } = useSession();
-    const user = useUserStore(useShallow(state => state.user));
+    const user = useCurrentProfile();
     const generateQuickDraft = useLeaveStore(state => state.generateQuickDraft);
     const fetchUserDefaults = useLeaveStore(state => state.fetchUserDefaults);
     const insets = useSafeAreaInsets();

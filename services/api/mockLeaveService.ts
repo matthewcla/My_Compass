@@ -5,6 +5,8 @@ import type {
 } from '@/types/api';
 import type { LeaveBalance, LeaveRequest } from '@/types/schema';
 import type { ILeaveService } from './interfaces/ILeaveService';
+import { useDemoStore } from '@/store/useDemoStore';
+import { getLeaveDefaults } from '@/constants/MockLeaveDefaults';
 
 // =============================================================================
 // HELPER FUNCTIONS
@@ -19,6 +21,7 @@ import type { ILeaveService } from './interfaces/ILeaveService';
  */
 export const generateDraftRequest = (userId: string): LeaveRequest => {
     const now = new Date().toISOString();
+    const defaults = getLeaveDefaults(userId);
 
     return {
         id: `lr-draft-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -31,14 +34,14 @@ export const generateDraftRequest = (userId: string): LeaveRequest => {
 
         // Leave details
         leaveType: 'annual',
-        leaveAddress: '',
-        leavePhoneNumber: '',
+        leaveAddress: defaults.leaveAddress ?? '',
+        leavePhoneNumber: defaults.leavePhoneNumber ?? '',
 
-        // Emergency contact (required, initialized empty)
+        // Emergency contact — pre-filled from persona defaults
         emergencyContact: {
-            name: '',
-            relationship: '',
-            phoneNumber: '',
+            name: defaults.emergencyContact?.name ?? '',
+            relationship: defaults.emergencyContact?.relationship ?? '',
+            phoneNumber: defaults.emergencyContact?.phoneNumber ?? '',
             altPhoneNumber: undefined,
             address: undefined,
         },
@@ -87,19 +90,32 @@ export const generateDraftRequest = (userId: string): LeaveRequest => {
 // MOCK DATA
 // =============================================================================
 
-const MOCK_LEAVE_BALANCE: LeaveBalance = {
-    id: 'lb-mock-user-1',
-    userId: 'user-123', // Will be overwritten by requested userId
-    currentBalance: 45.5,
-    useOrLoseDays: 15.0,
-    useOrLoseExpirationDate: '2026-09-30T23:59:59Z',
-    earnedThisFiscalYear: 10.0,
-    usedThisFiscalYear: 5.0,
-    projectedEndOfYearBalance: 55.5, // 45.5 + (2.5 * 8 months left) approx
-    maxCarryOver: 60,
-    balanceAsOfDate: new Date().toISOString(),
-    lastSyncTimestamp: new Date().toISOString(),
-    syncStatus: 'synced',
+/**
+ * Builds a LeaveBalance for the requested userId.
+ * In demo mode, reads the persona's leaveBalance from DemoUser.
+ */
+const buildLeaveBalance = (userId: string): LeaveBalance => {
+    const demo = useDemoStore.getState();
+    const balance = (demo.isDemoMode && demo.selectedUser?.leaveBalance != null)
+        ? demo.selectedUser.leaveBalance
+        : 45.5;
+
+    const useOrLose = Math.max(0, balance - 60);
+
+    return {
+        id: `lb-${userId}`,
+        userId,
+        currentBalance: balance,
+        useOrLoseDays: useOrLose,
+        useOrLoseExpirationDate: '2026-09-30T23:59:59Z',
+        earnedThisFiscalYear: 10.0,
+        usedThisFiscalYear: 5.0,
+        projectedEndOfYearBalance: balance + 20, // ~2.5 days/mo * 8 months left
+        maxCarryOver: 60,
+        balanceAsOfDate: new Date().toISOString(),
+        lastSyncTimestamp: new Date().toISOString(),
+        syncStatus: 'synced',
+    };
 };
 
 // =============================================================================
@@ -117,7 +133,7 @@ export const mockLeaveService: ILeaveService = {
 
         return {
             success: true,
-            data: { ...MOCK_LEAVE_BALANCE, userId },
+            data: buildLeaveBalance(userId),
             meta: meta(),
         };
     },

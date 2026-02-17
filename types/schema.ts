@@ -400,6 +400,7 @@ export const BilletSchema = z.object({
   dutyType: z.string().nullable().optional(), // Sea, Shore, Overseas, etc.
   reportNotLaterThan: z.string().datetime().nullable().optional(), // RNLTD
   billetDescription: z.string().nullable().optional(),
+  targetRating: z.string().nullable().optional(), // Rating filter (IT, AT, SWO, ETN, etc.)
 
   // Compass AI Enhancements
   compass: CompassBilletMetadataSchema,

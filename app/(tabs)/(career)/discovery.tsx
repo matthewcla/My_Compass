@@ -9,6 +9,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useFeedback } from '@/hooks/useFeedback';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { useDemoStore } from '@/store/useDemoStore';
 import { Billet } from '@/types/schema';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -45,6 +46,8 @@ export default function DiscoveryScreen() {
         updateSandboxFilters,
         applications
     } = useAssignmentStore();
+    const profile = useCurrentProfile();
+    const activeUserId = profile?.id ?? 'unknown';
     const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
     const isSlatePhase = assignmentPhase === 'NEGOTIATION';
     const colorScheme = useColorScheme();
@@ -58,7 +61,7 @@ export default function DiscoveryScreen() {
     // Initial Fetch
     useEffect(() => {
         if (billetStack.length === 0) {
-            fetchBillets('USER_0001');
+            fetchBillets(activeUserId);
         }
     }, []);
 
@@ -168,7 +171,7 @@ export default function DiscoveryScreen() {
 
         // Defer: No visual transition — store re-queues the billet
         if (direction === 'down') {
-            await swipe(currentBillet.id, direction, 'USER_0001');
+            await swipe(currentBillet.id, direction, activeUserId);
             if (mode === 'real') {
                 showFeedback('Deferred. You\'ll see this one again later.', 'info');
             }
@@ -179,7 +182,7 @@ export default function DiscoveryScreen() {
         deck.next();
 
         // 2. Store Update
-        await swipe(currentBillet.id, direction, 'USER_0001');
+        await swipe(currentBillet.id, direction, activeUserId);
 
         // 3. Phase-gated Feedback
         if (mode === 'real') {
@@ -208,7 +211,7 @@ export default function DiscoveryScreen() {
 
     const handleUndo = () => {
         deck.back();
-        undo('USER_0001');
+        undo(activeUserId);
     };
 
     // Calculate Saved Count (Shortlist) for Header

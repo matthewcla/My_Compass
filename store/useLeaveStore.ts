@@ -2,7 +2,7 @@ import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
 import { useDemoStore } from '@/store/useDemoStore';
-import { MOCK_LEAVE_DEFAULTS } from '@/constants/MockLeaveDefaults';
+import { getLeaveDefaults } from '@/constants/MockLeaveDefaults';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import {
     LeaveBalance,
@@ -172,9 +172,9 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         try {
             let defaults = await storage.getLeaveDefaults(userId);
 
-            // Seed defaults from mock data if not yet persisted
+            // Seed defaults from persona-aware mock data if not yet persisted
             if (!defaults) {
-                defaults = { ...MOCK_LEAVE_DEFAULTS };
+                defaults = { ...getLeaveDefaults(userId) };
                 await storage.saveLeaveDefaults(userId, defaults);
             }
 
@@ -221,20 +221,8 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         const now = new Date();
         const draftId = generateUUID();
 
-        // Robust Defaults (Fallback if userDefaults is null)
-        const defaults = userDefaults || {
-            leaveAddress: '123 Sailor Blvd, Norfolk, VA',
-            leavePhoneNumber: '555-000-1234',
-            emergencyContact: {
-                name: 'Sarah Connor',
-                relationship: 'Mother',
-                phoneNumber: '555-867-5309',
-            },
-            dutySection: 'Deck Dept',
-            deptDiv: '1st Div',
-            dutyPhone: '555-111-2222',
-            rationStatus: 'not_applicable'
-        };
+        // Robust Defaults (Fallback if userDefaults is null — use persona-aware defaults)
+        const defaults = userDefaults || getLeaveDefaults(userId);
 
         let startDate = '';
         let endDate = '';

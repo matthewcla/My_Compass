@@ -460,6 +460,52 @@ export function PCSDevPanel() {
                             left: 0,
                         }, tabBarSyncStyle]}
                     >
+                        {/* ── Phase stepper chevrons ── */}
+                        <TouchableOpacity
+                            onPress={() => setLifecycleStep(Math.max(0, lifecycleStep - 1))}
+                            activeOpacity={0.7}
+                            disabled={lifecycleStep <= 0}
+                            style={{
+                                position: 'absolute',
+                                bottom: 108 + 48 + 8 + 36 + 4,  // beaker bottom + beaker height + gap + chevron height + gap
+                                right: 16 + (48 - 36) / 2,      // center within beaker column
+                                width: 36,
+                                height: 36,
+                                borderRadius: 18,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.10)',
+                                borderWidth: 1,
+                                borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(252, 165, 165, 0.6)',
+                                opacity: lifecycleStep <= 0 ? 0.35 : 1,
+                            }}
+                        >
+                            <Ionicons name="chevron-up" size={18} color={isDark ? '#F87171' : '#EF4444'} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={() => setLifecycleStep(Math.min(LIFECYCLE_STEPS.length - 1, lifecycleStep + 1))}
+                            activeOpacity={0.7}
+                            disabled={lifecycleStep >= LIFECYCLE_STEPS.length - 1}
+                            style={{
+                                position: 'absolute',
+                                bottom: 108 + 48 + 8,            // beaker bottom + beaker height + gap
+                                right: 16 + (48 - 36) / 2,      // center within beaker column
+                                width: 36,
+                                height: 36,
+                                borderRadius: 18,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: isDark ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.10)',
+                                borderWidth: 1,
+                                borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : 'rgba(134, 239, 172, 0.6)',
+                                opacity: lifecycleStep >= LIFECYCLE_STEPS.length - 1 ? 0.35 : 1,
+                            }}
+                        >
+                            <Ionicons name="chevron-down" size={18} color={isDark ? '#4ADE80' : '#22C55E'} />
+                        </TouchableOpacity>
+
+                        {/* ── Beaker icon ── */}
                         <TouchableOpacity
                             onPress={openPanel}
                             activeOpacity={0.8}

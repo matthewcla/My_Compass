@@ -1,4 +1,4 @@
-import { useScrollContext } from '@/components/navigation/ScrollControlContext';
+import { useScrollContextSafe } from '@/components/navigation/ScrollControlContext';
 import { DEMO_USERS } from '@/constants/DemoData';
 import { LIFECYCLE_STEPS, useDemoStore } from '@/store/useDemoStore';
 import { usePCSArchiveStore } from '@/store/usePCSArchiveStore';
@@ -66,7 +66,10 @@ export function PCSDevPanel() {
 
     // Sync position with GlobalTabBar's scroll-to-hide animation.
     // Clamp so the beaker settles ~24px above the safe area (not off-screen).
-    const { translateY: tabBarTranslateY } = useScrollContext();
+    // Use safe variant — context may be absent on screens without CollapsibleScaffold.
+    const scrollContext = useScrollContextSafe();
+    const fallbackTranslateY = useSharedValue(0);
+    const tabBarTranslateY = scrollContext?.translateY ?? fallbackTranslateY;
     const insets = useSafeAreaInsets();
     const BEAKER_RESTING_BOTTOM = 108; // collapsed-state `bottom` value
     const BEAKER_MIN_BOTTOM = 24 + insets.bottom; // comfortable floor above safe area

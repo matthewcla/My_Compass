@@ -9,6 +9,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useFeedback } from '@/hooks/useFeedback';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
+import { useDemoStore } from '@/store/useDemoStore';
 import { Billet } from '@/types/schema';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -44,6 +45,8 @@ export default function DiscoveryScreen() {
         updateSandboxFilters,
         applications
     } = useAssignmentStore();
+    const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
+    const isSlatePhase = assignmentPhase === 'NEGOTIATION';
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
@@ -176,44 +179,32 @@ export default function DiscoveryScreen() {
         deck.next();
 
         // 2. Store Update
-        // Right -> Manifest (Like)
-        // Up -> Slate (Promote)
-        // Left -> Archive (Nope)
         await swipe(currentBillet.id, direction, 'USER_0001');
 
-        // 3. Feedback Logic
+        // 3. Phase-gated Feedback
         if (mode === 'real') {
             if (direction === 'up') {
-                // Check if it was actually added to slate or just manifest (due to full slate)
-                // We need to check if an application exists for this billet now.
-                // Since state update might be async/batched, we might need a better way or assume store logic.
-                // Store `promoteToSlate` returns boolean, but `swipe` calls it internally and doesn't return the result.
-                // For now, let's check the application count constraint logic which is 7.
-
-                // USE REF TO PREVENT DEPENDENCY ON APPLICATIONS STATE (Background Sync)
-                const activeAppCount = Object.values(applicationsRef.current).filter(a =>
-                    ['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)
-                ).length;
-
-                // We are post-swipe, so if it WAS added, count should be <= 7 (if it was 6 before).
-                // Or we can rely on `realDecisions` being 'super'.
-                // If the slate was full (7), it wouldn't add.
-                // NOTE: This check is slightly racy with React state update, but for feedback it's usually acceptable.
-                // Better approach: calculate count *before* or modify store to return result.
-                // Assuming it worked for now:
-                if (activeAppCount <= 7) {
-                    // Calculate count (naive approximation since state might lag slightly)
-                    showFeedback(`Drafted! Added to Slate (${Math.min(activeAppCount + 1, 7)}/7)`, 'success');
+                if (isSlatePhase) {
+                    // Negotiation: actual slate building
+                    const activeAppCount = Object.values(applicationsRef.current).filter(a =>
+                        ['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)
+                    ).length;
+                    if (activeAppCount <= 7) {
+                        showFeedback(`Drafted! Added to Slate (${Math.min(activeAppCount + 1, 7)}/7)`, 'success');
+                    } else {
+                        showFeedback('Slate Full. Added to Manifest instead.', 'warning');
+                    }
                 } else {
-                    showFeedback('Slate Full. Added to Manifest instead.', 'warning');
+                    // Discovery / On-Ramp: bookmark signaling CNPC interest
+                    showFeedback('Top Pick — CNPC sees this interest.', 'success');
                 }
             } else if (direction === 'right') {
-                showFeedback('Saved to Candidates.', 'info');
+                showFeedback(isSlatePhase ? 'Saved to Candidates.' : 'Bookmarked ✓', 'info');
             } else if (direction === 'left') {
-                showFeedback('Archived. Go to Manifest to recover.', 'info');
+                showFeedback(isSlatePhase ? 'Archived. Go to Manifest to recover.' : 'Passed.', 'info');
             }
         }
-    }, [deck.next, currentBillet, mode, swipe, showFeedback]);
+    }, [deck.next, currentBillet, mode, swipe, showFeedback, isSlatePhase]);
 
     const handleUndo = () => {
         deck.back();

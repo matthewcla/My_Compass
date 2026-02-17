@@ -189,3 +189,11 @@ export function useScrollContext() {
     }
     return context;
 }
+
+/**
+ * Safe variant that returns a static fallback when outside ScrollControlProvider.
+ * Used by PCSDevPanel so it can render on any screen (not just CollapsibleScaffold).
+ */
+export function useScrollContextSafe() {
+    return useContext(ScrollControlContext);
+}

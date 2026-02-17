@@ -127,6 +127,7 @@ export const useDemoStore = create<DemoState>()(
         const target = LIFECYCLE_STEPS[clamped];
         const hasPCS = !!target.pcs;
         set({
+          isDemoMode: true,
           lifecycleStep: clamped,
           assignmentPhaseOverride: target.assignment,
           selectedPhase: hasPCS ? DemoPhase.MY_PCS : DemoPhase.MVP,

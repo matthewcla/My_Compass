@@ -1,8 +1,10 @@
 import OnboardingCard from '@/components/onboarding/OnboardingCard';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { useSession } from '@/lib/ctx';
+import { useDemoStore } from '@/store/useDemoStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
 
+import Constants from 'expo-constants';
 import { usePathname, useSegments } from 'expo-router';
 import {
   ChevronRight,
@@ -11,7 +13,7 @@ import {
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
 import React from 'react';
-import { ScrollView, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
@@ -25,6 +27,9 @@ export default function MenuHubScreen() {
   const segmentList = segments as string[];
   const isDark = colorScheme === 'dark';
   const isMenuModalRoute = segmentList.includes('MenuHubModal') || pathname.includes('MenuHubModal');
+  const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings ?? __DEV__;
+  const showDevFloatingIcons = useDemoStore((s) => s.showDevFloatingIcons);
+  const toggleDevFloatingIcons = useDemoStore((s) => s.toggleDevFloatingIcons);
 
 
   // Dynamic Theme Colors
@@ -90,6 +95,36 @@ export default function MenuHubScreen() {
             </View>
           </TouchableOpacity>
         </MotiView>
+
+        {/* Dev Tools Toggle — only in dev builds */}
+        {__DEV__ && (
+          <MotiView
+            from={{ opacity: 0, translateY: 20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400, delay: 200 }}
+          >
+            <View
+              style={{
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              }}
+              className="rounded-3xl p-5 flex-row items-center justify-between shadow-sm border mb-8"
+            >
+              <View className="flex-row items-center">
+                <View style={{ backgroundColor: isDark ? '#27272A' : '#F1F5F9' }} className="p-3 rounded-full mr-4">
+                  <Text style={{ fontSize: 20 }}>🧪</Text>
+                </View>
+                <Text style={{ color: theme.text }} className="font-bold text-[17px]">Dev Tools</Text>
+              </View>
+              <Switch
+                value={showDevFloatingIcons}
+                onValueChange={toggleDevFloatingIcons}
+                trackColor={{ false: isDark ? '#3f3f46' : '#d1d5db', true: '#3B82F6' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+          </MotiView>
+        )}
 
         {/* Footer Action */}
         <MotiView

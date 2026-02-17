@@ -49,6 +49,7 @@ export function PCSDevPanel() {
 
     const lifecycleStep = useDemoStore((state) => state.lifecycleStep);
     const setLifecycleStep = useDemoStore((state) => state.setLifecycleStep);
+    const showDevFloatingIcons = useDemoStore((state) => state.showDevFloatingIcons);
     const currentStep = LIFECYCLE_STEPS[lifecycleStep] ?? LIFECYCLE_STEPS[0];
 
 
@@ -447,9 +448,9 @@ export function PCSDevPanel() {
             )
             }
 
-            {/* Beaker icon — ALWAYS rendered, never conditionally hidden */}
+            {/* Floating icons — only when panel closed AND icons enabled */}
             {
-                !panelOpen && (
+                !panelOpen && showDevFloatingIcons && (
                     <Animated.View
                         pointerEvents="box-none"
                         style={[{

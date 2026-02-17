@@ -198,7 +198,6 @@ export default function HubDashboard() {
                                     icon={MapIcon}
                                     subtitle={isPCSPhase ? "Action Required" : undefined}
                                     onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
-                                    locked={!isPCSPhase}
                                     accent={isPCSPhase ? '#D97706' : undefined}
                                 />
                             </View>
@@ -217,7 +216,6 @@ export default function HubDashboard() {
                                     label="My Profile"
                                     icon={User}
                                     onPress={() => handleTilePress('/(profile)')}
-                                    locked
                                 />
                             </View>
                         </View>

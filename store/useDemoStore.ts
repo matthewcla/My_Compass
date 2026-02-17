@@ -40,6 +40,7 @@ interface DemoState {
   activeDemoScenarioId: string | null;
   assignmentPhaseOverride: AssignmentPhase | null;
   lifecycleStep: number;
+  showDevFloatingIcons: boolean;
 
   toggleDemoMode: () => void;
   setSelectedUser: (user: DemoUser) => void;
@@ -55,6 +56,7 @@ interface DemoState {
   updateSelectedUser: (updates: Partial<DemoUser>) => void;
   advanceLiquidationStatus: () => void;
   loadMockHistoricalOrders: () => void;
+  toggleDevFloatingIcons: () => void;
 }
 
 export const useDemoStore = create<DemoState>()(
@@ -70,8 +72,10 @@ export const useDemoStore = create<DemoState>()(
       activeDemoScenarioId: null,
       assignmentPhaseOverride: null,
       lifecycleStep: 0,
+      showDevFloatingIcons: true,
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
+      toggleDevFloatingIcons: () => set((state) => ({ showDevFloatingIcons: !state.showDevFloatingIcons })),
       setSelectedUser: (user) => set({ selectedUser: user }),
       updateSelectedUser: (updates) => set((state) => ({
         selectedUser: { ...state.selectedUser, ...updates },

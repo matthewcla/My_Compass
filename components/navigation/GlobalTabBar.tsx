@@ -8,10 +8,8 @@ import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import {
-    ClipboardList,
     Compass,
     LayoutGrid,
-    Settings,
     Target
 } from 'lucide-react-native';
 import React from 'react';
@@ -101,11 +99,6 @@ const SPOKE_CONFIG: Record<string, SpokeConfig> = {
     '(career)': {
         primary: { label: 'Discover', route: '/(career)/discovery', icon: Compass },
         secondary: { label: 'Assignment', route: '/(assignment)', icon: Target },
-    },
-
-    '(profile)': {
-        primary: { label: 'Preferences', route: '/(profile)/preferences', icon: Settings },
-        secondary: { label: 'Surveys', route: '/(profile)/surveys', icon: ClipboardList },
     },
 };
 

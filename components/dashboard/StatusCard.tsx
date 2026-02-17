@@ -158,12 +158,26 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── You've Been Selected (Celebratory) ────────────────────
         case 'selected': {
+            const selectionDetails = useDemoStore.getState().selectionDetails;
             const selGainingCommand = activeOrder?.gainingCommand.name || 'Awaiting assignment details';
+            const selBilletTitle = selectionDetails?.billetTitle;
             const selReportNLT = activeOrder?.reportNLT
                 ? new Date(activeOrder.reportNLT).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
                 : null;
             const obliserv = usePCSStore.getState().financials.obliserv;
             const obliservBlocked = obliserv.required && obliserv.status !== 'COMPLETE';
+
+            // Derive human-readable pipeline label
+            const pipelineLabel = (() => {
+                switch (selectionDetails?.pipelineStatus) {
+                    case 'MATCH_ANNOUNCED': return 'Match Announced';
+                    case 'CO_ENDORSEMENT': return 'Awaiting CO Endorsement';
+                    case 'PERS_PROCESSING': return 'PERS Processing';
+                    case 'ORDERS_DRAFTING': return 'Orders Being Drafted';
+                    case 'ORDERS_RELEASED': return 'Orders Released';
+                    default: return null;
+                }
+            })();
 
             return (
                 <View className="flex flex-col gap-2 my-2">
@@ -194,9 +208,19 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                             You've Been Selected!!!
                                         </Text>
                                         <Detail>{selGainingCommand}</Detail>
+                                        {selBilletTitle && (
+                                            <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold" numberOfLines={1}>
+                                                {selBilletTitle}
+                                            </Text>
+                                        )}
                                         {selReportNLT && (
                                             <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold mt-0.5">
                                                 Report by {selReportNLT}
+                                            </Text>
+                                        )}
+                                        {pipelineLabel && (
+                                            <Text className="text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider mt-1">
+                                                ⏱ {pipelineLabel}
                                             </Text>
                                         )}
                                     </View>
@@ -210,9 +234,17 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                         <CTAText>Extend{'\n'}to Accept</CTAText>
                                     </TouchableOpacity>
                                 ) : (
-                                    <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
-                                        <PillText color="text-green-800 dark:text-green-200">✓ Obligation Met</PillText>
-                                    </Pill>
+                                    <View className="items-end gap-2">
+                                        <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
+                                            <PillText color="text-green-800 dark:text-green-200">✓ Ready</PillText>
+                                        </Pill>
+                                        <TouchableOpacity
+                                            onPress={() => router.push('/(tabs)/(assignment)' as any)}
+                                            className="bg-amber-100 dark:bg-amber-900/40 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
+                                        >
+                                            <CTAText color="text-amber-800 dark:text-amber-200">View{'\n'}Details</CTAText>
+                                        </TouchableOpacity>
+                                    </View>
                                 )}
                             </View>
                         </LinearGradient>

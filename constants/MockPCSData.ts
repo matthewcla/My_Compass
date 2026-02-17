@@ -1,4 +1,4 @@
-import { HistoricalPCSOrder, PCSOrder, PCSSegment } from '@/types/pcs';
+import { HistoricalPCSOrder, PCSOrder, PCSSegment, SelectionDetails } from '@/types/pcs';
 
 const NOW = new Date();
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -6,6 +6,80 @@ const ONE_MONTH = 30 * ONE_DAY;
 
 // Helper to format dates
 const getDate = (daysFromNow: number) => new Date(NOW.getTime() + daysFromNow * ONE_DAY).toISOString();
+
+// =============================================================================
+// SELECTION PHASE — Per-Persona Mock Details
+// =============================================================================
+
+export const MOCK_SELECTION_DETAILS_A: SelectionDetails = {
+  billetTitle: 'WORK CENTER SUPERVISOR',
+  billetNec: '14NO',
+  dutyType: 'Sea',
+  pipelineStatus: 'CO_ENDORSEMENT',
+  estimatedOrdersDate: getDate(28),
+  detailer: {
+    name: 'PS1 Angela Brooks',
+    phone: '(901) 874-3483',
+    email: 'angela.brooks@navy.mil',
+    office: 'PERS-4013',
+  },
+  selectedDate: getDate(-7),
+};
+
+export const MOCK_SELECTION_DETAILS_B: SelectionDetails = {
+  billetTitle: 'OPERATIONS OFFICER',
+  billetNec: null,
+  dutyType: 'Shore',
+  pipelineStatus: 'MATCH_ANNOUNCED',
+  estimatedOrdersDate: getDate(35),
+  detailer: {
+    name: 'LCDR Maria Santos',
+    phone: '(901) 874-4112',
+    email: 'maria.santos@navy.mil',
+    office: 'PERS-41',
+  },
+  selectedDate: getDate(-3),
+};
+
+export const MOCK_SELECTION_DETAILS_C: SelectionDetails = {
+  billetTitle: 'LEADING PETTY OFFICER',
+  billetNec: '14RO',
+  dutyType: 'Sea',
+  pipelineStatus: 'ORDERS_DRAFTING',
+  estimatedOrdersDate: getDate(14),
+  detailer: {
+    name: 'PS1 Darnell Williams',
+    phone: '(901) 874-3500',
+    email: 'darnell.williams@navy.mil',
+    office: 'PERS-4013',
+  },
+  selectedDate: getDate(-21),
+};
+
+export const MOCK_SELECTION_DETAILS_D: SelectionDetails = {
+  billetTitle: 'INFORMATION SYSTEMS INSTRUCTOR',
+  billetNec: '2780',
+  dutyType: 'Shore',
+  pipelineStatus: 'MATCH_ANNOUNCED',
+  estimatedOrdersDate: getDate(42),
+  detailer: {
+    name: 'ITC Rashida Coleman',
+    phone: '(901) 874-3550',
+    email: 'rashida.coleman@navy.mil',
+    office: 'PERS-4013',
+  },
+  selectedDate: getDate(-2),
+};
+
+export const getSelectionDetailsByUserId = (userId: string): SelectionDetails => {
+  switch (userId) {
+    case 'demo-user-1': return MOCK_SELECTION_DETAILS_A;
+    case 'demo-user-2': return MOCK_SELECTION_DETAILS_B;
+    case 'demo-user-3': return MOCK_SELECTION_DETAILS_C;
+    case 'demo-user-4': return MOCK_SELECTION_DETAILS_D;
+    default: return MOCK_SELECTION_DETAILS_A;
+  }
+};
 
 // =============================================================================
 // PERSONA A: "THE FAMILY MOVE" - E-6, Cross-Country with Dependents

@@ -1,4 +1,5 @@
 import DiscoveryEntryWidget from '@/components/assignment/DiscoveryEntryWidget';
+import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
 import SlateSummaryWidget from '@/components/assignment/SlateSummaryWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
@@ -18,9 +19,9 @@ import {
     BookOpen,
     Compass,
     FileSearch,
-    Hourglass,
     Layers,
     Rocket,
+    Star,
 } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -86,19 +87,19 @@ function getPhaseContent(
 
         case 'SELECTION':
             return {
-                icon: <Hourglass size={28} color={isDark ? '#a78bfa' : '#7c3aed'} />,
-                hero: 'Awaiting Results',
-                explainer: 'Your slate has been submitted. Results will be posted after the cycle closes.',
+                icon: <Star size={28} color={isDark ? '#fbbf24' : '#d97706'} />,
+                hero: 'You\'ve Been Selected!',
+                explainer: 'Congratulations — you\'re heading to your next command. Track your orders progress below.',
                 accentColors: {
                     gradient: isDark
-                        ? ['rgba(167,139,250,0.10)', 'rgba(167,139,250,0.02)']
-                        : ['rgba(167,139,250,0.14)', 'rgba(167,139,250,0.04)'],
-                    border: 'border-violet-500 dark:border-violet-400',
-                    iconBg: 'bg-violet-100 dark:bg-violet-900/30',
-                    text: 'text-violet-900 dark:text-violet-100',
-                    ctaLabel: 'View Status',
+                        ? ['rgba(251,191,36,0.10)', 'rgba(251,191,36,0.02)']
+                        : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)'],
+                    border: 'border-amber-500 dark:border-amber-400',
+                    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+                    text: 'text-amber-900 dark:text-amber-100',
+                    ctaLabel: 'Track Pipeline',
                     ctaRoute: '/(assignment)/cycle',
-                    ctaBg: 'bg-violet-600 dark:bg-violet-700',
+                    ctaBg: 'bg-amber-600 dark:bg-amber-700',
                 },
             };
 
@@ -172,6 +173,7 @@ export default function AssignmentDashboard() {
     const showDiscoveryStats = assignmentPhase === 'DISCOVERY'
         || assignmentPhase === 'ON_RAMP';
     const showDiscoveryEntry = assignmentPhase === 'NEGOTIATION';
+    const showSelectionDetail = assignmentPhase === 'SELECTION';
 
     const phaseSubtitle = (() => {
         switch (assignmentPhase) {
@@ -251,16 +253,18 @@ export default function AssignmentDashboard() {
                                     {phase.explainer}
                                 </Text>
 
-                                {/* CTA */}
-                                <TouchableOpacity
-                                    onPress={() => router.push(phase.accentColors.ctaRoute as any)}
-                                    className={`${phase.accentColors.ctaBg} py-3.5 px-6 rounded-xl self-start`}
-                                    style={{ minHeight: 44 }}
-                                >
-                                    <Text className="text-white font-bold text-sm tracking-wide">
-                                        {phase.accentColors.ctaLabel}
-                                    </Text>
-                                </TouchableOpacity>
+                                {/* CTA — hidden for SELECTION since the widget IS the detail */}
+                                {assignmentPhase !== 'SELECTION' && (
+                                    <TouchableOpacity
+                                        onPress={() => router.push(phase.accentColors.ctaRoute as any)}
+                                        className={`${phase.accentColors.ctaBg} py-3.5 px-6 rounded-xl self-start`}
+                                        style={{ minHeight: 44 }}
+                                    >
+                                        <Text className="text-white font-bold text-sm tracking-wide">
+                                            {phase.accentColors.ctaLabel}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
                             </LinearGradient>
                         </GlassView>
 
@@ -285,6 +289,10 @@ export default function AssignmentDashboard() {
                             <DiscoveryEntryWidget
                                 onPress={() => router.push('/(career)/discovery' as any)}
                             />
+                        )}
+
+                        {showSelectionDetail && (
+                            <SelectionDetailWidget />
                         )}
 
                         {/* ── What Happens Next (contextual footer) ──────────── */}
@@ -355,8 +363,10 @@ function getNextSteps(phase: AssignmentPhase | null): string[] {
             ];
         case 'SELECTION':
             return [
-                'Cycle results are being finalized.',
-                'You\'ll be notified once your assignment is confirmed.',
+                'Research your gaining command\'s location, housing options, and local schools.',
+                'If PCSing with dependents, start your EFMP screening early.',
+                'Begin gathering documents for your check-out process.',
+                'Contact the gaining command\'s sponsor coordinator when orders arrive.',
             ];
         case 'ORDERS_PROCESSING':
             return [

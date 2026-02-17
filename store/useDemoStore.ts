@@ -1,6 +1,7 @@
 import { DEMO_USERS, DemoPhase, DemoUser } from '@/constants/DemoData';
+import { getSelectionDetailsByUserId } from '@/constants/MockPCSData';
 import { useUserStore } from '@/store/useUserStore';
-import { AssignmentPhase, LiquidationStatus, PCSPhase, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
+import { AssignmentPhase, LiquidationStatus, PCSPhase, SelectionDetails, TRANSITSubPhase, UCTPhase } from '@/types/pcs';
 import { User } from '@/types/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
@@ -39,6 +40,7 @@ interface DemoState {
   pcsContextOverride: 'ACTIVE' | 'ARCHIVE' | null;
   activeDemoScenarioId: string | null;
   assignmentPhaseOverride: AssignmentPhase | null;
+  selectionDetails: SelectionDetails | null;
   lifecycleStep: number;
   showDevFloatingIcons: boolean;
 
@@ -71,6 +73,7 @@ export const useDemoStore = create<DemoState>()(
       pcsContextOverride: null,
       activeDemoScenarioId: null,
       assignmentPhaseOverride: null,
+      selectionDetails: null,
       lifecycleStep: 0,
       showDevFloatingIcons: true,
 
@@ -130,10 +133,14 @@ export const useDemoStore = create<DemoState>()(
         const clamped = Math.max(0, Math.min(step, LIFECYCLE_STEPS.length - 1));
         const target = LIFECYCLE_STEPS[clamped];
         const hasPCS = !!target.pcs;
+        // Populate selectionDetails for SELECTION and ORDERS_PROCESSING phases
+        const needsSelection = target.assignment === 'SELECTION' || target.assignment === 'ORDERS_PROCESSING';
+        const userId = useDemoStore.getState().selectedUser.id;
         set({
           isDemoMode: true,
           lifecycleStep: clamped,
           assignmentPhaseOverride: target.assignment,
+          selectionDetails: needsSelection ? getSelectionDetailsByUserId(userId) : null,
           selectedPhase: hasPCS ? DemoPhase.MY_PCS : DemoPhase.MVP,
           pcsContextOverride: target.pcs?.context ?? null,
           pcsPhaseOverride: target.pcs?.phase ?? null,

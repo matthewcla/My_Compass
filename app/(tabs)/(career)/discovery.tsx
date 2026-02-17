@@ -9,9 +9,10 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useFeedback } from '@/hooks/useFeedback';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
-import { Stack, useRouter } from 'expo-router';
+import { Billet } from '@/types/schema';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,6 +21,13 @@ const NO_OP = () => { };
 
 export default function DiscoveryScreen() {
     const router = useRouter();
+    const { filter } = useLocalSearchParams<{ filter?: string }>();
+    const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+    // Sync route param → local state on mount
+    useEffect(() => {
+        if (filter) setCategoryFilter(filter);
+    }, [filter]);
     const {
         billets,
         billetStack,
@@ -115,17 +123,41 @@ export default function DiscoveryScreen() {
     // Reviewed count for progress
     const reviewedCount = Object.keys(mode === 'real' ? realDecisions : sandboxDecisions).length;
 
+    // 1b. CATEGORY FILTER (from Hub badge tap)
+    const categoryFilteredBillets = useMemo((): Billet[] => {
+        if (!categoryFilter) return filteredBillets;
+
+        const allBillets = Object.values(billets);
+        switch (categoryFilter) {
+            case 'wow':
+                return allBillets.filter(b => realDecisions[b.id] === 'super');
+            case 'liked':
+                return allBillets.filter(b => realDecisions[b.id] === 'like');
+            case 'passed':
+                return allBillets.filter(b => realDecisions[b.id] === 'nope');
+            case 'remaining':
+                return allBillets.filter(b => !realDecisions[b.id]);
+            default:
+                return filteredBillets;
+        }
+    }, [categoryFilter, filteredBillets, billets, realDecisions]);
+
+    const activeBillets = categoryFilter ? categoryFilteredBillets : filteredBillets;
+    const categoryLabels: Record<string, string> = {
+        wow: 'WOW!', liked: 'Liked', passed: 'Passed', remaining: 'Remaining'
+    };
+
     // 2. DECK LOGIC
     const handleDeckComplete = useCallback(() => {
         console.log('Deck Empty');
     }, []);
 
     const deck = useCinematicDeck({
-        totalSteps: filteredBillets.length,
+        totalSteps: activeBillets.length,
         onComplete: handleDeckComplete
     });
 
-    const currentBillet = filteredBillets[deck.step];
+    const currentBillet = activeBillets[deck.step];
 
     // Actions
     const handleSwipe = useCallback(async (direction: 'left' | 'right' | 'up' | 'down') => {
@@ -217,15 +249,35 @@ export default function DiscoveryScreen() {
                     {/* Progress Indicator */}
                     <View className="px-6 py-2 flex-row items-center justify-between">
                         <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">
-                            {reviewedCount} of {filteredBillets.length} reviewed
+                            {categoryFilter
+                                ? `${activeBillets.length} ${categoryLabels[categoryFilter] ?? ''} billets`
+                                : `${reviewedCount} of ${filteredBillets.length} reviewed`
+                            }
                         </Text>
-                        <View className="flex-1 ml-3 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <View
-                                className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
-                                style={{ width: `${filteredBillets.length > 0 ? (reviewedCount / filteredBillets.length) * 100 : 0}%` }}
-                            />
-                        </View>
+                        {!categoryFilter && (
+                            <View className="flex-1 ml-3 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <View
+                                    className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
+                                    style={{ width: `${filteredBillets.length > 0 ? (reviewedCount / filteredBillets.length) * 100 : 0}%` }}
+                                />
+                            </View>
+                        )}
                     </View>
+
+                    {/* Category Filter Pill */}
+                    {categoryFilter && (
+                        <View className="px-6 pb-2">
+                            <TouchableOpacity
+                                onPress={() => setCategoryFilter(null)}
+                                className="self-start flex-row items-center gap-2 bg-blue-500/15 dark:bg-blue-500/20 px-3 py-1.5 rounded-full"
+                            >
+                                <Text className="text-blue-400 text-xs font-bold">
+                                    Showing: {categoryLabels[categoryFilter] ?? categoryFilter}
+                                </Text>
+                                <Text className="text-blue-400/60 text-xs font-black">✕</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
 
                     {/* Main Content Area - Centered Vertically */}
                     <View className="flex-1 justify-center w-full" style={{ overflow: 'hidden' }}>
@@ -235,7 +287,7 @@ export default function DiscoveryScreen() {
                                 {/* Render current card */}
                                 <View className="flex-1 relative w-full h-full">
                                     {/* Back Card (Next + 1) - Deepest */}
-                                    {filteredBillets[deck.step + 2] && (
+                                    {filteredBillets[deck.step + 2] && !categoryFilter && (
                                         <View
                                             className="absolute w-full h-full bg-slate-50 dark:bg-slate-800 rounded-[40px] border border-slate-200 dark:border-slate-700 shadow-sm"
                                             style={{
@@ -248,7 +300,7 @@ export default function DiscoveryScreen() {
                                     )}
 
                                     {/* Back Card (Next) - Middle */}
-                                    {filteredBillets[deck.step + 1] && (
+                                    {filteredBillets[deck.step + 1] && !categoryFilter && (
                                         <View
                                             className="absolute w-full h-full"
                                             style={{

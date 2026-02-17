@@ -282,8 +282,14 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             );
 
         // ── Cycle Prep (Discovery / Default) ────────────────────────
+        // Sailor is >17 months from PRD — calm, exploratory tone.
+        // PRD and months-out are mocked; will be driven by profile later.
         case 'cycle-prep':
-        default:
+        default: {
+            // TODO: Replace with real PRD from user profile
+            const prdLabel = 'Oct 2027';
+            const monthsOut = 19;
+
             return (
                 <CardShell borderColor="border-blue-500 dark:border-blue-400" isDark={isDark}>
                     <View className="flex-row items-center gap-4 flex-1">
@@ -291,21 +297,26 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                             <Calendar size={24} color={isDark ? '#60a5fa' : '#2563eb'} />
                         </IconBubble>
                         <View className="flex-1">
-                            <Headline color="text-blue-900 dark:text-blue-100">Next Assignment Window</Headline>
-                            <Text className="text-slate-600 dark:text-slate-400 text-xs font-medium mt-0.5">
-                                Opens in {daysUntilOpen} days — start exploring billets now.
+                            <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle Opens</Headline>
+                            <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mt-0.5">
+                                ~{monthsOut} months · PRD {prdLabel}
+                            </Text>
+                            <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium mt-0.5">
+                                Explore billets now — no action required yet.
                             </Text>
                         </View>
                     </View>
 
                     <TouchableOpacity
                         onPress={() => router.push('/(career)/discovery' as any)}
-                        className="bg-blue-600 dark:bg-blue-700 px-3 py-2 rounded-lg border border-blue-500 dark:border-blue-600 ml-2"
+                        className="bg-blue-600 dark:bg-blue-700 px-4 py-3 rounded-lg border border-blue-500 dark:border-blue-600 ml-2"
+                        style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' }}
                     >
                         <CTAText>Explore</CTAText>
                     </TouchableOpacity>
                 </CardShell>
             );
+        }
     }
 }
 

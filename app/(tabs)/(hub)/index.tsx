@@ -1,4 +1,5 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
+import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
 import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
@@ -226,6 +227,16 @@ export default function HubDashboard() {
                 return (
                     <DiscoveryStatusCard
                         onStartExploring={() => handleTilePress('/(career)/discovery')}
+                        onBadgeTap={(category: DiscoveryBadgeCategory, count: number) => {
+                            if (count === 0) {
+                                const labels: Record<DiscoveryBadgeCategory, string> = {
+                                    wow: 'WOW!', liked: 'Liked', passed: 'Passed', remaining: 'remaining'
+                                };
+                                Alert.alert('Nothing here yet', `You don't have any ${labels[category]} billets yet. Start exploring!`);
+                                return;
+                            }
+                            router.push({ pathname: '/(career)/discovery', params: { filter: category } } as any);
+                        }}
                     />
                 );
             case 'receiptCapture': {

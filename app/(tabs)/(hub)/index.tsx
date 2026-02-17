@@ -17,10 +17,9 @@ import { DemoPhase } from '@/constants/DemoData';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useSession } from '@/lib/ctx';
-import { useDemoStore } from '@/store/useDemoStore';
+import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
-import { useCurrentProfile } from '@/store/useDemoStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
@@ -189,6 +188,18 @@ export default function HubDashboard() {
                                 <MenuTile
                                     label="My Assignment"
                                     icon={Briefcase}
+                                    subtitle={
+                                        assignmentPhase === 'SELECTION'
+                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? 'Action Required' : "You're Selected!")
+                                            : assignmentPhase === 'NEGOTIATION' ? 'Cycle Open'
+                                                : undefined
+                                    }
+                                    accent={
+                                        assignmentPhase === 'SELECTION'
+                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? '#DC2626' : '#D97706')
+                                            : assignmentPhase === 'NEGOTIATION' ? '#EA580C'
+                                                : undefined
+                                    }
                                     onPress={() => handleTilePress('/(assignment)')}
                                 />
                             </View>

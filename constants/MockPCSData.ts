@@ -1,4 +1,4 @@
-import { HistoricalPCSOrder, PCSOrder, PCSSegment, SelectionDetails } from '@/types/pcs';
+import { DetailerContact, HistoricalPCSOrder, PCSOrder, PCSSegment, SelectionDetails } from '@/types/pcs';
 
 const NOW = new Date();
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -78,6 +78,55 @@ export const getSelectionDetailsByUserId = (userId: string): SelectionDetails =>
     case 'demo-user-3': return MOCK_SELECTION_DETAILS_C;
     case 'demo-user-4': return MOCK_SELECTION_DETAILS_D;
     default: return MOCK_SELECTION_DETAILS_A;
+  }
+};
+
+// =============================================================================
+// NEGOTIATION PHASE — Per-Persona Mock Details
+// =============================================================================
+
+export interface NegotiationDetails {
+  cycleId: string;                        // e.g. "26-02"
+  windowCloseDate: string;                // ISO date — when negotiation window closes
+  selectionAnnouncementDate: string | null; // estimated selection announcement
+  detailer: DetailerContact;
+}
+
+export const MOCK_NEGOTIATION_DETAILS_A: NegotiationDetails = {
+  cycleId: '26-02',
+  windowCloseDate: getDate(12),
+  selectionAnnouncementDate: getDate(30),
+  detailer: MOCK_SELECTION_DETAILS_A.detailer,
+};
+
+export const MOCK_NEGOTIATION_DETAILS_B: NegotiationDetails = {
+  cycleId: '26-02',
+  windowCloseDate: getDate(12),
+  selectionAnnouncementDate: getDate(30),
+  detailer: MOCK_SELECTION_DETAILS_B.detailer,
+};
+
+export const MOCK_NEGOTIATION_DETAILS_C: NegotiationDetails = {
+  cycleId: '26-02',
+  windowCloseDate: getDate(12),
+  selectionAnnouncementDate: getDate(30),
+  detailer: MOCK_SELECTION_DETAILS_C.detailer,
+};
+
+export const MOCK_NEGOTIATION_DETAILS_D: NegotiationDetails = {
+  cycleId: '26-02',
+  windowCloseDate: getDate(12),
+  selectionAnnouncementDate: getDate(30),
+  detailer: MOCK_SELECTION_DETAILS_D.detailer,
+};
+
+export const getNegotiationDetailsByUserId = (userId: string): NegotiationDetails => {
+  switch (userId) {
+    case 'demo-user-1': return MOCK_NEGOTIATION_DETAILS_A;
+    case 'demo-user-2': return MOCK_NEGOTIATION_DETAILS_B;
+    case 'demo-user-3': return MOCK_NEGOTIATION_DETAILS_C;
+    case 'demo-user-4': return MOCK_NEGOTIATION_DETAILS_D;
+    default: return MOCK_NEGOTIATION_DETAILS_A;
   }
 };
 

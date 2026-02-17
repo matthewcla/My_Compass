@@ -1,11 +1,12 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
+import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { useDemoStore } from '@/store/useDemoStore';
 import { usePCSPhase, usePCSStore } from '@/store/usePCSStore';
 import { AssignmentPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Anchor, Calendar, FileCheck, Map as MapIcon, Star, Timer } from 'lucide-react-native';
+import { Anchor, Calendar, FileCheck, Map as MapIcon, Star, Timer, Users } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -56,6 +57,10 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     const assignmentPhase = useDemoStore((state) => state.assignmentPhaseOverride);
     const activeOrder = usePCSStore((state) => state.activeOrder);
     const pcsPhase = usePCSPhase();
+
+    // Always call — needed for negotiation variant but hooks must be unconditional
+    const applications = useAssignmentStore((s) => s.applications);
+    const userApplicationIds = useAssignmentStore((s) => s.userApplicationIds);
 
     const variant = deriveVariant(assignmentPhase, pcsPhase);
 
@@ -254,12 +259,35 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         }
 
         // ── MNA Negotiation ─────────────────────────────────────────
-        case 'negotiation':
+        case 'negotiation': {
+            const negotiationDetails = useDemoStore.getState().negotiationDetails;
+
+            // Derive slate status
+            const slateCount = userApplicationIds.length;
+            const submittedCount = userApplicationIds.filter(
+                (id) => applications[id]?.status === 'submitted'
+            ).length;
+            const allSubmitted = slateCount > 0 && submittedCount === slateCount;
+            const hasAnyApps = slateCount > 0;
+
+            // Derive deadline label
+            const closeDate = negotiationDetails?.windowCloseDate
+                ? new Date(negotiationDetails.windowCloseDate).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                })
+                : null;
+
+            // Detailer info
+            const detailerName = negotiationDetails?.detailer.name ?? null;
+            const detailerOffice = negotiationDetails?.detailer.office ?? null;
+
             return (
                 <CardShell borderColor="border-amber-500 dark:border-amber-400" isDark={isDark}>
-                    <View className="flex-row items-center gap-4 flex-1">
+                    <View className="flex-row items-start gap-4 flex-1">
                         <IconBubble bg="bg-amber-100 dark:bg-amber-900/50">
-                            <Timer size={24} color={isDark ? '#fbbf24' : '#d97706'} />
+                            <Users size={24} color={isDark ? '#fbbf24' : '#d97706'} />
                         </IconBubble>
                         <View className="flex-1">
                             <Headline color="text-amber-900 dark:text-amber-100">MNA Negotiation</Headline>
@@ -268,20 +296,54 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     {daysUntilOpen}
                                 </Text>
                                 <Text className="text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wide">
-                                    Days Remaining
+                                    Days to Slate Lock
                                 </Text>
                             </View>
+
+                            {/* Slate Status */}
+                            <View className="flex-row items-center gap-1 mt-0.5">
+                                <Text className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                    {allSubmitted
+                                        ? `✅ Slate Submitted`
+                                        : hasAnyApps
+                                            ? `⚠️ ${slateCount} of ${MAX_SLATE_SIZE} drafted`
+                                            : `⚠️ No billets on slate`}
+                                </Text>
+                                {allSubmitted && (
+                                    <Text className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                        ({submittedCount} of {MAX_SLATE_SIZE})
+                                    </Text>
+                                )}
+                            </View>
+
+                            {/* Deadline Date */}
+                            {closeDate && (
+                                <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold mt-0.5">
+                                    Window closes {closeDate}
+                                </Text>
+                            )}
+
+                            {/* Detailer Line */}
+                            {detailerName && (
+                                <Text
+                                    className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1"
+                                    numberOfLines={1}
+                                >
+                                    ⏳ {detailerName}{detailerOffice ? ` · ${detailerOffice}` : ''}
+                                </Text>
+                            )}
                         </View>
                     </View>
 
                     <TouchableOpacity
                         onPress={() => router.push('/(career)/discovery' as any)}
-                        className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg ml-1 border border-amber-200 dark:border-amber-700/50"
+                        className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
                     >
-                        <CTAText color="text-amber-800 dark:text-amber-200">View{'\n'}Slate</CTAText>
+                        <CTAText color="text-amber-800 dark:text-amber-200">My{'\n'}Slate</CTAText>
                     </TouchableOpacity>
                 </CardShell>
             );
+        }
 
         // ── Cycle Open (On-Ramp) ────────────────────────────────────
         case 'cycle-open':

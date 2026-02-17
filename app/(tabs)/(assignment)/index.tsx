@@ -1,6 +1,5 @@
-import DiscoveryEntryWidget from '@/components/assignment/DiscoveryEntryWidget';
+import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
 import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
-import SlateSummaryWidget from '@/components/assignment/SlateSummaryWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
 import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
@@ -10,6 +9,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { useDemoStore } from '@/store/useDemoStore';
 import { AssignmentPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +21,7 @@ import {
     FileSearch,
     Layers,
     Rocket,
+    Search,
     Star,
 } from 'lucide-react-native';
 import React from 'react';
@@ -71,7 +72,7 @@ function getPhaseContent(
             return {
                 icon: <Layers size={28} color={isDark ? '#f97316' : '#ea580c'} />,
                 hero: 'Build Your Slate',
-                explainer: 'You have 3 cycles over the next 6 months to submit your ranked preferences. Billets you\'ve bookmarked are ready to promote.',
+                explainer: '', // Dynamic — set in component body
                 accentColors: {
                     gradient: isDark
                         ? ['rgba(249,115,22,0.10)', 'rgba(249,115,22,0.02)']
@@ -79,7 +80,7 @@ function getPhaseContent(
                     border: 'border-orange-500 dark:border-orange-400',
                     iconBg: 'bg-orange-100 dark:bg-orange-900/30',
                     text: 'text-orange-900 dark:text-orange-100',
-                    ctaLabel: 'View Slate',
+                    ctaLabel: 'Manage Slate',
                     ctaRoute: '/(assignment)/cycle',
                     ctaBg: 'bg-orange-600 dark:bg-orange-700',
                 },
@@ -167,12 +168,55 @@ export default function AssignmentDashboard() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
+    const negotiationDetails = useDemoStore(state => state.negotiationDetails);
+
+    // Slate state for dynamic content during Negotiation
+    const applications = useAssignmentStore(s => s.applications);
+    const userApplicationIds = useAssignmentStore(s => s.userApplicationIds);
+    const slateDeadline = useAssignmentStore(s => s.slateDeadline);
+    const submitSlate = useAssignmentStore(s => s.submitSlate);
+    const slateCount = userApplicationIds.length;
+    let draftCount = 0;
+    let submittedCount = 0;
+    Object.values(applications).forEach(app => {
+        if (app.status === 'draft') draftCount++;
+        else if (['submitted', 'confirmed'].includes(app.status)) submittedCount++;
+    });
+    const slateSubmitted = slateCount > 0 && draftCount === 0 && submittedCount > 0;
+    const slateEmpty = slateCount === 0;
+    const canSubmit = draftCount > 0 && submittedCount === 0;
+
+    // Time remaining for slate deadline
+    const deadlineMs = new Date(slateDeadline).getTime() - Date.now();
+    const daysRemaining = Math.ceil(deadlineMs / (1000 * 60 * 60 * 24));
+    const hoursRemaining = Math.ceil(deadlineMs / (1000 * 60 * 60));
+    const isUrgent = deadlineMs > 0 && hoursRemaining < 48;
+    const timeLabel = deadlineMs <= 0 ? 'Closed' : hoursRemaining < 48 ? `${hoursRemaining}h Left` : `${daysRemaining}d Left`;
 
     const phase = getPhaseContent(assignmentPhase, isDark);
-    const showSlate = assignmentPhase === 'NEGOTIATION';
+    const isNegotiation = assignmentPhase === 'NEGOTIATION';
+
+    // Dynamic explainer for Negotiation
+    const closeDate = negotiationDetails?.windowCloseDate
+        ? new Date(negotiationDetails.windowCloseDate).toLocaleDateString(undefined, {
+            month: 'short', day: 'numeric', year: 'numeric',
+        })
+        : null;
+    const negotiationExplainer = isNegotiation
+        ? slateSubmitted
+            ? `✅ Slate submitted with ${submittedCount} of ${MAX_SLATE_SIZE} billets.${closeDate ? ` Window closes ${closeDate}.` : ''}`
+            : slateEmpty
+                ? `⚠️ Your slate is empty. Start by exploring billets and building your ranked list.${closeDate ? ` Window closes ${closeDate}.` : ''}`
+                : `⚠️ ${slateCount} of ${MAX_SLATE_SIZE} billets drafted — submit before the window closes.${closeDate ? ` Window closes ${closeDate}.` : ''}`
+        : null;
+
+    // Slot indices for the dot visualization
+    const SLOT_INDICES = Array.from({ length: MAX_SLATE_SIZE }, (_, i) => i);
+
+    const showDetailer = isNegotiation;
     const showDiscoveryStats = assignmentPhase === 'DISCOVERY'
         || assignmentPhase === 'ON_RAMP';
-    const showDiscoveryEntry = assignmentPhase === 'NEGOTIATION';
+    const showDiscoveryEntry = isNegotiation;
     const showSelectionDetail = assignmentPhase === 'SELECTION';
 
     const phaseSubtitle = (() => {
@@ -248,13 +292,71 @@ export default function AssignmentDashboard() {
                                     </Text>
                                 </View>
 
-                                {/* Explainer */}
+                                {/* Explainer (dynamic for Negotiation) */}
                                 <Text className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
-                                    {phase.explainer}
+                                    {negotiationExplainer ?? phase.explainer}
                                 </Text>
 
-                                {/* CTA — hidden for SELECTION since the widget IS the detail */}
-                                {assignmentPhase !== 'SELECTION' && (
+                                {/* ── Negotiation: Inline Slate Visualization ── */}
+                                {isNegotiation && (
+                                    <View className="mb-4">
+                                        {/* Slot Dots + Time Pill */}
+                                        <View className="flex-row items-center justify-between mb-3">
+                                            <View className="flex-row items-center gap-2">
+                                                {SLOT_INDICES.map((index) => (
+                                                    <View
+                                                        key={index}
+                                                        className={`w-3.5 h-3.5 rounded-full ${index < slateCount
+                                                            ? 'bg-orange-600 dark:bg-orange-400'
+                                                            : 'border-2 border-orange-300 dark:border-orange-700'
+                                                            }`}
+                                                    />
+                                                ))}
+                                            </View>
+                                            {timeLabel !== 'Closed' && (
+                                                <View className={`px-2.5 py-1 rounded-full ${isUrgent
+                                                    ? 'bg-red-100 dark:bg-red-900/30'
+                                                    : 'bg-orange-100/60 dark:bg-orange-900/30'
+                                                    }`}>
+                                                    <Text className={`text-xs font-bold ${isUrgent
+                                                        ? 'text-red-600 dark:text-red-400'
+                                                        : 'text-orange-700 dark:text-orange-300'
+                                                        }`}>
+                                                        {timeLabel}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </View>
+
+                                        {/* Status Line */}
+                                        <Text className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">
+                                            {draftCount} Drafts • {submittedCount} Submitted
+                                        </Text>
+
+                                        {/* Submit CTA or Confirmation */}
+                                        {canSubmit && (
+                                            <TouchableOpacity
+                                                onPress={submitSlate}
+                                                className="bg-orange-600 dark:bg-orange-700 py-3 rounded-xl"
+                                                style={{ minHeight: 44 }}
+                                            >
+                                                <Text className="text-white text-center font-bold text-sm tracking-wide">
+                                                    Submit Slate
+                                                </Text>
+                                            </TouchableOpacity>
+                                        )}
+                                        {slateSubmitted && (
+                                            <View className="bg-green-50 dark:bg-green-900/20 py-2.5 rounded-xl border border-green-200 dark:border-green-800">
+                                                <Text className="text-green-700 dark:text-green-400 text-center text-sm font-semibold">
+                                                    ✅ Slate Submitted
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                )}
+
+                                {/* CTA — hidden for SELECTION and NEGOTIATION (inline above) */}
+                                {assignmentPhase !== 'SELECTION' && !isNegotiation && (
                                     <TouchableOpacity
                                         onPress={() => router.push(phase.accentColors.ctaRoute as any)}
                                         className={`${phase.accentColors.ctaBg} py-3.5 px-6 rounded-xl self-start`}
@@ -269,11 +371,6 @@ export default function AssignmentDashboard() {
                         </GlassView>
 
                         {/* ── Phase-Gated Widgets ─────────────────────────────── */}
-                        {showSlate && (
-                            <SlateSummaryWidget
-                                onPress={() => router.push('/(assignment)/cycle' as any)}
-                            />
-                        )}
 
                         {showDiscoveryStats && (
                             <DiscoveryStatusCard
@@ -285,10 +382,24 @@ export default function AssignmentDashboard() {
                             />
                         )}
 
+                        {showDetailer && (
+                            <DetailerContactWidget />
+                        )}
+
                         {showDiscoveryEntry && (
-                            <DiscoveryEntryWidget
+                            <TouchableOpacity
                                 onPress={() => router.push('/(career)/discovery' as any)}
-                            />
+                                className="flex-row items-center justify-between bg-indigo-50 dark:bg-indigo-900/20 px-5 py-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800"
+                                style={{ minHeight: 44 }}
+                            >
+                                <View className="flex-row items-center gap-2.5">
+                                    <Search size={16} color={isDark ? '#a5b4fc' : '#4f46e5'} />
+                                    <Text className="text-indigo-700 dark:text-indigo-300 font-semibold text-sm">
+                                        Browse More Billets
+                                    </Text>
+                                </View>
+                                <Text className="text-indigo-400 dark:text-indigo-500 text-xs">→</Text>
+                            </TouchableOpacity>
                         )}
 
                         {showSelectionDetail && (
@@ -296,7 +407,18 @@ export default function AssignmentDashboard() {
                         )}
 
                         {/* ── What Happens Next (contextual footer) ──────────── */}
-                        <PhaseNextSteps phase={assignmentPhase} isDark={isDark} />
+                        <PhaseNextSteps
+                            phase={assignmentPhase}
+                            isDark={isDark}
+                            slateState={slateEmpty ? 'empty' : slateSubmitted ? 'submitted' : 'drafted'}
+                            closeDate={closeDate}
+                            selectionDate={negotiationDetails?.selectionAnnouncementDate
+                                ? new Date(negotiationDetails.selectionAnnouncementDate).toLocaleDateString(undefined, {
+                                    month: 'short', day: 'numeric', year: 'numeric',
+                                })
+                                : null
+                            }
+                        />
                     </Animated.ScrollView>
                 )}
             </CollapsibleScaffold>
@@ -309,14 +431,22 @@ export default function AssignmentDashboard() {
 
 // ── "What Happens Next" Section ──────────────────────────────────────────────
 
+type SlateState = 'empty' | 'drafted' | 'submitted';
+
 function PhaseNextSteps({
     phase,
     isDark,
+    slateState = 'empty',
+    closeDate = null,
+    selectionDate = null,
 }: {
     phase: AssignmentPhase | null;
     isDark: boolean;
+    slateState?: SlateState;
+    closeDate?: string | null;
+    selectionDate?: string | null;
 }) {
-    const steps = getNextSteps(phase);
+    const steps = getNextSteps(phase, slateState, closeDate, selectionDate);
     if (steps.length === 0) return null;
 
     return (
@@ -341,7 +471,12 @@ function PhaseNextSteps({
     );
 }
 
-function getNextSteps(phase: AssignmentPhase | null): string[] {
+function getNextSteps(
+    phase: AssignmentPhase | null,
+    slateState: SlateState = 'empty',
+    closeDate: string | null = null,
+    selectionDate: string | null = null,
+): string[] {
     switch (phase) {
         case 'DISCOVERY':
             return [
@@ -356,11 +491,31 @@ function getNextSteps(phase: AssignmentPhase | null): string[] {
                 'You\'ll have 3 cycles over 6 months to be matched.',
             ];
         case 'NEGOTIATION':
-            return [
-                'Rank your preferred billets on your slate.',
-                'Detailers review slates and make assignments after each cycle.',
-                'If unmatched after 3 cycles, you may be direct-detailed.',
-            ];
+            if (slateState === 'submitted') {
+                return [
+                    'Your slate is with detailers for review.',
+                    selectionDate
+                        ? `Selections expected around ${selectionDate}.`
+                        : 'Selections are announced after each cycle closes.',
+                    'If unmatched this cycle, your slate carries forward to the next.',
+                ];
+            } else if (slateState === 'drafted') {
+                return [
+                    'Review your rankings — order matters to detailers.',
+                    closeDate
+                        ? `Submit your slate before ${closeDate}.`
+                        : 'Submit your slate before the window closes.',
+                    'Contact your detailer if you have questions about specific billets.',
+                ];
+            } else {
+                return [
+                    'Start by swiping billets in the Explorer to find matches.',
+                    'Promote your favorites to build a ranked slate.',
+                    closeDate
+                        ? `Submit before ${closeDate} to be considered this cycle.`
+                        : 'Submit before the window closes to be considered this cycle.',
+                ];
+            }
         case 'SELECTION':
             return [
                 'Research your gaining command\'s location, housing options, and local schools.',

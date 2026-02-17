@@ -2,6 +2,8 @@ import { BilletSwipeCard } from '@/components/BilletSwipeCard';
 import { BilletControlBar } from '@/components/discovery/BilletControlBar';
 import { DiscoveryFilters } from '@/components/discovery/DiscoveryFilters';
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader';
+import { SandboxExplainerModal } from '@/components/discovery/SandboxExplainerModal';
+import { SwipeTutorialOverlay } from '@/components/discovery/SwipeTutorialOverlay';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
@@ -31,10 +33,14 @@ export default function DiscoveryScreen() {
         fetchBillets,
         showProjected,
         toggleShowProjected,
+        updateSandboxFilters,
         applications
     } = useAssignmentStore();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+
+    // Sandbox explainer state
+    const [sandboxTriggered, setSandboxTriggered] = useState(false);
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const { showFeedback, FeedbackComponent } = useFeedback();
 
@@ -58,12 +64,32 @@ export default function DiscoveryScreen() {
         let result = [];
         if (mode === 'real') {
             // REAL MODE: Filter strictly by User's Rank/Designator (E-6)
-            result = allBillets.filter(b => b.payGrade === 'E-6');
+            // Allow current rank + 1 (E-7) when rank filter is expanded
+            const allowedRanks = sandboxFilters.payGrade.length > 0
+                ? sandboxFilters.payGrade
+                : ['E-6'];
+            result = allBillets.filter(b => allowedRanks.includes(b.payGrade));
+
+            // Location filter
+            if (sandboxFilters.location.length > 0) {
+                result = result.filter(b => sandboxFilters.location.includes(b.location));
+            }
+
+            // Duty type filter
+            if (sandboxFilters.dutyType?.length > 0) {
+                result = result.filter(b => b.dutyType && sandboxFilters.dutyType.includes(b.dutyType));
+            }
         } else {
             // SANDBOX MODE: Filter by store.sandboxFilters
             result = allBillets.filter(b => {
                 if (sandboxFilters.payGrade.length > 0 && !sandboxFilters.payGrade.includes(b.payGrade)) {
                     return false;
+                }
+                if (sandboxFilters.location.length > 0 && !sandboxFilters.location.includes(b.location)) {
+                    return false;
+                }
+                if (sandboxFilters.dutyType?.length > 0) {
+                    if (!b.dutyType || !sandboxFilters.dutyType.includes(b.dutyType)) return false;
                 }
                 return true;
             });
@@ -76,6 +102,18 @@ export default function DiscoveryScreen() {
 
         return result;
     }, [billets, billetStack, mode, sandboxFilters, showProjected]);
+
+    // Available duty stations & duty types for filter chips
+    const availableLocations = useMemo(() => {
+        return [...new Set(Object.values(billets).map(b => b.location).filter(Boolean))];
+    }, [billets]);
+
+    const availableDutyTypes = useMemo(() => {
+        return [...new Set(Object.values(billets).map(b => b.dutyType).filter(Boolean))] as string[];
+    }, [billets]);
+
+    // Reviewed count for progress
+    const reviewedCount = Object.keys(mode === 'real' ? realDecisions : sandboxDecisions).length;
 
     // 2. DECK LOGIC
     const handleDeckComplete = useCallback(() => {
@@ -166,11 +204,28 @@ export default function DiscoveryScreen() {
                     {/* Header */}
                     <DiscoveryHeader
                         mode={mode}
-                        onToggleMode={() => setMode(mode === 'real' ? 'sandbox' : 'real')}
+                        onToggleMode={() => {
+                            const newMode = mode === 'real' ? 'sandbox' : 'real';
+                            setMode(newMode);
+                            if (newMode === 'sandbox') setSandboxTriggered(true);
+                        }}
                         onOpenFilters={() => setIsFiltersOpen(true)}
                         onOpenShortlist={() => router.push('/(assignment)/cycle' as any)}
                         savedCount={savedCount}
                     />
+
+                    {/* Progress Indicator */}
+                    <View className="px-6 py-2 flex-row items-center justify-between">
+                        <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                            {reviewedCount} of {filteredBillets.length} reviewed
+                        </Text>
+                        <View className="flex-1 ml-3 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <View
+                                className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
+                                style={{ width: `${filteredBillets.length > 0 ? (reviewedCount / filteredBillets.length) * 100 : 0}%` }}
+                            />
+                        </View>
+                    </View>
 
                     {/* Main Content Area - Centered Vertically */}
                     <View className="flex-1 justify-center w-full" style={{ overflow: 'hidden' }}>
@@ -256,11 +311,26 @@ export default function DiscoveryScreen() {
                     </View>
                 </SafeAreaView>
 
+                {/* Swipe Tutorial Overlay */}
+                <SwipeTutorialOverlay />
+
+                {/* Sandbox Explainer Modal */}
+                <SandboxExplainerModal
+                    trigger={sandboxTriggered}
+                    onDismiss={() => setSandboxTriggered(false)}
+                />
+
                 <DiscoveryFilters
                     visible={isFiltersOpen}
                     onClose={() => setIsFiltersOpen(false)}
                     showProjected={showProjected}
                     onToggleProjected={toggleShowProjected}
+                    availableLocations={availableLocations}
+                    availableDutyTypes={availableDutyTypes}
+                    selectedLocations={sandboxFilters.location}
+                    selectedDutyTypes={sandboxFilters.dutyType ?? []}
+                    selectedPayGrades={sandboxFilters.payGrade}
+                    onUpdateFilters={updateSandboxFilters}
                 />
             </ScreenGradient>
         </GestureHandlerRootView>

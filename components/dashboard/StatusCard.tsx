@@ -285,29 +285,25 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         case 'cycle-prep':
         default:
             return (
-                <CardShell borderColor="border-slate-900 dark:border-slate-700" isDark={isDark}>
+                <CardShell borderColor="border-blue-500 dark:border-blue-400" isDark={isDark}>
                     <View className="flex-row items-center gap-4 flex-1">
-                        <IconBubble bg="bg-slate-100 dark:bg-slate-800">
-                            <Calendar size={24} color={isDark ? '#fbbf24' : '#0f172a'} />
+                        <IconBubble bg="bg-blue-100 dark:bg-blue-900/30">
+                            <Calendar size={24} color={isDark ? '#60a5fa' : '#2563eb'} />
                         </IconBubble>
                         <View className="flex-1">
-                            <Headline>Cycle {nextCycle} Status</Headline>
-                            <View className="flex-row items-baseline gap-1">
-                                <Text className="text-slate-950 dark:text-white text-2xl font-black">
-                                    {daysUntilOpen}
-                                </Text>
-                                <Text className="text-slate-600 dark:text-slate-400 text-sm font-medium">
-                                    days until open
-                                </Text>
-                            </View>
+                            <Headline color="text-blue-900 dark:text-blue-100">Next Assignment Window</Headline>
+                            <Text className="text-slate-600 dark:text-slate-400 text-xs font-medium mt-0.5">
+                                Opens in {daysUntilOpen} days — start exploring billets now.
+                            </Text>
                         </View>
                     </View>
 
-                    <View className="items-end">
-                        <Pill bg="bg-slate-900 dark:bg-slate-800" border="border-slate-800 dark:border-slate-700">
-                            <PillText color="text-amber-400">Prep Mode</PillText>
-                        </Pill>
-                    </View>
+                    <TouchableOpacity
+                        onPress={() => router.push('/(career)/discovery' as any)}
+                        className="bg-blue-600 dark:bg-blue-700 px-3 py-2 rounded-lg border border-blue-500 dark:border-blue-600 ml-2"
+                    >
+                        <CTAText>Explore</CTAText>
+                    </TouchableOpacity>
                 </CardShell>
             );
     }

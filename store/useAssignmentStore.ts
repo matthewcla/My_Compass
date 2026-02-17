@@ -41,6 +41,7 @@ export type FilterState = {
     payGrade: string[];
     designator: string[]; // Kept for schema compatibility, though less relevant for enlisted
     location: string[];
+    dutyType: string[];
 };
 
 export type DiscoveryMode = 'real' | 'sandbox';
@@ -194,7 +195,8 @@ const INITIAL_STATE: MyAssignmentState & {
     sandboxFilters: {
         payGrade: ['E-6'], // Default to user's rank
         designator: [],
-        location: []
+        location: [],
+        dutyType: [],
     },
     showProjected: false,
     // Mock Deadline: 72 hours from now

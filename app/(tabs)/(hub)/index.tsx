@@ -1,4 +1,5 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
+import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
@@ -145,6 +146,10 @@ export default function HubDashboard() {
     }
 
     const sections = ['menu'];
+    // Show DiscoveryStatusCard on Hub during Discovery & On-Ramp phases
+    if (!assignmentPhase || assignmentPhase === 'DISCOVERY' || assignmentPhase === 'ON_RAMP') {
+        sections.push('discoveryStatus');
+    }
     // Show standalone receipt capture on Home Hub during Phase 3 (ACTIVE_TRAVEL) only.
     // Phase 2 (PLANNING) shares TRANSIT_LEAVE but doesn't need receipt capture yet.
     // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
@@ -216,6 +221,12 @@ export default function HubDashboard() {
                             </View>
                         </View>
                     </View>
+                );
+            case 'discoveryStatus':
+                return (
+                    <DiscoveryStatusCard
+                        onStartExploring={() => handleTilePress('/(career)/discovery')}
+                    />
                 );
             case 'receiptCapture': {
                 const { ReceiptScannerWidget } = require('@/components/pcs/widgets/ReceiptScannerWidget');

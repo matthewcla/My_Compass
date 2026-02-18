@@ -65,15 +65,14 @@
 
 ---
 
-## 6. Gaining Command Check-In Flow
+## ~~6. Gaining Command Check-In Flow~~ ✅ IMPLEMENTED
 
 | Property | Detail |
 |----------|--------|
 | **UCT Phase** | 4 — Check-in & Travel Claim |
 | **Checklist Item** | "Complete Gaining Command Check-In" |
-| **Current Behavior** | Manual toggle only (no `actionRoute`) |
-| **What's Needed** | Interactive check-in sheet with department sign-off tracking (Admin, Medical, Dental, Supply, etc.) |
-| **Suggested Route** | `/pcs-wizard/check-in` |
+| **Route** | `/pcs-wizard/check-in` |
+| **Status** | ✅ 8-department confirmation flow with sign-off tracking |
 
 ---
 

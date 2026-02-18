@@ -41,9 +41,16 @@
 ### BaseWelcomeKit
 | Property | Detail |
 |----------|--------|
-| **User Path** | My PCS → UCT Phase 1 (ACTIVE node) |
+| **User Path** | My PCS → UCT Phase 4 (ACTIVE node) |
 | **File** | `components/pcs/widgets/BaseWelcomeKit.tsx` |
-| **Purpose** | Orders overview card shown on initial PCS activation |
+| **Purpose** | Gaining command overview card with quarterdeck directions, uniform of the day, and contacts |
+
+### ArrivalBriefingWidget
+| Property | Detail |
+|----------|--------|
+| **User Path** | My PCS → UCT Phase 4 (ACTIVE node) |
+| **File** | `components/pcs/widgets/ArrivalBriefingWidget.tsx` |
+| **Purpose** | 72-hour arrival timeline with day counter and auto-checkmarks linked to Phase 4 checklist items |
 
 ### DigitalOrdersWallet
 | Property | Detail |

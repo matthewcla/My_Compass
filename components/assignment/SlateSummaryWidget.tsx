@@ -1,18 +1,17 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { useAssignmentStore } from '@/store/useAssignmentStore';
+import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { ChevronRight } from 'lucide-react-native';
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface SlateSummaryWidgetProps {
     onPress?: () => void;
 }
 
-const TOTAL_SLOTS = 7;
-const SLOT_INDICES = Array.from({ length: TOTAL_SLOTS }, (_, i) => i);
+const SLOT_INDICES = Array.from({ length: MAX_SLATE_SIZE }, (_, i) => i);
 
 export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps) {
-    const { applications, slateDeadline, userApplicationIds } = useAssignmentStore();
+    const { applications, slateDeadline, userApplicationIds, submitSlate } = useAssignmentStore();
 
     // Logic: Calculate Filled Slots based on userApplicationIds
     const filledCount = userApplicationIds.length;
@@ -49,6 +48,9 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
         isUrgent = false;
     }
 
+    const canSubmit = draftCount > 0 && submittedCount === 0;
+    const allSubmitted = filledCount > 0 && draftCount === 0 && submittedCount > 0;
+
     return (
         <ScalePressable onPress={onPress}>
             <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
@@ -65,10 +67,9 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
                 </View>
 
                 {/* Visuals: The Slots */}
-                <View className="flex-row items-center space-x-2 mb-6">
+                <View className="flex-row items-center space-x-2 mb-4">
                     {SLOT_INDICES.map((index) => {
                         const isFilled = index < filledCount;
-                        // Solid Blue circle (bg-blue-600) vs Empty Gray ring (border-2 border-slate-200)
                         return (
                             <View
                                 key={index}
@@ -88,6 +89,26 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
                     </Text>
                     <ChevronRight size={20} color="#94a3b8" />
                 </View>
+
+                {/* Submit CTA or Confirmation */}
+                {canSubmit && (
+                    <TouchableOpacity
+                        onPress={submitSlate}
+                        className="bg-orange-600 dark:bg-orange-700 mt-4 py-3 rounded-xl"
+                        style={{ minHeight: 44 }}
+                    >
+                        <Text className="text-white text-center font-bold text-sm tracking-wide">
+                            Submit Slate
+                        </Text>
+                    </TouchableOpacity>
+                )}
+                {allSubmitted && (
+                    <View className="bg-green-50 dark:bg-green-900/20 mt-4 py-2.5 rounded-xl border border-green-200 dark:border-green-800">
+                        <Text className="text-green-700 dark:text-green-400 text-center text-sm font-semibold">
+                            ✅ Slate Submitted
+                        </Text>
+                    </View>
+                )}
             </View>
         </ScalePressable>
     );

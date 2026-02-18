@@ -1,4 +1,3 @@
-import { services } from '@/services/api/serviceRegistry';
 import { MOCK_BILLETS } from '@/constants/MockBillets';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
@@ -35,13 +34,14 @@ const generateUUID = () => {
 // STORE TYPES
 // =============================================================================
 
-export type SwipeDirection = 'left' | 'right' | 'up';
+export type SwipeDirection = 'left' | 'right' | 'up' | 'down';
 export type SmartBenchItem = { billet: Billet; type: 'manifest' | 'suggestion' };
 
 export type FilterState = {
     payGrade: string[];
     designator: string[]; // Kept for schema compatibility, though less relevant for enlisted
     location: string[];
+    dutyType: string[];
 };
 
 export type DiscoveryMode = 'real' | 'sandbox';
@@ -195,7 +195,8 @@ const INITIAL_STATE: MyAssignmentState & {
     sandboxFilters: {
         payGrade: ['E-6'], // Default to user's rank
         designator: [],
-        location: []
+        location: [],
+        dutyType: [],
     },
     showProjected: false,
     // Mock Deadline: 72 hours from now
@@ -341,10 +342,6 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         // If userId provided, hydrate. otherwise just fetch billets.
         set({ isSyncingBillets: true });
 
-        // Reset Pagination
-        const limit = 20;
-        const offset = 0;
-
         // Ensure storage has data (Mock Init)
         // In a real scenario, this step might be "Sync from API to DB"
         const billetCount = await storage.getBilletCount();
@@ -354,13 +351,15 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             }
         }
 
-        const pagedBillets = await storage.getPagedBillets(limit, offset);
+        // Load ALL billets so the full dataset is available for
+        // persona-aware filtering in discovery (rating, pay grade, etc.)
+        const allBillets = await storage.getAllBillets();
 
         // Convert array to record for store
         const billetRecord: Record<string, Billet> = {};
         const newStack: string[] = [];
 
-        pagedBillets.forEach((billet) => {
+        allBillets.forEach((billet) => {
             billetRecord[billet.id] = billet;
             newStack.push(billet.id);
         });
@@ -419,7 +418,19 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
     },
 
     swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
-        const { cursor, realDecisions, sandboxDecisions, promoteToSlate, mode } = get();
+        const { cursor, realDecisions, sandboxDecisions, promoteToSlate, mode, billetStack } = get();
+
+        // DEFER: Move billet to back of deck, no decision recorded
+        if (direction === 'down') {
+            const idx = billetStack.indexOf(billetId);
+            if (idx !== -1) {
+                const newStack = [...billetStack];
+                newStack.splice(idx, 1);
+                newStack.push(billetId);
+                set({ billetStack: newStack });
+            }
+            return;
+        }
 
         // 1. Determine Decision based on Direction
         let decision: SwipeDecision = 'nope';

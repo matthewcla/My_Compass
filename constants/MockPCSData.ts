@@ -1,4 +1,4 @@
-import { HistoricalPCSOrder, PCSDocument, PCSOrder, PCSSegment } from '@/types/pcs';
+import { DetailerContact, HistoricalPCSOrder, PCSOrder, PCSSegment, SelectionDetails } from '@/types/pcs';
 
 const NOW = new Date();
 const ONE_DAY = 24 * 60 * 60 * 1000;
@@ -6,6 +6,129 @@ const ONE_MONTH = 30 * ONE_DAY;
 
 // Helper to format dates
 const getDate = (daysFromNow: number) => new Date(NOW.getTime() + daysFromNow * ONE_DAY).toISOString();
+
+// =============================================================================
+// SELECTION PHASE — Per-Persona Mock Details
+// =============================================================================
+
+export const MOCK_SELECTION_DETAILS_A: SelectionDetails = {
+  billetTitle: 'WORK CENTER SUPERVISOR',
+  billetNec: '14NO',
+  dutyType: 'Sea',
+  pipelineStatus: 'CO_ENDORSEMENT',
+  estimatedOrdersDate: getDate(28),
+  detailer: {
+    name: 'PS1 Angela Brooks',
+    phone: '(901) 874-3483',
+    email: 'angela.brooks@navy.mil',
+    office: 'PERS-4013',
+  },
+  selectedDate: getDate(-7),
+};
+
+export const MOCK_SELECTION_DETAILS_B: SelectionDetails = {
+  billetTitle: 'OPERATIONS OFFICER',
+  billetNec: null,
+  dutyType: 'Shore',
+  pipelineStatus: 'MATCH_ANNOUNCED',
+  estimatedOrdersDate: getDate(35),
+  detailer: {
+    name: 'LCDR Maria Santos',
+    phone: '(901) 874-4112',
+    email: 'maria.santos@navy.mil',
+    office: 'PERS-41',
+  },
+  selectedDate: getDate(-3),
+};
+
+export const MOCK_SELECTION_DETAILS_C: SelectionDetails = {
+  billetTitle: 'LEADING PETTY OFFICER',
+  billetNec: '14RO',
+  dutyType: 'Sea',
+  pipelineStatus: 'ORDERS_DRAFTING',
+  estimatedOrdersDate: getDate(14),
+  detailer: {
+    name: 'PS1 Darnell Williams',
+    phone: '(901) 874-3500',
+    email: 'darnell.williams@navy.mil',
+    office: 'PERS-4013',
+  },
+  selectedDate: getDate(-21),
+};
+
+export const MOCK_SELECTION_DETAILS_D: SelectionDetails = {
+  billetTitle: 'INFORMATION SYSTEMS INSTRUCTOR',
+  billetNec: '2780',
+  dutyType: 'Shore',
+  pipelineStatus: 'MATCH_ANNOUNCED',
+  estimatedOrdersDate: getDate(42),
+  detailer: {
+    name: 'ITC Rashida Coleman',
+    phone: '(901) 874-3550',
+    email: 'rashida.coleman@navy.mil',
+    office: 'PERS-4013',
+  },
+  selectedDate: getDate(-2),
+};
+
+export const getSelectionDetailsByUserId = (userId: string): SelectionDetails => {
+  switch (userId) {
+    case 'demo-user-1': return MOCK_SELECTION_DETAILS_A;
+    case 'demo-user-2': return MOCK_SELECTION_DETAILS_B;
+    case 'demo-user-3': return MOCK_SELECTION_DETAILS_C;
+    case 'demo-user-4': return MOCK_SELECTION_DETAILS_D;
+    default: return MOCK_SELECTION_DETAILS_A;
+  }
+};
+
+// =============================================================================
+// NEGOTIATION PHASE — Per-Persona Mock Details
+// =============================================================================
+
+export interface NegotiationDetails {
+  cycleId: string;                        // e.g. "26-02"
+  windowCloseDate: string;                // ISO date — when negotiation window closes
+  selectionAnnouncementDate: string | null; // estimated selection announcement
+  detailer: DetailerContact;
+}
+
+export const MOCK_NEGOTIATION_DETAILS_A: NegotiationDetails = {
+  cycleId: '26-02',
+  windowCloseDate: getDate(12),
+  selectionAnnouncementDate: getDate(30),
+  detailer: MOCK_SELECTION_DETAILS_A.detailer,
+};
+
+export const MOCK_NEGOTIATION_DETAILS_B: NegotiationDetails = {
+  cycleId: '26-02',
+  windowCloseDate: getDate(12),
+  selectionAnnouncementDate: getDate(30),
+  detailer: MOCK_SELECTION_DETAILS_B.detailer,
+};
+
+export const MOCK_NEGOTIATION_DETAILS_C: NegotiationDetails = {
+  cycleId: '26-02',
+  windowCloseDate: getDate(12),
+  selectionAnnouncementDate: getDate(30),
+  detailer: MOCK_SELECTION_DETAILS_C.detailer,
+};
+
+export const MOCK_NEGOTIATION_DETAILS_D: NegotiationDetails = {
+  cycleId: '26-02',
+  windowCloseDate: getDate(12),
+  selectionAnnouncementDate: getDate(30),
+  detailer: MOCK_SELECTION_DETAILS_D.detailer,
+};
+
+export const getNegotiationDetailsByUserId = (userId: string): NegotiationDetails => {
+  switch (userId) {
+    case 'demo-user-1': return MOCK_NEGOTIATION_DETAILS_A;
+    case 'demo-user-2': return MOCK_NEGOTIATION_DETAILS_B;
+    case 'demo-user-3': return MOCK_NEGOTIATION_DETAILS_C;
+    case 'demo-user-4': return MOCK_NEGOTIATION_DETAILS_D;
+    default: return MOCK_NEGOTIATION_DETAILS_A;
+  }
+};
 
 // =============================================================================
 // PERSONA A: "THE FAMILY MOVE" - E-6, Cross-Country with Dependents
@@ -103,7 +226,14 @@ export const MOCK_PCS_ORDERS: PCSOrder = {
     psdPhone: '+81-46-816-5678',
     oodPhone: '+81-46-816-0000',
     uniformOfDay: 'NWU Type III',
+    homePort: 'Yokosuka, Japan',
     quarterdeckLocation: { latitude: 35.2916, longitude: 139.6683 },
+  },
+  sponsor: {
+    name: 'ET1 Marcus Rivera',
+    rank: 'E-6',
+    phone: '+81-80-5555-1234',
+    email: 'marcus.rivera@navy.mil',
   },
   segments: [SEGMENT_1, SEGMENT_2, SEGMENT_3],
   reportNLT: SEGMENT_3.dates.nlt,
@@ -180,7 +310,14 @@ export const MOCK_PCS_ORDERS_PERSONA_B: PCSOrder = {
     psdPhone: '+1-619-437-3456',
     oodPhone: '+1-619-437-0000',
     uniformOfDay: 'NWU Type III',
+    homePort: 'Coronado, CA',
     quarterdeckLocation: { latitude: 32.6811, longitude: -117.1565 },
+  },
+  sponsor: {
+    name: 'LT Sarah Chen',
+    rank: 'O-3',
+    phone: '+1-619-555-8821',
+    email: 'sarah.chen@navy.mil',
   },
   segments: [SEGMENT_B1, SEGMENT_B2],
   reportNLT: SEGMENT_B2.dates.nlt,
@@ -266,12 +403,130 @@ export const MOCK_PCS_ORDERS_PERSONA_C: PCSOrder = {
     psdPhone: '+1-860-694-3456',
     oodPhone: '+1-860-694-0000',
     uniformOfDay: 'NWU Type I',
+    homePort: 'Groton, CT',
     quarterdeckLocation: { latitude: 41.3831, longitude: -72.0829 },
+  },
+  sponsor: {
+    name: 'ETC(SS) James Kowalski',
+    rank: 'E-7',
+    phone: '+1-860-555-4470',
+    email: 'james.kowalski@navy.mil',
   },
   segments: [SEGMENT_C1, SEGMENT_C2],
   reportNLT: SEGMENT_C2.dates.nlt,
   isOconus: false,
   isSeaDuty: true,
+};
+
+// =============================================================================
+// PERSONA D: "THE IT PROFESSIONAL" - E-6, Norfolk → Pensacola with Dependents
+// =============================================================================
+
+const SEGMENT_D1: PCSSegment = {
+  id: 'seg-d1-origin',
+  type: 'ORIGIN',
+  title: 'Detach USS Gerald R. Ford',
+  location: {
+    name: 'USS Gerald R. Ford (CVN-78)',
+    uic: '09561',
+    zip: '23511',
+    type: 'DUTY_STATION',
+  },
+  dates: {
+    projectedArrival: getDate(-365 * 2.5), // Arrived ~2.5 years ago
+    projectedDeparture: getDate(30),        // Departing in 30 days
+    nlt: getDate(30),
+  },
+  entitlements: {
+    authorizedTravelDays: 3,
+    proceedDays: 0,
+    leaveDays: 0,
+  },
+  userPlan: {
+    mode: 'POV',
+    isAccompanied: true,
+  },
+  status: 'PLANNING',
+};
+
+const SEGMENT_D2: PCSSegment = {
+  id: 'seg-d2-enroute',
+  type: 'INTERMEDIATE',
+  title: 'En-Route Leave — Raleigh, NC',
+  location: {
+    name: 'Raleigh, NC (Family Visit)',
+    uic: '00000',
+    zip: '27601',
+    type: 'TAD',
+  },
+  dates: {
+    projectedArrival: getDate(33),
+    projectedDeparture: getDate(40),
+    nlt: getDate(45),
+  },
+  entitlements: {
+    authorizedTravelDays: 0,
+    proceedDays: 0,
+    leaveDays: 7,
+  },
+  userPlan: {
+    mode: 'POV',
+    isAccompanied: true,
+  },
+  status: 'PLANNING',
+};
+
+const SEGMENT_D3: PCSSegment = {
+  id: 'seg-d3-dest',
+  type: 'DESTINATION',
+  title: 'Report to CETTC Corry Station',
+  location: {
+    name: 'Center for Information Warfare Training (CETTC)',
+    uic: '62500',
+    zip: '32508',
+    type: 'DUTY_STATION',
+  },
+  dates: {
+    projectedArrival: getDate(42),
+    projectedDeparture: getDate(42 + 365 * 3),
+    nlt: getDate(50),
+  },
+  entitlements: {
+    authorizedTravelDays: 2,
+    proceedDays: 4,
+    leaveDays: 14,
+  },
+  userPlan: {
+    mode: 'POV',
+    isAccompanied: true,
+  },
+  status: 'LOCKED',
+};
+
+export const MOCK_PCS_ORDERS_PERSONA_D: PCSOrder = {
+  orderNumber: 'ORD-2026-004',
+  gainingCommand: {
+    name: 'CETTC Corry Station',
+    uic: '62500',
+    address: 'Center for Information Warfare Training, 640 Roberts Ave, Pensacola, FL 32508',
+    zip: '32508',
+    quarterdeckPhone: '+1-850-452-6100',
+    psdPhone: '+1-850-452-6200',
+    oodPhone: '+1-850-452-6000',
+    uniformOfDay: 'NWU Type III',
+    homePort: 'Pensacola, FL',
+    quarterdeckLocation: { latitude: 30.3958, longitude: -87.2925 },
+  },
+  sponsor: {
+    name: 'ITC(IW) Robert Delgado',
+    rank: 'E-7',
+    phone: '+1-850-555-3847',
+    email: 'robert.delgado@navy.mil',
+  },
+  segments: [SEGMENT_D1, SEGMENT_D2, SEGMENT_D3],
+  reportNLT: SEGMENT_D3.dates.nlt,
+  isOconus: false,
+  isSeaDuty: false,
 };
 
 /**
@@ -280,11 +535,13 @@ export const MOCK_PCS_ORDERS_PERSONA_C: PCSOrder = {
 export const getPCSOrderByUserId = (userId: string): PCSOrder => {
   switch (userId) {
     case 'demo-user-1':
-      return MOCK_PCS_ORDERS; // Persona A - Family Move
+      return MOCK_PCS_ORDERS; // Persona A - Family Move (AT1 Trent)
     case 'demo-user-2':
-      return MOCK_PCS_ORDERS_PERSONA_B; // Persona B - Single Sailor
+      return MOCK_PCS_ORDERS_PERSONA_B; // Persona B - Single Sailor (LT Navarro)
     case 'demo-user-3':
-      return MOCK_PCS_ORDERS_PERSONA_C; // Persona C - Career Sailor
+      return MOCK_PCS_ORDERS_PERSONA_C; // Persona C - Career Sailor (ETN1 Hargrove)
+    case 'demo-user-4':
+      return MOCK_PCS_ORDERS_PERSONA_D; // Persona D - IT Professional (IT1 Wilson)
     default:
       return MOCK_PCS_ORDERS; // Default fallback
   }

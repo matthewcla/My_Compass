@@ -1,8 +1,10 @@
 import { services } from '@/services/api/serviceRegistry';
-import { ChecklistItem, HHGItem, HHGShipment, HHGShipmentType, LiquidationStatus, LiquidationStep, LiquidationTracking, MovingCostsBreakdown, PCSOrder, PCSPhase, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
+import { ChecklistItem, HHGItem, HHGShipment, HHGShipmentType, LiquidationStatus, LiquidationStep, LiquidationTracking, MovingCostsBreakdown, PCSOrder, PCSPhase, PCSReceipt, PCSRoute, PCSSegment, PCSSegmentStatus, TRANSITSubPhase, UCTNodeStatus, UCTPhase } from '@/types/pcs';
+import type { TravelClaim } from '@/types/travelClaim';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
+import { bridgeReceiptsToExpenses } from '@/utils/receiptBridge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useMemo } from 'react';
@@ -125,13 +127,24 @@ interface Financials {
   };
   movingCosts: MovingCostsBreakdown | null;
   liquidation: LiquidationTracking | null;
+  /** null = not yet answered (defaults to hasDependents). true = accompanied. false = geo-bachelor. */
+  dependentsRelocating: boolean | null;
+}
+
+// ─── Travel Claim Settlement Slice ────────────────────────────────────
+
+interface TravelClaimSlice {
+  draft: TravelClaim | null;
+  status: 'idle' | 'settling' | 'submitted';
 }
 
 interface PCSState {
   activeOrder: PCSOrder | null;
   checklist: ChecklistItem[];
   financials: Financials;
+  receipts: PCSReceipt[];
   currentDraft: PCSSegment | null;
+  travelClaim: TravelClaimSlice;
 
   initializeOrders: () => Promise<void>;
   updateSegmentStatus: (segmentId: string, status: PCSSegmentStatus) => void;
@@ -143,6 +156,16 @@ interface PCSState {
   startPlanning: (segmentId: string) => void;
   commitSegment: (segmentId: string) => void;
   updateDraft: (updates: Partial<PCSSegment>) => void;
+
+  // Receipt Vault Actions
+  addReceipt: (receipt: Omit<PCSReceipt, 'id' | 'capturedAt'>) => void;
+  removeReceipt: (id: string) => void;
+  updateReceipt: (id: string, updates: Partial<PCSReceipt>) => void;
+
+  // Travel Claim Settlement Actions
+  initSettlement: () => void;
+  updateSettlement: (patch: Partial<TravelClaim>) => void;
+  submitSettlement: () => void;
 
   // HHG Shipment Actions (multi-shipment)
   addShipment: (type: HHGShipmentType, label: string, originZip: string, destinationZip?: string | null) => void;
@@ -174,6 +197,7 @@ export const usePCSStore = create<PCSState>()(
       activeOrder: null,
       checklist: [],
       currentDraft: null,
+      receipts: [],
       financials: {
         advancePay: {
           requested: false,
@@ -206,7 +230,9 @@ export const usePCSStore = create<PCSState>()(
         },
         movingCosts: null,
         liquidation: null,
+        dependentsRelocating: null,
       },
+      travelClaim: { draft: null, status: 'idle' },
       cachedOrders: null,
 
       initializeOrders: async () => {
@@ -274,7 +300,7 @@ export const usePCSStore = create<PCSState>()(
         // Phase 2: Logistics & Finances
         checklist.push({
           id: generateUUID(),
-          label: 'Plan & Schedule HHG Move',
+          label: 'Household Goods Move Planner',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 2,
@@ -283,7 +309,7 @@ export const usePCSStore = create<PCSState>()(
         });
         checklist.push({
           id: generateUUID(),
-          label: 'Financial Review & DLA Request',
+          label: 'Financial Review & Requests',
           status: 'NOT_STARTED',
           category: 'FINANCE',
           uctPhase: 2,
@@ -292,36 +318,53 @@ export const usePCSStore = create<PCSState>()(
         });
 
         // Phase 3: Transit & Leave — Segment Planning
-        order.segments.forEach((segment) => {
-          checklist.push({
-            id: generateUUID(),
-            label: `Plan Travel: ${segment.title}`,
-            segmentId: segment.id,
-            status: 'NOT_STARTED',
-            category: 'PRE_TRAVEL',
-            uctPhase: 3,
-            helpText: 'Plan your route, travel mode, and leave requests for this segment.',
+        // Skip ORIGIN segments — they're detachment points, not travel legs
+        order.segments
+          .filter((seg) => seg.type !== 'ORIGIN')
+          .forEach((segment) => {
+            checklist.push({
+              id: generateUUID(),
+              label: `Plan Travel: ${segment.title}`,
+              segmentId: segment.id,
+              status: 'NOT_STARTED',
+              category: 'PRE_TRAVEL',
+              uctPhase: 3,
+              actionRoute: `/pcs-wizard/${segment.id}`,
+              helpText: 'Plan your route, travel mode, and leave for this segment.',
+            });
           });
-        });
 
         // Phase 4: Check-in & Travel Claim
         checklist.push({
           id: generateUUID(),
-          label: 'Complete Gaining Command Check-In',
+          label: 'Complete Check-In',
           status: 'NOT_STARTED',
           category: 'PRE_TRAVEL',
           uctPhase: 4,
+          actionRoute: '/pcs/check-in',
           helpText: 'Report to your new command\u2019s quarterdeck with your orders. This starts your check-in sheet.',
         });
+
         checklist.push({
           id: generateUUID(),
-          label: 'File DD 1351-2 Travel Claim',
+          label: 'File Travel Claim',
           status: 'NOT_STARTED',
           category: 'FINANCE',
           uctPhase: 4,
           actionRoute: '/travel-claim/request',
           helpText: 'Your travel voucher for reimbursement. File within 5 business days of arrival for fastest payout.',
         });
+        checklist.push({
+          id: generateUUID(),
+          label: 'Establish Housing & Update Profile',
+          status: 'NOT_STARTED',
+          category: 'PRE_TRAVEL',
+          uctPhase: 4,
+          actionRoute: '/pcs-wizard/profile-confirmation',
+          helpText: 'Secure housing at your new duty station and verify your address, BAH, and contact info are current.',
+        });
+
+
 
         set({ activeOrder: order, checklist });
 
@@ -363,6 +406,7 @@ export const usePCSStore = create<PCSState>()(
         set({
           activeOrder: null,
           checklist: [],
+          receipts: [],
           financials: {
             advancePay: {
               requested: false,
@@ -395,29 +439,20 @@ export const usePCSStore = create<PCSState>()(
             },
             movingCosts: null,
             liquidation: null,
+            dependentsRelocating: null,
           }
         });
       },
 
       recalculateFinancials: () => {
         const { activeOrder, financials } = get();
-        if (!activeOrder) return;
 
         const user = getActiveUser();
         if (!user) return;
 
-        let totalMalt = 0;
-        let totalPerDiem = 0;
-
-        // Sum MALT/Per Diem per segment
-        activeOrder.segments.forEach(segment => {
-          const { malt, perDiem } = calculateSegmentEntitlement(segment);
-          totalMalt += malt;
-          totalPerDiem += perDiem;
-        });
-
-        // DLA Calculation
-        const hasDependents = (user.dependents || 0) > 0;
+        // ── DLA + HHG Weight — only need rank & dependent status ──
+        const profileHasDeps = (user.dependents || 0) > 0;
+        const hasDependents = financials.dependentsRelocating ?? profileHasDeps;
         const dlaRate = getDLARate(user.rank, hasDependents);
 
         // Safe fallback for persisted state that predates multi-shipment migration
@@ -429,12 +464,25 @@ export const usePCSStore = create<PCSState>()(
           estimatedExcessCost: 0,
         };
 
-        // Sum weight across ALL shipments
         const allShipments = currentHhg.shipments ?? [];
         const maxWeight = getHHGWeightAllowance(user.rank || 'E-1', hasDependents);
         const estimatedWeight = allShipments.reduce(
           (sum, s) => sum + s.items.reduce((iSum, i) => iSum + i.estimatedWeight, 0), 0
         );
+
+        // ── MALT / Per Diem — require order segments ──────────────
+        let totalMalt = financials.totalMalt || 0;
+        let totalPerDiem = financials.totalPerDiem || 0;
+
+        if (activeOrder) {
+          totalMalt = 0;
+          totalPerDiem = 0;
+          activeOrder.segments.forEach(segment => {
+            const { malt, perDiem } = calculateSegmentEntitlement(segment);
+            totalMalt += malt;
+            totalPerDiem += perDiem;
+          });
+        }
 
         set({
           financials: {
@@ -489,6 +537,9 @@ export const usePCSStore = create<PCSState>()(
         if (newFinancials.liquidation !== undefined) {
           mergedFinancials.liquidation = newFinancials.liquidation;
         }
+        if (newFinancials.dependentsRelocating !== undefined) {
+          mergedFinancials.dependentsRelocating = newFinancials.dependentsRelocating;
+        }
 
         set({ financials: mergedFinancials });
 
@@ -502,15 +553,31 @@ export const usePCSStore = create<PCSState>()(
         if (newFinancials.hhg && newFinancials.hhg.shipments) {
           get().recalculateFinancials();
         }
+
+        // Recalculate if geo-bachelor status changes (affects DLA rate + HHG weight)
+        if (newFinancials.dependentsRelocating !== undefined) {
+          get().recalculateFinancials();
+        }
       },
 
       checkObliserv: () => {
         const { activeOrder, financials } = get();
         const user = getActiveUser();
 
-        if (!activeOrder || !user || !user.eaos) return;
+        if (!user || !user.eaos) {
+          console.log('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
+          return;
+        }
 
-        const reportDate = new Date(activeOrder.reportNLT);
+        // Use activeOrder.reportNLT if we have orders, otherwise fall back
+        // to the sailor's PRD as the projected report date (SELECTION phase).
+        const reportDateStr = activeOrder?.reportNLT ?? user.prd;
+        if (!reportDateStr) {
+          console.log('[OBLISERV] No reportDate and no PRD — bailing');
+          return;
+        }
+
+        const reportDate = new Date(reportDateStr);
         const eaosDate = new Date(user.eaos);
 
         // Report + 36 months
@@ -521,6 +588,14 @@ export const usePCSStore = create<PCSState>()(
         // If EAOS is BEFORE the required service date, OBLISERV is required
         const isObliservRequired = eaosDate < requiredServiceDate;
 
+        console.log('[OBLISERV] Check:', {
+          user: user.displayName,
+          reportDateStr,
+          eaos: user.eaos,
+          requiredServiceDate: requiredServiceDate.toISOString(),
+          isObliservRequired,
+        });
+
         // Compute what status should be based on requirement
         // Note: If user submits an extension/reenlistment, obliserv-request.tsx
         // sets COMPLETE via updateFinancials() directly — not through this function.
@@ -528,7 +603,12 @@ export const usePCSStore = create<PCSState>()(
 
         // Bail early if nothing changed — prevents re-render loops
         const current = financials.obliserv;
-        if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) return;
+        if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) {
+          console.log('[OBLISERV] No change — skipping update');
+          return;
+        }
+
+        console.log('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
 
         set({
           financials: {
@@ -588,6 +668,150 @@ export const usePCSStore = create<PCSState>()(
             ...updates,
           }
         });
+      },
+
+      // ─── Receipt Vault Actions ─────────────────────────────────────
+
+      addReceipt: (receipt) => {
+        const newReceipt: PCSReceipt = {
+          ...receipt,
+          id: generateUUID(),
+          capturedAt: new Date().toISOString(),
+        };
+        set((state) => ({ receipts: [...state.receipts, newReceipt] }));
+      },
+
+      removeReceipt: (id) => {
+        set((state) => ({ receipts: state.receipts.filter(r => r.id !== id) }));
+      },
+
+      updateReceipt: (id, updates) => {
+        set((state) => ({
+          receipts: state.receipts.map(r => r.id === id ? { ...r, ...updates } : r),
+        }));
+      },
+
+      // ─── Travel Claim Settlement Actions ────────────────────────────
+
+      initSettlement: () => {
+        const { activeOrder, financials, receipts } = get();
+        if (!activeOrder) return;
+
+        const user = getActiveUser();
+        if (!user) return;
+
+        const claimId = `tc-pcs-${Date.now()}`;
+        const now = new Date().toISOString();
+
+        // Bridge Phase 3 receipts → Expense line items
+        const bridgedExpenses = bridgeReceiptsToExpenses(receipts, claimId);
+
+        // Calculate totals from bridged expenses
+        const totalExpenses = bridgedExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+        const firstSeg = activeOrder.segments[0];
+        const lastSeg = activeOrder.segments[activeOrder.segments.length - 1];
+
+        const draft: TravelClaim = {
+          id: claimId,
+          userId: user.id,
+          orderNumber: activeOrder.orderNumber,
+          travelType: 'pcs',
+          status: 'draft',
+
+          // Trip details — pre-filled from orders
+          departureDate: firstSeg?.dates.projectedDeparture || now,
+          returnDate: lastSeg?.dates.projectedArrival || now,
+          departureLocation: firstSeg?.location.name || '',
+          destinationLocation: activeOrder.gainingCommand.name,
+          isOconus: activeOrder.isOconus,
+          travelMode: (firstSeg?.userPlan.mode?.toLowerCase() as any) || 'pov',
+
+          // Entitlements — pre-filled from Phase 2 financial review
+          maltAmount: financials.totalMalt || 0,
+          maltMiles: 0, // Sailor confirms actual mileage
+          dlaAmount: financials.dla.estimatedAmount || 0,
+          tleDays: 0,
+          tleAmount: 0,
+
+          // Per diem — defaults, Sailor adjusts during settlement
+          perDiemDays: [],
+
+          // Expenses — bridged from Phase 3 receipts
+          expenses: bridgedExpenses,
+
+          // Totals
+          totalExpenses,
+          totalEntitlements: (financials.totalMalt || 0) + (financials.totalPerDiem || 0) + (financials.dla.estimatedAmount || 0),
+          totalClaimAmount: 0,
+          advanceAmount: financials.advancePay.requested ? financials.advancePay.amount : 0,
+          netPayable: 0,
+
+          // Status
+          statusHistory: [],
+          approvalChain: [],
+          memberCertification: false,
+
+          // Timestamps
+          createdAt: now,
+          updatedAt: now,
+          lastSyncTimestamp: now,
+          syncStatus: 'pending_upload',
+        };
+
+        // Recalculate claim amount
+        draft.totalClaimAmount = draft.totalEntitlements + totalExpenses;
+        draft.netPayable = draft.totalClaimAmount - draft.advanceAmount;
+
+        set({ travelClaim: { draft, status: 'settling' } });
+      },
+
+      updateSettlement: (patch) => {
+        set((state) => {
+          if (!state.travelClaim.draft) return state;
+
+          const updated = {
+            ...state.travelClaim.draft,
+            ...patch,
+            updatedAt: new Date().toISOString(),
+          };
+
+          // Recalculate totals when expenses change
+          if (patch.expenses) {
+            updated.totalExpenses = updated.expenses.reduce((sum, e) => sum + e.amount, 0);
+          }
+          updated.totalClaimAmount = updated.totalEntitlements + updated.totalExpenses;
+          updated.netPayable = updated.totalClaimAmount - updated.advanceAmount;
+
+          return { travelClaim: { draft: updated, status: 'settling' } };
+        });
+      },
+
+      submitSettlement: () => {
+        const { travelClaim } = get();
+        if (!travelClaim.draft) return;
+
+        const now = new Date().toISOString();
+        const submittedDraft: TravelClaim = {
+          ...travelClaim.draft,
+          status: 'pending',
+          submittedAt: now,
+          updatedAt: now,
+          memberCertification: true,
+          statusHistory: [
+            ...travelClaim.draft.statusHistory,
+            { status: 'pending', timestamp: now },
+          ],
+        };
+
+        set({ travelClaim: { draft: submittedDraft, status: 'submitted' } });
+
+        // Mark the checklist item complete
+        const task = get().checklist.find((c) => c.label === 'File Travel Claim');
+        if (task) get().setChecklistItemStatus(task.id, 'COMPLETE');
+
+        // Trigger liquidation tracking
+        get().initializeLiquidation(submittedDraft.id);
       },
 
       // ─── Multi-Shipment Actions ───────────────────────────────────

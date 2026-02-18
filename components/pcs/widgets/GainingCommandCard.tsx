@@ -1,6 +1,6 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { useColorScheme } from '@/components/useColorScheme';
 import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
 import { useActiveOrder } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
 import { Building2, Mail, MessageSquare, Phone, User } from 'lucide-react-native';
@@ -126,10 +126,9 @@ export function GainingCommandCard({ variant = 'widget' }: GainingCommandCardPro
 
   const sponsorDisplayName = useMemo(() => {
     const sponsorName = sponsor?.name?.trim();
-    const sponsorRank = sponsor?.rank?.trim();
-    if (!sponsorName && !sponsorRank) return 'Sponsor';
-    return [sponsorRank, sponsorName].filter(Boolean).join(' ');
-  }, [sponsor?.name, sponsor?.rank]);
+    if (!sponsorName) return 'Sponsor';
+    return sponsorName;
+  }, [sponsor?.name]);
 
   const phone = sanitizePhone(sponsor?.phone);
   const email = sanitizeEmail(sponsor?.email);

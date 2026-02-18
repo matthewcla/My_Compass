@@ -22,21 +22,17 @@ export function BilletControlBar({
     const isDark = colorScheme === 'dark';
 
     // "My Path" Dark Mode Glow Style
-    // In dark mode, we want a blue glow (Lighter Shadow) and a dark background
     const shadowStyle = isDark ? {
-        shadowColor: '#3B82F6', // Blue-500 Glow
+        shadowColor: '#3B82F6',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.5,
         shadowRadius: 10,
         elevation: 8,
-        backgroundColor: '#1E293B', // Slate-800
-        borderColor: 'rgba(59, 130, 246, 0.3)', // Subtle blue border
+        backgroundColor: '#1E293B',
+        borderColor: 'rgba(59, 130, 246, 0.3)',
         borderWidth: 1
-    } : {}; // Light mode uses default Tailwind shadow-md
+    } : {};
 
-    // Base classes
-    // We use dark:bg-slate-800 in className as fallback/base, but style overrides it if set.
-    // We intentionally remove shadow-md in dark mode via style override (shadowColor in style takes precedence)
     const btnClass = "items-center justify-center rounded-full bg-white shadow-md dark:bg-slate-800 dark:border-slate-700 dark:border";
 
     return (

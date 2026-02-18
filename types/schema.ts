@@ -23,9 +23,9 @@ export type SyncStatus = z.infer<typeof SyncStatusSchema>;
  * Applied to transactional records that require offline support.
  */
 export const SyncMetadataSchema = z.object({
-    lastSyncTimestamp: z.string().datetime(), // ISO 8601 timestamp
-    syncStatus: SyncStatusSchema,
-    localModifiedAt: z.string().datetime().optional(), // Tracks local edits for conflict detection
+  lastSyncTimestamp: z.string().datetime(), // ISO 8601 timestamp
+  syncStatus: SyncStatusSchema,
+  localModifiedAt: z.string().datetime().optional(), // Tracks local edits for conflict detection
 });
 export type SyncMetadata = z.infer<typeof SyncMetadataSchema>;
 
@@ -40,10 +40,10 @@ export type SyncMetadata = z.infer<typeof SyncMetadataSchema>;
 // =============================================================================
 
 export const DashboardCacheSchema = z.object({
-    userId: z.string(),
-    data: z.string(), // JSON stringified DashboardData
-    lastSyncTimestamp: z.string().datetime(),
-    syncStatus: SyncStatusSchema,
+  userId: z.string(),
+  data: z.string(), // JSON stringified DashboardData
+  lastSyncTimestamp: z.string().datetime(),
+  syncStatus: SyncStatusSchema,
 });
 export type DashboardCache = z.infer<typeof DashboardCacheSchema>;
 
@@ -56,20 +56,20 @@ export type DashboardCache = z.infer<typeof DashboardCacheSchema>;
  * Computed at runtime based on current userId and billet.compass.lockedByUserId.
  */
 export interface BilletLockContext {
-    /** Raw lock status from server */
-    rawStatus: BilletLockStatus;
-    /** Is the billet currently locked by anyone? */
-    isLocked: boolean;
-    /** Is the lock held by the current authenticated user? */
-    isLockedByMe: boolean;
-    /** Is the lock held by someone else? */
-    isLockedByOther: boolean;
-    /** Can the current user apply to this billet? */
-    canApply: boolean;
-    /** Human-readable lock message for UI */
-    lockMessage: string | null;
-    /** Time remaining on lock (if applicable) */
-    lockExpiresIn: number | null; // milliseconds
+  /** Raw lock status from server */
+  rawStatus: BilletLockStatus;
+  /** Is the billet currently locked by anyone? */
+  isLocked: boolean;
+  /** Is the lock held by the current authenticated user? */
+  isLockedByMe: boolean;
+  /** Is the lock held by someone else? */
+  isLockedByOther: boolean;
+  /** Can the current user apply to this billet? */
+  canApply: boolean;
+  /** Human-readable lock message for UI */
+  lockMessage: string | null;
+  /** Time remaining on lock (if applicable) */
+  lockExpiresIn: number | null; // milliseconds
 }
 
 /**
@@ -78,18 +78,18 @@ export interface BilletLockContext {
  * @param currentUserId - The authenticated user's ID
  */
 export function computeBilletLockContext(
-    billet: Billet,
-    currentUserId: string
+  billet: Billet,
+  currentUserId: string
 ): BilletLockContext {
-    return {
-        rawStatus: 'open',
-        isLocked: false,
-        isLockedByMe: false,
-        isLockedByOther: false,
-        canApply: true,
-        lockMessage: null,
-        lockExpiresIn: null,
-    };
+  return {
+    rawStatus: 'open',
+    isLocked: false,
+    isLockedByMe: false,
+    isLockedByOther: false,
+    canApply: true,
+    lockMessage: null,
+    lockExpiresIn: null,
+  };
 }
 
 // =============================================================================
@@ -101,7 +101,7 @@ export function computeBilletLockContext(
  * These map directly to Zod schemas but use SQLite-compatible types.
  */
 export const SQLiteTableDefinitions = {
-    users: `
+  users: `
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       dod_id TEXT,
@@ -118,7 +118,7 @@ export const SQLiteTableDefinitions = {
     );
   `,
 
-    dashboard_cache: `
+  dashboard_cache: `
     CREATE TABLE IF NOT EXISTS dashboard_cache (
       user_id TEXT PRIMARY KEY,
       data TEXT NOT NULL,
@@ -128,7 +128,7 @@ export const SQLiteTableDefinitions = {
     );
     `,
 
-    billets: `
+  billets: `
     CREATE TABLE IF NOT EXISTS billets (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -155,7 +155,7 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_billets_pay_grade ON billets(pay_grade);
   `,
 
-    applications: `
+  applications: `
     CREATE TABLE IF NOT EXISTS applications (
       id TEXT PRIMARY KEY,
       billet_id TEXT NOT NULL,
@@ -183,7 +183,7 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
   `,
 
-    assignment_decisions: `
+  assignment_decisions: `
     CREATE TABLE IF NOT EXISTS assignment_decisions (
       user_id TEXT PRIMARY KEY,
       data TEXT NOT NULL, -- JSON record of billetId -> decision
@@ -193,7 +193,7 @@ export const SQLiteTableDefinitions = {
     );
   `,
 
-    assignment_decisions_entries: `
+  assignment_decisions_entries: `
     CREATE TABLE IF NOT EXISTS assignment_decisions_entries (
       user_id TEXT NOT NULL,
       billet_id TEXT NOT NULL,
@@ -205,7 +205,7 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_assignment_decisions_entries_user_id ON assignment_decisions_entries(user_id);
   `,
 
-    leave_balances: `
+  leave_balances: `
     CREATE TABLE IF NOT EXISTS leave_balances (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL UNIQUE,
@@ -223,7 +223,7 @@ export const SQLiteTableDefinitions = {
     );
   `,
 
-    leave_requests: `
+  leave_requests: `
     CREATE TABLE IF NOT EXISTS leave_requests (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -261,7 +261,7 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_leave_requests_status ON leave_requests(status);
   `,
 
-    leave_defaults: `
+  leave_defaults: `
     CREATE TABLE IF NOT EXISTS leave_defaults (
       user_id TEXT PRIMARY KEY,
       data TEXT NOT NULL, -- Encrypted JSON blob
@@ -271,7 +271,7 @@ export const SQLiteTableDefinitions = {
     );
   `,
 
-    inbox_messages: `
+  inbox_messages: `
     CREATE TABLE IF NOT EXISTS inbox_messages (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
@@ -286,7 +286,7 @@ export const SQLiteTableDefinitions = {
     );
   `,
 
-    career_events: `
+  career_events: `
     CREATE TABLE IF NOT EXISTS career_events (
       event_id TEXT PRIMARY KEY,
       event_type TEXT NOT NULL,
@@ -302,7 +302,7 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_career_events_date ON career_events(date);
   `,
 
-    historical_pcs_orders: `
+  historical_pcs_orders: `
     CREATE TABLE IF NOT EXISTS historical_pcs_orders (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -328,7 +328,7 @@ export const SQLiteTableDefinitions = {
     CREATE INDEX IF NOT EXISTS idx_historical_pcs_fiscal_year ON historical_pcs_orders(fiscal_year);
   `,
 
-    pcs_documents: `
+  pcs_documents: `
     CREATE TABLE IF NOT EXISTS pcs_documents (
       id TEXT PRIMARY KEY,
       pcs_order_id TEXT NOT NULL,
@@ -351,13 +351,13 @@ export const SQLiteTableDefinitions = {
  * @param db - expo-sqlite database instance
  */
 export async function initializeSQLiteTables(db: { execAsync: (sql: string) => Promise<void> }): Promise<void> {
-    // Create all tables
-    for (const tableDef of Object.values(SQLiteTableDefinitions)) {
-        await db.execAsync(tableDef);
-    }
+  // Create all tables
+  for (const tableDef of Object.values(SQLiteTableDefinitions)) {
+    await db.execAsync(tableDef);
+  }
 
-    // Run versioned migration system
-    await runMigrationSystem(db);
+  // Run versioned migration system
+  await runMigrationSystem(db);
 }
 
 // =============================================================================
@@ -381,8 +381,8 @@ export type BilletLockStatus = z.infer<typeof BilletLockStatusSchema>;
  * Compass-specific AI enhancement fields for billet matching.
  */
 export const CompassBilletMetadataSchema = z.object({
-    matchScore: z.number().min(0).max(100), // AI-computed fit score (0-100)
-    contextualNarrative: z.string(), // AI-generated "Why this fits you" explanation
+  matchScore: z.number().min(0).max(100), // AI-computed fit score (0-100)
+  contextualNarrative: z.string(), // AI-generated "Why this fits you" explanation
 });
 export type CompassBilletMetadata = z.infer<typeof CompassBilletMetadataSchema>;
 
@@ -390,26 +390,27 @@ export type CompassBilletMetadata = z.infer<typeof CompassBilletMetadataSchema>;
  * Standard Navy billet/job posting fields.
  */
 export const BilletSchema = z.object({
-    id: z.string(),
-    title: z.string(), // Job title
-    uic: z.string(), // Unit Identification Code
-    location: z.string(), // Geographic location
-    payGrade: z.string(), // E-1 through O-10, W-1 through W-5
-    nec: z.string().nullable().optional(), // Navy Enlisted Classification code
-    designator: z.string().nullable().optional(), // Officer designator code
-    dutyType: z.string().nullable().optional(), // Sea, Shore, Overseas, etc.
-    reportNotLaterThan: z.string().datetime().nullable().optional(), // RNLTD
-    billetDescription: z.string().nullable().optional(),
+  id: z.string(),
+  title: z.string(), // Job title
+  uic: z.string(), // Unit Identification Code
+  location: z.string(), // Geographic location
+  payGrade: z.string(), // E-1 through O-10, W-1 through W-5
+  nec: z.string().nullable().optional(), // Navy Enlisted Classification code
+  designator: z.string().nullable().optional(), // Officer designator code
+  dutyType: z.string().nullable().optional(), // Sea, Shore, Overseas, etc.
+  reportNotLaterThan: z.string().datetime().nullable().optional(), // RNLTD
+  billetDescription: z.string().nullable().optional(),
+  targetRating: z.string().nullable().optional(), // Rating filter (IT, AT, SWO, ETN, etc.)
 
-    // Compass AI Enhancements
-    compass: CompassBilletMetadataSchema,
+  // Compass AI Enhancements
+  compass: CompassBilletMetadataSchema,
 
-    // Status for MyNavy Assignment Projection
-    advertisementStatus: z.enum(['projected', 'confirmed_open', 'closed']).default('confirmed_open'),
+  // Status for MyNavy Assignment Projection
+  advertisementStatus: z.enum(['projected', 'confirmed_open', 'closed']).default('confirmed_open'),
 
-    // Sync metadata (billets are reference data, but we cache locally)
-    lastSyncTimestamp: z.string().datetime(),
-    syncStatus: SyncStatusSchema,
+  // Sync metadata (billets are reference data, but we cache locally)
+  lastSyncTimestamp: z.string().datetime(),
+  syncStatus: SyncStatusSchema,
 });
 export type Billet = z.infer<typeof BilletSchema>;
 
@@ -428,11 +429,11 @@ export type Billet = z.infer<typeof BilletSchema>;
  * 5. declined → Detailer rejected application
  */
 export const ApplicationStatusSchema = z.enum([
-    'draft',
-    'submitted',
-    'confirmed',
-    'withdrawn',
-    'declined',
+  'draft',
+  'submitted',
+  'confirmed',
+  'withdrawn',
+  'declined',
 ]);
 export type ApplicationStatus = z.infer<typeof ApplicationStatusSchema>;
 
@@ -440,35 +441,35 @@ export type ApplicationStatus = z.infer<typeof ApplicationStatusSchema>;
  * Application record representing a user's intent to fill a billet.
  */
 export const ApplicationSchema = z.object({
-    id: z.string(),
-    billetId: z.string(),
-    userId: z.string(),
+  id: z.string(),
+  billetId: z.string(),
+  userId: z.string(),
 
-    // State machine
+  // State machine
+  status: ApplicationStatusSchema,
+  statusHistory: z.array(z.object({
     status: ApplicationStatusSchema,
-    statusHistory: z.array(z.object({
-        status: ApplicationStatusSchema,
-        timestamp: z.string().datetime(),
-        reason: z.string().optional(),
-    })),
+    timestamp: z.string().datetime(),
+    reason: z.string().optional(),
+  })),
 
-    // Application content
-    personalStatement: z.string().optional(),
-    preferenceRank: z.number().int().min(1).optional(), // User's ranking among their applications
-    submittedAt: z.string().datetime().optional(),
+  // Application content
+  personalStatement: z.string().optional(),
+  preferenceRank: z.number().int().min(1).optional(), // User's ranking among their applications
+  submittedAt: z.string().datetime().optional(),
 
-    // Server response tracking
-    serverConfirmedAt: z.string().datetime().optional(),
-    serverRejectionReason: z.string().optional(),
+  // Server response tracking
+  serverConfirmedAt: z.string().datetime().optional(),
+  serverRejectionReason: z.string().optional(),
 
-    // Timestamps
-    createdAt: z.string().datetime(),
-    updatedAt: z.string().datetime(),
+  // Timestamps
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
 
-    // Sync metadata
-    lastSyncTimestamp: z.string().datetime(),
-    syncStatus: SyncStatusSchema,
-    localModifiedAt: z.string().datetime().optional(),
+  // Sync metadata
+  lastSyncTimestamp: z.string().datetime(),
+  syncStatus: SyncStatusSchema,
+  localModifiedAt: z.string().datetime().optional(),
 });
 export type Application = z.infer<typeof ApplicationSchema>;
 
@@ -480,10 +481,10 @@ export const EventPrioritySchema = z.enum(['CRITICAL', 'HIGH', 'STANDARD']);
 export type EventPriority = z.infer<typeof EventPrioritySchema>;
 
 export const CareerEventTypeSchema = z.enum([
-    'ADVANCEMENT_EXAM',
-    'STATUTORY_BOARD',
-    'ADMIN_BOARD',
-    'ATTENDANCE_MUSTER'
+  'ADVANCEMENT_EXAM',
+  'STATUTORY_BOARD',
+  'ADMIN_BOARD',
+  'ATTENDANCE_MUSTER'
 ]);
 export type CareerEventType = z.infer<typeof CareerEventTypeSchema>;
 
@@ -491,18 +492,18 @@ export const AttendanceStatusSchema = z.enum(['PENDING', 'PRESENT', 'ABSENT', 'E
 export type AttendanceStatus = z.infer<typeof AttendanceStatusSchema>;
 
 export const CareerEventSchema = z.object({
-    eventId: z.string(),
-    eventType: CareerEventTypeSchema,
-    title: z.string(),
-    date: z.string().datetime(),
-    location: z.string(),
-    attendanceStatus: AttendanceStatusSchema,
-    priority: EventPrioritySchema,
-    qr_token: z.string().optional(),
+  eventId: z.string(),
+  eventType: CareerEventTypeSchema,
+  title: z.string(),
+  date: z.string().datetime(),
+  location: z.string(),
+  attendanceStatus: AttendanceStatusSchema,
+  priority: EventPrioritySchema,
+  qr_token: z.string().optional(),
 
-    // Sync metadata
-    lastSyncTimestamp: z.string().datetime(),
-    syncStatus: SyncStatusSchema,
+  // Sync metadata
+  lastSyncTimestamp: z.string().datetime(),
+  syncStatus: SyncStatusSchema,
 });
 export type CareerEvent = z.infer<typeof CareerEventSchema>;
 
@@ -518,28 +519,28 @@ export type CareerEvent = z.infer<typeof CareerEventSchema>;
  * Leave balance snapshot for the authenticated user.
  */
 export const LeaveBalanceSchema = z.object({
-    id: z.string(),
-    userId: z.string(),
+  id: z.string(),
+  userId: z.string(),
 
-    // Core balance fields
-    currentBalance: z.number().min(0), // Days currently available
-    useOrLoseDays: z.number().min(0), // Days that will expire at fiscal year end
-    useOrLoseExpirationDate: z.string().datetime(), // Typically Sep 30
+  // Core balance fields
+  currentBalance: z.number().min(0), // Days currently available
+  useOrLoseDays: z.number().min(0), // Days that will expire at fiscal year end
+  useOrLoseExpirationDate: z.string().datetime(), // Typically Sep 30
 
-    // Accrual tracking
-    earnedThisFiscalYear: z.number().min(0),
-    usedThisFiscalYear: z.number().min(0),
-    projectedEndOfYearBalance: z.number(),
+  // Accrual tracking
+  earnedThisFiscalYear: z.number().min(0),
+  usedThisFiscalYear: z.number().min(0),
+  projectedEndOfYearBalance: z.number(),
 
-    // Maximum carry-over (typically 60 days)
-    maxCarryOver: z.number().default(60),
+  // Maximum carry-over (typically 60 days)
+  maxCarryOver: z.number().default(60),
 
-    // Balance as-of date (server snapshot time)
-    balanceAsOfDate: z.string().datetime(),
+  // Balance as-of date (server snapshot time)
+  balanceAsOfDate: z.string().datetime(),
 
-    // Sync metadata
-    lastSyncTimestamp: z.string().datetime(),
-    syncStatus: SyncStatusSchema,
+  // Sync metadata
+  lastSyncTimestamp: z.string().datetime(),
+  syncStatus: SyncStatusSchema,
 });
 export type LeaveBalance = z.infer<typeof LeaveBalanceSchema>;
 
@@ -551,15 +552,15 @@ export type LeaveBalance = z.infer<typeof LeaveBalanceSchema>;
  * Leave types per DoD standards.
  */
 export const LeaveTypeSchema = z.enum([
-    'annual', // Regular annual leave
-    'emergency', // Emergency leave
-    'convalescent', // Medical convalescent leave
-    'terminal', // Terminal leave (separation/retirement)
-    'parental', // Parental leave
-    'bereavement', // Bereavement leave
-    'adoption', // Adoption leave
-    'ptdy', // Permissive TDY
-    'other', // Other authorized absence
+  'annual', // Regular annual leave
+  'emergency', // Emergency leave
+  'convalescent', // Medical convalescent leave
+  'terminal', // Terminal leave (separation/retirement)
+  'parental', // Parental leave
+  'bereavement', // Bereavement leave
+  'adoption', // Adoption leave
+  'ptdy', // Permissive TDY
+  'other', // Other authorized absence
 ]);
 export type LeaveType = z.infer<typeof LeaveTypeSchema>;
 
@@ -567,12 +568,12 @@ export type LeaveType = z.infer<typeof LeaveTypeSchema>;
  * Leave request status workflow.
  */
 export const LeaveRequestStatusSchema = z.enum([
-    'draft', // User composing, not yet submitted
-    'pending', // Submitted, awaiting supervisor action
-    'approved', // Approved by chain
-    'denied', // Denied by chain
-    'returned', // Returned for corrections
-    'cancelled', // Cancelled by member after submission
+  'draft', // User composing, not yet submitted
+  'pending', // Submitted, awaiting supervisor action
+  'approved', // Approved by chain
+  'denied', // Denied by chain
+  'returned', // Returned for corrections
+  'cancelled', // Cancelled by member after submission
 ]);
 export type LeaveRequestStatus = z.infer<typeof LeaveRequestStatusSchema>;
 
@@ -580,11 +581,11 @@ export type LeaveRequestStatus = z.infer<typeof LeaveRequestStatusSchema>;
  * Emergency contact information (required for leave requests).
  */
 export const EmergencyContactSchema = z.object({
-    name: z.string(),
-    relationship: z.string(),
-    phoneNumber: z.string(),
-    altPhoneNumber: z.string().optional(),
-    address: z.string().optional(),
+  name: z.string(),
+  relationship: z.string(),
+  phoneNumber: z.string(),
+  altPhoneNumber: z.string().optional(),
+  address: z.string().optional(),
 });
 export type EmergencyContact = z.infer<typeof EmergencyContactSchema>;
 
@@ -592,12 +593,12 @@ export type EmergencyContact = z.infer<typeof EmergencyContactSchema>;
  * Approval chain member.
  */
 export const ApproverSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    title: z.string().optional(), // e.g., "Division Officer", "Department Head"
-    action: z.enum(['pending', 'approved', 'denied', 'returned']).optional(),
-    actionTimestamp: z.string().datetime().optional(),
-    comments: z.string().optional(),
+  id: z.string(),
+  name: z.string(),
+  title: z.string().optional(), // e.g., "Division Officer", "Department Head"
+  action: z.enum(['pending', 'approved', 'denied', 'returned']).optional(),
+  actionTimestamp: z.string().datetime().optional(),
+  comments: z.string().optional(),
 });
 export type Approver = z.infer<typeof ApproverSchema>;
 
@@ -608,9 +609,9 @@ export const RationStatusSchema = z.enum(['commuted', 'in_kind', 'not_applicable
 export type RationStatus = z.infer<typeof RationStatusSchema>;
 
 export const PreReviewChecksSchema = z.object({
-    hasReadPolicy: z.boolean(),
-    hasInformalApproval: z.boolean(),
-    isReadyToSubmit: z.boolean(),
+  hasReadPolicy: z.boolean(),
+  hasInformalApproval: z.boolean(),
+  isReadyToSubmit: z.boolean(),
 });
 export type PreReviewChecks = z.infer<typeof PreReviewChecksSchema>;
 
@@ -618,68 +619,68 @@ export type PreReviewChecks = z.infer<typeof PreReviewChecksSchema>;
  * Leave request record (modeled after USAF LeaveWeb structure).
  */
 export const LeaveRequestSchema = z.object({
-    id: z.string(),
-    userId: z.string(),
+  id: z.string(),
+  userId: z.string(),
 
-    // Leave period
-    startDate: z.string().datetime(), // Leave start date/time
-    endDate: z.string().datetime(), // Leave end date/time
-    chargeDays: z.number().min(0), // Actual chargeable days (excludes weekends/holidays)
+  // Leave period
+  startDate: z.string().datetime(), // Leave start date/time
+  endDate: z.string().datetime(), // Leave end date/time
+  chargeDays: z.number().min(0), // Actual chargeable days (excludes weekends/holidays)
 
-    // Leave details
-    leaveType: LeaveTypeSchema,
-    leaveAddress: z.string(), // Where member will be during leave
-    leavePhoneNumber: z.string(),
+  // Leave details
+  leaveType: LeaveTypeSchema,
+  leaveAddress: z.string(), // Where member will be during leave
+  leavePhoneNumber: z.string(),
 
-    // Command Details
-    dutySection: z.string().optional(), // e.g. "N1 Admin"
-    deptDiv: z.string().optional(),
-    dutyPhone: z.string().optional(),
-    rationStatus: RationStatusSchema.optional(),
+  // Command Details
+  dutySection: z.string().optional(), // e.g. "N1 Admin"
+  deptDiv: z.string().optional(),
+  dutyPhone: z.string().optional(),
+  rationStatus: RationStatusSchema.optional(),
 
-    // Emergency contact (required for submission, optional for draft)
-    emergencyContact: EmergencyContactSchema.optional(),
+  // Emergency contact (required for submission, optional for draft)
+  emergencyContact: EmergencyContactSchema.optional(),
 
-    // Transportation
-    modeOfTravel: z.string().optional(), // POV, Commercial Air, etc.
-    destinationCountry: z.string().default('USA'),
-    normalWorkingHours: z.string().default('0700-1600'),
-    leaveInConus: z.boolean().default(true),
+  // Transportation
+  modeOfTravel: z.string().optional(), // POV, Commercial Air, etc.
+  destinationCountry: z.string().default('USA'),
+  normalWorkingHours: z.string().default('0700-1600'),
+  leaveInConus: z.boolean().default(true),
 
-    // Remarks
-    memberRemarks: z.string().nullable().optional(),
+  // Remarks
+  memberRemarks: z.string().nullable().optional(),
 
-    // Checklist
-    preReviewChecks: PreReviewChecksSchema.optional(),
+  // Checklist
+  preReviewChecks: PreReviewChecksSchema.optional(),
 
-    // Status workflow
+  // Status workflow
+  status: LeaveRequestStatusSchema,
+  statusHistory: z.array(z.object({
     status: LeaveRequestStatusSchema,
-    statusHistory: z.array(z.object({
-        status: LeaveRequestStatusSchema,
-        timestamp: z.string().datetime(),
-        actorId: z.string().optional(),
-        comments: z.string().optional(),
-    })),
+    timestamp: z.string().datetime(),
+    actorId: z.string().optional(),
+    comments: z.string().optional(),
+  })),
 
-    // Approval chain
-    approvalChain: z.array(ApproverSchema),
-    currentApproverId: z.string().nullable().optional(), // Who needs to act next
+  // Approval chain
+  approvalChain: z.array(ApproverSchema),
+  currentApproverId: z.string().nullable().optional(), // Who needs to act next
 
-    // Return reason (if status = returned)
-    returnReason: z.string().nullable().optional(),
+  // Return reason (if status = returned)
+  returnReason: z.string().nullable().optional(),
 
-    // Denial reason (if status = denied)
-    denialReason: z.string().nullable().optional(),
+  // Denial reason (if status = denied)
+  denialReason: z.string().nullable().optional(),
 
-    // Timestamps
-    createdAt: z.string().datetime(),
-    updatedAt: z.string().datetime(),
-    submittedAt: z.string().datetime().nullable().optional(),
+  // Timestamps
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  submittedAt: z.string().datetime().nullable().optional(),
 
-    // Sync metadata
-    lastSyncTimestamp: z.string().datetime(),
-    syncStatus: SyncStatusSchema,
-    localModifiedAt: z.string().datetime().nullable().optional(),
+  // Sync metadata
+  lastSyncTimestamp: z.string().datetime(),
+  syncStatus: SyncStatusSchema,
+  localModifiedAt: z.string().datetime().nullable().optional(),
 });
 export type LeaveRequest = z.infer<typeof LeaveRequestSchema>;
 
@@ -691,25 +692,25 @@ export type LeaveRequest = z.infer<typeof LeaveRequestSchema>;
  * My Assignment domain store slice.
  */
 export interface MyAssignmentState {
-    billets: Record<string, Billet>; // Indexed by billet ID
-    applications: Record<string, Application>; // Indexed by application ID
-    userApplicationIds: string[]; // Quick lookup of current user's applications
-    lastBilletSyncAt: string | null;
-    isSyncingBillets: boolean;
-    isSyncingApplications: boolean;
+  billets: Record<string, Billet>; // Indexed by billet ID
+  applications: Record<string, Application>; // Indexed by application ID
+  userApplicationIds: string[]; // Quick lookup of current user's applications
+  lastBilletSyncAt: string | null;
+  isSyncingBillets: boolean;
+  isSyncingApplications: boolean;
 }
 
 /**
  * My Admin (Leave) domain store slice.
  */
 export interface MyAdminState {
-    leaveBalance: LeaveBalance | null;
-    leaveRequests: Record<string, LeaveRequest>; // Indexed by request ID
-    userLeaveRequestIds: string[]; // Quick lookup of current user's requests
-    userDefaults: LeaveRequestDefaults | null;
-    lastBalanceSyncAt: string | null;
-    isSyncingBalance: boolean;
-    isSyncingRequests: boolean;
+  leaveBalance: LeaveBalance | null;
+  leaveRequests: Record<string, LeaveRequest>; // Indexed by request ID
+  userLeaveRequestIds: string[]; // Quick lookup of current user's requests
+  userDefaults: LeaveRequestDefaults | null;
+  lastBalanceSyncAt: string | null;
+  isSyncingBalance: boolean;
+  isSyncingRequests: boolean;
 }
 
 // =============================================================================
@@ -717,32 +718,32 @@ export interface MyAdminState {
 // =============================================================================
 
 export const Step1IntentSchema = LeaveRequestSchema.pick({
-    leaveType: true,
-    startDate: true,
-    endDate: true,
-    chargeDays: true,
-    leaveInConus: true,
-    destinationCountry: true,
+  leaveType: true,
+  startDate: true,
+  endDate: true,
+  chargeDays: true,
+  leaveInConus: true,
+  destinationCountry: true,
 });
 
 export const Step2ContactSchema = LeaveRequestSchema.pick({
-    leaveAddress: true,
-    leavePhoneNumber: true,
-    modeOfTravel: true,
+  leaveAddress: true,
+  leavePhoneNumber: true,
+  modeOfTravel: true,
 });
 
 export const Step3CommandSchema = LeaveRequestSchema.pick({
-    dutySection: true,
-    deptDiv: true,
-    dutyPhone: true,
-    rationStatus: true,
+  dutySection: true,
+  deptDiv: true,
+  dutyPhone: true,
+  rationStatus: true,
 });
 
 export const Step4SafetySchema = LeaveRequestSchema.pick({
-    emergencyContact: true,
-    memberRemarks: true,
+  emergencyContact: true,
+  memberRemarks: true,
 }).extend({
-    emergencyContact: EmergencyContactSchema,
+  emergencyContact: EmergencyContactSchema,
 });
 
 /**
@@ -750,13 +751,13 @@ export const Step4SafetySchema = LeaveRequestSchema.pick({
  * Subset of LeaveRequest that is persisted to speed up data entry.
  */
 export const LeaveRequestDefaultsSchema = LeaveRequestSchema.pick({
-    leaveAddress: true,
-    leavePhoneNumber: true,
-    emergencyContact: true,
-    dutySection: true,
-    deptDiv: true,
-    dutyPhone: true,
-    rationStatus: true,
+  leaveAddress: true,
+  leavePhoneNumber: true,
+  emergencyContact: true,
+  dutySection: true,
+  deptDiv: true,
+  dutyPhone: true,
+  rationStatus: true,
 });
 export type LeaveRequestDefaults = z.infer<typeof LeaveRequestDefaultsSchema>;
 
@@ -764,13 +765,13 @@ export type LeaveRequestDefaults = z.infer<typeof LeaveRequestDefaultsSchema>;
  * Root store interface combining all domain slices.
  */
 export interface MyCompassStore {
-    assignment: MyAssignmentState;
-    admin: MyAdminState;
+  assignment: MyAssignmentState;
+  admin: MyAdminState;
 }
 
 // =============================================================================
 // SWIPE DECISIONS
 // =============================================================================
 
-export const SwipeDecisionSchema = z.enum(['like', 'nope', 'super']);
+export const SwipeDecisionSchema = z.enum(['like', 'nope', 'super', 'defer']);
 export type SwipeDecision = z.infer<typeof SwipeDecisionSchema>;

@@ -2,7 +2,53 @@ export type PCSSegmentType = 'ORIGIN' | 'INTERMEDIATE' | 'DESTINATION';
 export type PCSSegmentMode = 'POV' | 'AIR' | 'MIXED' | 'GOV_VEHICLE';
 export type PCSSegmentStatus = 'LOCKED' | 'PLANNING' | 'COMPLETE';
 export type PCSPhase = 'DORMANT' | 'ORDERS_NEGOTIATION' | 'TRANSIT_LEAVE' | 'CHECK_IN';
+
+export type AssignmentPhase =
+  | 'DISCOVERY'
+  | 'ON_RAMP'
+  | 'NEGOTIATION'
+  | 'SELECTION'
+  | 'ORDERS_PROCESSING'
+  | 'ORDERS_RELEASED';
 export type TRANSITSubPhase = 'PLANNING' | 'ACTIVE_TRAVEL';
+
+// ── Selection Phase Pipeline ─────────────────────────────────────────────────
+
+export type OrdersPipelineStatus =
+  | 'MATCH_ANNOUNCED'
+  | 'CO_ENDORSEMENT'
+  | 'PERS_PROCESSING'
+  | 'ORDERS_DRAFTING'
+  | 'ORDERS_RELEASED';
+
+export interface DetailerContact {
+  name: string;
+  phone: string;
+  email: string;
+  office: string; // e.g. "PERS-4013"
+}
+
+export interface SelectionDetails {
+  billetTitle: string;                   // e.g. "WORK CENTER SUPERVISOR"
+  billetNec: string | null;              // e.g. "14NO"
+  dutyType: string;                      // e.g. "Sea" | "Shore"
+  pipelineStatus: OrdersPipelineStatus;
+  estimatedOrdersDate: string | null;    // ISO date
+  detailer: DetailerContact;
+  selectedDate: string;                  // when match was announced
+}
+
+export type ReceiptCategory = 'GAS' | 'LODGING' | 'TOLLS' | 'MEALS' | 'OTHER';
+
+export interface PCSReceipt {
+  id: string;
+  imageUri: string;
+  amount: number | null;
+  category: ReceiptCategory;
+  note: string;
+  capturedAt: string;
+  ocrConfidence: 'high' | 'medium' | 'low';
+}
 
 /**
  * PCS Route information for travel distance calculations.

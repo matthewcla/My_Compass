@@ -6,7 +6,7 @@ import { storage } from '@/services/storage';
 const MAX_INBOX_MESSAGES = 500;
 
 const sortByNewest = (a: InboxMessage, b: InboxMessage) =>
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0;
 
 const clipMessages = (messages: InboxMessage[]) =>
     [...messages].sort(sortByNewest).slice(0, MAX_INBOX_MESSAGES);
@@ -81,14 +81,19 @@ export const useInboxStore = create<InboxState>((set, get) => ({
     },
 
     markAsRead: (id: string) => {
-        const newMessages = clipMessages(get().messages.map(m => m.id === id ? { ...m, isRead: true } : m));
+        const messages = get().messages;
+        const newMessages = messages.map(m => m.id === id ? { ...m, isRead: true } : m);
         set({ messages: newMessages });
         storage.updateInboxMessageReadStatus(id, true).catch(e => console.error('Failed to save read status', e));
     },
 
     togglePin: (id: string) => {
-        const newMessages = clipMessages(get().messages.map(m => m.id === id ? { ...m, isPinned: !m.isPinned } : m));
+        const messages = get().messages;
+        const message = messages.find(m => m.id === id);
+        if (!message) return;
+
+        const newMessages = messages.map(m => m.id === id ? { ...m, isPinned: !m.isPinned } : m);
         set({ messages: newMessages });
-        storage.saveInboxMessages(newMessages).catch(e => console.error('Failed to save pin status', e));
+        storage.updateInboxMessagePinStatus(id, !message.isPinned).catch(e => console.error('Failed to save pin status', e));
     }
 }));

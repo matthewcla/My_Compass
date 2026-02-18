@@ -12,6 +12,7 @@ This directory contains developer-facing documentation for the My Compass projec
 
 | Document | Description |
 |----------|-------------|
+| [COMPASS_LIFECYCLE.md](./COMPASS_LIFECYCLE.md) | Full sailor lifecycle (Accession → DD-214): Assignment phases, PCS UCT phases, transition rules, feature activation map |
 | [DESIGN_STANDARDS.md](./DESIGN_STANDARDS.md) | Glass Cockpit philosophy, UCT pattern, Flow pattern, animation standards, Navy terminology, component conventions |
 
 ### Security & Compliance

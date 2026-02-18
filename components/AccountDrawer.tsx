@@ -1,6 +1,6 @@
 import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
-import { useUser } from '@/store/useUserStore';
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { getShadow } from '@/utils/getShadow';
 import { router } from 'expo-router';
 import { LogOut, Minimize, Settings, UserCircle, X } from 'lucide-react-native';
@@ -15,7 +15,7 @@ interface AccountDrawerProps {
 
 export function AccountDrawer({ visible, onClose }: AccountDrawerProps) {
     const { signOut } = useSession();
-    const user = useUser();
+    const user = useCurrentProfile();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const theme = Colors[colorScheme ?? 'light'];

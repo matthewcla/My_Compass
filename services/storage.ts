@@ -915,6 +915,15 @@ class SQLiteStorage implements IStorageService {
     );
   }
 
+  async updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void> {
+    const db = await this.getDB();
+    await db.runAsync(
+      'UPDATE inbox_messages SET is_pinned = ? WHERE id = ?',
+      isPinned ? 1 : 0,
+      id
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Career Events
   // ---------------------------------------------------------------------------
@@ -1329,6 +1338,13 @@ class MockStorage implements IStorageService {
     }
   }
 
+  async updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void> {
+    const msg = this.inboxMessages.get(id);
+    if (msg) {
+      this.inboxMessages.set(id, { ...msg, isPinned });
+    }
+  }
+
   // Career Events
   async saveCareerEvents(events: CareerEvent[]): Promise<void> {
     events.forEach(event => this.careerEvents.set(event.eventId, event));
@@ -1517,6 +1533,12 @@ class WebStorage implements IStorageService {
   async updateInboxMessageReadStatus(id: string, isRead: boolean): Promise<void> {
     const messages = await this.getInboxMessages();
     const newMessages = messages.map(m => m.id === id ? { ...m, isRead } : m);
+    await this.saveInboxMessages(newMessages);
+  }
+
+  async updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void> {
+    const messages = await this.getInboxMessages();
+    const newMessages = messages.map(m => m.id === id ? { ...m, isPinned } : m);
     await this.saveInboxMessages(newMessages);
   }
 

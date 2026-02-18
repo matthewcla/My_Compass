@@ -1,20 +1,22 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import { AdvancePayVisualizer } from '@/components/pcs/financials/AdvancePayVisualizer';
-import { EntitlementsMeter } from '@/components/pcs/financials/EntitlementsMeter';
 import { MovingCostProjection } from '@/components/pcs/financials/MovingCostProjection';
 import { FinancialWizardStatusBar } from '@/components/pcs/wizard/FinancialWizardStatusBar';
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import {
+    AlertTriangle,
     Banknote,
     CheckCircle,
     ChevronLeft,
-    FileCheck2,
-    Shield
+    Send,
+    Shield,
+    Users,
 } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
     LayoutChangeEvent,
     NativeScrollEvent,
@@ -30,9 +32,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ─── Constants ────────────────────────────────────────────────
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 2;
 
-const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+const fmt = (n: number) => {
+    const abs = Math.abs(n).toFixed(2);
+    const [whole, dec] = abs.split('.');
+    const withCommas = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `$${withCommas}.${dec}`;
+};
 
 // ─── Screen ───────────────────────────────────────────────────
 
@@ -46,9 +53,17 @@ export default function FinancialReviewScreen() {
     const checklist = usePCSStore((s) => s.checklist);
 
     const [requestDLA, setRequestDLA] = useState(financials.dla.eligible);
+    const [requestAdvancePay, setRequestAdvancePay] = useState(financials.advancePay.requested);
+    const [advanceMonths, setAdvanceMonths] = useState(financials.advancePay.months || 1);
+    const [advanceRepaymentTerm, setAdvanceRepaymentTerm] = useState(financials.advancePay.repaymentMonths || 12);
     const [saving, setSaving] = useState(false);
     const [showExitModal, setShowExitModal] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+
+    // ─── Profile (for dependents check) ──────────────────────
+    const profile = useCurrentProfile();
+    const hasDependentsOnProfile = (profile?.dependents || 0) > 0;
+    const isGeoBachelor = financials.dependentsRelocating === false;
 
     // ─── Scroll Tracking (Tactical Wizard pattern) ──────────
     const [activeStep, setActiveStep] = useState(0);
@@ -85,7 +100,7 @@ export default function FinancialReviewScreen() {
 
     // Auto-mark in-progress when flow opens
     useEffect(() => {
-        const task = checklist.find((c) => c.label === 'Financial Review & DLA Request');
+        const task = checklist.find((c) => c.label === 'Financial Review & Requests');
         if (task && task.status === 'NOT_STARTED') {
             setChecklistItemStatus(task.id, 'IN_PROGRESS');
         }
@@ -95,6 +110,22 @@ export default function FinancialReviewScreen() {
         if (Platform.OS !== 'web') Haptics.impactAsync(style).catch(() => undefined);
     };
 
+    // ─── Dynamic CTA Label ──────────────────────────────────
+    const ctaLabel = useMemo(() => {
+        if (requestDLA && requestAdvancePay) return 'Submit DLA & Advance Pay Request';
+        if (requestDLA) return 'Submit DLA Request';
+        if (requestAdvancePay) return 'Submit Advance Pay Request';
+        return 'Complete Financial Review';
+    }, [requestDLA, requestAdvancePay]);
+
+    const hasRequests = requestDLA || requestAdvancePay;
+
+    // ─── Computed advance pay amount ───────────────────────────
+    const basePay = financials.advancePay.amount > 0
+        ? financials.advancePay.amount / (financials.advancePay.months || 1)
+        : 3800; // fallback
+    const computedAdvanceAmount = basePay * advanceMonths;
+
     // ─── Exit Handling ───────────────────────────────────────
     const handleExit = () => {
         setShowExitModal(true);
@@ -103,26 +134,39 @@ export default function FinancialReviewScreen() {
     const confirmExit = (action: 'save' | 'discard') => {
         setShowExitModal(false);
         if (action === 'save') {
-            // Persist current DLA decision before leaving
             updateFinancials((prev) => ({
                 dla: { ...prev.dla, eligible: requestDLA },
+                advancePay: {
+                    ...prev.advancePay,
+                    requested: requestAdvancePay,
+                    amount: requestAdvancePay ? (prev.advancePay.amount || 0) : 0,
+                    months: advanceMonths,
+                    repaymentMonths: advanceRepaymentTerm,
+                },
             }));
         }
         router.replace('/(tabs)/(pcs)/pcs' as any);
     };
 
-    // ─── Save & Complete ─────────────────────────────────────
-    const handleSaveAndFinish = () => {
+    // ─── Submit Requests ─────────────────────────────────────
+    const handleSubmit = () => {
         if (saving) return;
         setSaving(true);
 
-        // Persist DLA decision
+        // Persist DLA + Advance Pay decisions
         updateFinancials((prev) => ({
             dla: { ...prev.dla, eligible: requestDLA },
+            advancePay: {
+                ...prev.advancePay,
+                requested: requestAdvancePay,
+                amount: requestAdvancePay ? computedAdvanceAmount : 0,
+                months: advanceMonths,
+                repaymentMonths: advanceRepaymentTerm,
+            },
         }));
 
         // Mark complete
-        const task = checklist.find((c) => c.label === 'Financial Review & DLA Request');
+        const task = checklist.find((c) => c.label === 'Financial Review & Requests');
         if (task) setChecklistItemStatus(task.id, 'COMPLETE');
 
         triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);
@@ -168,60 +212,131 @@ export default function FinancialReviewScreen() {
                 onScroll={handleScroll}
                 scrollEventThrottle={16}
             >
-                {/* ── Section 0: Entitlements Overview ───────────── */}
+                {/* ═══════════════════════════════════════════════════
+                    SECTION 0: YOUR ESTIMATED COSTS
+                    "What you'll spend out of pocket"
+                    ═══════════════════════════════════════════════════ */}
                 <View onLayout={(e) => handleSectionLayout(0, e)}>
                     <Animated.View entering={FadeIn} className="px-4 mb-6">
-                        <Text className="text-lg font-bold text-white mb-3">Entitlements Overview</Text>
+                        <Text className="text-lg font-bold text-white mb-1">Your Estimated Costs</Text>
+                        <Text className="text-zinc-500 text-xs mb-3">Enter your expected out-of-pocket expenses</Text>
+                        <MovingCostProjection hideGapAnalysis />
+                    </Animated.View>
+                </View>
 
-                        {/* Summary cards */}
+                {/* ═══════════════════════════════════════════════════
+                    SECTION 1: ENTITLEMENTS & REQUESTS
+                    "Geo-bach toggle → summary → DLA/Advance Pay"
+                    ═══════════════════════════════════════════════════ */}
+                <View onLayout={(e) => handleSectionLayout(1, e)}>
+                    <Animated.View entering={FadeInDown.delay(100)} className="px-4 mb-6">
+                        <Text className="text-lg font-bold text-white mb-1">Your Entitlements</Text>
+                        <Text className="text-zinc-500 text-xs mb-4">What the Navy covers — and what to request</Text>
+
+                        {/* ── Dependent Relocation (Geo-Bachelor) ──── */}
+                        {hasDependentsOnProfile && (
+                            <View className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-4 gap-3 mb-4">
+                                <View className="flex-row items-center gap-3">
+                                    <Users size={20} color="#60a5fa" />
+                                    <View className="flex-1">
+                                        <Text className="text-zinc-200 text-sm font-semibold">Are your dependents moving with you?</Text>
+                                        <Text className="text-zinc-400 text-xs mt-0.5">
+                                            Affects DLA rate, HHG weight allowance, and per diem calculations
+                                        </Text>
+                                    </View>
+                                </View>
+
+                                {/* Two-option pill selector */}
+                                <View className="flex-row gap-2">
+                                    <Pressable
+                                        onPress={() => {
+                                            updateFinancials({ dependentsRelocating: true });
+                                            triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
+                                        }}
+                                        className={`flex-1 rounded-xl py-3 items-center border ${!isGeoBachelor
+                                            ? 'bg-blue-900/30 border-blue-600/50'
+                                            : 'bg-zinc-900/50 border-zinc-700/30'
+                                            }`}
+                                        style={{ minHeight: 44 }}
+                                    >
+                                        <Text className={`text-sm font-semibold ${!isGeoBachelor ? 'text-blue-300' : 'text-zinc-500'
+                                            }`}>Yes, relocating</Text>
+                                    </Pressable>
+                                    <Pressable
+                                        onPress={() => {
+                                            updateFinancials({ dependentsRelocating: false });
+                                            triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
+                                        }}
+                                        className={`flex-1 rounded-xl py-3 items-center border ${isGeoBachelor
+                                            ? 'bg-amber-900/30 border-amber-600/50'
+                                            : 'bg-zinc-900/50 border-zinc-700/30'
+                                            }`}
+                                        style={{ minHeight: 44 }}
+                                    >
+                                        <Text className={`text-sm font-semibold ${isGeoBachelor ? 'text-amber-300' : 'text-zinc-500'
+                                            }`}>No, geo-bachelor</Text>
+                                    </Pressable>
+                                </View>
+
+                                {isGeoBachelor && (
+                                    <View className="bg-amber-950/30 border border-amber-700/30 rounded-xl px-4 py-2.5">
+                                        <Text className="text-amber-400 text-xs">
+                                            Entitlements calculated at the without-dependents rate. Your dependents' BAH continues at your current location.
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                        )}
+
+                        {/* ── Entitlement Summary Cards ──────────────── */}
                         <View className="flex-row gap-3 mb-3">
                             <View className="flex-1 rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-3">
                                 <Text className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">MALT</Text>
                                 <Text className="text-white text-lg font-black mt-0.5">{fmt(financials.totalMalt)}</Text>
+                                <Text className="text-zinc-600 text-[10px] mt-0.5">Mileage allowance</Text>
                             </View>
                             <View className="flex-1 rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-3">
                                 <Text className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">Per Diem</Text>
                                 <Text className="text-white text-lg font-black mt-0.5">{fmt(financials.totalPerDiem)}</Text>
+                                <Text className="text-zinc-600 text-[10px] mt-0.5">Meals & lodging</Text>
                             </View>
                             <View className="flex-1 rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-3">
                                 <Text className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">DLA</Text>
                                 <Text className="text-white text-lg font-black mt-0.5">{fmt(financials.dla.estimatedAmount)}</Text>
+                                <Text className="text-zinc-600 text-[10px] mt-0.5">
+                                    {isGeoBachelor ? '🏠 W/O dep rate' : 'Dislocation allowance'}
+                                </Text>
                             </View>
                         </View>
 
-                        {/* Entitlements Meter widget (embedded) */}
-                        <View className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 overflow-hidden">
-                            <EntitlementsMeter />
+                        {/* Total entitlements callout */}
+                        <View className="bg-emerald-950/30 border border-emerald-700/30 rounded-xl px-4 py-3 flex-row items-center justify-between mb-4">
+                            <Text className="text-emerald-400 text-sm font-semibold">Total Entitlements</Text>
+                            <Text className="text-emerald-300 text-lg font-black">
+                                {fmt((financials.totalMalt || 0) + (financials.totalPerDiem || 0) + (financials.dla.estimatedAmount || 0))}
+                            </Text>
                         </View>
-                    </Animated.View>
-                </View>
 
-                {/* ── Section 1: Cost Projection ─────────────────── */}
-                <View onLayout={(e) => handleSectionLayout(1, e)}>
-                    <Animated.View entering={FadeInDown.delay(100)} className="px-4 mb-6">
-                        <Text className="text-lg font-bold text-white mb-3">Cost Projection</Text>
-                        <MovingCostProjection />
-                    </Animated.View>
-                </View>
-
-                {/* ── Section 2: DLA Decision ────────────────────── */}
-                <View onLayout={(e) => handleSectionLayout(2, e)}>
-                    <Animated.View entering={FadeInDown.delay(200)} className="px-4 mb-6">
-                        <Text className="text-lg font-bold text-white mb-3">DLA Request</Text>
-                        <View className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-4 gap-3">
+                        {/* ── DLA Request ───────────────────────────── */}
+                        <View className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-4 gap-3 mb-4">
                             <View className="flex-row items-center gap-3">
                                 <Shield size={20} color="#10b981" />
                                 <View className="flex-1">
-                                    <Text className="text-zinc-200 text-sm font-semibold">Dislocation Allowance</Text>
+                                    <Text className="text-zinc-200 text-sm font-semibold">Dislocation Allowance (DLA)</Text>
                                     <Text className="text-zinc-400 text-xs mt-0.5">
                                         Partially reimburses mandatory relocation expenses (deposits, temporary lodging, etc.)
                                     </Text>
                                 </View>
                             </View>
 
-                            <View className="bg-emerald-950/30 border border-emerald-700/30 rounded-xl px-4 py-3 flex-row items-center justify-between">
-                                <Text className="text-emerald-400 text-sm font-semibold">Estimated Amount</Text>
-                                <Text className="text-emerald-300 text-lg font-black">{fmt(financials.dla.estimatedAmount)}</Text>
+                            <View className="bg-emerald-950/30 border border-emerald-700/30 rounded-xl px-4 py-3">
+                                <View className="flex-row items-center justify-between">
+                                    <Text className="text-emerald-400 text-sm font-semibold">Estimated Amount</Text>
+                                    <Text className="text-emerald-300 text-lg font-black">{fmt(financials.dla.estimatedAmount)}</Text>
+                                </View>
+                                {isGeoBachelor && (
+                                    <Text className="text-amber-400/70 text-[10px] mt-1">🏠 Without-dependents rate</Text>
+                                )}
                             </View>
 
                             {financials.dla.receivedFY && (
@@ -232,26 +347,23 @@ export default function FinancialReviewScreen() {
                                 </View>
                             )}
 
-                            <View className="flex-row items-center justify-between">
-                                <Text className="text-zinc-300 text-sm">Request DLA</Text>
+                            <View className="flex-row items-center justify-between bg-zinc-900/50 border border-zinc-700/30 rounded-xl px-4 py-3">
+                                <Text className="text-zinc-200 text-sm font-semibold">Request DLA</Text>
                                 <Switch
                                     value={requestDLA}
-                                    onValueChange={setRequestDLA}
+                                    onValueChange={(val) => {
+                                        setRequestDLA(val);
+                                        triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
+                                    }}
                                     trackColor={{ false: '#3f3f46', true: '#065f46' }}
                                     thumbColor={requestDLA ? '#34d399' : '#a1a1aa'}
                                 />
                             </View>
                         </View>
-                    </Animated.View>
-                </View>
 
-                {/* ── Section 3: Advance Pay ─────────────────────── */}
-                <View onLayout={(e) => handleSectionLayout(3, e)}>
-                    <Animated.View entering={FadeInDown.delay(300)} className="px-4 mb-6">
-                        <Text className="text-lg font-bold text-white mb-3">Advance Pay</Text>
-
+                        {/* ── Advance Pay Request ───────────────────── */}
                         <View className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-4 gap-3">
-                            <View className="flex-row items-center gap-3 mb-1">
+                            <View className="flex-row items-center gap-3">
                                 <Banknote size={20} color="#f59e0b" />
                                 <View className="flex-1">
                                     <Text className="text-zinc-200 text-sm font-semibold">Advance Basic Pay</Text>
@@ -261,31 +373,68 @@ export default function FinancialReviewScreen() {
                                 </View>
                             </View>
 
-                            {/* Advance Pay Visualizer (embedded) */}
-                            <AdvancePayVisualizer />
+                            {/* Opt-in toggle */}
+                            <View className="flex-row items-center justify-between bg-zinc-900/50 border border-zinc-700/30 rounded-xl px-4 py-3">
+                                <Text className="text-zinc-200 text-sm font-semibold">Request Advance Pay</Text>
+                                <Switch
+                                    value={requestAdvancePay}
+                                    onValueChange={(val) => {
+                                        setRequestAdvancePay(val);
+                                        triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
+                                    }}
+                                    trackColor={{ false: '#3f3f46', true: '#92400e' }}
+                                    thumbColor={requestAdvancePay ? '#f59e0b' : '#a1a1aa'}
+                                />
+                            </View>
+
+                            {/* Caveat banner — always visible */}
+                            <View className="flex-row items-start gap-2 bg-amber-950/30 border border-amber-700/30 rounded-xl px-4 py-2.5">
+                                <AlertTriangle size={14} color="#fbbf24" style={{ marginTop: 2 }} />
+                                <Text className="text-amber-400 text-xs flex-1 leading-4">
+                                    Advance pay reduces your take-home pay for up to 24 months. Review the impact below before deciding.
+                                </Text>
+                            </View>
+
+                            {/* Visualizer + summary — only when opted in */}
+                            {requestAdvancePay && (
+                                <Animated.View entering={FadeInDown.duration(300)}>
+                                    <AdvancePayVisualizer
+                                        monthsRequested={advanceMonths}
+                                        onMonthsRequestedChange={setAdvanceMonths}
+                                        repaymentTerm={advanceRepaymentTerm}
+                                        onRepaymentTermChange={setAdvanceRepaymentTerm}
+                                    />
+
+                                    {/* Confirm summary */}
+                                    <View className="mt-3 bg-amber-950/20 border border-amber-700/20 rounded-xl px-4 py-3">
+                                        <Text className="text-zinc-300 text-xs font-semibold uppercase tracking-wider mb-1">
+                                            Your Request
+                                        </Text>
+                                        <Text className="text-amber-300 text-base font-black">
+                                            {fmt(computedAdvanceAmount)} advance
+                                        </Text>
+                                        <Text className="text-zinc-400 text-xs mt-0.5">
+                                            {advanceMonths} month{advanceMonths > 1 ? 's' : ''} base pay · repaid over {advanceRepaymentTerm} months
+                                        </Text>
+                                    </View>
+                                </Animated.View>
+                            )}
                         </View>
                     </Animated.View>
                 </View>
             </Animated.ScrollView>
 
-            {/* ── Bottom CTA ───────────────────────────────────── */}
-            <View
-                style={{ paddingBottom: Math.max(insets.bottom, 20) }}
-                className="absolute bottom-0 left-0 right-0 border-t border-zinc-800 bg-slate-950 p-4"
-            >
-                <ScalePressable
-                    onPress={handleSaveAndFinish}
-                    disabled={saving}
-                    className={`rounded-xl px-4 py-3.5 items-center flex-row justify-center gap-2 ${saving ? 'bg-zinc-700' : 'bg-emerald-600'}`}
-                    accessibilityRole="button"
-                    accessibilityLabel="Save financial review"
-                >
-                    <FileCheck2 size={18} color={saving ? '#a1a1aa' : '#fff'} />
-                    <Text className={`text-base font-bold ${saving ? 'text-zinc-300' : 'text-white'}`}>
-                        Save & Complete Review
-                    </Text>
-                </ScalePressable>
-            </View>
+            {/* ── Bottom Bar: Summary + CTA ──────────────────── */}
+            <PreSubmitSummary
+                totalEntitlements={(financials.totalMalt || 0) + (financials.totalPerDiem || 0) + (financials.dla.estimatedAmount || 0)}
+                totalCosts={financials.movingCosts?.totalEstimated || 0}
+                advanceAmount={requestAdvancePay ? computedAdvanceAmount : 0}
+                paddingBottom={Math.max(insets.bottom, 20)}
+                ctaLabel={ctaLabel}
+                hasRequests={hasRequests}
+                saving={saving}
+                onSubmit={handleSubmit}
+            />
 
             {/* ── Exit Confirmation Modal ──────────────────────── */}
             {showExitModal && (
@@ -302,7 +451,7 @@ export default function FinancialReviewScreen() {
                                 Save Progress?
                             </Text>
                             <Text className="text-slate-400 text-center mb-6">
-                                Would you like to save your DLA decision before exiting?
+                                Would you like to save your selections before exiting?
                             </Text>
 
                             <View className="w-full gap-3">
@@ -347,17 +496,123 @@ export default function FinancialReviewScreen() {
                         className="absolute inset-0 items-center justify-center bg-black/40"
                     >
                         <Animated.View entering={ZoomIn.delay(200).springify()}>
-                            <CheckCircle size={100} color="white" strokeWidth={2.5} />
+                            {hasRequests ? (
+                                <Send size={100} color="white" strokeWidth={2.5} />
+                            ) : (
+                                <CheckCircle size={100} color="white" strokeWidth={2.5} />
+                            )}
                         </Animated.View>
                         <Animated.Text entering={FadeInUp.delay(500)} className="text-white text-3xl font-bold mt-8 tracking-tight">
-                            Plan Saved!
+                            {hasRequests ? 'Requests Submitted!' : 'Review Complete!'}
                         </Animated.Text>
-                        <Animated.Text entering={FadeInUp.delay(600)} className="text-blue-100 text-lg mt-3 text-center">
-                            Your financial review is complete.{'\n'}You're on track.
+                        <Animated.Text entering={FadeInUp.delay(600)} className="text-blue-100 text-lg mt-3 text-center px-8">
+                            {hasRequests
+                                ? 'Your PSD will process your request(s) within 5–7 business days.'
+                                : 'Your financial review is complete.\nYou\'re on track.'}
                         </Animated.Text>
                     </BlurView>
                 </Animated.View>
             )}
+        </View>
+    );
+}
+
+// ─── Pre-Submit Summary Strip ─────────────────────────────────
+// Compact financial overview just above the CTA button, matching
+// other flows' pattern of showing key data near the submit action.
+
+interface PreSubmitSummaryProps {
+    totalEntitlements: number;
+    totalCosts: number;
+    advanceAmount: number;
+    paddingBottom: number;
+    ctaLabel: string;
+    hasRequests: boolean;
+    saving: boolean;
+    onSubmit: () => void;
+}
+
+function PreSubmitSummary({
+    totalEntitlements,
+    totalCosts,
+    advanceAmount,
+    paddingBottom,
+    ctaLabel,
+    hasRequests,
+    saving,
+    onSubmit,
+}: PreSubmitSummaryProps) {
+    const totalCoverage = totalEntitlements + advanceAmount;
+    const net = totalCoverage - totalCosts;
+    const isCovered = net >= 0;
+    const coveredOnlyWithAdvance = !isCovered ? false : (totalEntitlements < totalCosts && totalCoverage >= totalCosts);
+
+    const netColor = isCovered
+        ? (coveredOnlyWithAdvance ? 'text-amber-400' : 'text-emerald-400')
+        : 'text-red-400';
+    const netBgColor = isCovered
+        ? (coveredOnlyWithAdvance ? 'bg-amber-950/30 border-amber-700/30' : 'bg-emerald-950/30 border-emerald-700/30')
+        : 'bg-red-950/30 border-red-700/30';
+    const netLabel = isCovered
+        ? (coveredOnlyWithAdvance ? 'Covered w/ advance' : 'Covered')
+        : 'Shortfall';
+
+    return (
+        <View
+            style={{ paddingBottom }}
+            className="absolute bottom-0 left-0 right-0 border-t border-zinc-800 bg-slate-950 px-4 pt-3 pb-4"
+        >
+            {/* Summary Row */}
+            <View className="flex-row items-center justify-between mb-2.5">
+                <View className="flex-1 items-center">
+                    <Text className="text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Entitlements</Text>
+                    <Text className="text-emerald-400 text-sm font-bold">{fmt(totalEntitlements)}</Text>
+                </View>
+
+                {advanceAmount > 0 && (
+                    <>
+                        <Text className="text-zinc-600 text-xs mx-1">+</Text>
+                        <View className="flex-1 items-center">
+                            <Text className="text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Advance</Text>
+                            <Text className="text-amber-400 text-sm font-bold">{fmt(advanceAmount)}</Text>
+                        </View>
+                    </>
+                )}
+
+                <Text className="text-zinc-600 text-xs mx-1">vs</Text>
+
+                <View className="flex-1 items-center">
+                    <Text className="text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Costs</Text>
+                    <Text className="text-zinc-200 text-sm font-bold">{fmt(totalCosts)}</Text>
+                </View>
+
+                <Text className="text-zinc-600 text-xs mx-1">=</Text>
+
+                <View className={`items-center rounded-lg border px-2.5 py-1 ${netBgColor}`}>
+                    <Text className="text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">{netLabel}</Text>
+                    <Text className={`text-sm font-black ${netColor}`}>
+                        {isCovered ? '+' : '-'}{fmt(net)}
+                    </Text>
+                </View>
+            </View>
+
+            {/* CTA */}
+            <ScalePressable
+                onPress={onSubmit}
+                disabled={saving}
+                className={`rounded-xl px-4 py-3.5 items-center flex-row justify-center gap-2 ${saving ? 'bg-zinc-700' : hasRequests ? 'bg-blue-600' : 'bg-emerald-600'}`}
+                accessibilityRole="button"
+                accessibilityLabel={ctaLabel}
+            >
+                {hasRequests ? (
+                    <Send size={18} color={saving ? '#a1a1aa' : '#fff'} />
+                ) : (
+                    <CheckCircle size={18} color={saving ? '#a1a1aa' : '#fff'} />
+                )}
+                <Text className={`text-base font-bold ${saving ? 'text-zinc-300' : 'text-white'}`}>
+                    {ctaLabel}
+                </Text>
+            </ScalePressable>
         </View>
     );
 }

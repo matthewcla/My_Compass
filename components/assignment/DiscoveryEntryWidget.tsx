@@ -29,7 +29,7 @@ export default function DiscoveryEntryWidget({ onPress }: DiscoveryEntryWidgetPr
 
                 {/* Content */}
                 <View>
-                    <Text className="text-xl font-bold text-white">Marketplace</Text>
+                    <Text className="text-xl font-bold text-white">Billet Explorer</Text>
                     <Text className="text-indigo-100 text-sm mt-1">Explore opportunities & build your career.</Text>
                 </View>
 

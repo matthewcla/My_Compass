@@ -5,14 +5,14 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useInboxStore } from '@/store/useInboxStore';
 import type { InboxMessage } from '@/types/inbox';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 // Create Animated SectionList
 type InboxSection = { title: string; data: InboxMessage[] };
-type AnimatedInboxSectionListProps = React.ComponentProps<typeof SectionList<InboxMessage, InboxSection>>;
+type AnimatedInboxSectionListProps = React.ComponentProps<typeof SectionList<InboxMessage, InboxSection>> & { ref?: React.Ref<any> };
 const AnimatedSectionList = Animated.createAnimatedComponent(
     SectionList as React.ComponentType<AnimatedInboxSectionListProps>
 ) as React.ComponentType<AnimatedInboxSectionListProps>;
@@ -49,6 +49,14 @@ export default function InboxScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterHeight, setFilterHeight] = useState(0);
     const lastNonZeroFilterHeight = useRef(0);
+    const listRef = useRef<any>(null);
+
+    // Scroll to top whenever this tab gains focus
+    useFocusEffect(
+        useCallback(() => {
+            listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
+        }, [])
+    );
 
     const searchConfig = useMemo(() => ({
         visible: true,
@@ -225,6 +233,7 @@ export default function InboxScreen() {
                     contentContainerStyle,
                 }) => (
                     <AnimatedSectionList
+                        ref={listRef}
                         sections={sections}
                         initialNumToRender={10}
                         windowSize={5}
@@ -234,6 +243,7 @@ export default function InboxScreen() {
                         bounces={true}
                         alwaysBounceVertical={true}
                         overScrollMode="always"
+                        showsVerticalScrollIndicator={false}
                         renderItem={renderMessageItem}
                         renderSectionHeader={renderSectionHeader}
                         keyExtractor={item => item.id}

@@ -1,9 +1,13 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
+import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
+import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { MenuTile } from '@/components/menu/MenuTile';
 import GlobalTabBar from '@/components/navigation/GlobalTabBar';
+import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
+import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
@@ -13,20 +17,19 @@ import { DemoPhase } from '@/constants/DemoData';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useSession } from '@/lib/ctx';
-import { useDemoStore } from '@/store/useDemoStore';
+import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
-import { usePCSStore } from '@/store/usePCSStore';
-import { useUserStore } from '@/store/useUserStore';
+import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {
     Briefcase,
     FileText,
     Map as MapIcon,
     User
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, Platform, Pressable, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -39,7 +42,7 @@ const AnimatedFlashList = (Platform.OS === 'web'
 export default function HubDashboard() {
     const router = useRouter();
     const { isLoading: isSessionLoading } = useSession();
-    const user = useUserStore(useShallow(state => state.user));
+    const user = useCurrentProfile();
     const generateQuickDraft = useLeaveStore(state => state.generateQuickDraft);
     const fetchUserDefaults = useLeaveStore(state => state.fetchUserDefaults);
     const insets = useSafeAreaInsets();
@@ -64,7 +67,11 @@ export default function HubDashboard() {
 
     const isDemoMode = useDemoStore(state => state.isDemoMode);
     const selectedPhase = useDemoStore(state => state.selectedPhase);
+    const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
     const initializeOrders = usePCSStore(state => state.initializeOrders);
+    const obliserv = usePCSStore(state => state.financials.obliserv);
+    const pcsPhase = usePCSPhase();
+    const subPhase = useSubPhase();
 
     // Hydrate defaults on mount
     React.useEffect(() => {
@@ -81,6 +88,12 @@ export default function HubDashboard() {
     }, [isDemoMode, selectedPhase, initializeOrders]);
 
 
+    // Scroll to top whenever this tab gains focus
+    useFocusEffect(
+        useCallback(() => {
+            listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
+        }, [])
+    );
 
     const globalSearchConfig = useGlobalSpotlightHeaderSearch();
 
@@ -138,7 +151,35 @@ export default function HubDashboard() {
         );
     }
 
-    const sections = ['menu', 'leave'];
+    const sections = ['menu'];
+    // Show DiscoveryStatusCard on Hub during Discovery & On-Ramp phases
+    if (!assignmentPhase || assignmentPhase === 'DISCOVERY' || assignmentPhase === 'ON_RAMP') {
+        sections.push('discoveryStatus');
+    }
+    // Show standalone receipt capture on Home Hub during Phase 3 (ACTIVE_TRAVEL) only.
+    // Phase 2 (PLANNING) shares TRANSIT_LEAVE but doesn't need receipt capture yet.
+    // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
+    if (pcsPhase === 'TRANSIT_LEAVE' && subPhase === 'ACTIVE_TRAVEL') sections.push('receiptCapture');
+    // Surface Mission Brief on Home Hub from Selection onward only
+    if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
+        sections.push('missionBrief');
+    }
+    // Surface Phase 4 urgency widgets on the Home Hub — streamlined
+    if (pcsPhase === 'CHECK_IN') {
+        sections.push('tierThisWeek');
+        sections.push('baseWelcomeKit');
+        sections.push('travelClaimUrgency');
+        // Only show liquidation widget when there's an active liquidation to track
+        const liquidation = usePCSStore.getState().financials.liquidation;
+        const hasActiveLiquidation = liquidation && liquidation.currentStatus !== 'NOT_STARTED';
+        if (hasActiveLiquidation) {
+            sections.push('tierTracking');
+            sections.push('liquidationTracker');
+        }
+    }
+    // Tracking header always visible above leave
+    sections.push('tierTracking');
+    sections.push('leave');
 
     const renderItem = ({ item }: { item: any }) => {
         const isPCSPhase = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
@@ -153,7 +194,21 @@ export default function HubDashboard() {
                                 <MenuTile
                                     label="My Assignment"
                                     icon={Briefcase}
-                                    onPress={() => handleTilePress('/(career)/discovery')}
+                                    subtitle={
+                                        assignmentPhase === 'SELECTION'
+                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? 'Action Required' : "You're Selected!")
+                                            : assignmentPhase === 'NEGOTIATION' ? 'Cycle Open'
+                                                : assignmentPhase === 'ON_RAMP' ? 'Opening Soon'
+                                                    : undefined
+                                    }
+                                    accent={
+                                        assignmentPhase === 'SELECTION'
+                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? '#DC2626' : '#D97706')
+                                            : assignmentPhase === 'NEGOTIATION' ? '#EA580C'
+                                                : assignmentPhase === 'ON_RAMP' ? '#D97706'
+                                                    : undefined
+                                    }
+                                    onPress={() => handleTilePress('/(assignment)')}
                                 />
                             </View>
                             <View style={{ width: '47%', aspectRatio: 1 }}>
@@ -162,7 +217,6 @@ export default function HubDashboard() {
                                     icon={MapIcon}
                                     subtitle={isPCSPhase ? "Action Required" : undefined}
                                     onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
-                                    locked={!isPCSPhase}
                                     accent={isPCSPhase ? '#D97706' : undefined}
                                 />
                             </View>
@@ -181,12 +235,67 @@ export default function HubDashboard() {
                                     label="My Profile"
                                     icon={User}
                                     onPress={() => handleTilePress('/(profile)')}
-                                    locked
                                 />
                             </View>
                         </View>
                     </View>
                 );
+            case 'discoveryStatus':
+                return (
+                    <DiscoveryStatusCard
+                        onStartExploring={() => handleTilePress('/(career)/discovery')}
+                        onBadgeTap={(category: DiscoveryBadgeCategory, count: number) => {
+                            if (count === 0) {
+                                const labels: Record<DiscoveryBadgeCategory, string> = {
+                                    wow: 'WOW!', liked: 'Liked', passed: 'Passed', remaining: 'remaining'
+                                };
+                                Alert.alert('Nothing here yet', `You don't have any ${labels[category]} billets yet. Start exploring!`);
+                                return;
+                            }
+                            router.push({ pathname: '/(career)/discovery', params: { filter: category } } as any);
+                        }}
+                    />
+                );
+            case 'receiptCapture': {
+                const { ReceiptScannerWidget } = require('@/components/pcs/widgets/ReceiptScannerWidget');
+                return <ReceiptScannerWidget />;
+            }
+            case 'tierRightNow':
+            case 'tierThisWeek':
+            case 'tierTracking': {
+                const tierLabel = item === 'tierRightNow' ? '⚓  Right Now'
+                    : item === 'tierThisWeek' ? '📋  This Week'
+                        : '📡  Tracking';
+                return (
+                    <View className="flex-row items-center mt-1 mb-0.5">
+                        <View className="bg-slate-800/60 dark:bg-slate-700/40 rounded-full px-3 py-1.5 border border-slate-600/30 dark:border-slate-500/20">
+                            <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-300 dark:text-slate-300">
+                                {tierLabel}
+                            </Text>
+                        </View>
+                        <View className="flex-1 h-px bg-slate-700/30 dark:bg-slate-600/20 ml-3" />
+                    </View>
+                );
+            }
+
+            case 'baseWelcomeKit': {
+                const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
+                return <BaseWelcomeKit />;
+            }
+            case 'travelClaimUrgency': {
+                const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
+                return <TravelClaimHUDWidget />;
+            }
+            case 'liquidationTracker': {
+                const { LiquidationTrackerWidget } = require('@/components/pcs/widgets/LiquidationTrackerWidget');
+                return <LiquidationTrackerWidget />;
+            }
+            case 'missionBrief': {
+                const { PCSMissionBrief } = require('@/components/pcs/widgets/PCSMissionBrief');
+                return <PCSMissionBrief />;
+            }
+            case 'obliserv':
+                return <ObliservBanner variant="widget" />;
             case 'leave':
                 return (
                     <LeaveCard
@@ -221,8 +330,9 @@ export default function HubDashboard() {
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
+                minTopBarHeight={70}
                 topBar={
-                    <View className="bg-slate-50 dark:bg-slate-950 pb-2">
+                    <View className="bg-slate-50 dark:bg-slate-950">
                         <View className="px-4 pt-2">
                             <StatusCard
                                 nextCycle={data?.cycle?.cycleId ?? '24-02'}
@@ -253,11 +363,14 @@ export default function HubDashboard() {
                         ref={listRef}
                         data={sections}
                         renderItem={renderItem}
-                        ItemSeparatorComponent={() => <View style={{ height: 24 }} />}
-                        ListHeaderComponent={<View style={{ height: 24 }} />}
+                        ItemSeparatorComponent={({ leadingItem }: { leadingItem: string }) => (
+                            <View style={{ height: typeof leadingItem === 'string' && leadingItem.startsWith('tier') ? 18 : 24 }} />
+                        )}
+                        ListHeaderComponent={<View style={{ height: 8 }} />}
 
                         estimatedItemSize={150}
                         style={{ flex: 1 }}
+                        showsVerticalScrollIndicator={false}
                         scrollEventThrottle={scrollEventThrottle}
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
@@ -269,6 +382,9 @@ export default function HubDashboard() {
                     />
                 )}
             </CollapsibleScaffold>
+
+            {/* Floating demo panel — outside CollapsibleScaffold */}
+            <PCSDevPanel />
 
             {/* Quick Leave Overlay (Replaces Native Modal to fix Navigation Context loss) */}
             {quickDraft && (

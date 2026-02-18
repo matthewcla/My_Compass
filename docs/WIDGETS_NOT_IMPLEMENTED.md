@@ -7,6 +7,13 @@
 
 ## PCS Widgets Needed
 
+### Gaining Command Card
+| Property | Detail |
+|----------|--------|
+| **Planned Location** | My PCS → UCT Phase 4 (Home Hub) |
+| **Purpose** | Consolidated gaining command detail card (address, UIC, key contacts) |
+| **Note** | `GainingCommandCard` component exists but was removed from the Home Hub layout in favour of the more compact `BaseWelcomeKit`. Could be re-surfaced in a dedicated command detail screen. |
+
 ### Move Planning Timeline Widget
 | Property | Detail |
 |----------|--------|

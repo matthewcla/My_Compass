@@ -55,6 +55,7 @@ export function DocumentFolderView() {
                     paddingTop: insets.top + 10
                 }}
                 className="flex-1 px-4"
+                showsVerticalScrollIndicator={false}
             >
                 {/* Navigation / Header */}
                 <TouchableOpacity

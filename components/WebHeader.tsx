@@ -7,7 +7,7 @@ import { useColorScheme } from './useColorScheme';
 
 import Colors from '@/constants/Colors';
 import { useSession } from '@/lib/ctx';
-import { useUserDisplayName, useUserRank } from '@/store/useUserStore';
+import { useCurrentProfile } from '@/store/useDemoStore';
 import { getShadow } from '@/utils/getShadow';
 
 /**
@@ -21,8 +21,9 @@ import { getShadow } from '@/utils/getShadow';
 export function WebHeader() {
     const { width } = useWindowDimensions();
     const insets = useSafeAreaInsets();
-    const rank = useUserRank();
-    const displayName = useUserDisplayName();
+    const profile = useCurrentProfile();
+    const rank = profile?.rank;
+    const displayName = profile?.displayName;
     const { signOut } = useSession();
     const colorScheme = useColorScheme() ?? 'light';
     const themeColors = Colors[colorScheme];

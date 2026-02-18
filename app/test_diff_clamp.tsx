@@ -47,6 +47,7 @@ export default function DiffClampDemo() {
                 onScroll={onScroll}
                 scrollEventThrottle={16}
                 contentContainerStyle={{ paddingTop: HEADER_HEIGHT + 20, paddingBottom: 40, paddingHorizontal: 16 }}
+                showsVerticalScrollIndicator={false}
             >
                 <Text style={styles.instructions}>
                     1. Scroll DOWN: Header should slide up and hide.

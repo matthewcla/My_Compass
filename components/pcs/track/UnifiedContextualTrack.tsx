@@ -1,10 +1,5 @@
 import { TrackChecklistItem } from '@/components/pcs/track/TrackChecklistItem';
 import { TrackNode } from '@/components/pcs/track/TrackNode';
-import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
-import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
-import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
-import { ReceiptScannerWidget } from '@/components/pcs/widgets/ReceiptScannerWidget';
-import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
 import { UCT_PHASES } from '@/constants/UCTPhases';
 import { useActiveOrder, usePCSStore, useUCTPhaseStatus } from '@/store/usePCSStore';
 import { ChecklistItem, UCTNodeStatus, UCTPhase } from '@/types/pcs';
@@ -12,8 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 
 // ─── Widget Sets Per Phase ─────────────────────────────────────
-// Widgets render inside their respective task flows, not inline.
-// Only Phase 3 & 4 retain inline widgets (transit/check-in context).
+// Widgets render inside their respective task flows or on the Home Hub,
+// not inline in the UCT track. Only Phase 4 retains inline widgets.
 
 function Phase1Widgets() {
     return null;
@@ -26,22 +21,15 @@ function Phase2Widgets() {
 }
 
 function Phase3Widgets() {
-    return (
-        <View className="space-y-4 mt-4">
-            <ReceiptScannerWidget />
-            <DigitalOrdersWallet />
-        </View>
-    );
+    // Phase 3 widgets live on the Home Hub (ReceiptScannerWidget) and
+    // inside the PCS Travel Plan wizard (leave impact + travel day counter).
+    return null;
 }
 
 function Phase4Widgets() {
-    return (
-        <View className="space-y-4 mt-4">
-            <BaseWelcomeKit />
-            <TravelClaimHUDWidget />
-            <LiquidationTrackerWidget />
-        </View>
-    );
+    // Phase 4 widgets live on the Home Hub (ArrivalBriefing, GainingCommandCard,
+    // TravelClaimHUD, LiquidationTracker) on the Home Hub.
+    return null;
 }
 
 const PHASE_WIDGETS: Record<UCTPhase, React.ComponentType> = {

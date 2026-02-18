@@ -57,10 +57,9 @@ export function PCSHeroBanner() {
 
     const sponsorDisplayName = useMemo(() => {
         const n = sponsor?.name?.trim();
-        const r = sponsor?.rank?.trim();
-        if (!n && !r) return 'Sponsor';
-        return [r, n].filter(Boolean).join(' ');
-    }, [sponsor?.name, sponsor?.rank]);
+        if (!n) return 'Sponsor';
+        return n;
+    }, [sponsor?.name]);
 
     const handleContactAction = async (url: string) => {
         if (!url) return;
@@ -87,14 +86,14 @@ export function PCSHeroBanner() {
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className="mx-4 mb-6 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
+                className="mx-4 mb-8 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
             >
                 {/* ── Top section: Destination + Countdown ── */}
                 <View className="bg-[#0A1628] p-5 pb-4">
                     <View className="flex-row items-center mb-2">
                         <MapPin size={16} color="#C9A227" />
                         <Text className="text-xs font-semibold uppercase tracking-widest text-slate-400 ml-2">
-                            {homePort || 'PCS Destination'}
+                            {homePort || 'Command Location'}
                         </Text>
                     </View>
 
@@ -148,31 +147,31 @@ export function PCSHeroBanner() {
                                 {callUrl ? (
                                     <ScalePressable
                                         onPress={() => handleContactAction(callUrl)}
-                                        className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-900/20 items-center justify-center"
+                                        className="w-9 h-9 rounded-full bg-green-50 dark:bg-green-900/20 items-center justify-center"
                                         accessibilityRole="button"
                                         accessibilityLabel="Call Sponsor"
                                     >
-                                        <Phone size={14} color={isDark ? '#86efac' : '#15803d'} strokeWidth={2.2} />
+                                        <Phone size={15} color={isDark ? '#86efac' : '#15803d'} strokeWidth={2.2} />
                                     </ScalePressable>
                                 ) : null}
                                 {textUrl ? (
                                     <ScalePressable
                                         onPress={() => handleContactAction(textUrl)}
-                                        className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 items-center justify-center"
+                                        className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/20 items-center justify-center"
                                         accessibilityRole="button"
                                         accessibilityLabel="Text Sponsor"
                                     >
-                                        <MessageSquare size={14} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
+                                        <MessageSquare size={15} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
                                     </ScalePressable>
                                 ) : null}
                                 {emailUrl ? (
                                     <ScalePressable
                                         onPress={() => handleContactAction(emailUrl)}
-                                        className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
+                                        className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
                                         accessibilityRole="button"
                                         accessibilityLabel="Email Sponsor"
                                     >
-                                        <Mail size={14} color={isDark ? '#cbd5e1' : '#475569'} strokeWidth={2.2} />
+                                        <Mail size={15} color={isDark ? '#cbd5e1' : '#475569'} strokeWidth={2.2} />
                                     </ScalePressable>
                                 ) : null}
                             </View>

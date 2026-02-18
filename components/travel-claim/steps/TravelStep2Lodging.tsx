@@ -1,3 +1,8 @@
+/**
+ * @deprecated This step is no longer used in the 3-step settlement flow.
+ * Lodging expenses are now managed inline in request.tsx Step 2.
+ * Kept for reference only.
+ */
 import { ReceiptUploader } from '@/components/travel-claim/ReceiptUploader';
 import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
@@ -245,18 +250,16 @@ function LodgingExpenseCard({
               <View className="flex-row gap-1 mb-1">
                 <Pressable
                   onPress={() => onUpdate({ manualTotalOverride: false })}
-                  className={`px-2 py-1 rounded-full border ${
-                    !expense.manualTotalOverride
+                  className={`px-2 py-1 rounded-full border ${!expense.manualTotalOverride
                       ? 'bg-blue-50 dark:bg-slate-700 border-blue-500'
                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-[11px] font-semibold ${
-                      !expense.manualTotalOverride
+                    className={`text-[11px] font-semibold ${!expense.manualTotalOverride
                         ? 'text-blue-700 dark:text-blue-300'
                         : 'text-slate-600 dark:text-slate-300'
-                    }`}
+                      }`}
                   >
                     Auto
                   </Text>
@@ -268,18 +271,16 @@ function LodgingExpenseCard({
                       totalCost: resolveTotalCost(expense),
                     })
                   }
-                  className={`px-2 py-1 rounded-full border ${
-                    expense.manualTotalOverride
+                  className={`px-2 py-1 rounded-full border ${expense.manualTotalOverride
                       ? 'bg-blue-50 dark:bg-slate-700 border-blue-500'
                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`text-[11px] font-semibold ${
-                      expense.manualTotalOverride
+                    className={`text-[11px] font-semibold ${expense.manualTotalOverride
                         ? 'text-blue-700 dark:text-blue-300'
                         : 'text-slate-600 dark:text-slate-300'
-                    }`}
+                      }`}
                   >
                     Manual
                   </Text>
@@ -298,11 +299,10 @@ function LodgingExpenseCard({
                   }}
                   editable={!!expense.manualTotalOverride}
                   keyboardType="decimal-pad"
-                  className={`flex-1 font-semibold ml-1 ${
-                    expense.manualTotalOverride
+                  className={`flex-1 font-semibold ml-1 ${expense.manualTotalOverride
                       ? 'text-slate-900 dark:text-white'
                       : 'text-slate-500 dark:text-slate-400'
-                  }`}
+                    }`}
                 />
               </View>
             </View>
@@ -577,11 +577,10 @@ export function TravelStep2Lodging({
               Reimbursable
             </Text>
             <Text
-              className={`font-extrabold ${
-                summary.capped
+              className={`font-extrabold ${summary.capped
                   ? 'text-amber-600 dark:text-amber-300'
                   : 'text-emerald-600 dark:text-emerald-300'
-              }`}
+                }`}
             >
               {formatMoney(summary.reimbursable)}
             </Text>

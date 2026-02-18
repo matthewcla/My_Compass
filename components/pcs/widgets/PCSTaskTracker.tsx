@@ -51,7 +51,7 @@ export function PCSTaskTracker() {
                 className="mx-4 mb-6 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
             >
                 {/* ── Progress bar section ── */}
-                <View className="px-5 pt-4 pb-3">
+                <View className="px-5 pt-5 pb-4">
                     <View className="flex-row items-center justify-between mb-2">
                         <Text className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                             {completed} of {total} tasks complete
@@ -78,7 +78,7 @@ export function PCSTaskTracker() {
                                 router.push(nextAction.actionRoute as any);
                             }
                         }}
-                        className="mx-5 mb-4 mt-1 flex-row items-center bg-blue-50 dark:bg-blue-900/30 rounded-xl px-4 py-3 border border-blue-100 dark:border-blue-800/50"
+                        className="mx-5 mb-4 mt-2 flex-row items-center bg-blue-50 dark:bg-blue-900/30 rounded-xl px-4 py-3 border border-blue-100 dark:border-blue-800/50"
                     >
                         <Zap size={16} color={isDark ? '#60A5FA' : '#2563EB'} />
                         <Text

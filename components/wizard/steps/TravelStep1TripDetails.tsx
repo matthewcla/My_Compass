@@ -397,9 +397,8 @@ export function TravelStep1TripDetails({
             >
               <Text className="text-xs text-slate-500 mb-1">Start Date</Text>
               <Text
-                className={`font-bold ${
-                  watchedStartDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'
-                }`}
+                className={`font-bold ${watchedStartDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                  }`}
               >
                 {watchedStartDate || 'Select'}
               </Text>
@@ -407,9 +406,8 @@ export function TravelStep1TripDetails({
             <View className="items-end">
               <Text className="text-xs text-slate-500 mb-1">End Date</Text>
               <Text
-                className={`font-bold ${
-                  watchedEndDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'
-                }`}
+                className={`font-bold ${watchedEndDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                  }`}
               >
                 {watchedEndDate || 'Select'}
               </Text>
@@ -440,19 +438,17 @@ export function TravelStep1TripDetails({
                 <Pressable
                   key={option.id}
                   onPress={() => setTravelMode(option.id)}
-                  className={`w-[48%] rounded-2xl border p-3 ${
-                    selected
+                  className={`w-[48%] rounded-2xl border p-3 ${selected
                       ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
                       : 'bg-inputBackground border-slate-200 dark:border-slate-700'
-                  }`}
+                    }`}
                 >
                   <View className="flex-row items-start justify-between">
                     <View
-                      className={`w-9 h-9 rounded-full items-center justify-center ${
-                        selected
+                      className={`w-9 h-9 rounded-full items-center justify-center ${selected
                           ? 'bg-blue-500'
                           : 'bg-slate-200 dark:bg-slate-700'
-                      }`}
+                        }`}
                     >
                       <Icon
                         size={18}
@@ -463,11 +459,10 @@ export function TravelStep1TripDetails({
                     {selected && <View className="w-2 h-2 rounded-full bg-blue-500 mt-1" />}
                   </View>
                   <Text
-                    className={`font-bold mt-3 ${
-                      selected
+                    className={`font-bold mt-3 ${selected
                         ? 'text-blue-700 dark:text-blue-300'
                         : 'text-slate-700 dark:text-slate-200'
-                    }`}
+                      }`}
                   >
                     {option.label}
                   </Text>
@@ -694,7 +689,7 @@ export function TravelStep1TripDetails({
               </Pressable>
             </View>
 
-            <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}>
+            <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }} showsVerticalScrollIndicator={false}>
               {activeOrder ? (
                 <Pressable
                   onPress={() => {
@@ -706,18 +701,16 @@ export function TravelStep1TripDetails({
                     trigger('pcsOrderId');
                     Haptics.selectionAsync().catch(() => undefined);
                   }}
-                  className={`rounded-xl border p-4 ${
-                    watchedOrderId === activeOrder.orderNumber
+                  className={`rounded-xl border p-4 ${watchedOrderId === activeOrder.orderNumber
                       ? 'bg-blue-50 dark:bg-slate-700 border-blue-500 dark:border-blue-500'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
-                  }`}
+                    }`}
                 >
                   <Text
-                    className={`font-bold text-base ${
-                      watchedOrderId === activeOrder.orderNumber
+                    className={`font-bold text-base ${watchedOrderId === activeOrder.orderNumber
                         ? 'text-blue-700 dark:text-blue-300'
                         : 'text-slate-900 dark:text-white'
-                    }`}
+                      }`}
                   >
                     {activeOrder.orderNumber}
                   </Text>

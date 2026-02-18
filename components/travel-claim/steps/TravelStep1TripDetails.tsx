@@ -1,741 +1,439 @@
-import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
-import { usePCSStore } from '@/store/usePCSStore';
-import { addDays, eachDayOfInterval, format } from 'date-fns';
+import type { PCSSegment, PCSSegmentMode } from '@/types/pcs';
 import * as Haptics from 'expo-haptics';
-import { Bus, CalendarDays, Car, DollarSign, MapPin, Minus, Plane, Plus } from 'lucide-react-native';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Modal, Pressable, ScrollView, Text, TextInput, View, useColorScheme } from 'react-native';
-import { Calendar, DateData } from 'react-native-calendars';
+import {
+  Bus,
+  Car,
+  Check,
+  DollarSign,
+  MapPin,
+  Minus,
+  Pencil,
+  Plane,
+  Plus
+} from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import { Pressable, Text, TextInput, View, useColorScheme } from 'react-native';
+import Animated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
+
+// ─── Props ────────────────────────────────────────────────────────────
 
 export interface TravelStep1Props {
-  pcsOrderId?: string;
-  startDate: string;
-  endDate: string;
-  travelMode?: 'POV' | 'AIR' | 'MIXED' | 'GOV_VEHICLE';
-  originZip: string;
-  destinationZip: string;
-  estimatedMileage: number;
+  segments?: PCSSegment[];
   actualMileage: number;
-  onUpdate: (field: string, value: any) => void;
+  onSegmentOverride: (segmentId: string, overrides: Partial<PCSSegment>) => void;
+  onMileageUpdate: (mileage: number) => void;
   embedded?: boolean;
 }
 
-interface TravelStep1FormData {
-  pcsOrderId: string;
-  startDate: string;
-  endDate: string;
-  travelMode: 'POV' | 'AIR' | 'MIXED' | 'GOV_VEHICLE' | '';
-  originZip: string;
-  destinationZip: string;
-  actualMileage: number;
-}
+// ─── Constants ────────────────────────────────────────────────────────
 
 const MALT_RATE = 0.21;
-const ZIP_REGEX = /^\d{5}$/;
 
+const MODE_META: Record<string, { label: string; icon: typeof Car; emoji: string }> = {
+  POV: { label: 'POV', icon: Car, emoji: '🚗' },
+  AIR: { label: 'Air', icon: Plane, emoji: '✈️' },
+  MIXED: { label: 'Mixed', icon: MapPin, emoji: '🔀' },
+  GOV_VEHICLE: { label: 'Gov Vehicle', icon: Bus, emoji: '🚐' },
+};
+
+const ALL_MODES: PCSSegmentMode[] = ['POV', 'AIR', 'MIXED', 'GOV_VEHICLE'];
+
+const formatCurrency = (value: number): string => `$${value.toFixed(2)}`;
 const toDateOnly = (value: string): string => {
   if (!value) return '';
   return value.includes('T') ? value.slice(0, 10) : value;
 };
-
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
-// Offline-safe ZIP mileage estimator to avoid remote calls in wizard flow.
-const estimateMileageFromZips = (originZip: string, destinationZip: string): number => {
-  if (!ZIP_REGEX.test(originZip) || !ZIP_REGEX.test(destinationZip)) {
-    return 0;
-  }
+// ─── Segment Override Tracker ─────────────────────────────────────────
 
-  const originRegion = Number(originZip.slice(0, 3));
-  const destinationRegion = Number(destinationZip.slice(0, 3));
-  const originLocal = Number(originZip.slice(3, 5));
-  const destinationLocal = Number(destinationZip.slice(3, 5));
+interface SegmentOverrides {
+  departureDate?: string;
+  arrivalDate?: string;
+  mode?: PCSSegmentMode;
+}
 
-  const regionalDelta = Math.abs(originRegion - destinationRegion) * 3.8;
-  const localDelta = Math.abs(originLocal - destinationLocal) * 1.2;
-
-  return clamp(Math.round(regionalDelta + localDelta + 35), 25, 4500);
-};
-
-const formatCurrency = (value: number): string => `$${value.toFixed(2)}`;
-
-const TRAVEL_MODE_OPTIONS = [
-  {
-    id: 'POV',
-    label: 'POV',
-    subtitle: 'Personal vehicle',
-    icon: Car,
-  },
-  {
-    id: 'AIR',
-    label: 'Air',
-    subtitle: 'Commercial flight',
-    icon: Plane,
-  },
-  {
-    id: 'MIXED',
-    label: 'Mixed',
-    subtitle: 'Multiple modes',
-    icon: MapPin,
-  },
-  {
-    id: 'GOV_VEHICLE',
-    label: 'Gov Vehicle',
-    subtitle: 'Command vehicle',
-    icon: Bus,
-  },
-] as const;
+// ─── Main Component ───────────────────────────────────────────────────
 
 export function TravelStep1TripDetails({
-  pcsOrderId,
-  startDate,
-  endDate,
-  travelMode,
-  originZip,
-  destinationZip,
-  estimatedMileage,
+  segments = [],
   actualMileage,
-  onUpdate,
+  onSegmentOverride,
+  onMileageUpdate,
   embedded = false,
 }: TravelStep1Props) {
   const colorScheme = useColorScheme() ?? 'light';
   const isDark = colorScheme === 'dark';
   const themeColors = Colors[colorScheme];
-  const activeOrder = usePCSStore((state) => state.activeOrder);
-  const [showOrderPicker, setShowOrderPicker] = useState(false);
 
-  const {
-    register,
-    control,
-    setValue,
-    watch,
-    trigger,
-    formState: { errors },
-  } = useForm<TravelStep1FormData>({
-    mode: 'onChange',
-    defaultValues: {
-      pcsOrderId: pcsOrderId ?? activeOrder?.orderNumber ?? '',
-      startDate: toDateOnly(startDate),
-      endDate: toDateOnly(endDate),
-      travelMode: travelMode ?? '',
-      originZip,
-      destinationZip,
-      actualMileage: Math.max(0, actualMileage || 0),
-    },
-  });
+  // Segments the user has explicitly confirmed (collapsed after "Looks Good")
+  const [confirmedIds, setConfirmedIds] = useState<Set<string>>(new Set());
 
-  const watchedStartDate = watch('startDate');
-  const watchedEndDate = watch('endDate');
-  const watchedOriginZip = watch('originZip');
-  const watchedDestinationZip = watch('destinationZip');
-  const watchedActualMileage = watch('actualMileage');
-  const watchedTravelMode = watch('travelMode');
-  const watchedOrderId = watch('pcsOrderId');
-  const lastMileagePushed = useRef<number | null>(null);
+  // Track local overrides for visual diffing (segmentId -> overrides)
+  const [overrides, setOverrides] = useState<Record<string, SegmentOverrides>>({});
 
-  useEffect(() => {
-    register('pcsOrderId', {
-      required: 'PCS order is required.',
+  // Local mileage state for immediate UI feedback
+  const [localMileage, setLocalMileage] = useState(Math.max(0, actualMileage || 0));
+
+  const maltPreview = localMileage * MALT_RATE;
+
+  // Confirm a segment — collapses it with green badge
+  const confirmSegment = useCallback((segmentId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+    setConfirmedIds((prev) => new Set(prev).add(segmentId));
+  }, []);
+
+  // Re-open a confirmed segment for editing
+  const reopenSegment = useCallback((segmentId: string) => {
+    Haptics.selectionAsync().catch(() => undefined);
+    setConfirmedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(segmentId);
+      return next;
     });
-    register('startDate', {
-      required: 'Start date is required.',
-    });
-    register('endDate', {
-      required: 'End date is required.',
-      validate: (value) => {
-        if (!watchedStartDate || !value) return true;
-        return value >= watchedStartDate || 'End date must be on/after start date.';
-      },
-    });
-    register('travelMode', {
-      required: 'Select a travel mode.',
-    });
-  }, [register, watchedStartDate]);
+  }, []);
 
-  useEffect(() => {
-    setValue('startDate', toDateOnly(startDate), { shouldValidate: true });
-  }, [setValue, startDate]);
+  const applyOverride = useCallback(
+    (segmentId: string, field: keyof SegmentOverrides, value: string) => {
+      setOverrides((prev) => ({
+        ...prev,
+        [segmentId]: { ...prev[segmentId], [field]: value },
+      }));
 
-  useEffect(() => {
-    setValue('endDate', toDateOnly(endDate), { shouldValidate: true });
-  }, [setValue, endDate]);
+      // Build the PCSSegment partial patch
+      const seg = segments.find((s) => s.id === segmentId);
+      if (!seg) return;
 
-  useEffect(() => {
-    setValue('originZip', originZip, { shouldValidate: true });
-  }, [originZip, setValue]);
-
-  useEffect(() => {
-    setValue('destinationZip', destinationZip, { shouldValidate: true });
-  }, [destinationZip, setValue]);
-
-  useEffect(() => {
-    setValue('actualMileage', Math.max(0, actualMileage || 0), {
-      shouldValidate: true,
-    });
-  }, [actualMileage, setValue]);
-
-  useEffect(() => {
-    setValue('travelMode', travelMode ?? '', { shouldValidate: true });
-  }, [setValue, travelMode]);
-
-  useEffect(() => {
-    const nextOrder = pcsOrderId ?? activeOrder?.orderNumber ?? '';
-    if (nextOrder) {
-      setValue('pcsOrderId', nextOrder, { shouldValidate: true });
-    }
-  }, [activeOrder?.orderNumber, pcsOrderId, setValue]);
-
-  useEffect(() => {
-    if (!watchedStartDate || !watchedEndDate) return;
-    if (watchedEndDate < watchedStartDate) {
-      const nextEnd = format(addDays(new Date(watchedStartDate), 1), 'yyyy-MM-dd');
-      setValue('endDate', nextEnd, { shouldValidate: true });
-      onUpdate('endDate', nextEnd);
-    }
-  }, [watchedEndDate, watchedStartDate, setValue, onUpdate]);
-
-  const estimatedMileageFromZips = useMemo(
-    () => estimateMileageFromZips(watchedOriginZip, watchedDestinationZip),
-    [watchedOriginZip, watchedDestinationZip],
-  );
-
-  useEffect(() => {
-    if (!estimatedMileageFromZips) return;
-    if (lastMileagePushed.current === estimatedMileageFromZips) return;
-    lastMileagePushed.current = estimatedMileageFromZips;
-    onUpdate('estimatedMileage', estimatedMileageFromZips);
-  }, [estimatedMileageFromZips, onUpdate]);
-
-  const displayedEstimatedMileage = estimatedMileageFromZips || estimatedMileage || 0;
-  const maltPreview = watchedActualMileage * MALT_RATE;
-
-  const markedDates = useMemo(() => {
-    const marks: Record<string, any> = {};
-    const start = watchedStartDate;
-    const end = watchedEndDate;
-
-    const rangeColor = isDark ? Colors.dark.navyLight : '#DBEAFE';
-    const rangeTextColor = isDark ? '#FFFFFF' : themeColors.tint;
-
-    if (start && end) {
-      const startDateValue = new Date(`${start}T12:00:00`);
-      const endDateValue = new Date(`${end}T12:00:00`);
-
-      if (startDateValue <= endDateValue) {
-        const range = eachDayOfInterval({
-          start: startDateValue,
-          end: endDateValue,
+      if (field === 'departureDate' || field === 'arrivalDate') {
+        onSegmentOverride(segmentId, {
+          dates: {
+            ...seg.dates,
+            ...(field === 'departureDate' ? { projectedDeparture: value } : {}),
+            ...(field === 'arrivalDate' ? { projectedArrival: value } : {}),
+          },
         });
-
-        range.forEach((day) => {
-          const dayKey = format(day, 'yyyy-MM-dd');
-          let mark: any = { color: rangeColor, textColor: rangeTextColor };
-
-          if (dayKey === start) {
-            mark = {
-              ...mark,
-              startingDay: true,
-              color: themeColors.tint,
-              textColor: '#ffffff',
-            };
-          }
-
-          if (dayKey === end) {
-            mark = {
-              ...mark,
-              endingDay: true,
-              color: themeColors.tint,
-              textColor: '#ffffff',
-            };
-          }
-
-          marks[dayKey] = mark;
+      } else if (field === 'mode') {
+        onSegmentOverride(segmentId, {
+          userPlan: { ...seg.userPlan, mode: value as PCSSegmentMode },
         });
       }
-    } else if (start) {
-      marks[start] = {
-        startingDay: true,
-        endingDay: true,
-        color: themeColors.tint,
-        textColor: '#ffffff',
-      };
-    }
+    },
+    [segments, onSegmentOverride],
+  );
 
-    return marks;
-  }, [isDark, themeColors.tint, watchedEndDate, watchedStartDate]);
+  const updateMileage = useCallback(
+    (next: number) => {
+      const clamped = clamp(next, 0, 10000);
+      setLocalMileage(clamped);
+      onMileageUpdate(clamped);
+    },
+    [onMileageUpdate],
+  );
 
-  const handleDayPress = (day: DateData) => {
-    Haptics.selectionAsync().catch(() => undefined);
+  // Determine if a segment has been edited
+  const isEdited = useCallback(
+    (segmentId: string) => {
+      const o = overrides[segmentId];
+      return !!o && (o.departureDate !== undefined || o.arrivalDate !== undefined || o.mode !== undefined);
+    },
+    [overrides],
+  );
 
-    if (watchedStartDate && watchedEndDate) {
-      setValue('startDate', day.dateString, { shouldValidate: true });
-      setValue('endDate', '', { shouldValidate: true });
-      onUpdate('startDate', day.dateString);
-      onUpdate('endDate', '');
-      trigger(['startDate', 'endDate']);
-      return;
-    }
-
-    if (!watchedStartDate) {
-      setValue('startDate', day.dateString, { shouldValidate: true });
-      onUpdate('startDate', day.dateString);
-      trigger('startDate');
-      return;
-    }
-
-    if (day.dateString < watchedStartDate) {
-      setValue('startDate', day.dateString, { shouldValidate: true });
-      onUpdate('startDate', day.dateString);
-      trigger('startDate');
-      return;
-    }
-
-    setValue('endDate', day.dateString, { shouldValidate: true });
-    onUpdate('endDate', day.dateString);
-    trigger('endDate');
-  };
-
-  const updateActualMileage = (nextValue: number) => {
-    const clamped = clamp(nextValue, 0, 10000);
-    setValue('actualMileage', clamped, { shouldValidate: true });
-    onUpdate('actualMileage', clamped);
-    trigger('actualMileage');
-  };
-
-  const setTravelMode = (mode: 'POV' | 'AIR' | 'MIXED' | 'GOV_VEHICLE') => {
-    Haptics.selectionAsync().catch(() => undefined);
-    setValue('travelMode', mode, { shouldValidate: true });
-    onUpdate('travelMode', mode);
-    trigger('travelMode');
-  };
-
-  const errorMessages = useMemo(() => {
-    const messages: string[] = [];
-
-    if (errors.pcsOrderId?.message) messages.push(errors.pcsOrderId.message);
-    if (errors.startDate?.message) messages.push(errors.startDate.message);
-    if (errors.endDate?.message) messages.push(errors.endDate.message);
-    if (errors.travelMode?.message) messages.push(errors.travelMode.message);
-    if (errors.originZip?.message) messages.push(errors.originZip.message);
-    if (errors.destinationZip?.message) messages.push(errors.destinationZip.message);
-    if (errors.actualMileage?.message) messages.push(errors.actualMileage.message);
-
-    return messages;
-  }, [errors]);
+  // ─── Render ───────────────────────────────────────────────────────
 
   return (
-    <WizardCard title="Trip Details" scrollable={!embedded} noPadding={true}>
-      <View className="gap-6 pt-6 pb-6 px-4 md:px-6">
-        <View>
-          <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-            PCS Order
-          </Text>
-          <Pressable
-            onPress={() => {
-              setShowOrderPicker(true);
-              Haptics.selectionAsync().catch(() => undefined);
-            }}
-            className="bg-inputBackground p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-[0.99]"
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-1 mr-3">
-                <Text className="text-base font-bold text-slate-900 dark:text-white">
-                  {watchedOrderId || 'Select PCS order'}
-                </Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {activeOrder
-                    ? `${activeOrder.gainingCommand.name} • NLT ${toDateOnly(activeOrder.reportNLT)}`
-                    : 'No active order found'}
-                </Text>
-              </View>
-              <Text className="text-blue-600 dark:text-blue-400 font-semibold">Choose</Text>
-            </View>
-          </Pressable>
-          {errors.pcsOrderId?.message && (
-            <Text className="text-red-500 text-xs mt-2">{errors.pcsOrderId.message}</Text>
-          )}
-        </View>
-
-        <View>
-          <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-            Date Range
-          </Text>
-          <View className="bg-cardBackground dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
-            <Calendar
-              key={colorScheme}
-              current={watchedStartDate || undefined}
-              onDayPress={handleDayPress}
-              markingType="period"
-              markedDates={markedDates}
-              theme={{
-                calendarBackground: isDark ? themeColors.background : '#ffffff',
-                textSectionTitleColor: isDark ? '#94a3b8' : '#b6c1cd',
-                selectedDayBackgroundColor: themeColors.tint,
-                selectedDayTextColor: '#ffffff',
-                todayTextColor: themeColors.tint,
-                dayTextColor: isDark ? '#e2e8f0' : '#2d4150',
-                textDisabledColor: isDark ? '#334155' : '#d9e1e8',
-                arrowColor: themeColors.tint,
-                monthTextColor: isDark ? '#f8fafc' : '#1e293b',
-                textDayFontWeight: '600',
-                textMonthFontWeight: 'bold',
-                textDayHeaderFontWeight: '500',
-              }}
-            />
-          </View>
-          <View className="flex-row items-center justify-between mt-3 px-1">
-            <Pressable
-              onPress={() => {
-                setValue('startDate', '', { shouldValidate: true });
-                setValue('endDate', '', { shouldValidate: true });
-                onUpdate('startDate', '');
-                onUpdate('endDate', '');
-              }}
-            >
-              <Text className="text-xs text-slate-500 mb-1">Start Date</Text>
-              <Text
-                className={`font-bold ${
-                  watchedStartDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'
-                }`}
-              >
-                {watchedStartDate || 'Select'}
-              </Text>
-            </Pressable>
-            <View className="items-end">
-              <Text className="text-xs text-slate-500 mb-1">End Date</Text>
-              <Text
-                className={`font-bold ${
-                  watchedEndDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'
-                }`}
-              >
-                {watchedEndDate || 'Select'}
-              </Text>
-            </View>
-          </View>
-          {(errors.startDate?.message || errors.endDate?.message) && (
-            <View className="mt-2">
-              {errors.startDate?.message && (
-                <Text className="text-red-500 text-xs">{errors.startDate.message}</Text>
-              )}
-              {errors.endDate?.message && (
-                <Text className="text-red-500 text-xs">{errors.endDate.message}</Text>
-              )}
-            </View>
-          )}
-        </View>
-
+    <View className={`gap-4 ${embedded ? 'pt-2 pb-2' : 'pt-6 pb-6 px-4'}`}>
+      {/* ── Segment Confirmation Cards ── */}
+      {segments.length > 0 && (
         <View>
           <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
-            Travel Mode
+            Verify Each Segment
           </Text>
-          <View className="flex-row flex-wrap gap-3">
-            {TRAVEL_MODE_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              const selected = watchedTravelMode === option.id;
+
+          <Animated.View layout={LinearTransition.springify()} className="gap-3">
+            {segments.map((seg, idx) => {
+              const isConfirmed = confirmedIds.has(seg.id);
+              const edited = isEdited(seg.id);
+              const segOverrides = overrides[seg.id] || {};
+
+              // Resolve displayed values (override or original)
+              const displayDeparture = segOverrides.departureDate ?? toDateOnly(seg.dates.projectedDeparture);
+              const displayArrival = segOverrides.arrivalDate ?? toDateOnly(seg.dates.projectedArrival);
+              const displayMode = segOverrides.mode ?? seg.userPlan.mode;
+
+              const originalDeparture = toDateOnly(seg.dates.projectedDeparture);
+              const originalArrival = toDateOnly(seg.dates.projectedArrival);
+              const originalMode = seg.userPlan.mode;
+
+              const modeMeta = MODE_META[displayMode || ''] || { label: displayMode || 'TBD', emoji: '📍' };
 
               return (
-                <Pressable
-                  key={option.id}
-                  onPress={() => setTravelMode(option.id)}
-                  className={`w-[48%] rounded-2xl border p-3 ${
-                    selected
-                      ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
-                      : 'bg-inputBackground border-slate-200 dark:border-slate-700'
-                  }`}
+                <Animated.View
+                  key={seg.id}
+                  entering={FadeInDown.delay(idx * 60)}
+                  layout={LinearTransition.springify()}
                 >
-                  <View className="flex-row items-start justify-between">
-                    <View
-                      className={`w-9 h-9 rounded-full items-center justify-center ${
-                        selected
-                          ? 'bg-blue-500'
-                          : 'bg-slate-200 dark:bg-slate-700'
+                  <View
+                    className={`bg-white dark:bg-slate-900/80 rounded-2xl border overflow-hidden ${isConfirmed
+                        ? 'border-emerald-300 dark:border-emerald-700/50'
+                        : 'border-blue-300 dark:border-blue-600/50'
                       }`}
-                    >
-                      <Icon
-                        size={18}
-                        color={selected ? '#ffffff' : isDark ? '#94a3b8' : '#64748b'}
-                        strokeWidth={2.5}
-                      />
-                    </View>
-                    {selected && <View className="w-2 h-2 rounded-full bg-blue-500 mt-1" />}
-                  </View>
-                  <Text
-                    className={`font-bold mt-3 ${
-                      selected
-                        ? 'text-blue-700 dark:text-blue-300'
-                        : 'text-slate-700 dark:text-slate-200'
-                    }`}
                   >
-                    {option.label}
-                  </Text>
-                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {option.subtitle}
-                  </Text>
-                </Pressable>
+                    {/* ── Card Header (always visible) ── */}
+                    <View className="p-4 pb-2">
+                      <View className="flex-row items-center justify-between mb-1">
+                        <View className="flex-row items-center gap-2">
+                          <View className={`w-6 h-6 rounded-full items-center justify-center ${isConfirmed
+                              ? 'bg-emerald-100 dark:bg-emerald-900/30'
+                              : 'bg-blue-100 dark:bg-blue-900/30'
+                            }`}>
+                            {isConfirmed ? (
+                              <Check size={13} color={isDark ? '#34d399' : '#059669'} strokeWidth={3} />
+                            ) : (
+                              <Text className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                                {idx + 1}
+                              </Text>
+                            )}
+                          </View>
+                          <Text className="text-sm font-bold text-slate-900 dark:text-white">
+                            {seg.title || seg.location.name}
+                          </Text>
+                        </View>
+
+                        {/* Badge — only shown after user action */}
+                        {isConfirmed && (
+                          <View className={`rounded-full px-2 py-0.5 ${edited
+                              ? 'bg-amber-100 dark:bg-amber-900/30'
+                              : 'bg-emerald-100 dark:bg-emerald-900/30'
+                            }`}>
+                            <Text className={`text-[10px] font-semibold ${edited
+                                ? 'text-amber-700 dark:text-amber-400'
+                                : 'text-emerald-700 dark:text-emerald-400'
+                              }`}>
+                              {edited ? 'EDITED ✓' : 'CONFIRMED ✓'}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+
+                    {isConfirmed ? (
+                      /* ── Collapsed Confirmed State ── */
+                      <Pressable onPress={() => reopenSegment(seg.id)} className="px-4 pb-3">
+                        <View className="flex-row flex-wrap gap-x-4 gap-y-1 mb-2">
+                          <Text className="text-xs text-slate-500 dark:text-slate-400">
+                            📍 {seg.location.name}
+                          </Text>
+                          <Text className="text-xs text-slate-500 dark:text-slate-400">
+                            📅 {displayDeparture} → {displayArrival}
+                          </Text>
+                          <Text className="text-xs text-slate-500 dark:text-slate-400">
+                            {modeMeta.emoji} {modeMeta.label}
+                          </Text>
+                          <Text className="text-xs text-slate-500 dark:text-slate-400">
+                            🕐 {seg.entitlements.authorizedTravelDays}d travel
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center gap-1 self-end">
+                          <Pencil size={11} color={isDark ? '#64748b' : '#94a3b8'} />
+                          <Text className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                            Tap to edit
+                          </Text>
+                        </View>
+                      </Pressable>
+                    ) : (
+                      /* ── Expanded Edit State (default) ── */
+                      <Animated.View
+                        entering={FadeInDown.duration(200)}
+                        exiting={FadeOutUp.duration(150)}
+                        className="px-4 pb-4 gap-4"
+                      >
+                        {/* Summary info */}
+                        <View className="flex-row flex-wrap gap-x-4 gap-y-1">
+                          <Text className="text-xs text-slate-500 dark:text-slate-400">
+                            📍 {seg.location.name}
+                          </Text>
+                          <Text className="text-xs text-slate-500 dark:text-slate-400">
+                            🕐 {seg.entitlements.authorizedTravelDays}d authorized travel
+                          </Text>
+                        </View>
+
+                        {/* Dates */}
+                        <View className="gap-2">
+                          <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Dates
+                          </Text>
+                          <View className="flex-row gap-3">
+                            <View className="flex-1">
+                              <Text className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                Departure
+                              </Text>
+                              <TextInput
+                                value={displayDeparture}
+                                onChangeText={(v) => applyOverride(seg.id, 'departureDate', v)}
+                                placeholder="YYYY-MM-DD"
+                                placeholderTextColor={isDark ? '#475569' : '#94a3b8'}
+                                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white font-semibold"
+                              />
+                              {segOverrides.departureDate && segOverrides.departureDate !== originalDeparture && (
+                                <Text className="text-[10px] text-slate-400 mt-1 line-through">
+                                  Planned: {originalDeparture}
+                                </Text>
+                              )}
+                            </View>
+                            <View className="flex-1">
+                              <Text className="text-xs text-slate-500 dark:text-slate-400 mb-1">
+                                Arrival
+                              </Text>
+                              <TextInput
+                                value={displayArrival}
+                                onChangeText={(v) => applyOverride(seg.id, 'arrivalDate', v)}
+                                placeholder="YYYY-MM-DD"
+                                placeholderTextColor={isDark ? '#475569' : '#94a3b8'}
+                                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white font-semibold"
+                              />
+                              {segOverrides.arrivalDate && segOverrides.arrivalDate !== originalArrival && (
+                                <Text className="text-[10px] text-slate-400 mt-1 line-through">
+                                  Planned: {originalArrival}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Travel Mode */}
+                        <View className="gap-2">
+                          <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Travel Mode
+                          </Text>
+                          <View className="flex-row flex-wrap gap-2">
+                            {ALL_MODES.map((mode) => {
+                              const meta = MODE_META[mode];
+                              const Icon = meta.icon;
+                              const selected = displayMode === mode;
+
+                              return (
+                                <Pressable
+                                  key={mode}
+                                  onPress={() => {
+                                    Haptics.selectionAsync().catch(() => undefined);
+                                    applyOverride(seg.id, 'mode', mode);
+                                  }}
+                                  className={`flex-row items-center gap-1.5 px-3 py-2 rounded-xl border ${selected
+                                    ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 dark:border-blue-500'
+                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                                    }`}
+                                >
+                                  <Icon
+                                    size={14}
+                                    color={selected ? themeColors.tint : (isDark ? '#94a3b8' : '#64748b')}
+                                    strokeWidth={2.5}
+                                  />
+                                  <Text
+                                    className={`text-xs font-semibold ${selected
+                                      ? 'text-blue-700 dark:text-blue-300'
+                                      : 'text-slate-600 dark:text-slate-300'
+                                      }`}
+                                  >
+                                    {meta.label}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                          </View>
+                          {segOverrides.mode && segOverrides.mode !== originalMode && (
+                            <Text className="text-[10px] text-slate-400 line-through">
+                              Planned: {originalMode || 'TBD'}
+                            </Text>
+                          )}
+                        </View>
+
+                        {/* "Looks Good" Confirm Button */}
+                        <Pressable
+                          onPress={() => confirmSegment(seg.id)}
+                          className="flex-row items-center justify-center gap-1.5 bg-emerald-600 dark:bg-emerald-500 rounded-lg py-3 mt-1 active:opacity-80"
+                        >
+                          <Check size={16} color="#ffffff" strokeWidth={2.5} />
+                          <Text className="text-sm font-bold text-white">
+                            {edited ? 'Save Changes' : 'Looks Good'}
+                          </Text>
+                        </Pressable>
+                      </Animated.View>
+                    )}
+                  </View>
+                </Animated.View>
               );
             })}
+          </Animated.View>
+        </View>
+      )}
+
+      {/* ── Actual Mileage ── */}
+      <View className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-4">
+        <View className="flex-row items-center justify-between mb-3">
+          <View className="flex-row items-center gap-2">
+            <View className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 items-center justify-center">
+              <MapPin size={16} color={themeColors.tint} />
+            </View>
+            <View>
+              <Text className="text-slate-900 dark:text-white font-bold">Actual Mileage</Text>
+              <Text className="text-[10px] text-slate-500 dark:text-slate-400">
+                Reconciled from odometer
+              </Text>
+            </View>
           </View>
-          {errors.travelMode?.message && (
-            <Text className="text-red-500 text-xs mt-2">{errors.travelMode.message}</Text>
-          )}
         </View>
 
-        <View className="gap-3">
-          <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-            Mileage
-          </Text>
-
-          <View className="bg-inputBackground border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
-            <View className="flex-row items-center mb-3">
-              <View className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 items-center justify-center mr-2">
-                <MapPin size={16} color={themeColors.tint} />
-              </View>
-              <Text className="text-slate-900 dark:text-white font-bold">
-                Auto Mileage Estimate
-              </Text>
-            </View>
-
-            <View className="flex-row gap-3">
-              <Controller
-                control={control}
-                name="originZip"
-                rules={{
-                  required: 'Origin ZIP is required.',
-                  pattern: {
-                    value: ZIP_REGEX,
-                    message: 'Origin ZIP must be 5 digits.',
-                  },
-                }}
-                render={({ field: { value } }) => (
-                  <View className="flex-1">
-                    <Text className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                      Origin ZIP
-                    </Text>
-                    <TextInput
-                      value={value}
-                      onChangeText={(next) => {
-                        const normalized = next.replace(/[^0-9]/g, '').slice(0, 5);
-                        setValue('originZip', normalized, { shouldValidate: true });
-                        onUpdate('originZip', normalized);
-                      }}
-                      keyboardType="number-pad"
-                      maxLength={5}
-                      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white"
-                      placeholder="00000"
-                      placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-                    />
-                  </View>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="destinationZip"
-                rules={{
-                  required: 'Destination ZIP is required.',
-                  pattern: {
-                    value: ZIP_REGEX,
-                    message: 'Destination ZIP must be 5 digits.',
-                  },
-                }}
-                render={({ field: { value } }) => (
-                  <View className="flex-1">
-                    <Text className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                      Destination ZIP
-                    </Text>
-                    <TextInput
-                      value={value}
-                      onChangeText={(next) => {
-                        const normalized = next.replace(/[^0-9]/g, '').slice(0, 5);
-                        setValue('destinationZip', normalized, { shouldValidate: true });
-                        onUpdate('destinationZip', normalized);
-                      }}
-                      keyboardType="number-pad"
-                      maxLength={5}
-                      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-slate-900 dark:text-white"
-                      placeholder="00000"
-                      placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
-                    />
-                  </View>
-                )}
-              />
-            </View>
-
-            {(errors.originZip?.message || errors.destinationZip?.message) && (
-              <View className="mt-2">
-                {errors.originZip?.message && (
-                  <Text className="text-red-500 text-xs">{errors.originZip.message}</Text>
-                )}
-                {errors.destinationZip?.message && (
-                  <Text className="text-red-500 text-xs">{errors.destinationZip.message}</Text>
-                )}
-              </View>
-            )}
-
-            <View className="mt-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 p-3">
-              <Text className="text-xs text-slate-500 dark:text-slate-300 mb-1">
-                Estimated
-              </Text>
-              <Text className="text-xl font-extrabold text-blue-700 dark:text-blue-300">
-                {displayedEstimatedMileage.toLocaleString()} mi
-              </Text>
-            </View>
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => updateMileage(localMileage - 10)}
+              className="h-9 w-9 rounded-full border border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-800 items-center justify-center"
+            >
+              <Minus size={16} color={isDark ? '#e2e8f0' : '#0f172a'} />
+            </Pressable>
+            <Pressable
+              onPress={() => updateMileage(localMileage + 10)}
+              className="h-9 w-9 rounded-full border border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-800 items-center justify-center"
+            >
+              <Plus size={16} color={isDark ? '#e2e8f0' : '#0f172a'} />
+            </Pressable>
           </View>
 
-          <Controller
-            control={control}
-            name="actualMileage"
-            rules={{
-              required: 'Actual mileage is required.',
-              min: {
-                value: 0,
-                message: 'Actual mileage cannot be negative.',
-              },
-            }}
-            render={({ field: { value } }) => (
-              <View className="bg-inputBackground border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-slate-900 dark:text-white font-bold">
-                    Actual Mileage
-                  </Text>
-                  <Text className="text-xs text-slate-500 dark:text-slate-400">
-                    Reconciled from odometer
-                  </Text>
-                </View>
-
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-2">
-                    <Pressable
-                      onPress={() => updateActualMileage((value || 0) - 10)}
-                      className="h-9 w-9 rounded-full border border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-800 items-center justify-center"
-                    >
-                      <Minus size={16} color={isDark ? '#e2e8f0' : '#0f172a'} />
-                    </Pressable>
-                    <Pressable
-                      onPress={() => updateActualMileage((value || 0) + 10)}
-                      className="h-9 w-9 rounded-full border border-slate-300 dark:border-slate-600 bg-white/80 dark:bg-slate-800 items-center justify-center"
-                    >
-                      <Plus size={16} color={isDark ? '#e2e8f0' : '#0f172a'} />
-                    </Pressable>
-                  </View>
-
-                  <View className="flex-row items-center">
-                    <TextInput
-                      value={`${value || 0}`}
-                      onChangeText={(next) => {
-                        const sanitized = next.replace(/[^0-9]/g, '');
-                        updateActualMileage(Number(sanitized || 0));
-                      }}
-                      keyboardType="number-pad"
-                      className="text-2xl font-black text-slate-900 dark:text-white min-w-[94px] text-right"
-                    />
-                    <Text className="ml-2 text-slate-500 dark:text-slate-400 font-semibold">
-                      mi
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
-          />
-          {errors.actualMileage?.message && (
-            <Text className="text-red-500 text-xs">{errors.actualMileage.message}</Text>
-          )}
+          <View className="flex-row items-center">
+            <TextInput
+              value={`${localMileage}`}
+              onChangeText={(next) => {
+                const sanitized = next.replace(/[^0-9]/g, '');
+                updateMileage(Number(sanitized || 0));
+              }}
+              keyboardType="number-pad"
+              className="text-2xl font-black text-slate-900 dark:text-white min-w-[94px] text-right"
+            />
+            <Text className="ml-2 text-slate-500 dark:text-slate-400 font-semibold">mi</Text>
+          </View>
         </View>
-
-        <View className="bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 rounded-2xl p-4">
-          <View className="flex-row items-center mb-1.5">
-            <View className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/40 items-center justify-center mr-2">
-              <DollarSign size={15} color={themeColors.tint} />
-            </View>
-            <Text className="text-slate-700 dark:text-slate-200 font-semibold text-sm">
-              MALT Preview
-            </Text>
-          </View>
-          <Text className="text-2xl font-black text-blue-700 dark:text-blue-300">
-            Estimated MALT: {formatCurrency(maltPreview)}
-          </Text>
-          <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Based on {(watchedActualMileage || 0).toLocaleString()} miles × ${MALT_RATE.toFixed(2)}
-          </Text>
-        </View>
-
-        {errorMessages.length > 0 && (
-          <View className="bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 rounded-xl p-3">
-            {errorMessages.map((message, index) => (
-              <Text key={`${message}-${index}`} className="text-red-600 dark:text-red-400 text-xs mb-1">
-                • {message}
-              </Text>
-            ))}
-          </View>
-        )}
       </View>
 
-      <Modal
-        transparent
-        animationType="fade"
-        visible={showOrderPicker}
-        onRequestClose={() => setShowOrderPicker(false)}
-      >
-        <View className="flex-1 bg-black/70 justify-end">
-          <Pressable className="absolute inset-0" onPress={() => setShowOrderPicker(false)} />
-          <View className="bg-white dark:bg-slate-800 rounded-t-3xl max-h-[65%] overflow-hidden">
-            <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <CalendarDays size={18} color={themeColors.tint} />
-                <Text className="ml-2 text-lg font-bold text-slate-900 dark:text-white">
-                  Select PCS Order
-                </Text>
-              </View>
-              <Pressable onPress={() => setShowOrderPicker(false)}>
-                <Text className="text-blue-600 dark:text-blue-400 font-semibold">Close</Text>
-              </Pressable>
-            </View>
-
-            <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}>
-              {activeOrder ? (
-                <Pressable
-                  onPress={() => {
-                    setValue('pcsOrderId', activeOrder.orderNumber, {
-                      shouldValidate: true,
-                    });
-                    onUpdate('pcsOrderId', activeOrder.orderNumber);
-                    setShowOrderPicker(false);
-                    trigger('pcsOrderId');
-                    Haptics.selectionAsync().catch(() => undefined);
-                  }}
-                  className={`rounded-xl border p-4 ${
-                    watchedOrderId === activeOrder.orderNumber
-                      ? 'bg-blue-50 dark:bg-slate-700 border-blue-500 dark:border-blue-500'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
-                  }`}
-                >
-                  <Text
-                    className={`font-bold text-base ${
-                      watchedOrderId === activeOrder.orderNumber
-                        ? 'text-blue-700 dark:text-blue-300'
-                        : 'text-slate-900 dark:text-white'
-                    }`}
-                  >
-                    {activeOrder.orderNumber}
-                  </Text>
-                  <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-                    {activeOrder.gainingCommand.name} • Report NLT {toDateOnly(activeOrder.reportNLT)}
-                  </Text>
-                </Pressable>
-              ) : (
-                <View className="rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                  <Text className="text-slate-600 dark:text-slate-300 text-sm">
-                    No active PCS order found in local store.
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
+      {/* ── MALT Preview ── */}
+      <View className="bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 rounded-2xl p-4">
+        <View className="flex-row items-center mb-1.5">
+          <View className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/40 items-center justify-center mr-2">
+            <DollarSign size={15} color={themeColors.tint} />
           </View>
+          <Text className="text-slate-700 dark:text-slate-200 font-semibold text-sm">
+            MALT Preview
+          </Text>
         </View>
-      </Modal>
-    </WizardCard>
+        <Text className="text-2xl font-black text-blue-700 dark:text-blue-300">
+          Estimated MALT: {formatCurrency(maltPreview)}
+        </Text>
+        <Text className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          Based on {localMileage.toLocaleString()} miles × ${MALT_RATE.toFixed(2)}
+        </Text>
+      </View>
+    </View>
   );
 }

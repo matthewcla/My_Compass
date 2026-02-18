@@ -1,0 +1,23 @@
+# EAS Build ignore file
+# Exclude files from EAS builds to reduce upload time
+
+# Development
+dist/
+.expo/
+.vercel/
+
+# Documentation
+*.md
+CLAUDE.md
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.github/
+
+# Build artifacts
+android/app/build/
+ios/Pods/

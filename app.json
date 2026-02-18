@@ -4,7 +4,7 @@
     "slug": "My_Compass",
     "version": "1.0.2",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/my-icon-1024.png",
     "scheme": "mycompass",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -14,7 +14,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "icon": "./assets/images/favicon.png",
+      "icon": "./assets/images/my-icon-1024.png",
       "supportsTablet": true,
       "bundleIdentifier": "mil.navy.mycompass",
       "buildNumber": "1",
@@ -33,7 +33,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/my-icon-1024.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -45,7 +45,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
+      "favicon": "./assets/images/my-icon-1024.png",
       "display": "standalone",
       "backgroundColor": "#0A1628",
       "themeColor": "#0A1628"

@@ -347,15 +347,19 @@ Every variant follows a **two-row layout** inside a `GlassView` with a `LinearGr
 
 #### Color-per-Phase Mapping
 
-Each variant uses a **single accent hue** applied consistently to: left border, gradient wash, icon bubble, headline, progress-dot active state, next-action text, and CTA button.
+Each variant uses a **single accent hue** applied consistently to: left border, gradient wash, icon bubble, headline, progress-dot active state, next-action text, and CTA button. Adjacent phases must have **distinct** accent colors to maintain the "progression" signal.
 
-| Variant | Accent | Border | Icon Colors (dark / light) |
-|---------|--------|--------|---------------------------|
-| `cycle-prep` | Navy Gold | `border-amber-400` | `#fbbf24` / `#d97706` |
-| `orders-received` | Amber | `border-amber-400` | `#fbbf24` / `#d97706` |
-| `plan-move` | Teal | `border-teal-400` | `#2dd4bf` / `#0d9488` |
-| `en-route` | Sky | `border-sky-400` | `#38bdf8` / `#0284c7` |
-| `welcome-aboard` | Green | `border-green-400` | `#4ade80` / `#16a34a` |
+| # | Variant | Accent | Border | Icon Colors (dark / light) |
+|---|---------|--------|--------|---------------------------|
+| 1 | `cycle-prep` | Blue | `border-blue-400` | `#60a5fa` / `#2563eb` |
+| 2 | `cycle-open` | Indigo | `border-indigo-500` | `#818cf8` / `#4f46e5` |
+| 3 | `negotiation` | Amber | `border-amber-400` | `#fbbf24` / `#d97706` |
+| 4 | `selected` | Emerald | `border-emerald-400` | `#A7F3D0→#10B981` gradient |
+| 5 | `processing` | Zinc | `border-zinc-400` | `#a1a1aa` / `#52525b` |
+| 6 | `orders-received` | Amber | `border-amber-400` | `#fbbf24` / `#d97706` |
+| 7 | `plan-move` | Teal | `border-teal-400` | `#2dd4bf` / `#0d9488` |
+| 8 | `en-route` | Sky | `border-sky-400` | `#38bdf8` / `#0284c7` |
+| 9 | `welcome-aboard` | Green | `border-green-400` | `#4ade80` / `#15803d` |
 
 #### Urgency Escalation (Days Counter)
 

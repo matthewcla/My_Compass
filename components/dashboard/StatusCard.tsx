@@ -105,37 +105,97 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
             const uniformOfDay = activeOrder?.gainingCommand.uniformOfDay?.trim() || null;
 
-            return (
-                <CardShell borderColor="border-green-500 dark:border-green-400" isDark={isDark}>
-                    <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center gap-4 flex-1">
-                            <IconBubble bg="bg-green-100 dark:bg-green-900/30">
-                                <Anchor size={24} color={isDark ? '#4ade80' : '#15803d'} />
-                            </IconBubble>
-                            <View className="flex-1">
-                                <Headline>Welcome Aboard</Headline>
-                                <Detail>{gainingCommand}</Detail>
-                                {uniformOfDay && (
-                                    <Text className="text-green-700 dark:text-green-300 text-[11px] font-semibold mt-1">
-                                        👔 {uniformOfDay}
-                                    </Text>
-                                )}
-                            </View>
-                        </View>
+            // UCT Phase 4 progress (Check-in & Claim)
+            const phase4Items = checklist.filter(i => i.uctPhase === 4);
+            const completedPhase4 = phase4Items.filter(i => i.status === 'COMPLETE').length;
+            const totalPhase4 = phase4Items.length;
+            const wabNextAction = checklist.find(
+                i => i.uctPhase === 4 && i.status === 'NOT_STARTED'
+            );
 
-                        <View className="items-end gap-2.5">
-                            <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
-                                <PillText color="text-green-800 dark:text-green-200">Day {daysOnStation}</PillText>
-                            </Pill>
-                            <TouchableOpacity
-                                onPress={() => router.push('/pcs/check-in' as any)}
-                                className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg border border-green-500 dark:border-green-600"
-                            >
-                                <CTAText>Check In</CTAText>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </CardShell>
+            return (
+                <View className="flex flex-col gap-2">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-green-400 dark:border-green-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(34,197,94,0.08)', 'rgba(34,197,94,0.02)']
+                                : ['rgba(34,197,94,0.14)', 'rgba(34,197,94,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
+                        >
+                            {/* ── Header Row: icon + title | Day N pill ── */}
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <IconBubble bg="bg-green-100 dark:bg-green-900/30">
+                                        <Anchor size={24} color={isDark ? '#4ade80' : '#15803d'} />
+                                    </IconBubble>
+                                    <View className="flex-1">
+                                        <Headline color="text-green-900 dark:text-green-100">Welcome Aboard</Headline>
+                                        <Detail>{gainingCommand}</Detail>
+                                    </View>
+                                </View>
+
+                                <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
+                                    <PillText color="text-green-800 dark:text-green-200">Day {daysOnStation}</PillText>
+                                </Pill>
+                            </View>
+
+                            {/* ── Footer Row: progress + next action + CTA ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                <View className="flex-1 gap-1">
+                                    {/* Phase 4 progress dots */}
+                                    {totalPhase4 > 0 && (
+                                        <View className="flex-row items-center gap-1.5">
+                                            <View className="flex-row gap-0.5">
+                                                {phase4Items.map((item) => (
+                                                    <View
+                                                        key={item.id}
+                                                        className={`w-5 h-2 rounded-full ${item.status === 'COMPLETE'
+                                                            ? 'bg-green-500 dark:bg-green-400'
+                                                            : item.status === 'IN_PROGRESS'
+                                                                ? 'bg-green-400 dark:bg-green-500'
+                                                                : 'bg-slate-300 dark:bg-slate-600'
+                                                            }`}
+                                                    />
+                                                ))}
+                                            </View>
+                                            <Text className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                                {completedPhase4}/{totalPhase4} check-in tasks
+                                            </Text>
+                                        </View>
+                                    )}
+
+                                    {/* Next action */}
+                                    {wabNextAction && (
+                                        <Text className="text-green-700 dark:text-green-300 text-[11px] font-semibold" numberOfLines={1}>
+                                            Next: {wabNextAction.label}
+                                        </Text>
+                                    )}
+
+                                    {/* Uniform of the day */}
+                                    {uniformOfDay && (
+                                        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                                            👔 {uniformOfDay}
+                                        </Text>
+                                    )}
+                                </View>
+
+                                {/* CTA — bottom right */}
+                                <TouchableOpacity
+                                    onPress={() => router.push('/pcs/check-in' as any)}
+                                    className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg border border-green-500 dark:border-green-600 ml-3"
+                                >
+                                    <CTAText>Check{`\n`}In</CTAText>
+                                </TouchableOpacity>
+                            </View>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
             );
         }
 
@@ -547,50 +607,58 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-amber-400 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border-l-4 border-zinc-400 dark:border-zinc-500 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
                     >
                         <LinearGradient
                             colors={isDark
-                                ? ['rgba(251,191,36,0.08)', 'rgba(251,191,36,0.02)']
-                                : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)']}
+                                ? ['rgba(161,161,170,0.08)', 'rgba(161,161,170,0.02)']
+                                : ['rgba(161,161,170,0.14)', 'rgba(161,161,170,0.04)']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
                         >
+                            {/* ── Header Row: icon + title | Est. date pill ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-amber-100 dark:bg-amber-900/30">
-                                        <FileCheck size={24} color={isDark ? '#fbbf24' : '#d97706'} />
+                                    <IconBubble bg="bg-zinc-100 dark:bg-zinc-800/30">
+                                        <FileCheck size={24} color={isDark ? '#a1a1aa' : '#52525b'} />
                                     </IconBubble>
                                     <View className="flex-1">
                                         <Headline>Orders Processing</Headline>
                                         <Detail>{procGainingCommand}</Detail>
                                         {procBilletTitle && (
-                                            <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold" numberOfLines={1}>
+                                            <Text className="text-zinc-700 dark:text-zinc-300 text-[11px] font-semibold" numberOfLines={1}>
                                                 {procBilletTitle}
-                                            </Text>
-                                        )}
-                                        {procPipelineLabel && (
-                                            <Text className="text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider mt-1">
-                                                ⏱ {procPipelineLabel}
                                             </Text>
                                         )}
                                     </View>
                                 </View>
 
-                                <View className="items-end gap-2">
-                                    <Pill bg="bg-amber-100 dark:bg-amber-900/40" border="border-amber-200 dark:border-amber-700/50">
-                                        <PillText color="text-amber-800 dark:text-amber-200">
-                                            {procEstDate ? `Est. ${procEstDate}` : 'Pending'}
-                                        </PillText>
-                                    </Pill>
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/(tabs)/(assignment)' as any)}
-                                        className="bg-amber-100 dark:bg-amber-900/40 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
-                                    >
-                                        <CTAText color="text-amber-800 dark:text-amber-200">Track{'\n'}Progress</CTAText>
-                                    </TouchableOpacity>
-                                </View>
+                                <Pill bg="bg-zinc-100 dark:bg-zinc-800/40" border="border-zinc-200 dark:border-zinc-600/50">
+                                    <PillText color="text-zinc-700 dark:text-zinc-300">
+                                        {procEstDate ? `Est. ${procEstDate}` : 'Pending'}
+                                    </PillText>
+                                </Pill>
+                            </View>
+
+                            {/* ── Footer Row: pipeline status + CTA ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                {procPipelineLabel ? (
+                                    <Text className="text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold flex-1">
+                                        ⏱ {procPipelineLabel}
+                                    </Text>
+                                ) : (
+                                    <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium flex-1">
+                                        Awaiting pipeline update
+                                    </Text>
+                                )}
+
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(tabs)/(assignment)' as any)}
+                                    className="bg-zinc-100 dark:bg-zinc-800/40 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-600/50 ml-3"
+                                >
+                                    <CTAText color="text-zinc-700 dark:text-zinc-300">Track{`\n`}Progress</CTAText>
+                                </TouchableOpacity>
                             </View>
                         </LinearGradient>
                     </GlassView>
@@ -608,84 +676,72 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 : null;
             const obliservBlocked = obliserv.required && obliserv.status !== 'COMPLETE';
 
-            // Derive human-readable pipeline label
-            const pipelineLabel = (() => {
-                switch (selectionDetails?.pipelineStatus) {
-                    case 'MATCH_ANNOUNCED': return 'Match Announced';
-                    case 'CO_ENDORSEMENT': return 'Awaiting CO Endorsement';
-                    case 'PERS_PROCESSING': return 'PERS Processing';
-                    case 'ORDERS_DRAFTING': return 'Orders Being Drafted';
-                    case 'ORDERS_RELEASED': return 'Orders Released';
-                    default: return null;
-                }
-            })();
-
             return (
                 <View className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-amber-400 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border-l-4 border-emerald-400 dark:border-emerald-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
                     >
                         <LinearGradient
                             colors={isDark
-                                ? ['rgba(251,191,36,0.08)', 'rgba(251,191,36,0.02)']
-                                : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)']}
+                                ? ['rgba(16,185,129,0.08)', 'rgba(16,185,129,0.02)']
+                                : ['rgba(16,185,129,0.14)', 'rgba(16,185,129,0.04)']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
                         >
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <View className="w-12 h-12 rounded-full overflow-hidden items-center justify-center">
-                                        <LinearGradient
-                                            colors={['#FDE68A', '#F59E0B']}
-                                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                                        />
-                                        <Star size={24} color={isDark ? '#78350F' : '#FFFFFF'} fill={isDark ? '#78350F' : '#FFFFFF'} />
-                                    </View>
-                                    <View className="flex-1">
-                                        <Text className="text-amber-900 dark:text-amber-100 text-lg font-black leading-tight mb-0.5">
-                                            You've Been Selected!!!
+                            {/* ── Header Row: star icon + headline + details ── */}
+                            <View className="flex-row items-center gap-4">
+                                <View className="w-12 h-12 rounded-full overflow-hidden items-center justify-center">
+                                    <LinearGradient
+                                        colors={['#A7F3D0', '#10B981']}
+                                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                                    />
+                                    <Star size={24} color={isDark ? '#064E3B' : '#FFFFFF'} fill={isDark ? '#064E3B' : '#FFFFFF'} />
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="text-emerald-900 dark:text-emerald-100 text-lg font-black leading-tight mb-0.5">
+                                        You've Been Selected!!!
+                                    </Text>
+                                    <Detail>{selGainingCommand}</Detail>
+                                    {selBilletTitle && (
+                                        <Text className="text-emerald-800 dark:text-emerald-200 text-[11px] font-semibold" numberOfLines={1}>
+                                            {selBilletTitle}
                                         </Text>
-                                        <Detail>{selGainingCommand}</Detail>
-                                        {selBilletTitle && (
-                                            <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold" numberOfLines={1}>
-                                                {selBilletTitle}
-                                            </Text>
-                                        )}
-                                        {selReportNLT && (
-                                            <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold mt-0.5">
-                                                Report by {selReportNLT}
-                                            </Text>
-                                        )}
-                                        {pipelineLabel && (
-                                            <Text className="text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider mt-1">
-                                                ⏱ {pipelineLabel}
-                                            </Text>
-                                        )}
-                                    </View>
+                                    )}
+                                </View>
+                            </View>
+
+                            {/* ── Footer Row: report date + status + CTA ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                <View className="flex-1 gap-0.5">
+                                    {selReportNLT && (
+                                        <Text className="text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold">
+                                            Report by {selReportNLT}
+                                        </Text>
+                                    )}
+                                    {obliservBlocked && (
+                                        <Text className="text-red-600 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                                            ⚠ OBLISERV Extension Required
+                                        </Text>
+                                    )}
                                 </View>
 
                                 {obliservBlocked ? (
                                     <TouchableOpacity
                                         onPress={() => router.push('/pcs-wizard/obliserv-check' as any)}
-                                        className="bg-red-600 dark:bg-red-700 px-3 py-2.5 rounded-lg border border-red-500 dark:border-red-600 ml-3"
+                                        className="bg-red-600 dark:bg-red-700 px-3 py-2 rounded-lg border border-red-500 dark:border-red-600 ml-3"
                                     >
-                                        <CTAText>Extend{'\n'}to Accept</CTAText>
+                                        <CTAText>Extend{`\n`}to Accept</CTAText>
                                     </TouchableOpacity>
                                 ) : (
-                                    <View className="items-end gap-2">
-                                        <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
-                                            <PillText color="text-green-800 dark:text-green-200">✓ Ready</PillText>
-                                        </Pill>
-                                        <TouchableOpacity
-                                            onPress={() => router.push('/(tabs)/(assignment)' as any)}
-                                            className="bg-amber-100 dark:bg-amber-900/40 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
-                                        >
-                                            <CTAText color="text-amber-800 dark:text-amber-200">View{'\n'}Details</CTAText>
-                                        </TouchableOpacity>
-                                    </View>
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/(tabs)/(assignment)' as any)}
+                                        className="bg-emerald-100 dark:bg-emerald-900/40 px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-700/50 ml-3"
+                                    >
+                                        <CTAText color="text-emerald-800 dark:text-emerald-200">View{`\n`}Details</CTAText>
+                                    </TouchableOpacity>
                                 )}
                             </View>
                         </LinearGradient>
@@ -720,66 +776,83 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const detailerOffice = negotiationDetails?.detailer.office ?? null;
 
             return (
-                <CardShell borderColor="border-amber-500 dark:border-amber-400" isDark={isDark}>
-                    <View className="flex-row items-start justify-between">
-                        <View className="flex-row items-start gap-4 flex-1">
-                            <IconBubble bg="bg-amber-100 dark:bg-amber-900/50">
-                                <Users size={24} color={isDark ? '#fbbf24' : '#d97706'} />
-                            </IconBubble>
-                            <View className="flex-1">
-                                <Headline color="text-amber-900 dark:text-amber-100">MNA Negotiation</Headline>
-                                <View className="flex-row items-baseline gap-1.5">
+                <View className="flex flex-col gap-2">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-amber-400 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(251,191,36,0.08)', 'rgba(251,191,36,0.02)']
+                                : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
+                        >
+                            {/* ── Header Row: icon + title | days counter ── */}
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <IconBubble bg="bg-amber-100 dark:bg-amber-900/50">
+                                        <Users size={24} color={isDark ? '#fbbf24' : '#d97706'} />
+                                    </IconBubble>
+                                    <View className="flex-1">
+                                        <Headline color="text-amber-900 dark:text-amber-100">MNA Negotiation</Headline>
+                                        <Detail>Build and submit your ranked slate</Detail>
+                                    </View>
+                                </View>
+
+                                <View className="flex-row items-baseline gap-1">
                                     <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">
                                         {daysUntilOpen}
                                     </Text>
-                                    <Text className="text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wide">
-                                        Days to Slate Lock
+                                    <Text className="text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wide">
+                                        Days
                                     </Text>
                                 </View>
+                            </View>
 
-                                {/* Slate Status */}
-                                <View className="flex-row items-center gap-1 mt-0.5">
+                            {/* ── Footer Row: slate status + deadline + CTA ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                <View className="flex-1 gap-0.5">
+                                    {/* Slate Status */}
                                     <Text className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                                         {allSubmitted
                                             ? `✅ Slate Submitted`
                                             : hasAnyApps
                                                 ? `⚠️ ${slateCount} of ${MAX_SLATE_SIZE} drafted`
                                                 : `⚠️ No billets on slate`}
+                                        {allSubmitted ? ` (${submittedCount} of ${MAX_SLATE_SIZE})` : ''}
                                     </Text>
-                                    {allSubmitted && (
-                                        <Text className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                                            ({submittedCount} of {MAX_SLATE_SIZE})
+
+                                    {/* Deadline */}
+                                    {closeDate && (
+                                        <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold">
+                                            Window closes {closeDate}
+                                        </Text>
+                                    )}
+
+                                    {/* Detailer Line */}
+                                    {detailerName && (
+                                        <Text
+                                            className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider"
+                                            numberOfLines={1}
+                                        >
+                                            ⏳ {detailerName}{detailerOffice ? ` · ${detailerOffice}` : ''}
                                         </Text>
                                     )}
                                 </View>
 
-                                {/* Deadline Date */}
-                                {closeDate && (
-                                    <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold mt-0.5">
-                                        Window closes {closeDate}
-                                    </Text>
-                                )}
-
-                                {/* Detailer Line */}
-                                {detailerName && (
-                                    <Text
-                                        className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1"
-                                        numberOfLines={1}
-                                    >
-                                        ⏳ {detailerName}{detailerOffice ? ` · ${detailerOffice}` : ''}
-                                    </Text>
-                                )}
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(career)/discovery' as any)}
+                                    className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50 ml-3"
+                                >
+                                    <CTAText color="text-amber-800 dark:text-amber-200">My{`\n`}Slate</CTAText>
+                                </TouchableOpacity>
                             </View>
-                        </View>
-
-                        <TouchableOpacity
-                            onPress={() => router.push('/(career)/discovery' as any)}
-                            className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
-                        >
-                            <CTAText color="text-amber-800 dark:text-amber-200">My{'\n'}Slate</CTAText>
-                        </TouchableOpacity>
-                    </View>
-                </CardShell>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
             );
         }
 
@@ -797,15 +870,15 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const hasPrepped = reviewed > 0;
 
             return (
-                <CardShell borderColor="border-amber-500 dark:border-amber-400" isDark={isDark}>
+                <CardShell borderColor="border-indigo-500 dark:border-indigo-400" isDark={isDark}>
                     {/* ── Header: icon + title + PRD ── */}
                     <View className="flex-row items-center gap-2 w-full">
-                        <Timer size={16} color={isDark ? '#fbbf24' : '#d97706'} />
-                        <Text className="text-amber-900 dark:text-amber-100 text-sm font-extrabold flex-shrink">
+                        <Timer size={16} color={isDark ? '#818cf8' : '#4f46e5'} />
+                        <Text className="text-indigo-900 dark:text-indigo-100 text-sm font-extrabold flex-shrink">
                             Cycle {nextCycle} Opening Soon
                         </Text>
                         {prdLabel && (
-                            <Text className="text-amber-600 dark:text-amber-400 text-[10px] font-bold ml-auto">
+                            <Text className="text-indigo-600 dark:text-indigo-400 text-[10px] font-bold ml-auto">
                                 PRD {prdLabel}
                             </Text>
                         )}
@@ -814,10 +887,10 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     {/* ── Hero: countdown + prep stats ── */}
                     <View className="flex-row items-center mt-3 w-full">
                         <View className="flex-row items-baseline gap-1.5">
-                            <Text className="text-amber-950 dark:text-white text-4xl font-black font-mono tracking-tighter">
+                            <Text className="text-indigo-950 dark:text-white text-4xl font-black font-mono tracking-tighter">
                                 {daysUntilOpen}
                             </Text>
-                            <Text className="text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wide">
+                            <Text className="text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wide">
                                 Days
                             </Text>
                         </View>
@@ -827,20 +900,20 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                             {hasPrepped ? (
                                 <>
                                     <View className="flex-row items-center gap-1">
-                                        <Eye size={11} color={isDark ? '#fbbf24' : '#92400e'} />
-                                        <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold">
+                                        <Eye size={11} color={isDark ? '#818cf8' : '#3730a3'} />
+                                        <Text className="text-indigo-800 dark:text-indigo-200 text-[11px] font-semibold">
                                             {reviewed} reviewed
                                         </Text>
                                     </View>
                                     <View className="flex-row items-center gap-1">
-                                        <Heart size={11} color={isDark ? '#fbbf24' : '#92400e'} />
-                                        <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold">
+                                        <Heart size={11} color={isDark ? '#818cf8' : '#3730a3'} />
+                                        <Text className="text-indigo-800 dark:text-indigo-200 text-[11px] font-semibold">
                                             {saved} saved
                                         </Text>
                                     </View>
                                 </>
                             ) : (
-                                <Text className="text-amber-600 dark:text-amber-400 text-[11px] font-medium">
+                                <Text className="text-indigo-600 dark:text-indigo-400 text-[11px] font-medium">
                                     No billets reviewed yet
                                 </Text>
                             )}
@@ -854,9 +927,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                         </Text>
                         <TouchableOpacity
                             onPress={() => router.push('/(tabs)/(profile)/preferences')}
-                            className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
+                            className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50"
                         >
-                            <CTAText color="text-amber-800 dark:text-amber-200">Get Ready</CTAText>
+                            <CTAText color="text-indigo-800 dark:text-indigo-200">Get{`\n`}Ready</CTAText>
                         </TouchableOpacity>
                     </View>
                 </CardShell>
@@ -865,40 +938,70 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── Cycle Prep (Discovery / Default) ────────────────────────
         // Sailor is >17 months from PRD — calm, exploratory tone.
-        // PRD and months-out are mocked; will be driven by profile later.
         case 'cycle-prep':
         default: {
-            // TODO: Replace with real PRD from user profile
-            const prdLabel = 'Oct 2027';
-            const monthsOut = 19;
+            // Derive PRD from profile, fall back to mock
+            const prdDate = currentProfile?.prd ? new Date(currentProfile.prd) : null;
+            const prdLabel = prdDate
+                ? prdDate.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+                : 'Oct 2027';
+            const monthsOut = prdDate
+                ? Math.max(0, Math.round((prdDate.getTime() - Date.now()) / (30.44 * 86400000)))
+                : 19;
 
             return (
-                <CardShell borderColor="border-blue-500 dark:border-blue-400" isDark={isDark}>
-                    <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center gap-4 flex-1">
-                            <IconBubble bg="bg-blue-100 dark:bg-blue-900/30">
-                                <Calendar size={24} color={isDark ? '#60a5fa' : '#2563eb'} />
-                            </IconBubble>
-                            <View className="flex-1">
-                                <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle Opens</Headline>
-                                <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mt-0.5">
-                                    ~{monthsOut} months · PRD {prdLabel}
-                                </Text>
-                                <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium mt-0.5">
+                <View className="flex flex-col gap-2">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-blue-400 dark:border-blue-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(59,130,246,0.08)', 'rgba(59,130,246,0.02)']
+                                : ['rgba(59,130,246,0.14)', 'rgba(59,130,246,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
+                        >
+                            {/* ── Header Row: icon + title | months counter ── */}
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <IconBubble bg="bg-blue-100 dark:bg-blue-900/30">
+                                        <Calendar size={24} color={isDark ? '#60a5fa' : '#2563eb'} />
+                                    </IconBubble>
+                                    <View className="flex-1">
+                                        <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle Opens</Headline>
+                                        <Detail>PRD {prdLabel}</Detail>
+                                    </View>
+                                </View>
+
+                                <View className="flex-row items-baseline gap-1">
+                                    <Text className="text-blue-950 dark:text-white text-2xl font-black font-mono tracking-tighter">
+                                        ~{monthsOut}
+                                    </Text>
+                                    <Text className="text-blue-700 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wide">
+                                        Months
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* ── Footer Row: coaching + CTA ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium flex-1 leading-[14px]">
                                     Explore billets now — no action required yet.
                                 </Text>
-                            </View>
-                        </View>
 
-                        <TouchableOpacity
-                            onPress={() => router.push('/(career)/discovery' as any)}
-                            className="bg-blue-600 dark:bg-blue-700 px-4 py-3 rounded-lg border border-blue-500 dark:border-blue-600 ml-2"
-                            style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' }}
-                        >
-                            <CTAText>Explore</CTAText>
-                        </TouchableOpacity>
-                    </View>
-                </CardShell>
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(career)/discovery' as any)}
+                                    className="bg-blue-600 dark:bg-blue-700 px-3 py-2 rounded-lg border border-blue-500 dark:border-blue-600 ml-3"
+                                >
+                                    <CTAText>Start{`\n`}Exploring</CTAText>
+                                </TouchableOpacity>
+                            </View>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
             );
         }
     }

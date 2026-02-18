@@ -3,6 +3,7 @@ import { FilterState } from '@/store/useAssignmentStore';
 import { X } from 'lucide-react-native';
 import React from 'react';
 import { Modal, Pressable, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface DiscoveryFiltersProps {
     visible: boolean;
@@ -35,6 +36,7 @@ export function DiscoveryFilters({
 }: DiscoveryFiltersProps) {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const insets = useSafeAreaInsets();
 
     const toggleChip = (
         value: string,
@@ -61,15 +63,26 @@ export function DiscoveryFilters({
                 className="flex-1 bg-black/40"
                 onPress={onClose}
             />
-            <View className="bg-white dark:bg-slate-900 rounded-t-3xl pb-8 border-t border-slate-200 dark:border-slate-700">
+            <View className="bg-white dark:bg-slate-900 rounded-t-3xl pb-8 border-t border-slate-200 dark:border-slate-700" style={{ paddingTop: insets.top }}>
                 {/* Handle + Header */}
                 <View className="items-center pt-3 pb-2">
                     <View className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full" />
                 </View>
-                <View className="flex-row items-center justify-between px-6 pb-4">
-                    <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                        Filters
-                    </Text>
+                <View className="flex-row items-start justify-between px-6 pb-4">
+                    <View>
+                        <Text
+                            style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
+                            className="text-slate-400 dark:text-gray-500 mb-0.5"
+                        >
+                            DISCOVERY
+                        </Text>
+                        <Text
+                            style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}
+                            className="text-slate-900 dark:text-white"
+                        >
+                            Filters
+                        </Text>
+                    </View>
                     <TouchableOpacity onPress={onClose} className="p-2">
                         <X size={20} color={isDark ? '#94A3B8' : '#64748B'} />
                     </TouchableOpacity>
@@ -174,18 +187,18 @@ function FilterChip({
         <TouchableOpacity
             onPress={onPress}
             className={`px-4 py-2.5 rounded-full border ${selected
-                    ? 'bg-blue-500 border-blue-500'
-                    : isDark
-                        ? 'bg-slate-800 border-slate-700'
-                        : 'bg-slate-100 border-slate-200'
+                ? 'bg-blue-500 border-blue-500'
+                : isDark
+                    ? 'bg-slate-800 border-slate-700'
+                    : 'bg-slate-100 border-slate-200'
                 }`}
         >
             <Text
                 className={`text-sm font-semibold ${selected
-                        ? 'text-white'
-                        : isDark
-                            ? 'text-slate-300'
-                            : 'text-slate-700'
+                    ? 'text-white'
+                    : isDark
+                        ? 'text-slate-300'
+                        : 'text-slate-700'
                     }`}
             >
                 {label}

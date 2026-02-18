@@ -1,4 +1,4 @@
-import { usePCSStore } from '@/store/usePCSStore';
+import { useTravelClaimStore } from '@/store/useTravelClaimStore';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { format } from 'date-fns';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,8 +9,7 @@ import { Pressable, ScrollView, Text, View, useColorScheme } from 'react-native'
 export default function TravelClaimDetail() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
-    // Read from unified PCS store — only the current draft is stored now
-    const claim = usePCSStore((state) => state.travelClaim.draft?.id === id ? state.travelClaim.draft : null);
+    const claim = useTravelClaimStore((state) => state.travelClaims[id as string]);
     const isDark = useColorScheme() === 'dark';
 
     if (!claim) {
@@ -35,7 +34,7 @@ export default function TravelClaimDetail() {
                 )
             }} />
 
-            <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: 16 }}>
                 {/* Header Card */}
                 <View className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 mb-4">
                     <View className="flex-row items-center gap-3 mb-4">

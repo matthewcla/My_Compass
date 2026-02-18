@@ -9,7 +9,7 @@
  */
 
 import type { LeaveRequest } from '@/types/schema';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, isAfter, isBefore, parseISO } from 'date-fns';
 
 // =============================================================================
 // CHARGEABLE TYPE CLASSIFICATION
@@ -83,9 +83,6 @@ export function calculateCommittedDeduction(
     to: Date,
     excludeRequestId?: string,
 ): number {
-    const fromTime = from.getTime();
-    const toTime = to.getTime();
-
     return allRequests.reduce((sum, req) => {
         // Skip the request we're currently evaluating
         if (excludeRequestId && req.id === excludeRequestId) return sum;
@@ -97,28 +94,12 @@ export function calculateCommittedDeduction(
         if (!isChargeableLeaveType(req.leaveType)) return sum;
 
         // Must overlap with the window [from, to]
-        let reqStart: Date;
-        let reqEnd: Date;
         try {
-            // Optimization: Parse Date once and compare timestamps directly
-            // This is ~7.5x faster than using date-fns parseISO + isBefore/isAfter in a tight loop
-            reqStart = new Date(req.startDate);
-            reqEnd = new Date(req.endDate);
-
-            const reqStartTime = reqStart.getTime();
-            const reqEndTime = reqEnd.getTime();
-
-            // Validate dates
-            if (isNaN(reqStartTime) || isNaN(reqEndTime)) return sum;
+            const reqStart = parseISO(req.startDate);
+            const reqEnd = parseISO(req.endDate);
 
             // No overlap if request ends before window starts or starts after window ends
-            // (Strict inequality because overlap requires at least one day or partial day?
-            // Original used isBefore(reqEnd, from) which means reqEnd < from.
-            // If reqEnd == from, it overlaps (at least the instant).
-            // Usually leave dates are inclusive.
-            // If reqEnd < from, they don't overlap.
-            // If reqStart > to, they don't overlap.
-            if (reqEndTime < fromTime || reqStartTime > toTime) return sum;
+            if (isBefore(reqEnd, from) || isAfter(reqStart, to)) return sum;
         } catch {
             return sum; // Skip malformed dates
         }
@@ -126,7 +107,7 @@ export function calculateCommittedDeduction(
         // Use the stored chargeDays if available and positive, else estimate
         const charge = req.chargeDays > 0
             ? req.chargeDays
-            : Math.max(0, differenceInDays(reqEnd, reqStart) + 1);
+            : Math.max(0, differenceInDays(parseISO(req.endDate), parseISO(req.startDate)) + 1);
 
         return sum + charge;
     }, 0);

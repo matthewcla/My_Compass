@@ -39,14 +39,6 @@ export default function PCSWizardScreen() {
   const commitSegment = usePCSStore((state) => state.commitSegment);
   const setHeaderVisible = useHeaderStore((state) => state.setVisible);
 
-  // Leave balance for leave impact display
-  const leaveBalance = React.useMemo(() => {
-    try {
-      const { useLeaveStore } = require('@/store/useLeaveStore');
-      return useLeaveStore.getState().leaveBalance?.currentBalance ?? null;
-    } catch { return null; }
-  }, []);
-
   // Hide Global Header
   useFocusEffect(
     useCallback(() => {
@@ -210,24 +202,24 @@ export default function PCSWizardScreen() {
               keyboardDismissMode="interactive"
             >
               {/* 1. Dates */}
-              <Animated.View entering={FadeInUp.delay(50).duration(300)} onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
+              <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
                 <PCSStep1Dates embedded={true} />
-              </Animated.View>
+              </View>
 
               {/* 2. Mode */}
-              <Animated.View entering={FadeInUp.delay(100).duration(300)} onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
+              <View onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
                 <PCSStep2Mode embedded={true} />
-              </Animated.View>
+              </View>
 
               {/* 3. Itinerary */}
-              <Animated.View entering={FadeInUp.delay(150).duration(300)} onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
+              <View onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
                 <PCSStep3Itinerary embedded={true} />
-              </Animated.View>
+              </View>
 
               {/* 4. Review */}
-              <Animated.View entering={FadeInUp.delay(200).duration(300)} onLayout={(e) => handleSectionLayout(3, e)} className="mb-6">
+              <View onLayout={(e) => handleSectionLayout(3, e)} className="mb-6">
                 <PCSStep4Review embedded={true} />
-              </Animated.View>
+              </View>
             </Animated.ScrollView>
           </KeyboardAvoidingView>
 
@@ -257,39 +249,6 @@ export default function PCSWizardScreen() {
                     {currentDraft.location.name}
                   </Text>
                 </View>
-              </View>
-
-              {/* Travel Day Counter + Leave Impact */}
-              <View className="flex-row justify-between mb-3 pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">
-                <View className="items-center flex-1">
-                  <Text className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Auth Days</Text>
-                  <Text className="text-sm font-bold text-slate-900 dark:text-white">
-                    {currentDraft.entitlements.authorizedTravelDays}
-                  </Text>
-                </View>
-                <View className="items-center flex-1">
-                  <Text className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Proceed</Text>
-                  <Text className="text-sm font-bold text-slate-900 dark:text-white">
-                    {currentDraft.entitlements.proceedDays}
-                  </Text>
-                </View>
-                <View className="items-center flex-1">
-                  <Text className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Leave Chg</Text>
-                  <Text className={`text-sm font-bold ${currentDraft.entitlements.leaveDays > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
-                    {currentDraft.entitlements.leaveDays > 0 ? `−${currentDraft.entitlements.leaveDays}` : '0'}
-                  </Text>
-                </View>
-                {leaveBalance != null && (
-                  <View className="items-center flex-1">
-                    <Text className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Balance</Text>
-                    <Text className={`text-sm font-bold ${leaveBalance - currentDraft.entitlements.leaveDays < 0
-                        ? 'text-red-500'
-                        : 'text-slate-900 dark:text-white'
-                      }`}>
-                      {leaveBalance - currentDraft.entitlements.leaveDays}d
-                    </Text>
-                  </View>
-                )}
               </View>
 
               <View className="flex-row items-center gap-3">

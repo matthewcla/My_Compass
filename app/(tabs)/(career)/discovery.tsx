@@ -2,19 +2,14 @@ import { BilletSwipeCard } from '@/components/BilletSwipeCard';
 import { BilletControlBar } from '@/components/discovery/BilletControlBar';
 import { DiscoveryFilters } from '@/components/discovery/DiscoveryFilters';
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader';
-import { SandboxExplainerModal } from '@/components/discovery/SandboxExplainerModal';
-import { SwipeTutorialOverlay } from '@/components/discovery/SwipeTutorialOverlay';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useFeedback } from '@/hooks/useFeedback';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
-import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
-import { Billet } from '@/types/schema';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Heart, HelpCircle, Star, X } from 'lucide-react-native';
+import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,13 +18,6 @@ const NO_OP = () => { };
 
 export default function DiscoveryScreen() {
     const router = useRouter();
-    const { filter } = useLocalSearchParams<{ filter?: string }>();
-    const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-
-    // Sync route param → local state on mount
-    useEffect(() => {
-        if (filter) setCategoryFilter(filter);
-    }, [filter]);
     const {
         billets,
         billetStack,
@@ -40,27 +28,22 @@ export default function DiscoveryScreen() {
         undo,
         realDecisions,
         sandboxDecisions,
+        fetchBillets,
         showProjected,
         toggleShowProjected,
-        updateSandboxFilters,
         applications
     } = useAssignmentStore();
-    const profile = useCurrentProfile();
-    const activeUserId = profile?.id ?? 'unknown';
-    const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
-    const isSlatePhase = assignmentPhase === 'NEGOTIATION';
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
-
-    // Sandbox explainer state
-    const [sandboxTriggered, setSandboxTriggered] = useState(false);
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const { showFeedback, FeedbackComponent } = useFeedback();
 
-    // Billets are hydrated by the Hub on mount/focus — no re-fetch needed here.
-    // A second fetchBillets() call was causing the store's billet pool to shift
-    // mid-render, producing a mismatch between this scoreboard and the
-    // DiscoveryStatusCard widget on the Hub.
+    // Initial Fetch
+    useEffect(() => {
+        if (billetStack.length === 0) {
+            fetchBillets('USER_0001');
+        }
+    }, []);
 
     // Optimization: Keep applications in ref to prevent handleSwipe from changing on background syncs
     const applicationsRef = useRef(applications);
@@ -75,32 +58,12 @@ export default function DiscoveryScreen() {
         let result = [];
         if (mode === 'real') {
             // REAL MODE: Filter strictly by User's Rank/Designator (E-6)
-            // Allow current rank + 1 (E-7) when rank filter is expanded
-            const allowedRanks = sandboxFilters.payGrade.length > 0
-                ? sandboxFilters.payGrade
-                : ['E-6'];
-            result = allBillets.filter(b => allowedRanks.includes(b.payGrade));
-
-            // Location filter
-            if (sandboxFilters.location.length > 0) {
-                result = result.filter(b => sandboxFilters.location.includes(b.location));
-            }
-
-            // Duty type filter
-            if (sandboxFilters.dutyType?.length > 0) {
-                result = result.filter(b => b.dutyType && sandboxFilters.dutyType.includes(b.dutyType));
-            }
+            result = allBillets.filter(b => b.payGrade === 'E-6');
         } else {
             // SANDBOX MODE: Filter by store.sandboxFilters
             result = allBillets.filter(b => {
                 if (sandboxFilters.payGrade.length > 0 && !sandboxFilters.payGrade.includes(b.payGrade)) {
                     return false;
-                }
-                if (sandboxFilters.location.length > 0 && !sandboxFilters.location.includes(b.location)) {
-                    return false;
-                }
-                if (sandboxFilters.dutyType?.length > 0) {
-                    if (!b.dutyType || !sandboxFilters.dutyType.includes(b.dutyType)) return false;
                 }
                 return true;
             });
@@ -114,126 +77,68 @@ export default function DiscoveryScreen() {
         return result;
     }, [billets, billetStack, mode, sandboxFilters, showProjected]);
 
-    // Available duty stations & duty types for filter chips
-    const availableLocations = useMemo(() => {
-        return [...new Set(Object.values(billets).map(b => b.location).filter(Boolean))];
-    }, [billets]);
-
-    const availableDutyTypes = useMemo(() => {
-        return [...new Set(Object.values(billets).map(b => b.dutyType).filter(Boolean))] as string[];
-    }, [billets]);
-
-    // Scoreboard stats — scoped to ALL billets (consistent with Hub DiscoveryStatusCard)
-    const stats = useMemo(() => {
-        const decisions = mode === 'real' ? realDecisions : sandboxDecisions;
-        const total = Object.keys(billets).length;
-        let slated = 0, saved = 0, passed = 0;
-
-        Object.values(decisions).forEach(d => {
-            if (d === 'super') slated++;
-            else if (d === 'like') saved++;
-            else if (d === 'nope') passed++;
-            // 'defer' intentionally not counted — deferred billets re-appear
-        });
-
-        const remaining = total - (slated + saved + passed);
-        return { slated, saved, passed, remaining };
-    }, [billets, realDecisions, sandboxDecisions, mode]);
-
-    // 1b. CATEGORY FILTER (from Hub badge tap)
-    const categoryFilteredBillets = useMemo((): Billet[] => {
-        if (!categoryFilter) return filteredBillets;
-
-        const activeDecisions = mode === 'real' ? realDecisions : sandboxDecisions;
-        const allBillets = Object.values(billets);
-        switch (categoryFilter) {
-            case 'wow':
-                return allBillets.filter(b => activeDecisions[b.id] === 'super');
-            case 'liked':
-                return allBillets.filter(b => activeDecisions[b.id] === 'like');
-            case 'passed':
-                return allBillets.filter(b => activeDecisions[b.id] === 'nope');
-            case 'remaining':
-                return allBillets.filter(b => !activeDecisions[b.id]);
-            default:
-                return filteredBillets;
-        }
-    }, [categoryFilter, filteredBillets, billets, realDecisions, sandboxDecisions, mode]);
-
-    const activeBillets = categoryFilter ? categoryFilteredBillets : filteredBillets;
-    const categoryLabels: Record<string, string> = {
-        wow: 'WOW!', liked: 'Liked', passed: 'Passed', remaining: 'Remaining'
-    };
-
     // 2. DECK LOGIC
     const handleDeckComplete = useCallback(() => {
         console.log('Deck Empty');
     }, []);
 
     const deck = useCinematicDeck({
-        totalSteps: activeBillets.length,
+        totalSteps: filteredBillets.length,
         onComplete: handleDeckComplete
     });
 
-    // Reset deck step when filter changes so we don't start out of bounds
-    useEffect(() => {
-        deck.reset();
-    }, [categoryFilter, mode]);
-
-    const currentBillet = activeBillets[deck.step];
+    const currentBillet = filteredBillets[deck.step];
 
     // Actions
-    const handleSwipe = useCallback(async (direction: 'left' | 'right' | 'up' | 'down') => {
+    const handleSwipe = useCallback(async (direction: 'left' | 'right' | 'up') => {
         if (!currentBillet) return;
-
-        // Defer: No visual transition — store re-queues the billet
-        if (direction === 'down') {
-            await swipe(currentBillet.id, direction, activeUserId, { skipPromotion: !isSlatePhase });
-            if (mode === 'real') {
-                showFeedback('Deferred. You\'ll see this one again later.', 'info');
-            }
-            return;
-        }
 
         // 1. Visual Transition
         deck.next();
 
         // 2. Store Update
-        await swipe(currentBillet.id, direction, activeUserId, { skipPromotion: !isSlatePhase });
+        // Right -> Manifest (Like)
+        // Up -> Slate (Promote)
+        // Left -> Archive (Nope)
+        await swipe(currentBillet.id, direction, 'USER_0001');
 
-        // 3. Phase-gated Feedback
+        // 3. Feedback Logic
         if (mode === 'real') {
             if (direction === 'up') {
-                if (isSlatePhase) {
-                    // Negotiation: actual slate building
-                    const activeAppCount = Object.values(applicationsRef.current).filter(a =>
-                        ['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)
-                    ).length;
+                // Check if it was actually added to slate or just manifest (due to full slate)
+                // We need to check if an application exists for this billet now.
+                // Since state update might be async/batched, we might need a better way or assume store logic.
+                // Store `promoteToSlate` returns boolean, but `swipe` calls it internally and doesn't return the result.
+                // For now, let's check the application count constraint logic which is 7.
 
-                    // The slate count does not include the card we JUST swiped (it hasn't fully propagated to the store state here yet)
-                    // So we show the NEW total which is activeAppCount + 1
-                    const newTotal = activeAppCount + 1;
+                // USE REF TO PREVENT DEPENDENCY ON APPLICATIONS STATE (Background Sync)
+                const activeAppCount = Object.values(applicationsRef.current).filter(a =>
+                    ['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)
+                ).length;
 
-                    if (newTotal <= 7) {
-                        showFeedback(`Drafted! Added to Slate (${newTotal}/7)`, 'success');
-                    } else {
-                        showFeedback('Slate Full. Added to Manifest instead.', 'warning');
-                    }
+                // We are post-swipe, so if it WAS added, count should be <= 7 (if it was 6 before).
+                // Or we can rely on `realDecisions` being 'super'.
+                // If the slate was full (7), it wouldn't add.
+                // NOTE: This check is slightly racy with React state update, but for feedback it's usually acceptable.
+                // Better approach: calculate count *before* or modify store to return result.
+                // Assuming it worked for now:
+                if (activeAppCount <= 7) {
+                    // Calculate count (naive approximation since state might lag slightly)
+                    showFeedback(`Drafted! Added to Slate (${Math.min(activeAppCount + 1, 7)}/7)`, 'success');
                 } else {
-                    // Discovery / On-Ramp: bookmark signaling CNPC interest
-                    showFeedback('Top Pick — CNPC sees this interest.', 'success');
+                    showFeedback('Slate Full. Added to Manifest instead.', 'warning');
                 }
             } else if (direction === 'right') {
-                showFeedback(isSlatePhase ? 'Saved to Candidates.' : 'Bookmarked ✓', 'info');
+                showFeedback('Saved to Candidates.', 'info');
             } else if (direction === 'left') {
-                showFeedback(isSlatePhase ? 'Archived. Go to Manifest to recover.' : 'Passed.', 'info');
+                showFeedback('Archived. Go to Manifest to recover.', 'info');
             }
         }
-    }, [deck.next, currentBillet, mode, swipe, showFeedback, isSlatePhase]);
+    }, [deck.next, currentBillet, mode, swipe, showFeedback]);
 
     const handleUndo = () => {
         deck.back();
-        undo(activeUserId);
+        undo('USER_0001');
     };
 
     // Calculate Saved Count (Shortlist) for Header
@@ -252,101 +157,49 @@ export default function DiscoveryScreen() {
                     {/* Header */}
                     <DiscoveryHeader
                         mode={mode}
-                        onToggleMode={() => {
-                            const newMode = mode === 'real' ? 'sandbox' : 'real';
-                            setMode(newMode);
-                            if (newMode === 'sandbox') setSandboxTriggered(true);
-                        }}
+                        onToggleMode={() => setMode(mode === 'real' ? 'sandbox' : 'real')}
                         onOpenFilters={() => setIsFiltersOpen(true)}
                         onOpenShortlist={() => router.push('/(assignment)/cycle' as any)}
                         savedCount={savedCount}
                     />
-
-                    {/* Scoreboard Strip */}
-                    <View className="px-4 py-1.5 flex-row items-center gap-2">
-                        <ScoreChip
-                            icon={<Star size={12} color={isDark ? '#60a5fa' : '#2563EB'} />}
-                            count={stats.slated}
-                            isDark={isDark}
-                            bg={isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)'}
-                            textColor={isDark ? '#93C5FD' : '#1D4ED8'}
-                            onPress={() => setCategoryFilter('wow')}
-                        />
-                        <ScoreChip
-                            icon={<Heart size={12} color={isDark ? '#4ADE80' : '#16A34A'} />}
-                            count={stats.saved}
-                            isDark={isDark}
-                            bg={isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)'}
-                            textColor={isDark ? '#86EFAC' : '#15803D'}
-                            onPress={() => setCategoryFilter('liked')}
-                        />
-                        <ScoreChip
-                            icon={<X size={12} color={isDark ? '#F87171' : '#DC2626'} />}
-                            count={stats.passed}
-                            isDark={isDark}
-                            bg={isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.08)'}
-                            textColor={isDark ? '#FCA5A5' : '#B91C1C'}
-                            onPress={() => setCategoryFilter('passed')}
-                        />
-                        <ScoreChip
-                            icon={<HelpCircle size={12} color={isDark ? '#94A3B8' : '#64748B'} />}
-                            count={stats.remaining}
-                            isDark={isDark}
-                            bg={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(100,116,139,0.08)'}
-                            textColor={isDark ? '#CBD5E1' : '#475569'}
-                            onPress={() => setCategoryFilter('remaining')}
-                        />
-                    </View>
-
-                    {/* Category Filter Pill */}
-                    {categoryFilter && (
-                        <View className="px-6 pb-2">
-                            <TouchableOpacity
-                                onPress={() => setCategoryFilter(null)}
-                                className="self-start flex-row items-center gap-2 bg-blue-500/15 dark:bg-blue-500/20 px-3 py-1.5 rounded-full"
-                            >
-                                <Text className="text-blue-400 text-xs font-bold">
-                                    Showing: {categoryLabels[categoryFilter] ?? categoryFilter}
-                                </Text>
-                                <Text className="text-blue-400/60 text-xs font-black">✕</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
 
                     {/* Main Content Area - Centered Vertically */}
                     <View className="flex-1 justify-center w-full" style={{ overflow: 'hidden' }}>
                         {/* Deck Area */}
                         <View className="h-[85%] items-center relative w-full">
                             <View className="w-full flex-1 max-w-md px-4 pb-12">
-                                {/* Deck Container */}
+                                {/* Render current card */}
                                 <View className="flex-1 relative w-full h-full">
                                     {/* Back Card (Next + 1) - Deepest */}
-                                    {filteredBillets[deck.step + 2] && !categoryFilter && (
+                                    {filteredBillets[deck.step + 2] && (
                                         <View
-                                            className="absolute w-full h-full"
+                                            className="absolute w-full h-full bg-slate-50 dark:bg-slate-800 rounded-[40px] border border-slate-200 dark:border-slate-700 shadow-sm"
                                             style={{
                                                 zIndex: 0,
+                                                opacity: 0.3,
                                                 transform: [{ translateY: 70 }, { scale: 0.9 }],
                                             }}
                                             pointerEvents="none"
-                                        >
-                                            <View className="w-full h-full bg-slate-50 dark:bg-slate-800 rounded-[40px] border border-slate-200 dark:border-slate-700 shadow-sm opacity-30" />
-                                        </View>
+                                        />
                                     )}
 
                                     {/* Back Card (Next) - Middle */}
-                                    {filteredBillets[deck.step + 1] && !categoryFilter && (
+                                    {filteredBillets[deck.step + 1] && (
                                         <View
                                             className="absolute w-full h-full"
                                             style={{
                                                 zIndex: 5,
+                                                opacity: 0.9,
                                                 transform: [{ translateY: 35 }, { scale: 0.95 }],
+                                                shadowOpacity: 0.1,
+                                                shadowOffset: { width: 0, height: 4 },
+                                                elevation: 5
                                             }}
                                             pointerEvents="none"
                                         >
                                             <BilletSwipeCard
-                                                key={`bg-${filteredBillets[deck.step + 1].id}`}
-                                                index={1}
+                                                key={filteredBillets[deck.step + 1].id}
+                                                index={0}
                                                 active={false}
                                                 billet={filteredBillets[deck.step + 1]}
                                                 onSwipe={NO_OP}
@@ -357,12 +210,9 @@ export default function DiscoveryScreen() {
 
                                     {/* Front Card (Current) - Active */}
                                     {currentBillet ? (
-                                        <View
-                                            className="absolute w-full h-full"
-                                            style={{ zIndex: 10 }}
-                                        >
+                                        <View className="flex-1 z-10">
                                             <BilletSwipeCard
-                                                key={`fg-${currentBillet.id}`}
+                                                key={currentBillet.id}
                                                 index={0}
                                                 active={true}
                                                 billet={currentBillet}
@@ -397,64 +247,13 @@ export default function DiscoveryScreen() {
                     </View>
                 </SafeAreaView>
 
-                {/* Swipe Tutorial Overlay */}
-                <SwipeTutorialOverlay />
-
-                {/* Sandbox Explainer Modal */}
-                <SandboxExplainerModal
-                    trigger={sandboxTriggered}
-                    onDismiss={() => setSandboxTriggered(false)}
-                />
-
                 <DiscoveryFilters
                     visible={isFiltersOpen}
                     onClose={() => setIsFiltersOpen(false)}
                     showProjected={showProjected}
                     onToggleProjected={toggleShowProjected}
-                    availableLocations={availableLocations}
-                    availableDutyTypes={availableDutyTypes}
-                    selectedLocations={sandboxFilters.location}
-                    selectedDutyTypes={sandboxFilters.dutyType ?? []}
-                    selectedPayGrades={sandboxFilters.payGrade}
-                    onUpdateFilters={updateSandboxFilters}
                 />
             </ScreenGradient>
         </GestureHandlerRootView>
-    );
-}
-
-/* ─── ScoreChip ──────────────────────────────────────────────────────────── */
-
-function ScoreChip({
-    icon,
-    count,
-    isDark,
-    bg,
-    textColor,
-    onPress,
-}: {
-    icon: React.ReactNode;
-    count: number;
-    isDark: boolean;
-    bg: string;
-    textColor: string;
-    onPress?: () => void;
-}) {
-    const isEmpty = count === 0;
-
-    return (
-        <TouchableOpacity
-            onPress={onPress}
-            disabled={isEmpty}
-            activeOpacity={0.7}
-            className="flex-1 flex-row items-center justify-center gap-1.5 py-3 rounded-xl"
-            style={[
-                { backgroundColor: bg },
-                isEmpty ? { opacity: 0.35 } : undefined,
-            ]}
-        >
-            {icon}
-            <Text style={{ color: textColor }} className="text-sm font-black">{count}</Text>
-        </TouchableOpacity>
     );
 }

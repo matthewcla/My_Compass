@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import Animated, {
     FadeIn,
-    LinearTransition,
+    Layout,
     useAnimatedStyle,
     useSharedValue,
     withSequence,
@@ -159,7 +159,7 @@ export function TrackNode({
 
     return (
         <Animated.View
-            layout={LinearTransition.duration(300)}
+            layout={Layout.springify().damping(15)}
             style={{ opacity: nodeOpacity }}
             className="px-4"
         >
@@ -185,7 +185,7 @@ export function TrackNode({
 
                 {/* ──── RIGHT COLUMN: Content ──── */}
                 <Animated.View style={[shakeStyle, { flex: 1 }]}>
-                    <Pressable onPress={handlePress} className="pb-8">
+                    <Pressable onPress={handlePress} className="pb-6">
                         {/* Title */}
                         <Text className="text-xl font-black" style={titleStyle}>{title}</Text>
 
@@ -220,7 +220,7 @@ export function TrackNode({
                         {showContent && children && (
                             <Animated.View
                                 entering={FadeIn.delay(150).duration(300)}
-                                className="mt-5"
+                                className="mt-4"
                             >
                                 {status === 'ACTIVE' ? (
                                     /* Glass card for active state */

@@ -7,6 +7,7 @@ export enum DemoPhase {
   MY_PROFILE = 'MY_PROFILE',
 }
 
+<<<<<<< HEAD
 // ── Career Data Types ───────────────────────────────────────
 export interface AssignmentHistoryEntry {
   title: string;
@@ -43,16 +44,21 @@ export interface TrainingEntry {
 }
 
 // ── DemoUser ────────────────────────────────────────────────
+=======
+>>>>>>> bf106a1 (updates to branch)
 export interface DemoUser extends User {
   pins: string[];
   leaveBalance: number;
   pcsRoute?: PCSRoute;
+<<<<<<< HEAD
   assignmentHistory?: AssignmentHistoryEntry[];
   necs?: NECEntry[];
   qualifications?: string[];
   coolCredentials?: COOLCredential[];
   seaShoreRotation?: SeaShoreEntry[];
   trainingRecord?: TrainingEntry[];
+=======
+>>>>>>> bf106a1 (updates to branch)
 }
 
 export const DEMO_USERS: DemoUser[] = [
@@ -133,6 +139,7 @@ export const DEMO_USERS: DemoUser[] = [
       phone: '425-555-0192',
       address: { street: '4318 Cascade Dr', city: 'Everett', state: 'WA', zip: '98207' },
     },
+<<<<<<< HEAD
     assignmentHistory: [
       { title: 'USS Gridley (DDG-101)', subtitle: 'AT1 — CIWS Technician', dates: 'Aug 2023 — Present', type: 'AFLOAT', current: true },
       { title: 'AIMD NAS Whidbey Island', subtitle: 'AT2 — Avionics Bench Tech', dates: 'Mar 2021 — Aug 2023', type: 'CONUS' },
@@ -166,6 +173,8 @@ export const DEMO_USERS: DemoUser[] = [
       { school: 'C-School — CIWS Mk 15 Maintenance', location: 'CNATTU Dam Neck', date: 'Jul 2022', type: 'C-School' },
       { school: 'C-School — CIWS Block 1B Upgrade', location: 'CNATTU Dam Neck', date: 'Mar 2024', type: 'C-School' },
     ],
+=======
+>>>>>>> bf106a1 (updates to branch)
     pcsRoute: {
       losingZip: '98207', // Everett, WA (USS Gridley)
       gainingZip: '96349', // Pearl Harbor, HI (USS Higgins)
@@ -195,7 +204,11 @@ export const DEMO_USERS: DemoUser[] = [
       type: 'CONUS',
     },
     prd: '2026-05-01T00:00:00.000Z',
+<<<<<<< HEAD
     eaos: '2027-04-30T00:00:00.000Z',
+=======
+    eaos: '2030-01-01T00:00:00.000Z',
+>>>>>>> bf106a1 (updates to branch)
     seaos: '2026-05-01T00:00:00.000Z',
     maritalStatus: 'single',
     financialProfile: {
@@ -240,6 +253,7 @@ export const DEMO_USERS: DemoUser[] = [
       phone: '619-555-0847',
       address: { street: '782 Elm Ave', city: 'Chula Vista', state: 'CA', zip: '91910' },
     },
+<<<<<<< HEAD
     assignmentHistory: [
       { title: 'SWOS Division Officer Course', subtitle: 'LT — Student', dates: 'Jan 2025 — Present', type: 'CONUS', current: true },
       { title: 'USS Halsey (DDG-97)', subtitle: 'LTJG — AUXO/DCA', dates: 'Jun 2023 — Dec 2024', type: 'AFLOAT' },
@@ -266,6 +280,8 @@ export const DEMO_USERS: DemoUser[] = [
       { school: 'OCS — Officer Candidate School', location: 'Newport, RI', date: 'Mar 2021', type: 'A-School' },
       { school: 'SWOS — Basic Division Officer', location: 'San Diego, CA', date: 'Jan 2025', type: 'C-School' },
     ],
+=======
+>>>>>>> bf106a1 (updates to branch)
     pcsRoute: {
       losingZip: '92136', // San Diego, CA (C-School)
       gainingZip: '92155', // San Diego, CA (nearby command)
@@ -296,7 +312,11 @@ export const DEMO_USERS: DemoUser[] = [
       type: 'AFLOAT',
     },
     prd: '2026-08-01T00:00:00.000Z',
+<<<<<<< HEAD
     eaos: '2027-06-30T00:00:00.000Z',
+=======
+    eaos: '2029-09-30T00:00:00.000Z',
+>>>>>>> bf106a1 (updates to branch)
     seaos: '2026-08-01T00:00:00.000Z',
     maritalStatus: 'married',
     financialProfile: {
@@ -346,6 +366,7 @@ export const DEMO_USERS: DemoUser[] = [
       phone: '360-555-0316',
       address: { street: '910 Trident Ave', city: 'Silverdale', state: 'WA', zip: '98315' },
     },
+<<<<<<< HEAD
     assignmentHistory: [
       { title: 'USS Louisiana (SSBN-743)', subtitle: 'ETN1 — Reactor Technician', dates: 'Oct 2022 — Present', type: 'AFLOAT', current: true },
       { title: 'NPTU Charleston', subtitle: 'ETN2 — Shift Supervisor', dates: 'Aug 2020 — Sep 2022', type: 'CONUS' },
@@ -381,12 +402,15 @@ export const DEMO_USERS: DemoUser[] = [
       { school: 'C-School — Nuclear Prototype (S8G)', location: 'NPTU Ballston Spa, NY', date: 'Jul 2017', type: 'C-School' },
       { school: 'C-School — ELT Qualification', location: 'NPTU Charleston, SC', date: 'Feb 2021', type: 'C-School' },
     ],
+=======
+>>>>>>> bf106a1 (updates to branch)
     pcsRoute: {
       losingZip: '98315', // Silverdale, WA (Submarine Base)
       gainingZip: '06340', // Groton, CT (Submarine Base)
       estimatedMileage: 2850,
     },
   },
+<<<<<<< HEAD
   // Persona D: "The IT Professional" - E-6 IT aboard CVN-78, OCONUS-experienced
   {
     id: 'demo-user-4',
@@ -506,4 +530,6 @@ export const DEMO_USERS: DemoUser[] = [
       estimatedMileage: 720,
     },
   },
+=======
+>>>>>>> bf106a1 (updates to branch)
 ];

@@ -171,7 +171,7 @@ export default function HHGMovePlannerScreen() {
         initialItemsRef.current = cloned;
 
         // Auto-mark in-progress when flow is opened
-        const hhgTask = checklist.find((c) => c.label === 'Household Goods Move Planner');
+        const hhgTask = checklist.find((c) => c.label === 'Plan & Schedule HHG Move');
         if (hhgTask && hhgTask.status === 'NOT_STARTED') {
             setChecklistItemStatus(hhgTask.id, 'IN_PROGRESS');
         }
@@ -382,7 +382,7 @@ export default function HHGMovePlannerScreen() {
         persistItemsToStore();
 
         // Mark complete
-        const hhgTask = checklist.find((c) => c.label === 'Household Goods Move Planner');
+        const hhgTask = checklist.find((c) => c.label === 'Plan & Schedule HHG Move');
         if (hhgTask) setChecklistItemStatus(hhgTask.id, 'COMPLETE');
 
         triggerHaptic(Haptics.ImpactFeedbackStyle.Medium);
@@ -466,7 +466,6 @@ export default function HHGMovePlannerScreen() {
                             scrollEventThrottle={16}
                             keyboardShouldPersistTaps="handled"
                             keyboardDismissMode="interactive"
-                            showsVerticalScrollIndicator={false}
                         >
                             {/* ── Shipment Tabs ──────────────────────── */}
                             <View className="mb-4">
@@ -1038,7 +1037,6 @@ export default function HHGMovePlannerScreen() {
                                 )}
                                 // @ts-expect-error: FlashList type definitions
                                 estimatedItemSize={76}
-                                showsVerticalScrollIndicator={false}
                                 keyboardShouldPersistTaps="handled"
                             />
                         </View>

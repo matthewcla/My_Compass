@@ -102,7 +102,6 @@ export default function ManifestScreen() {
                         renderItem={renderItem}
                         // @ts-expect-error: estimatedItemSize is missing in the type definition despite being mandatory
                         estimatedItemSize={280}
-                        showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
                     />
                 )}

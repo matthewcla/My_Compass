@@ -8,30 +8,12 @@ const meta = () => ({
     timestamp: new Date().toISOString(),
 });
 
-/**
- * Returns billets filtered by the active persona's rating.
- * Falls back to full list if no demo user or rating is set.
- */
-const getBilletsForActivePersona = (): Billet[] => {
-    // Lazy require to break circular dependency:
-    // serviceRegistry → mockAssignmentService → useDemoStore → useUserStore → serviceRegistry
-    const { useDemoStore } = require('@/store/useDemoStore');
-    const demo = useDemoStore.getState();
-    if (demo.isDemoMode && demo.selectedUser?.rating) {
-        const rating = demo.selectedUser.rating;
-        const filtered = MOCK_BILLETS.filter((b) => b.targetRating === rating);
-        return filtered.length > 0 ? filtered : MOCK_BILLETS;
-    }
-    return MOCK_BILLETS;
-};
-
 export const mockAssignmentService: IAssignmentService = {
     fetchBillets: async (limit: number, offset: number): Promise<PaginatedApiResult<Billet>> => {
         await new Promise((resolve) => setTimeout(resolve, 400));
 
-        const billets = getBilletsForActivePersona();
-        const page = billets.slice(offset, offset + limit);
-        const totalItems = billets.length;
+        const page = MOCK_BILLETS.slice(offset, offset + limit);
+        const totalItems = MOCK_BILLETS.length;
         const totalPages = Math.ceil(totalItems / limit);
         const currentPage = Math.floor(offset / limit) + 1;
 

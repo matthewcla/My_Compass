@@ -4,12 +4,12 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { PCSActiveState } from '@/components/pcs/states/PCSActiveState';
 import { PCSArchiveState } from '@/components/pcs/states/PCSArchiveState';
+import { ContextualFAB } from '@/components/ui/ContextualFAB';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { selectHasActiveOrders, usePCSStore } from '@/store/usePCSStore';
-import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -20,14 +20,6 @@ export default function PcsScreen() {
     const { initializeOrders } = usePCSStore();
     const hasActiveOrders = usePCSStore(selectHasActiveOrders);
     const resetHeader = useHeaderStore((state) => state.resetHeader);
-    const scrollRef = useRef<any>(null);
-
-    // Scroll to top whenever this tab gains focus
-    useFocusEffect(
-        useCallback(() => {
-            scrollRef.current?.scrollTo?.({ y: 0, animated: false });
-        }, [])
-    );
 
     // Dev override: force context track for testing
     const isDemoMode = useDemoStore((s) => s.isDemoMode);
@@ -76,7 +68,6 @@ export default function PcsScreen() {
                     contentContainerStyle
                 }) => showActiveContext ? (
                     <Animated.ScrollView
-                        ref={scrollRef}
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
                         onScrollEndDrag={onScrollEndDrag}
@@ -89,6 +80,7 @@ export default function PcsScreen() {
                     >
                         <Animated.View>
                             <PCSActiveState />
+                            <PCSDevPanel />
                         </Animated.View>
                     </Animated.ScrollView>
                 ) : (
@@ -104,12 +96,13 @@ export default function PcsScreen() {
                                 clipToPadding: false,
                                 contentContainerStyle,
                             }}
+                            footer={<PCSDevPanel />}
                         />
                     )}
             </CollapsibleScaffold>
 
-            {/* Floating demo panel — outside CollapsibleScaffold */}
-            <PCSDevPanel />
+            {/* FAB positioned outside ScrollView, inside ScreenGradient */}
+            <ContextualFAB />
         </ScreenGradient>
     );
 }

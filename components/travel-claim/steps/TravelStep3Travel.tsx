@@ -1,8 +1,3 @@
-/**
- * @deprecated This step is no longer used in the 3-step settlement flow.
- * Travel expenses are now managed inline in request.tsx Step 2.
- * Kept for reference only.
- */
 import { WizardCard } from '@/components/wizard/WizardCard';
 import { Expense } from '@/types/travelClaim';
 import { Fuel, ParkingCircle, Ticket } from 'lucide-react-native';

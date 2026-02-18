@@ -2,9 +2,6 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * useTravelClaimStore.ts — Travel Claim State Management (Zustand)
  * ─────────────────────────────────────────────────────────────────────────────
- * @deprecated All settlement logic now lives in usePCSStore (initSettlement,
- * updateSettlement, submitSettlement). This store is retained for its test
- * suite and as a reference. Do not import in new code.
  *
  * Mirrors the Leave store pattern (useLeaveStore.ts) with:
  *   • Optimistic updates for submit
@@ -520,17 +517,6 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
         {
             name: STORAGE_KEY,
             storage: createJSONStorage(() => AsyncStorage),
-            version: 1,
-            migrate: (persisted: any, version: number) => {
-                if (version === 0 || version === undefined) {
-                    const state = persisted as any;
-                    if (!state.travelClaims) state.travelClaims = {};
-                    if (!Array.isArray(state.userClaimIds)) state.userClaimIds = [];
-                    if (state.activeDraftId === undefined) state.activeDraftId = null;
-                    if (state.lastClaimSyncAt === undefined) state.lastClaimSyncAt = null;
-                }
-                return persisted;
-            },
             // Only persist the state slices, not actions
             partialize: (state) => ({
                 travelClaims: state.travelClaims,

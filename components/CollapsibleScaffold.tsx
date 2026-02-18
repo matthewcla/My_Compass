@@ -1,7 +1,8 @@
 import {
-    clamp,
+    COLLAPSE_ACTIVATION_OFFSET,
+    computeCollapseDistanceFromScrollY,
     computeMinContentHeightForCollapse,
-    computeRequiredCollapseTravel
+    computeRequiredCollapseTravel,
 } from '@/components/navigation/collapseMath';
 import { useScrollContext, useScrollControl } from '@/components/navigation/ScrollControlContext';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -121,13 +122,9 @@ export function CollapsibleScaffold({
     const clampedMinTopBarHeight = Math.min(Math.max(minTopBarHeight, 0), animatedHeaderHeight);
     const scrollableHeaderHeight = Math.max(animatedHeaderHeight - clampedMinTopBarHeight, 0);
     const headerCollapseDistance = useSharedValue(0);
-    const prevHeaderScrollY = useSharedValue(0);
 
     const { onScroll: scrollControlHandler } = useScrollControl();
     const headerScrollHandler = useAnimatedScrollHandler({
-        onBeginDrag: (event) => {
-            prevHeaderScrollY.value = event.contentOffset.y;
-        },
         onScroll: (event) => {
             if (!diffClampEnabled) {
                 return;
@@ -136,21 +133,16 @@ export function CollapsibleScaffold({
             const currentY = event.contentOffset.y;
             if (!Number.isFinite(currentY) || currentY <= 0) {
                 headerCollapseDistance.value = 0;
-                prevHeaderScrollY.value = Math.max(currentY, 0);
                 return;
             }
 
-            // Delta-based: direction-aware header collapse
-            const delta = currentY - prevHeaderScrollY.value;
-            prevHeaderScrollY.value = currentY;
-
-            headerCollapseDistance.value = clamp(
-                headerCollapseDistance.value + delta,
-                0,
-                scrollableHeaderHeight,
-            );
+            headerCollapseDistance.value = computeCollapseDistanceFromScrollY({
+                currentScrollY: currentY,
+                maxDistance: scrollableHeaderHeight,
+                activationOffset: COLLAPSE_ACTIVATION_OFFSET,
+            });
         },
-    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeight]);
+    }, [diffClampEnabled, headerCollapseDistance, scrollableHeaderHeight]);
 
     const composedOnScrollHandler = useComposedEventHandler(
         [headerScrollHandler as any, scrollControlHandler as any]

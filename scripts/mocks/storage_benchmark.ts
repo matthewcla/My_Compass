@@ -4,6 +4,9 @@ import { InboxMessage } from '@/types/inbox';
 console.log("BENCHMARK STORAGE LOADED");
 
 class BenchmarkStorage implements IStorageService {
+  updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
   messages: InboxMessage[] = [];
 
   // Metrics
@@ -73,13 +76,6 @@ class BenchmarkStorage implements IStorageService {
     this.itemsWritten += 1; // Simulate O(1) cost
 
     this.messages = this.messages.map(m => m.id === id ? { ...m, isRead } : m);
-  }
-
-  async updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void> {
-    this.writeOperations++;
-    this.itemsWritten += 1;
-
-    this.messages = this.messages.map(m => m.id === id ? { ...m, isPinned } : m);
   }
 
   // Career Events

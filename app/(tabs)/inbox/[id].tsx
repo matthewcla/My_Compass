@@ -33,7 +33,7 @@ export default function MessageDetailsScreen() {
 
     return (
         <ScreenGradient>
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <ScrollView className="flex-1">
                 <View className="p-4">
                     <View className="flex-row justify-between items-center mb-4">
                         <View className="bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full">

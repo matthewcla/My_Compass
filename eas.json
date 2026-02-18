@@ -6,13 +6,6 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "store",
-      "ios": {
-        "simulator": false
-      }
-    },
-    "development-simulator": {
-      "developmentClient": true,
       "distribution": "internal",
       "ios": {
         "simulator": true
@@ -32,18 +25,11 @@
         "autoIncrement": "buildNumber"
       },
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk"
       }
     }
   },
   "submit": {
-    "development": {
-      "ios": {
-        "appleId": "matthewcla@gmail.com",
-        "ascAppId": "6759069546",
-        "appleTeamId": "LPN4Q9CRGG"
-      }
-    },
     "production": {
       "ios": {
         "appleId": "matthewcla@gmail.com",

@@ -1,8 +1,3 @@
-/**
- * @deprecated This step is no longer used in the 3-step settlement flow.
- * Lodging expenses are now managed inline in request.tsx Step 2.
- * Kept for reference only.
- */
 import { ReceiptUploader } from '@/components/travel-claim/ReceiptUploader';
 import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';

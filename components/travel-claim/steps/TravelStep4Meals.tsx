@@ -1,8 +1,3 @@
-/**
- * @deprecated This step is no longer used in the 3-step settlement flow.
- * Meals/per diem are now handled by the settlement entitlements.
- * Kept for reference only.
- */
 import { WizardCard } from '@/components/wizard/WizardCard';
 import { PerDiemDay } from '@/types/travelClaim';
 import { Moon, Sun, Utensils } from 'lucide-react-native';

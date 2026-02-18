@@ -8,12 +8,12 @@ export const UCT_PHASES: UCTPhaseConfig[] = [
   },
   {
     phase: 2,
-    title: 'Household Movement',
+    title: 'Logistics & Finances',
     description: 'Complete these items before you detach from your current command.',
   },
   {
     phase: 3,
-    title: 'Travel Plan',
+    title: 'Transit & Leave',
     description: 'You are en route. Track receipts and manage travel documents.',
   },
   {

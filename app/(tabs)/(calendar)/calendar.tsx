@@ -9,9 +9,9 @@ import { CareerEvent } from '@/types/career';
 import { getShadow } from '@/utils/getShadow';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
-import { Stack, useFocusEffect } from 'expo-router';
+import { Stack } from 'expo-router';
 import { Clock, MapPin, QrCode } from 'lucide-react-native';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Alert, SectionList, Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -100,14 +100,6 @@ export default function CalendarScreen() {
     const isDark = colorScheme === 'dark';
 
     const [searchQuery, setSearchQuery] = useState('');
-    const listRef = useRef<any>(null);
-
-    // Scroll to top whenever this tab gains focus
-    useFocusEffect(
-        useCallback(() => {
-            listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
-        }, [])
-    );
 
     const searchConfig = {
         visible: true,
@@ -169,7 +161,6 @@ export default function CalendarScreen() {
                             </View>
                         ) : (
                             <AnimatedSectionList
-                                ref={listRef}
                                 sections={groupedEvents}
                                 initialNumToRender={10}
                                 windowSize={5}

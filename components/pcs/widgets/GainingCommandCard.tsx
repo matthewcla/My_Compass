@@ -126,9 +126,10 @@ export function GainingCommandCard({ variant = 'widget' }: GainingCommandCardPro
 
   const sponsorDisplayName = useMemo(() => {
     const sponsorName = sponsor?.name?.trim();
-    if (!sponsorName) return 'Sponsor';
-    return sponsorName;
-  }, [sponsor?.name]);
+    const sponsorRank = sponsor?.rank?.trim();
+    if (!sponsorName && !sponsorRank) return 'Sponsor';
+    return [sponsorRank, sponsorName].filter(Boolean).join(' ');
+  }, [sponsor?.name, sponsor?.rank]);
 
   const phone = sanitizePhone(sponsor?.phone);
   const email = sanitizeEmail(sponsor?.email);

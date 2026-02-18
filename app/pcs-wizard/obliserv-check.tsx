@@ -1,3 +1,4 @@
+
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { usePCSStore } from '@/store/usePCSStore';
 import { useUserStore } from '@/store/useUserStore';
@@ -156,7 +157,7 @@ export default function ObliservCheckScreen() {
                                     color: isDark ? '#64748B' : '#94A3B8',
                                 }}
                             >
-                                SELECTION
+                                PHASE 1
                             </Text>
                             <Text
                                 style={{

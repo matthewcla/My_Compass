@@ -316,7 +316,6 @@ export default function HHGEstimatorScreen() {
           }
           // @ts-expect-error: FlashList type definitions are missing estimatedItemSize in this project setup.
           estimatedItemSize={94}
-          showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingBottom: Math.max(insets.bottom, 20) + 110,
           }}
@@ -398,7 +397,6 @@ export default function HHGEstimatorScreen() {
                 )}
                 // @ts-expect-error: FlashList type definitions are missing estimatedItemSize in this project setup.
                 estimatedItemSize={76}
-                showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
               />
             </View>

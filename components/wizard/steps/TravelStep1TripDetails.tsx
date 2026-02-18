@@ -689,7 +689,7 @@ export function TravelStep1TripDetails({
               </Pressable>
             </View>
 
-            <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}>
               {activeOrder ? (
                 <Pressable
                   onPress={() => {

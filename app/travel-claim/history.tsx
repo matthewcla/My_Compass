@@ -1,25 +1,32 @@
-import { usePCSStore } from '@/store/usePCSStore';
+import { useTravelClaimStore } from '@/store/useTravelClaimStore';
 import { useUserId } from '@/store/useUserStore';
 import { TravelClaim } from '@/types/travelClaim';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { format } from 'date-fns';
 import { Link, Stack, useRouter } from 'expo-router';
 import { Calendar, ChevronRight, FileText, Plus } from 'lucide-react-native';
-import React, { useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { FlatList, Pressable, Text, View, useColorScheme } from 'react-native';
 
 export default function TravelClaimHistory() {
   const router = useRouter();
   const userId = useUserId();
-  const draft = usePCSStore((state) => state.travelClaim.draft);
+  const fetchUserClaims = useTravelClaimStore((state) => state.fetchUserClaims);
+  const userClaimIds = useTravelClaimStore((state) => state.userClaimIds);
+  const travelClaims = useTravelClaimStore((state) => state.travelClaims);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  // With the unified store, we only track the current settlement draft
-  const claims = useMemo(() => {
-    if (!draft) return [];
-    return [draft];
-  }, [draft]);
+  useEffect(() => {
+    if (userId) {
+      fetchUserClaims(userId);
+    }
+  }, [userId]);
+
+  const claims = userClaimIds
+    .map((id) => travelClaims[id])
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
   const handleCreate = () => {
     router.push('/travel-claim/request');
@@ -84,7 +91,6 @@ export default function TravelClaimHistory() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View className="items-center justify-center py-20">
             <View className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 items-center justify-center mb-4">

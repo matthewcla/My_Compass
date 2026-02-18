@@ -380,6 +380,47 @@ Progress dots and "Next action" must scope to the **UCT phases relevant to the c
 - ❌ Using the same accent color for adjacent phases — kills the "progression" signal
 - ❌ Placing the CTA in the header row — header is for status, footer is for action
 
+### 2.5 Status Bar Shim (Scroll Safety)
+
+Every screen that uses scrollable content (FlashList, FlatList, ScrollView) **must** include a **status bar shim** — an opaque `View` anchored behind the system status bar area (Dynamic Island, battery indicator, clock, signal icons) to prevent content from visibly scrolling beneath system chrome.
+
+**How it works:**
+
+The shim's height is derived from `useSafeAreaInsets().top`, so it automatically adapts to the device — taller on iPhones with Dynamic Island, shorter on older notch models, zero on Android devices without a cutout.
+
+**Implementation:**
+
+For screens using `CollapsibleScaffold`, the shim is built in via the `statusBarShimBackgroundColor` prop:
+
+```tsx
+<CollapsibleScaffold
+    statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
+    ...
+>
+```
+
+For standalone scroll screens without `CollapsibleScaffold`, add a manual shim:
+
+```tsx
+const insets = useSafeAreaInsets();
+
+<View style={{
+    position: 'absolute', top: 0, left: 0, right: 0,
+    height: insets.top,
+    backgroundColor: isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0],
+    zIndex: 10,
+}} />
+```
+
+**Color matching rule:** The shim color must match the screen's background (gradient start color or solid background) so the boundary is invisible — the user sees content smoothly disappearing, not a hard edge.
+
+**Anti-patterns:**
+- ❌ Omitting the shim on scrollable screens — content visibly passes behind the Dynamic Island
+- ❌ Using a fixed color (e.g., `#000000`) that doesn't match the screen background — creates a visible band
+- ❌ Using `SafeAreaView` alone without a shim — `SafeAreaView` insets content but doesn't prevent scroll-behind
+
+**Reference:** [hub/index.tsx line 367](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/app/(tabs)/(hub)/index.tsx#L367)
+
 ---
 
 ## 3. Visual Design System

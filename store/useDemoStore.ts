@@ -193,6 +193,20 @@ export const useDemoStore = create<DemoState>()(
     {
       name: 'demo-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        if (version === 0 || version === undefined) {
+          const state = persisted as any;
+          if (state.lifecycleStep === undefined) state.lifecycleStep = 0;
+          if (state.showDevFloatingIcons === undefined) state.showDevFloatingIcons = true;
+          if (state.pcsContextOverride === undefined) state.pcsContextOverride = null;
+          if (state.uctPhaseOverride === undefined) state.uctPhaseOverride = null;
+          if (state.assignmentPhaseOverride === undefined) state.assignmentPhaseOverride = null;
+          if (state.selectionDetails === undefined) state.selectionDetails = null;
+          if (state.negotiationDetails === undefined) state.negotiationDetails = null;
+        }
+        return persisted;
+      },
       // When rehydrating, replace the stale persisted selectedUser with the
       // fresh version from DEMO_USERS so newly-added fields always appear.
       onRehydrateStorage: () => (state) => {

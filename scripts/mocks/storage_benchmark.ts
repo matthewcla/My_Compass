@@ -75,6 +75,13 @@ class BenchmarkStorage implements IStorageService {
     this.messages = this.messages.map(m => m.id === id ? { ...m, isRead } : m);
   }
 
+  async updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void> {
+    this.writeOperations++;
+    this.itemsWritten += 1;
+
+    this.messages = this.messages.map(m => m.id === id ? { ...m, isPinned } : m);
+  }
+
   // Career Events
   async saveCareerEvents(events: any[]): Promise<void> { }
   async getCareerEvents(): Promise<any[]> { return []; }

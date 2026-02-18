@@ -1127,6 +1127,29 @@ export const usePCSStore = create<PCSState>()(
     {
       name: 'pcs-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        if (version === 0 || version === undefined) {
+          // Backfill fields that may not exist in older persisted state
+          const state = persisted as any;
+          if (!state.financials) state.financials = {};
+          const f = state.financials;
+          if (!f.advancePay) f.advancePay = { requested: false, amount: 0, months: 1, repaymentMonths: 12, repaymentJustification: null, timing: 'STANDARD', timingJustification: null, justification: null };
+          if (!f.dla) f.dla = { eligible: false, estimatedAmount: 0, receivedFY: false };
+          if (!f.obliserv) f.obliserv = { required: false, eaos: '', status: 'PENDING' };
+          if (f.totalMalt === undefined) f.totalMalt = 0;
+          if (f.totalPerDiem === undefined) f.totalPerDiem = 0;
+          if (!f.hhg) f.hhg = { maxWeightAllowance: 0, estimatedWeight: 0, isOverLimit: false, shipments: [], estimatedExcessCost: 0 };
+          if (!Array.isArray(f.hhg.shipments)) f.hhg.shipments = [];
+          if (f.movingCosts === undefined) f.movingCosts = null;
+          if (f.liquidation === undefined) f.liquidation = null;
+          if (f.dependentsRelocating === undefined) f.dependentsRelocating = null;
+          if (!state.travelClaim) state.travelClaim = { draft: null, status: 'idle' };
+          if (state.cachedOrders === undefined) state.cachedOrders = null;
+          if (!Array.isArray(state.receipts)) state.receipts = [];
+        }
+        return persisted;
+      },
     }
   )
 );

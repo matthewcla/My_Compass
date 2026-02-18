@@ -2,7 +2,7 @@
   "expo": {
     "name": "My_Compass",
     "slug": "My_Compass",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mycompass",
@@ -17,7 +17,7 @@
       "icon": "./assets/images/favicon.png",
       "supportsTablet": true,
       "bundleIdentifier": "mil.navy.mycompass",
-      "buildNumber": "2",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "My Compass uses the camera for event check-in and travel claim receipt scanning.",
         "NSPhotoLibraryUsageDescription": "My Compass may save images to your photo library and allows you to attach receipt photos to travel claims.",
@@ -73,7 +73,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "enableDevSettings": true,
+      "enableDevSettings": false,
       "router": {},
       "eas": {
         "projectId": "90a02736-d91a-49c4-a21f-9844b9f6dda0"

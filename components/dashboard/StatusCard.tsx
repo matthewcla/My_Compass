@@ -1,12 +1,12 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
-import { useDemoStore } from '@/store/useDemoStore';
+import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { usePCSPhase, usePCSStore } from '@/store/usePCSStore';
 import { AssignmentPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Anchor, Calendar, FileCheck, Map as MapIcon, Star, Timer, Users } from 'lucide-react-native';
+import { Anchor, Calendar, Eye, FileCheck, Heart, Map as MapIcon, Star, Timer, Users } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -58,9 +58,11 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     const activeOrder = usePCSStore((state) => state.activeOrder);
     const pcsPhase = usePCSPhase();
 
-    // Always call — needed for negotiation variant but hooks must be unconditional
+    // Always call — needed for negotiation/on-ramp variants but hooks must be unconditional
     const applications = useAssignmentStore((s) => s.applications);
     const userApplicationIds = useAssignmentStore((s) => s.userApplicationIds);
+    const realDecisions = useAssignmentStore((s) => s.realDecisions);
+    const currentProfile = useCurrentProfile();
 
     const variant = deriveVariant(assignmentPhase, pcsPhase);
 
@@ -83,31 +85,33 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
             return (
                 <CardShell borderColor="border-green-500 dark:border-green-400" isDark={isDark}>
-                    <View className="flex-row items-center gap-4 flex-1">
-                        <IconBubble bg="bg-green-100 dark:bg-green-900/30">
-                            <Anchor size={24} color={isDark ? '#4ade80' : '#15803d'} />
-                        </IconBubble>
-                        <View className="flex-1">
-                            <Headline>Welcome Aboard</Headline>
-                            <Detail>{gainingCommand}</Detail>
-                            {uniformOfDay && (
-                                <Text className="text-green-700 dark:text-green-300 text-[11px] font-semibold mt-1">
-                                    👔 {uniformOfDay}
-                                </Text>
-                            )}
+                    <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center gap-4 flex-1">
+                            <IconBubble bg="bg-green-100 dark:bg-green-900/30">
+                                <Anchor size={24} color={isDark ? '#4ade80' : '#15803d'} />
+                            </IconBubble>
+                            <View className="flex-1">
+                                <Headline>Welcome Aboard</Headline>
+                                <Detail>{gainingCommand}</Detail>
+                                {uniformOfDay && (
+                                    <Text className="text-green-700 dark:text-green-300 text-[11px] font-semibold mt-1">
+                                        👔 {uniformOfDay}
+                                    </Text>
+                                )}
+                            </View>
                         </View>
-                    </View>
 
-                    <View className="items-end gap-2.5">
-                        <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
-                            <PillText color="text-green-800 dark:text-green-200">Day {daysOnStation}</PillText>
-                        </Pill>
-                        <TouchableOpacity
-                            onPress={() => router.push('/pcs/check-in' as any)}
-                            className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg border border-green-500 dark:border-green-600"
-                        >
-                            <CTAText>Check In</CTAText>
-                        </TouchableOpacity>
+                        <View className="items-end gap-2.5">
+                            <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
+                                <PillText color="text-green-800 dark:text-green-200">Day {daysOnStation}</PillText>
+                            </Pill>
+                            <TouchableOpacity
+                                onPress={() => router.push('/pcs/check-in' as any)}
+                                className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg border border-green-500 dark:border-green-600"
+                            >
+                                <CTAText>Check In</CTAText>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </CardShell>
             );
@@ -121,22 +125,24 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
             return (
                 <CardShell borderColor="border-amber-400 dark:border-amber-400" isDark={isDark}>
-                    <View className="flex-row items-center gap-4 flex-1">
-                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/30">
-                            <MapIcon size={24} color={isDark ? '#fbbf24' : '#d97706'} />
-                        </IconBubble>
-                        <View className="flex-1">
-                            <Headline>Orders Received</Headline>
-                            <Detail>Report to {gainingCommand} by {nltDate}.</Detail>
+                    <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center gap-4 flex-1">
+                            <IconBubble bg="bg-amber-100 dark:bg-amber-900/30">
+                                <MapIcon size={24} color={isDark ? '#fbbf24' : '#d97706'} />
+                            </IconBubble>
+                            <View className="flex-1">
+                                <Headline>Orders Received</Headline>
+                                <Detail>Report to {gainingCommand} by {nltDate}.</Detail>
+                            </View>
                         </View>
-                    </View>
 
-                    <TouchableOpacity
-                        onPress={() => router.push('/(tabs)/(pcs)/pcs')}
-                        className="bg-amber-100 dark:bg-amber-900/40 px-3 py-2 rounded-lg ml-1 border border-amber-200 dark:border-amber-700/50"
-                    >
-                        <CTAText color="text-amber-800 dark:text-amber-200">View{'\n'}Roadmap</CTAText>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => router.push('/(tabs)/(pcs)/pcs')}
+                            className="bg-amber-100 dark:bg-amber-900/40 px-3 py-2 rounded-lg ml-1 border border-amber-200 dark:border-amber-700/50"
+                        >
+                            <CTAText color="text-amber-800 dark:text-amber-200">View{'\n'}Roadmap</CTAText>
+                        </TouchableOpacity>
+                    </View>
                 </CardShell>
             );
         }
@@ -342,95 +348,147 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
             return (
                 <CardShell borderColor="border-amber-500 dark:border-amber-400" isDark={isDark}>
-                    <View className="flex-row items-start gap-4 flex-1">
-                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/50">
-                            <Users size={24} color={isDark ? '#fbbf24' : '#d97706'} />
-                        </IconBubble>
-                        <View className="flex-1">
-                            <Headline color="text-amber-900 dark:text-amber-100">MNA Negotiation</Headline>
-                            <View className="flex-row items-baseline gap-1.5">
-                                <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">
-                                    {daysUntilOpen}
-                                </Text>
-                                <Text className="text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wide">
-                                    Days to Slate Lock
-                                </Text>
-                            </View>
+                    <View className="flex-row items-start justify-between">
+                        <View className="flex-row items-start gap-4 flex-1">
+                            <IconBubble bg="bg-amber-100 dark:bg-amber-900/50">
+                                <Users size={24} color={isDark ? '#fbbf24' : '#d97706'} />
+                            </IconBubble>
+                            <View className="flex-1">
+                                <Headline color="text-amber-900 dark:text-amber-100">MNA Negotiation</Headline>
+                                <View className="flex-row items-baseline gap-1.5">
+                                    <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">
+                                        {daysUntilOpen}
+                                    </Text>
+                                    <Text className="text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wide">
+                                        Days to Slate Lock
+                                    </Text>
+                                </View>
 
-                            {/* Slate Status */}
-                            <View className="flex-row items-center gap-1 mt-0.5">
-                                <Text className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                                    {allSubmitted
-                                        ? `✅ Slate Submitted`
-                                        : hasAnyApps
-                                            ? `⚠️ ${slateCount} of ${MAX_SLATE_SIZE} drafted`
-                                            : `⚠️ No billets on slate`}
-                                </Text>
-                                {allSubmitted && (
-                                    <Text className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                                        ({submittedCount} of {MAX_SLATE_SIZE})
+                                {/* Slate Status */}
+                                <View className="flex-row items-center gap-1 mt-0.5">
+                                    <Text className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                        {allSubmitted
+                                            ? `✅ Slate Submitted`
+                                            : hasAnyApps
+                                                ? `⚠️ ${slateCount} of ${MAX_SLATE_SIZE} drafted`
+                                                : `⚠️ No billets on slate`}
+                                    </Text>
+                                    {allSubmitted && (
+                                        <Text className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                            ({submittedCount} of {MAX_SLATE_SIZE})
+                                        </Text>
+                                    )}
+                                </View>
+
+                                {/* Deadline Date */}
+                                {closeDate && (
+                                    <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold mt-0.5">
+                                        Window closes {closeDate}
+                                    </Text>
+                                )}
+
+                                {/* Detailer Line */}
+                                {detailerName && (
+                                    <Text
+                                        className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1"
+                                        numberOfLines={1}
+                                    >
+                                        ⏳ {detailerName}{detailerOffice ? ` · ${detailerOffice}` : ''}
                                     </Text>
                                 )}
                             </View>
-
-                            {/* Deadline Date */}
-                            {closeDate && (
-                                <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold mt-0.5">
-                                    Window closes {closeDate}
-                                </Text>
-                            )}
-
-                            {/* Detailer Line */}
-                            {detailerName && (
-                                <Text
-                                    className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1"
-                                    numberOfLines={1}
-                                >
-                                    ⏳ {detailerName}{detailerOffice ? ` · ${detailerOffice}` : ''}
-                                </Text>
-                            )}
                         </View>
-                    </View>
 
-                    <TouchableOpacity
-                        onPress={() => router.push('/(career)/discovery' as any)}
-                        className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
-                    >
-                        <CTAText color="text-amber-800 dark:text-amber-200">My{'\n'}Slate</CTAText>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => router.push('/(career)/discovery' as any)}
+                            className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
+                        >
+                            <CTAText color="text-amber-800 dark:text-amber-200">My{'\n'}Slate</CTAText>
+                        </TouchableOpacity>
+                    </View>
                 </CardShell>
             );
         }
 
         // ── Cycle Open (On-Ramp) ────────────────────────────────────
-        case 'cycle-open':
+        case 'cycle-open': {
+            const prdLabel = currentProfile?.prd
+                ? new Date(currentProfile.prd).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+                : null;
+
+            // Prep readiness — same source as DiscoveryStatusCard
+            const reviewed = Object.keys(realDecisions).length;
+            const saved = Object.values(realDecisions).filter(
+                (d) => d === 'super' || d === 'like'
+            ).length;
+            const hasPrepped = reviewed > 0;
+
             return (
                 <CardShell borderColor="border-amber-500 dark:border-amber-400" isDark={isDark}>
-                    <View className="flex-row items-center gap-4 flex-1">
-                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/50">
-                            <Timer size={24} color={isDark ? '#fbbf24' : '#d97706'} />
-                        </IconBubble>
-                        <View className="flex-1">
-                            <Headline color="text-amber-900 dark:text-amber-100">Cycle Opening Soon</Headline>
-                            <View className="flex-row items-baseline gap-1.5">
-                                <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">
-                                    {daysUntilOpen}
+                    {/* ── Header: icon + title + PRD ── */}
+                    <View className="flex-row items-center gap-2 w-full">
+                        <Timer size={16} color={isDark ? '#fbbf24' : '#d97706'} />
+                        <Text className="text-amber-900 dark:text-amber-100 text-sm font-extrabold flex-shrink">
+                            Cycle {nextCycle} Opening Soon
+                        </Text>
+                        {prdLabel && (
+                            <Text className="text-amber-600 dark:text-amber-400 text-[10px] font-bold ml-auto">
+                                PRD {prdLabel}
+                            </Text>
+                        )}
+                    </View>
+
+                    {/* ── Hero: countdown + prep stats ── */}
+                    <View className="flex-row items-center mt-3 w-full">
+                        <View className="flex-row items-baseline gap-1.5">
+                            <Text className="text-amber-950 dark:text-white text-4xl font-black font-mono tracking-tighter">
+                                {daysUntilOpen}
+                            </Text>
+                            <Text className="text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wide">
+                                Days
+                            </Text>
+                        </View>
+
+                        {/* Compact prep stats — right side */}
+                        <View className="ml-auto items-end gap-0.5">
+                            {hasPrepped ? (
+                                <>
+                                    <View className="flex-row items-center gap-1">
+                                        <Eye size={11} color={isDark ? '#fbbf24' : '#92400e'} />
+                                        <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold">
+                                            {reviewed} reviewed
+                                        </Text>
+                                    </View>
+                                    <View className="flex-row items-center gap-1">
+                                        <Heart size={11} color={isDark ? '#fbbf24' : '#92400e'} />
+                                        <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold">
+                                            {saved} saved
+                                        </Text>
+                                    </View>
+                                </>
+                            ) : (
+                                <Text className="text-amber-600 dark:text-amber-400 text-[11px] font-medium">
+                                    No billets reviewed yet
                                 </Text>
-                                <Text className="text-amber-700 dark:text-amber-300 text-xs font-bold uppercase tracking-wide">
-                                    Days Until Open
-                                </Text>
-                            </View>
+                            )}
                         </View>
                     </View>
 
-                    <TouchableOpacity
-                        onPress={() => router.push('/(tabs)/(profile)/preferences')}
-                        className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg ml-1 border border-amber-200 dark:border-amber-700/50"
-                    >
-                        <CTAText color="text-amber-800 dark:text-amber-200">Update{'\n'}Prefs</CTAText>
-                    </TouchableOpacity>
+                    {/* ── Footer: coaching + CTA ── */}
+                    <View className="flex-row items-end mt-3 w-full gap-3">
+                        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-medium flex-1 leading-[14px]">
+                            When the window opens, you'll build and submit your ranked slate.
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => router.push('/(tabs)/(profile)/preferences')}
+                            className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
+                        >
+                            <CTAText color="text-amber-800 dark:text-amber-200">Get Ready</CTAText>
+                        </TouchableOpacity>
+                    </View>
                 </CardShell>
             );
+        }
 
         // ── Cycle Prep (Discovery / Default) ────────────────────────
         // Sailor is >17 months from PRD — calm, exploratory tone.
@@ -443,28 +501,30 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
             return (
                 <CardShell borderColor="border-blue-500 dark:border-blue-400" isDark={isDark}>
-                    <View className="flex-row items-center gap-4 flex-1">
-                        <IconBubble bg="bg-blue-100 dark:bg-blue-900/30">
-                            <Calendar size={24} color={isDark ? '#60a5fa' : '#2563eb'} />
-                        </IconBubble>
-                        <View className="flex-1">
-                            <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle Opens</Headline>
-                            <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mt-0.5">
-                                ~{monthsOut} months · PRD {prdLabel}
-                            </Text>
-                            <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium mt-0.5">
-                                Explore billets now — no action required yet.
-                            </Text>
+                    <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center gap-4 flex-1">
+                            <IconBubble bg="bg-blue-100 dark:bg-blue-900/30">
+                                <Calendar size={24} color={isDark ? '#60a5fa' : '#2563eb'} />
+                            </IconBubble>
+                            <View className="flex-1">
+                                <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle Opens</Headline>
+                                <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mt-0.5">
+                                    ~{monthsOut} months · PRD {prdLabel}
+                                </Text>
+                                <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium mt-0.5">
+                                    Explore billets now — no action required yet.
+                                </Text>
+                            </View>
                         </View>
-                    </View>
 
-                    <TouchableOpacity
-                        onPress={() => router.push('/(career)/discovery' as any)}
-                        className="bg-blue-600 dark:bg-blue-700 px-4 py-3 rounded-lg border border-blue-500 dark:border-blue-600 ml-2"
-                        style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' }}
-                    >
-                        <CTAText>Explore</CTAText>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => router.push('/(career)/discovery' as any)}
+                            className="bg-blue-600 dark:bg-blue-700 px-4 py-3 rounded-lg border border-blue-500 dark:border-blue-600 ml-2"
+                            style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' }}
+                        >
+                            <CTAText>Explore</CTAText>
+                        </TouchableOpacity>
+                    </View>
                 </CardShell>
             );
         }
@@ -487,7 +547,7 @@ function CardShell({
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className={`border-l-4 ${borderColor} pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-row items-center justify-between shadow-sm bg-slate-50 dark:bg-slate-900/50`}
+                className={`border-l-4 ${borderColor} pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-col shadow-sm bg-slate-50 dark:bg-slate-900/50`}
             >
                 {children}
             </GlassView>

@@ -208,7 +208,7 @@ function ControlPill({ label, isActive, onPress, isDark, disabled }: {
 // PROFILE SCREEN
 // ═══════════════════════════════════════════════════════════
 export default function ProfileScreen() {
-    const _insets = useSafeAreaInsets();
+    const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const user = useCurrentProfile();
@@ -220,7 +220,16 @@ export default function ProfileScreen() {
     // Scroll to top whenever this tab gains focus
     useFocusEffect(
         useCallback(() => {
-            scrollRef.current?.scrollTo?.({ y: 0, animated: false });
+            const ref = scrollRef.current;
+            if (!ref) return;
+            // Reanimated Animated.ScrollView: try direct, then getNode()
+            if (ref.scrollTo) {
+                ref.scrollTo({ y: 0, animated: false });
+            } else if (ref.getNode?.()?.scrollTo) {
+                ref.getNode().scrollTo({ y: 0, animated: false });
+            } else if (ref.getScrollResponder?.()?.scrollTo) {
+                ref.getScrollResponder().scrollTo({ y: 0, animated: false });
+            }
         }, [])
     );
 
@@ -555,9 +564,9 @@ export default function ProfileScreen() {
     return (
         <ScreenGradient>
             <CollapsibleScaffold
-                statusBarShimBackgroundColor={'transparent'}
+                statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
                 topBar={<View />}
-                contentContainerStyle={{ paddingTop: 0, paddingBottom: 100 }}
+                contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
             >
                 {({
                     onScroll, onScrollBeginDrag, onScrollEndDrag,

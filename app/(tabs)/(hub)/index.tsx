@@ -198,13 +198,15 @@ export default function HubDashboard() {
                                         assignmentPhase === 'SELECTION'
                                             ? (obliserv.required && obliserv.status !== 'COMPLETE' ? 'Action Required' : "You're Selected!")
                                             : assignmentPhase === 'NEGOTIATION' ? 'Cycle Open'
-                                                : undefined
+                                                : assignmentPhase === 'ON_RAMP' ? 'Opening Soon'
+                                                    : undefined
                                     }
                                     accent={
                                         assignmentPhase === 'SELECTION'
                                             ? (obliserv.required && obliserv.status !== 'COMPLETE' ? '#DC2626' : '#D97706')
                                             : assignmentPhase === 'NEGOTIATION' ? '#EA580C'
-                                                : undefined
+                                                : assignmentPhase === 'ON_RAMP' ? '#D97706'
+                                                    : undefined
                                     }
                                     onPress={() => handleTilePress('/(assignment)')}
                                 />

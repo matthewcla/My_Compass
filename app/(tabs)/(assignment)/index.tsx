@@ -1,4 +1,6 @@
 import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
+import MNAProcessWidget from '@/components/assignment/MNAProcessWidget';
+import ReadinessWidget from '@/components/assignment/ReadinessWidget';
 import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
@@ -240,6 +242,7 @@ export default function AssignmentDashboard() {
         || assignmentPhase === 'ON_RAMP';
     const showDiscoveryEntry = isNegotiation;
     const showSelectionDetail = assignmentPhase === 'SELECTION' || assignmentPhase === 'ORDERS_PROCESSING';
+    const isOnRamp = assignmentPhase === 'ON_RAMP';
 
     const phaseSubtitle = (() => {
         switch (assignmentPhase) {
@@ -395,6 +398,9 @@ export default function AssignmentDashboard() {
 
                         {/* ── Phase-Gated Widgets ─────────────────────────────── */}
 
+                        {/* On-Ramp Coaching Widgets */}
+                        {isOnRamp && <MNAProcessWidget />}
+
                         {showDiscoveryStats && (
                             <DiscoveryStatusCard
                                 onStartExploring={() => router.push('/(career)/discovery' as any)}
@@ -404,6 +410,8 @@ export default function AssignmentDashboard() {
                                 }}
                             />
                         )}
+
+                        {isOnRamp && <ReadinessWidget />}
 
                         {showDetailer && (
                             <DetailerContactWidget />

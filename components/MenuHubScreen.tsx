@@ -3,16 +3,18 @@ import { ScreenGradient } from '@/components/ScreenGradient';
 import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
+import { useUserStore } from '@/store/useUserStore';
 
 import Constants from 'expo-constants';
 import { usePathname, useSegments } from 'expo-router';
 import {
-  ChevronRight,
+  ChevronDown,
   LogOut,
-  Settings
+  Settings,
+  Shield
 } from 'lucide-react-native';
 import { MotiView } from 'moti';
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -30,6 +32,7 @@ export default function MenuHubScreen() {
   const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings ?? __DEV__;
   const showDevFloatingIcons = useDemoStore((s) => s.showDevFloatingIcons);
   const toggleDevFloatingIcons = useDemoStore((s) => s.toggleDevFloatingIcons);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
 
   // Dynamic Theme Colors
@@ -69,19 +72,21 @@ export default function MenuHubScreen() {
       >
         <OnboardingCard />
 
-        {/* Distinct Settings Tile (Full Width) */}
+        {/* Settings Section (Expandable) */}
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 400, delay: 100 }} // Hero Card slide up delay
+          transition={{ type: 'timing', duration: 400, delay: 100 }}
         >
           <TouchableOpacity
             style={{
               backgroundColor: theme.card,
-              borderColor: theme.border
+              borderColor: theme.border,
+              borderBottomLeftRadius: settingsOpen ? 0 : 24,
+              borderBottomRightRadius: settingsOpen ? 0 : 24,
             }}
-            className="rounded-3xl p-5 flex-row items-center justify-between shadow-sm border mb-8"
-            onPress={() => console.log('Navigate to: /(profile)/settings')}
+            className="rounded-t-3xl p-5 flex-row items-center justify-between shadow-sm border border-b-0"
+            onPress={() => setSettingsOpen((v: boolean) => !v)}
             activeOpacity={0.7}
           >
             <View className="flex-row items-center">
@@ -90,10 +95,45 @@ export default function MenuHubScreen() {
               </View>
               <Text style={{ color: theme.text }} className="font-bold text-[17px]">Settings</Text>
             </View>
-            <View style={{ backgroundColor: isDark ? '#27272A' : '#F8FAFC' }} className="p-2 rounded-full">
-              <ChevronRight size={20} color={theme.icon} />
+            <View style={{ backgroundColor: isDark ? '#27272A' : '#F8FAFC', transform: [{ rotate: settingsOpen ? '180deg' : '0deg' }] }} className="p-2 rounded-full">
+              <ChevronDown size={20} color={theme.icon} />
             </View>
           </TouchableOpacity>
+
+          {settingsOpen && (
+            <MotiView
+              from={{ opacity: 0, translateY: -8 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ type: 'timing', duration: 250 }}
+            >
+              <View
+                style={{
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                }}
+                className="rounded-b-3xl px-5 pb-5 pt-3 border border-t-0 mb-8"
+              >
+                {/* Privacy Mode Toggle */}
+                <View className="flex-row items-center justify-between py-2">
+                  <View className="flex-row items-center gap-3 flex-1 mr-4">
+                    <Shield size={18} color={isDark ? '#60A5FA' : '#2563EB'} />
+                    <View className="flex-1">
+                      <Text style={{ color: theme.text }} className="font-semibold text-[15px]">Privacy Mode</Text>
+                      <Text style={{ color: theme.subText }} className="text-xs mt-0.5">Hide rank and name from dashboard greeting</Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={useUserStore.getState().user?.privacyMode ?? false}
+                    onValueChange={(val) => useUserStore.getState().updateUser({ privacyMode: val })}
+                    trackColor={{ false: isDark ? '#3f3f46' : '#d1d5db', true: '#2563EB' }}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+              </View>
+            </MotiView>
+          )}
+
+          {!settingsOpen && <View className="mb-8" />}
         </MotiView>
 
         {/* Dev Tools Toggle — only in dev builds */}

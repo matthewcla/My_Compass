@@ -195,7 +195,7 @@ export const DEMO_USERS: DemoUser[] = [
       type: 'CONUS',
     },
     prd: '2026-05-01T00:00:00.000Z',
-    eaos: '2030-01-01T00:00:00.000Z',
+    eaos: '2027-04-30T00:00:00.000Z',
     seaos: '2026-05-01T00:00:00.000Z',
     maritalStatus: 'single',
     financialProfile: {
@@ -296,7 +296,7 @@ export const DEMO_USERS: DemoUser[] = [
       type: 'AFLOAT',
     },
     prd: '2026-08-01T00:00:00.000Z',
-    eaos: '2029-09-30T00:00:00.000Z',
+    eaos: '2027-06-30T00:00:00.000Z',
     seaos: '2026-08-01T00:00:00.000Z',
     maritalStatus: 'married',
     financialProfile: {
@@ -414,7 +414,7 @@ export const DEMO_USERS: DemoUser[] = [
       type: 'AFLOAT',
     },
     prd: '2026-09-15T00:00:00.000Z',
-    eaos: '2029-03-31T00:00:00.000Z',
+    eaos: '2027-09-30T00:00:00.000Z',
     seaos: '2026-09-15T00:00:00.000Z',
     maritalStatus: 'married',
     bloodType: 'O+',

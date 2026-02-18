@@ -249,6 +249,7 @@ export default function DiscoveryScreen() {
                         onOpenFilters={() => setIsFiltersOpen(true)}
                         onOpenShortlist={() => router.push('/(assignment)/cycle' as any)}
                         savedCount={savedCount}
+                        hideSlate={assignmentPhase === 'DISCOVERY'}
                     />
 
                     {/* Scoreboard Strip */}

@@ -12,6 +12,7 @@ interface DiscoveryHeaderProps {
     onOpenFilters: () => void;
     onOpenShortlist: () => void;
     savedCount: number;
+    hideSlate?: boolean;
 }
 
 export function DiscoveryHeader({
@@ -20,6 +21,7 @@ export function DiscoveryHeader({
     onOpenFilters,
     onOpenShortlist,
     savedCount,
+    hideSlate = false,
 }: DiscoveryHeaderProps) {
     const isSandbox = mode === 'sandbox';
     const colorScheme = useColorScheme();
@@ -118,16 +120,18 @@ export function DiscoveryHeader({
                     <SlidersHorizontal size={18} color={iconColor} strokeWidth={2.5} />
                 </TouchableOpacity>
 
-                {/* Slate (Cycle) */}
-                <TouchableOpacity
-                    onPress={handlePressShortlist}
-                    className={`w-10 h-10 items-center justify-center rounded-full border active:opacity-80 relative ${iconBtnBg}`}
-                >
-                    <ListOrdered size={18} color={iconColor} strokeWidth={2.5} />
-                    {savedCount > 0 && (
-                        <View className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900" />
-                    )}
-                </TouchableOpacity>
+                {/* Slate (Cycle) — hidden during Discovery phase */}
+                {!hideSlate && (
+                    <TouchableOpacity
+                        onPress={handlePressShortlist}
+                        className={`w-10 h-10 items-center justify-center rounded-full border active:opacity-80 relative ${iconBtnBg}`}
+                    >
+                        <ListOrdered size={18} color={iconColor} strokeWidth={2.5} />
+                        {savedCount > 0 && (
+                            <View className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900" />
+                        )}
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );

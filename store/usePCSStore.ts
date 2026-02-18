@@ -564,9 +564,20 @@ export const usePCSStore = create<PCSState>()(
         const { activeOrder, financials } = get();
         const user = getActiveUser();
 
-        if (!activeOrder || !user || !user.eaos) return;
+        if (!user || !user.eaos) {
+          console.log('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
+          return;
+        }
 
-        const reportDate = new Date(activeOrder.reportNLT);
+        // Use activeOrder.reportNLT if we have orders, otherwise fall back
+        // to the sailor's PRD as the projected report date (SELECTION phase).
+        const reportDateStr = activeOrder?.reportNLT ?? user.prd;
+        if (!reportDateStr) {
+          console.log('[OBLISERV] No reportDate and no PRD — bailing');
+          return;
+        }
+
+        const reportDate = new Date(reportDateStr);
         const eaosDate = new Date(user.eaos);
 
         // Report + 36 months
@@ -577,6 +588,14 @@ export const usePCSStore = create<PCSState>()(
         // If EAOS is BEFORE the required service date, OBLISERV is required
         const isObliservRequired = eaosDate < requiredServiceDate;
 
+        console.log('[OBLISERV] Check:', {
+          user: user.displayName,
+          reportDateStr,
+          eaos: user.eaos,
+          requiredServiceDate: requiredServiceDate.toISOString(),
+          isObliservRequired,
+        });
+
         // Compute what status should be based on requirement
         // Note: If user submits an extension/reenlistment, obliserv-request.tsx
         // sets COMPLETE via updateFinancials() directly — not through this function.
@@ -584,7 +603,12 @@ export const usePCSStore = create<PCSState>()(
 
         // Bail early if nothing changed — prevents re-render loops
         const current = financials.obliserv;
-        if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) return;
+        if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) {
+          console.log('[OBLISERV] No change — skipping update');
+          return;
+        }
+
+        console.log('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
 
         set({
           financials: {

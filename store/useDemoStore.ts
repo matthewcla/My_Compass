@@ -152,6 +152,12 @@ export const useDemoStore = create<DemoState>()(
           uctPhaseOverride: target.pcs?.uct ?? null,
           activeDemoScenarioId: null,
         });
+
+        // Trigger OBLISERV check when entering Selection or Processing phases
+        if (needsSelection) {
+          const { usePCSStore } = require('./usePCSStore');
+          usePCSStore.getState().checkObliserv();
+        }
       },
 
       advanceLiquidationStatus: () => {

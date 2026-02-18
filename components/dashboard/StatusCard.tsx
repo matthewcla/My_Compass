@@ -56,6 +56,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
     const assignmentPhase = useDemoStore((state) => state.assignmentPhaseOverride);
     const activeOrder = usePCSStore((state) => state.activeOrder);
+    const obliserv = usePCSStore((state) => state.financials.obliserv);
     const pcsPhase = usePCSPhase();
 
     // Always call — needed for negotiation/on-ramp variants but hooks must be unconditional
@@ -232,7 +233,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const selReportNLT = activeOrder?.reportNLT
                 ? new Date(activeOrder.reportNLT).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
                 : null;
-            const obliserv = usePCSStore.getState().financials.obliserv;
             const obliservBlocked = obliserv.required && obliserv.status !== 'COMPLETE';
 
             // Derive human-readable pipeline label

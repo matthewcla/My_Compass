@@ -91,7 +91,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
     // Countdown to report NLT (orders-received + plan-move)
     const daysToReport = useMemo(() => {
-        if ((variant !== 'plan-move' && variant !== 'orders-received') || !activeOrder?.reportNLT) return null;
+        if ((variant !== 'plan-move' && variant !== 'orders-received' && variant !== 'en-route') || !activeOrder?.reportNLT) return null;
         const nlt = new Date(activeOrder.reportNLT);
         const today = new Date();
         nlt.setHours(0, 0, 0, 0);
@@ -174,7 +174,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 : { num: 'text-teal-950 dark:text-white', label: 'text-teal-700 dark:text-teal-300' };
 
             return (
-                <View className="flex flex-col gap-2 mb-1">
+                <View className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -270,32 +270,130 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── En Route (TRANSIT_LEAVE + ACTIVE_TRAVEL) ──────────────────
         case 'en-route': {
-            const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
-            const nltDate = activeOrder?.reportNLT
-                ? new Date(activeOrder.reportNLT).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                : 'TBD';
+            const enGainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
+
+            // UCT Phase 3 progress (Transit & Leave)
+            const phase3Items = checklist.filter(i => i.uctPhase === 3);
+            const completedPhase3 = phase3Items.filter(i => i.status === 'COMPLETE').length;
+            const totalPhase3 = phase3Items.length;
+            const enNextAction = checklist.find(
+                i => i.uctPhase === 3 && i.status === 'NOT_STARTED'
+            );
+
+            // HHG micro-status
+            const enShipments = financials.hhg?.shipments ?? [];
+            const enHasShipments = enShipments.length > 0;
+            const enHhgLabel = enHasShipments
+                ? enShipments.some(s => s.status === 'CONFIRMED')
+                    ? '✅ HHG Scheduled'
+                    : enShipments.some(s => s.status === 'SUBMITTED')
+                        ? '⏳ HHG Submitted'
+                        : '📋 HHG Drafted'
+                : null;
+
+            // Urgency color escalation for countdown
+            const enUrgencyColor = daysToReport !== null
+                ? daysToReport < 30
+                    ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400' }
+                    : daysToReport <= 60
+                        ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400' }
+                        : { num: 'text-sky-950 dark:text-white', label: 'text-sky-700 dark:text-sky-300' }
+                : { num: 'text-sky-950 dark:text-white', label: 'text-sky-700 dark:text-sky-300' };
 
             return (
-                <CardShell borderColor="border-sky-500 dark:border-sky-400" isDark={isDark}>
-                    <View className="flex-row items-center justify-between">
-                        <View className="flex-row items-center gap-4 flex-1">
-                            <IconBubble bg="bg-sky-100 dark:bg-sky-900/30">
-                                <Plane size={24} color={isDark ? '#38bdf8' : '#0284c7'} />
-                            </IconBubble>
-                            <View className="flex-1">
-                                <Headline color="text-sky-900 dark:text-sky-100">En Route</Headline>
-                                <Detail>Report to {gainingCommand} by {nltDate}</Detail>
-                            </View>
-                        </View>
-
-                        <TouchableOpacity
-                            onPress={() => router.push('/(tabs)/(pcs)/pcs')}
-                            className="bg-sky-100 dark:bg-sky-900/40 px-3 py-2 rounded-lg ml-1 border border-sky-200 dark:border-sky-700/50"
+                <View className="flex flex-col gap-2">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-sky-400 dark:border-sky-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(56,189,248,0.08)', 'rgba(56,189,248,0.02)']
+                                : ['rgba(56,189,248,0.14)', 'rgba(56,189,248,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
                         >
-                            <CTAText color="text-sky-800 dark:text-sky-200">View{`\n`}Roadmap</CTAText>
-                        </TouchableOpacity>
-                    </View>
-                </CardShell>
+                            {/* ── Header Row: icon + title aligned with days counter ── */}
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <IconBubble bg="bg-sky-100 dark:bg-sky-900/30">
+                                        <Plane size={24} color={isDark ? '#38bdf8' : '#0284c7'} />
+                                    </IconBubble>
+                                    <View className="flex-1">
+                                        <Headline color="text-sky-900 dark:text-sky-100">En Route</Headline>
+                                        <Detail>{enGainingCommand}</Detail>
+                                    </View>
+                                </View>
+
+                                {daysToReport !== null && (
+                                    <View className="flex-row items-baseline gap-1">
+                                        <Text className={`${enUrgencyColor.num} text-2xl font-black font-mono tracking-tighter`}>
+                                            {daysToReport}
+                                        </Text>
+                                        <Text className={`${enUrgencyColor.label} text-[10px] font-bold uppercase tracking-wide`}>
+                                            Days
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* ── Footer Row: Progress + Next Action + CTA ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                <View className="flex-1 gap-1">
+                                    {/* Phase 3 progress dots */}
+                                    {totalPhase3 > 0 && (
+                                        <View className="flex-row items-center gap-1.5">
+                                            <View className="flex-row gap-0.5">
+                                                {phase3Items.map((item) => (
+                                                    <View
+                                                        key={item.id}
+                                                        className={`w-5 h-2 rounded-full ${item.status === 'COMPLETE'
+                                                            ? 'bg-green-500 dark:bg-green-400'
+                                                            : item.status === 'IN_PROGRESS'
+                                                                ? 'bg-sky-400 dark:bg-sky-500'
+                                                                : 'bg-slate-300 dark:bg-slate-600'
+                                                            }`}
+                                                    />
+                                                ))}
+                                            </View>
+                                            <Text className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                                {completedPhase3}/{totalPhase3} Phase 3
+                                            </Text>
+                                        </View>
+                                    )}
+
+                                    {/* Next action */}
+                                    {enNextAction && (
+                                        <Text className="text-sky-700 dark:text-sky-300 text-[11px] font-semibold" numberOfLines={1}>
+                                            Next: {enNextAction.label}
+                                        </Text>
+                                    )}
+
+                                    {/* HHG micro-status */}
+                                    {enHhgLabel ? (
+                                        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                                            {enHhgLabel}
+                                        </Text>
+                                    ) : (
+                                        <Text className="text-red-500 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                                            ⚠️ HHG: Not Started
+                                        </Text>
+                                    )}
+                                </View>
+
+                                {/* CTA — bottom right */}
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(tabs)/(pcs)/pcs')}
+                                    className="bg-sky-600 dark:bg-sky-700 px-3 py-2 rounded-lg border border-sky-500 dark:border-sky-600 ml-3"
+                                >
+                                    <CTAText>My{`\n`}Roadmap</CTAText>
+                                </TouchableOpacity>
+                            </View>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
             );
         }
 
@@ -326,7 +424,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const isSeaDuty = activeOrder?.isSeaDuty ?? false;
 
             return (
-                <View className="flex flex-col gap-2 mb-1">
+                <View className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -445,7 +543,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             })();
 
             return (
-                <View className="flex flex-col gap-2 mb-1">
+                <View className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -523,7 +621,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             })();
 
             return (
-                <View className="flex flex-col gap-2 mb-1">
+                <View className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -818,7 +916,7 @@ function CardShell({
     children: React.ReactNode;
 }) {
     return (
-        <View className="flex flex-col gap-2 mb-1">
+        <View className="flex flex-col gap-2">
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}

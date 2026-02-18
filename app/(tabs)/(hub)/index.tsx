@@ -68,6 +68,7 @@ export default function HubDashboard() {
     const isDemoMode = useDemoStore(state => state.isDemoMode);
     const selectedPhase = useDemoStore(state => state.selectedPhase);
     const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
+    const demoTimeline = useDemoStore(state => state.demoTimelineOverride);
     const initializeOrders = usePCSStore(state => state.initializeOrders);
     const obliserv = usePCSStore(state => state.financials.obliserv);
     const pcsPhase = usePCSPhase();
@@ -371,7 +372,7 @@ export default function HubDashboard() {
                         <View className="px-4">
                             <StatusCard
                                 nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                                daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
+                                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
                             />
                         </View>
                         <ScreenHeader

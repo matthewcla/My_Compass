@@ -62,6 +62,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     const router = useRouter();
 
     const assignmentPhase = useDemoStore((state) => state.assignmentPhaseOverride);
+    const isDemoMode = useDemoStore((state) => state.isDemoMode);
+    const demoTimeline = useDemoStore((state) => state.demoTimelineOverride);
     const activeOrder = usePCSStore((state) => state.activeOrder);
     const obliserv = usePCSStore((state) => state.financials.obliserv);
     const checklist = usePCSStore((state) => state.checklist);
@@ -80,6 +82,10 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
     // Days on station (welcome-aboard only)
     const daysOnStation = useMemo(() => {
+        // Use demo timeline override when available
+        if (isDemoMode && demoTimeline && demoTimeline.daysOnStation > 0) {
+            return demoTimeline.daysOnStation;
+        }
         if (variant !== 'welcome-aboard' || !activeOrder?.reportNLT) return 0;
         const report = new Date(activeOrder.reportNLT);
         const today = new Date();
@@ -87,17 +93,21 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         today.setHours(0, 0, 0, 0);
         const diff = Math.floor((today.getTime() - report.getTime()) / (1000 * 60 * 60 * 24));
         return Math.max(1, diff + 1);
-    }, [variant, activeOrder?.reportNLT]);
+    }, [variant, activeOrder?.reportNLT, isDemoMode, demoTimeline]);
 
-    // Countdown to report NLT (orders-received + plan-move)
+    // Countdown to report NLT (orders-received + plan-move + en-route)
     const daysToReport = useMemo(() => {
+        // Use demo timeline override when available
+        if (isDemoMode && demoTimeline && demoTimeline.daysToReport > 0) {
+            return demoTimeline.daysToReport;
+        }
         if ((variant !== 'plan-move' && variant !== 'orders-received' && variant !== 'en-route') || !activeOrder?.reportNLT) return null;
         const nlt = new Date(activeOrder.reportNLT);
         const today = new Date();
         nlt.setHours(0, 0, 0, 0);
         today.setHours(0, 0, 0, 0);
         return Math.max(0, Math.ceil((nlt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-    }, [variant, activeOrder?.reportNLT]);
+    }, [variant, activeOrder?.reportNLT, isDemoMode, demoTimeline]);
 
     switch (variant) {
         // ── Welcome Aboard (Phase 4) ────────────────────────────────
@@ -771,6 +781,16 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 })
                 : null;
 
+            // Days until window closes
+            const daysUntilClose = useMemo(() => {
+                if (!negotiationDetails?.windowCloseDate) return null;
+                const close = new Date(negotiationDetails.windowCloseDate);
+                const today = new Date();
+                close.setHours(0, 0, 0, 0);
+                today.setHours(0, 0, 0, 0);
+                return Math.max(0, Math.ceil((close.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+            }, [negotiationDetails?.windowCloseDate]);
+
             // Detailer info
             const detailerName = negotiationDetails?.detailer.name ?? null;
             const detailerOffice = negotiationDetails?.detailer.office ?? null;
@@ -802,14 +822,16 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </View>
                                 </View>
 
-                                <View className="flex-row items-baseline gap-1">
-                                    <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">
-                                        {daysUntilOpen}
-                                    </Text>
-                                    <Text className="text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wide">
-                                        Days
-                                    </Text>
-                                </View>
+                                {daysUntilClose !== null && (
+                                    <View className="flex-row items-baseline gap-1">
+                                        <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">
+                                            {daysUntilClose}
+                                        </Text>
+                                        <Text className="text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wide">
+                                            Days
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
 
                             {/* ── Footer Row: slate status + deadline + CTA ── */}
@@ -870,69 +892,77 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const hasPrepped = reviewed > 0;
 
             return (
-                <CardShell borderColor="border-indigo-500 dark:border-indigo-400" isDark={isDark}>
-                    {/* ── Header: icon + title + PRD ── */}
-                    <View className="flex-row items-center gap-2 w-full">
-                        <Timer size={16} color={isDark ? '#818cf8' : '#4f46e5'} />
-                        <Text className="text-indigo-900 dark:text-indigo-100 text-sm font-extrabold flex-shrink">
-                            Cycle {nextCycle} Opening Soon
-                        </Text>
-                        {prdLabel && (
-                            <Text className="text-indigo-600 dark:text-indigo-400 text-[10px] font-bold ml-auto">
-                                PRD {prdLabel}
-                            </Text>
-                        )}
-                    </View>
-
-                    {/* ── Hero: countdown + prep stats ── */}
-                    <View className="flex-row items-center mt-3 w-full">
-                        <View className="flex-row items-baseline gap-1.5">
-                            <Text className="text-indigo-950 dark:text-white text-4xl font-black font-mono tracking-tighter">
-                                {daysUntilOpen}
-                            </Text>
-                            <Text className="text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wide">
-                                Days
-                            </Text>
-                        </View>
-
-                        {/* Compact prep stats — right side */}
-                        <View className="ml-auto items-end gap-0.5">
-                            {hasPrepped ? (
-                                <>
-                                    <View className="flex-row items-center gap-1">
-                                        <Eye size={11} color={isDark ? '#818cf8' : '#3730a3'} />
-                                        <Text className="text-indigo-800 dark:text-indigo-200 text-[11px] font-semibold">
-                                            {reviewed} reviewed
-                                        </Text>
-                                    </View>
-                                    <View className="flex-row items-center gap-1">
-                                        <Heart size={11} color={isDark ? '#818cf8' : '#3730a3'} />
-                                        <Text className="text-indigo-800 dark:text-indigo-200 text-[11px] font-semibold">
-                                            {saved} saved
-                                        </Text>
-                                    </View>
-                                </>
-                            ) : (
-                                <Text className="text-indigo-600 dark:text-indigo-400 text-[11px] font-medium">
-                                    No billets reviewed yet
-                                </Text>
-                            )}
-                        </View>
-                    </View>
-
-                    {/* ── Footer: coaching + CTA ── */}
-                    <View className="flex-row items-end mt-3 w-full gap-3">
-                        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-medium flex-1 leading-[14px]">
-                            When the window opens, you'll build and submit your ranked slate.
-                        </Text>
-                        <TouchableOpacity
-                            onPress={() => router.push('/(tabs)/(profile)/preferences')}
-                            className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50"
+                <View className="flex flex-col gap-2">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-indigo-500 dark:border-indigo-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(99,102,241,0.08)', 'rgba(99,102,241,0.02)']
+                                : ['rgba(99,102,241,0.14)', 'rgba(99,102,241,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
                         >
-                            <CTAText color="text-indigo-800 dark:text-indigo-200">Get{`\n`}Ready</CTAText>
-                        </TouchableOpacity>
-                    </View>
-                </CardShell>
+                            {/* ── Header Row: icon + title | days counter ── */}
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <IconBubble bg="bg-indigo-100 dark:bg-indigo-900/30">
+                                        <Timer size={24} color={isDark ? '#818cf8' : '#4f46e5'} />
+                                    </IconBubble>
+                                    <View className="flex-1">
+                                        <Headline color="text-indigo-900 dark:text-indigo-100">Cycle {nextCycle} Opening Soon</Headline>
+                                        {prdLabel && <Detail>PRD {prdLabel}</Detail>}
+                                    </View>
+                                </View>
+
+                                <View className="flex-row items-baseline gap-1">
+                                    <Text className="text-indigo-950 dark:text-white text-3xl font-black font-mono tracking-tighter">
+                                        {daysUntilOpen}
+                                    </Text>
+                                    <Text className="text-indigo-700 dark:text-indigo-300 text-[10px] font-bold uppercase tracking-wide">
+                                        Days
+                                    </Text>
+                                </View>
+                            </View>
+
+                            {/* ── Footer Row: prep stats + coaching + CTA ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                <View className="flex-1 gap-0.5">
+                                    {hasPrepped ? (
+                                        <>
+                                            <View className="flex-row items-center gap-1">
+                                                <Eye size={11} color={isDark ? '#818cf8' : '#3730a3'} />
+                                                <Text className="text-indigo-800 dark:text-indigo-200 text-[11px] font-semibold">
+                                                    {reviewed} reviewed
+                                                </Text>
+                                            </View>
+                                            <View className="flex-row items-center gap-1">
+                                                <Heart size={11} color={isDark ? '#818cf8' : '#3730a3'} />
+                                                <Text className="text-indigo-800 dark:text-indigo-200 text-[11px] font-semibold">
+                                                    {saved} saved
+                                                </Text>
+                                            </View>
+                                        </>
+                                    ) : (
+                                        <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium leading-[14px]">
+                                            When the window opens, you'll build and submit your ranked slate.
+                                        </Text>
+                                    )}
+                                </View>
+
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(tabs)/(profile)/preferences')}
+                                    className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 ml-3"
+                                >
+                                    <CTAText color="text-indigo-800 dark:text-indigo-200">Get{`\n`}Ready</CTAText>
+                                </TouchableOpacity>
+                            </View>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
             );
         }
 

@@ -9,25 +9,32 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 // ── Unified Lifecycle Steps ─────────────────────────────────────────────────
 
+export interface LifecycleTimeline {
+  daysUntilOpen: number;
+  daysToReport: number;
+  daysOnStation: number;
+}
+
 export interface LifecycleStep {
   step: number;
   label: string;
   icon: string;
   assignment: AssignmentPhase | null;
   pcs: { phase: PCSPhase | null; sub: TRANSITSubPhase | null; uct: UCTPhase | null; context: 'ACTIVE' | 'ARCHIVE' } | null;
+  timeline: LifecycleTimeline;
 }
 
 export const LIFECYCLE_STEPS: LifecycleStep[] = [
-  { step: 0, label: 'Discovery', icon: '🔍', assignment: 'DISCOVERY', pcs: null },
-  { step: 1, label: 'On-Ramp', icon: '📋', assignment: 'ON_RAMP', pcs: null },
-  { step: 2, label: 'Negotiation', icon: '🤝', assignment: 'NEGOTIATION', pcs: null },
-  { step: 3, label: 'Selection', icon: '⭐', assignment: 'SELECTION', pcs: null },
-  { step: 4, label: 'Processing', icon: '⏳', assignment: 'ORDERS_PROCESSING', pcs: null },
-  { step: 5, label: 'Orders Released', icon: '📄', assignment: 'ORDERS_RELEASED', pcs: { phase: 'ORDERS_NEGOTIATION', sub: null, uct: 1, context: 'ACTIVE' } },
-  { step: 6, label: 'Plan Move', icon: '📦', assignment: 'ORDERS_RELEASED', pcs: { phase: 'TRANSIT_LEAVE', sub: 'PLANNING', uct: 2, context: 'ACTIVE' } },
-  { step: 7, label: 'En Route', icon: '✈️', assignment: 'ORDERS_RELEASED', pcs: { phase: 'TRANSIT_LEAVE', sub: 'ACTIVE_TRAVEL', uct: 3, context: 'ACTIVE' } },
-  { step: 8, label: 'Arrived', icon: '⚓', assignment: 'ORDERS_RELEASED', pcs: { phase: 'CHECK_IN', sub: null, uct: 4, context: 'ACTIVE' } },
-  { step: 9, label: 'Sea Bag', icon: '🎒', assignment: null, pcs: { phase: null, sub: null, uct: null, context: 'ARCHIVE' } },
+  { step: 0, label: 'Discovery', icon: '🔍', assignment: 'DISCOVERY', pcs: null, timeline: { daysUntilOpen: 45, daysToReport: 0, daysOnStation: 0 } },
+  { step: 1, label: 'On-Ramp', icon: '📋', assignment: 'ON_RAMP', pcs: null, timeline: { daysUntilOpen: 12, daysToReport: 0, daysOnStation: 0 } },
+  { step: 2, label: 'Negotiation', icon: '🤝', assignment: 'NEGOTIATION', pcs: null, timeline: { daysUntilOpen: 0, daysToReport: 0, daysOnStation: 0 } },
+  { step: 3, label: 'Selection', icon: '⭐', assignment: 'SELECTION', pcs: null, timeline: { daysUntilOpen: 0, daysToReport: 120, daysOnStation: 0 } },
+  { step: 4, label: 'Processing', icon: '⏳', assignment: 'ORDERS_PROCESSING', pcs: null, timeline: { daysUntilOpen: 0, daysToReport: 90, daysOnStation: 0 } },
+  { step: 5, label: 'Orders Released', icon: '📄', assignment: 'ORDERS_RELEASED', pcs: { phase: 'ORDERS_NEGOTIATION', sub: null, uct: 1, context: 'ACTIVE' }, timeline: { daysUntilOpen: 0, daysToReport: 75, daysOnStation: 0 } },
+  { step: 6, label: 'Plan Move', icon: '📦', assignment: 'ORDERS_RELEASED', pcs: { phase: 'TRANSIT_LEAVE', sub: 'PLANNING', uct: 2, context: 'ACTIVE' }, timeline: { daysUntilOpen: 0, daysToReport: 45, daysOnStation: 0 } },
+  { step: 7, label: 'En Route', icon: '✈️', assignment: 'ORDERS_RELEASED', pcs: { phase: 'TRANSIT_LEAVE', sub: 'ACTIVE_TRAVEL', uct: 3, context: 'ACTIVE' }, timeline: { daysUntilOpen: 0, daysToReport: 14, daysOnStation: 0 } },
+  { step: 8, label: 'Arrived', icon: '⚓', assignment: 'ORDERS_RELEASED', pcs: { phase: 'CHECK_IN', sub: null, uct: 4, context: 'ACTIVE' }, timeline: { daysUntilOpen: 0, daysToReport: 0, daysOnStation: 3 } },
+  { step: 9, label: 'Sea Bag', icon: '🎒', assignment: null, pcs: { phase: null, sub: null, uct: null, context: 'ARCHIVE' }, timeline: { daysUntilOpen: 0, daysToReport: 0, daysOnStation: 0 } },
 ];
 
 interface DemoState {
@@ -43,6 +50,7 @@ interface DemoState {
   selectionDetails: SelectionDetails | null;
   negotiationDetails: NegotiationDetails | null;
   lifecycleStep: number;
+  demoTimelineOverride: LifecycleTimeline | null;
   showDevFloatingIcons: boolean;
 
   toggleDemoMode: () => void;
@@ -77,6 +85,7 @@ export const useDemoStore = create<DemoState>()(
       selectionDetails: null,
       negotiationDetails: null,
       lifecycleStep: 0,
+      demoTimelineOverride: null,
       showDevFloatingIcons: true,
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
@@ -151,6 +160,7 @@ export const useDemoStore = create<DemoState>()(
           pcsSubPhaseOverride: target.pcs?.sub ?? null,
           uctPhaseOverride: target.pcs?.uct ?? null,
           activeDemoScenarioId: null,
+          demoTimelineOverride: target.timeline,
         });
 
         // Trigger OBLISERV check when entering Selection or Processing phases

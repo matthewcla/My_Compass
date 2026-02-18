@@ -1,5 +1,5 @@
-import { useColorScheme } from '@/components/useColorScheme';
 import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
 import { usePCSStore } from '@/store/usePCSStore';
 import { Check, Clock, DollarSign } from 'lucide-react-native';
 import React, { useMemo } from 'react';
@@ -84,8 +84,8 @@ export function LiquidationTrackerWidget() {
               const stepBgColor = isCompleted
                 ? 'bg-green-500'
                 : isCurrent
-                ? 'bg-blue-500'
-                : 'bg-slate-200 dark:bg-slate-700';
+                  ? 'bg-blue-500'
+                  : 'bg-slate-200 dark:bg-slate-700';
 
               const connectorBgColor = isCompleted
                 ? 'bg-green-500'

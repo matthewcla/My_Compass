@@ -474,7 +474,7 @@ export default function LeaveRequestScreen() {
                             showsVerticalScrollIndicator={false}
                         >
                             {/* 1. Intent */}
-                            <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
+                            <Animated.View entering={FadeInUp.delay(50).duration(300)} onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
                                 <Step1Intent
                                     leaveType={formData.leaveType}
                                     startDate={formData.startDate || ''}
@@ -486,42 +486,42 @@ export default function LeaveRequestScreen() {
                                     onUpdate={updateField}
                                     embedded={true}
                                 />
-                            </View>
+                            </Animated.View>
 
                             {/* 2. Contact */}
-                            <View onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
+                            <Animated.View entering={FadeInUp.delay(100).duration(300)} onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
                                 <Step2Contact
                                     formData={formData}
                                     onUpdate={updateField}
                                     embedded={true}
                                 />
-                            </View>
+                            </Animated.View>
 
                             {/* 3. Routing */}
-                            <View onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
+                            <Animated.View entering={FadeInUp.delay(150).duration(300)} onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
                                 <Step3Routing
                                     formData={formData}
                                     onUpdate={updateField}
                                     embedded={true}
                                 />
-                            </View>
+                            </Animated.View>
 
                             {/* 4. Safety */}
-                            <View onLayout={(e) => handleSectionLayout(3, e)} className="mb-6">
+                            <Animated.View entering={FadeInUp.delay(200).duration(300)} onLayout={(e) => handleSectionLayout(3, e)} className="mb-6">
                                 <Step4Safety
                                     formData={formData}
                                     onUpdate={updateField}
                                     embedded={true}
                                 />
-                            </View>
+                            </Animated.View>
 
                             {/* 5. Review */}
-                            <View onLayout={(e) => handleSectionLayout(4, e)} className="mb-6">
+                            <Animated.View entering={FadeInUp.delay(250).duration(300)} onLayout={(e) => handleSectionLayout(4, e)} className="mb-6">
                                 <ReviewSign
                                     formData={formData}
                                     embedded={true}
                                 />
-                            </View>
+                            </Animated.View>
                         </Animated.ScrollView>
                     </KeyboardAvoidingView>
 

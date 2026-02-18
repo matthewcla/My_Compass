@@ -1,6 +1,6 @@
-import { MotiView } from 'moti';
 import React, { memo } from 'react';
 import { Text, View } from 'react-native';
+import Animated, { FadeOut, ZoomIn } from 'react-native-reanimated';
 
 export type FeedbackType = 'success' | 'warning' | 'info';
 
@@ -37,18 +37,10 @@ export const FeedbackOverlay = memo(({ isVisible, message, type }: FeedbackOverl
 
     return (
         <View className="absolute top-0 left-0 right-0 items-center z-50 pointer-events-none" style={{ marginTop: 60 }}>
-            {/* 
-               We use MotiView for the animation. 
-               from: initial state (hidden, moved up)
-               animate: target state (visible, natural position)
-               exit: state when unmounting or isVisible becomes false (hidden, moved up)
-            */}
             {isVisible && (
-                <MotiView
-                    from={{ opacity: 0, translateY: -20, scale: 0.9 }}
-                    animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                    exit={{ opacity: 0, translateY: -20, scale: 0.9 }}
-                    transition={{ type: 'timing', duration: 300 }}
+                <Animated.View
+                    entering={ZoomIn.duration(300)}
+                    exiting={FadeOut.duration(200)}
                     style={{
                         paddingHorizontal: 16,
                         paddingVertical: 12,
@@ -64,7 +56,7 @@ export const FeedbackOverlay = memo(({ isVisible, message, type }: FeedbackOverl
                     <Text className={`font-bold text-sm ${textInfo} text-center`}>
                         {message}
                     </Text>
-                </MotiView>
+                </Animated.View>
             )}
         </View>
     );

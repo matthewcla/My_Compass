@@ -330,6 +330,56 @@ Widgets are small, glanceable components that can render in two modes:
 
 **Implementation rule:** Every widget must read from its Zustand store, ensuring data consistency between widget and full views. Never pass data as props when a store selector exists.
 
+### 2.4 Hero Status Card (Dashboard Phase Tile)
+
+The `StatusCard` is the top-of-dashboard hero tile that communicates the Sailor's current lifecycle phase at a glance. It uses a **phase-aware variant** system — each PCS phase renders a distinct card with its own accent color, icon, CTA, and scoped task progress.
+
+**Reference:** [StatusCard.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/components/dashboard/StatusCard.tsx)
+
+#### Layout Structure
+
+Every variant follows a **two-row layout** inside a `GlassView` with a `LinearGradient` wash and a colored left border (`border-l-4`):
+
+| Row | Left | Right |
+|-----|------|-------|
+| **Header** | `IconBubble` + Headline + Detail (subtitle) | Hero metric (e.g., days counter) |
+| **Footer** | Progress dots + Next action + micro-statuses | CTA button (bottom-right, `items-end`) |
+
+#### Color-per-Phase Mapping
+
+Each variant uses a **single accent hue** applied consistently to: left border, gradient wash, icon bubble, headline, progress-dot active state, next-action text, and CTA button.
+
+| Variant | Accent | Border | Icon Colors (dark / light) |
+|---------|--------|--------|---------------------------|
+| `cycle-prep` | Navy Gold | `border-amber-400` | `#fbbf24` / `#d97706` |
+| `orders-received` | Amber | `border-amber-400` | `#fbbf24` / `#d97706` |
+| `plan-move` | Teal | `border-teal-400` | `#2dd4bf` / `#0d9488` |
+| `en-route` | Sky | `border-sky-400` | `#38bdf8` / `#0284c7` |
+| `welcome-aboard` | Green | `border-green-400` | `#4ade80` / `#16a34a` |
+
+#### Urgency Escalation (Days Counter)
+
+When a variant displays a countdown (e.g., days to report NLT), the counter color escalates:
+
+| Threshold | Color | Meaning |
+|-----------|-------|---------|
+| > 60 days | Phase accent (e.g., teal) | On track |
+| 30–60 days | Orange (`text-orange-600 dark:text-orange-400`) | Time to act |
+| < 30 days | Red (`text-red-600 dark:text-red-400`) | Urgent |
+
+#### Task Scoping Rule
+
+Progress dots and "Next action" must scope to the **UCT phases relevant to the current variant**, not all checklist items:
+
+- `plan-move` → UCT phases 1 + 2 (Orders & OBLISERV + Logistics & Finances)
+- `en-route` → UCT phase 3 (Transit & Leave)
+- `welcome-aboard` → UCT phase 4 (Check-in & Claim)
+
+**Anti-patterns:**
+- ❌ Showing all checklist items regardless of phase — overwhelms the Sailor
+- ❌ Using the same accent color for adjacent phases — kills the "progression" signal
+- ❌ Placing the CTA in the header row — header is for status, footer is for action
+
 ---
 
 ## 3. Visual Design System

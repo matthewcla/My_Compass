@@ -1,6 +1,7 @@
 import Colors from '@/constants/Colors';
+import * as Haptics from 'expo-haptics';
 import { Lock } from 'lucide-react-native';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Text, TouchableOpacity, useColorScheme, View, ViewStyle } from 'react-native';
 
 interface MenuTileProps {
@@ -31,9 +32,14 @@ export const MenuTile: React.FC<MenuTileProps> = ({
 
     const isAccented = !!accent && !locked;
 
+    const handlePress = useCallback(() => {
+        Haptics.selectionAsync();
+        onPress();
+    }, [onPress]);
+
     return (
         <TouchableOpacity
-            onPress={onPress}
+            onPress={handlePress}
             activeOpacity={0.7}
             disabled={locked}
             style={[{

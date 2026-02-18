@@ -2,11 +2,12 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
-import { usePCSPhase, usePCSStore } from '@/store/usePCSStore';
+import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
+import { useUserDependents } from '@/store/useUserStore';
 import { AssignmentPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Anchor, Calendar, Eye, FileCheck, Heart, Map as MapIcon, Star, Timer, Users } from 'lucide-react-native';
+import { Anchor, Calendar, Eye, FileCheck, Heart, Package, Plane, Star, Timer, Users } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -24,11 +25,14 @@ type StatusVariant =
     | 'selected'
     | 'processing'
     | 'orders-received'
+    | 'plan-move'
+    | 'en-route'
     | 'welcome-aboard';
 
 function deriveVariant(
     assignmentPhase: AssignmentPhase | null,
     pcsPhase: string | null,
+    pcsSubPhase: string | null,
 ): StatusVariant {
     switch (assignmentPhase) {
         case 'ON_RAMP':
@@ -40,7 +44,10 @@ function deriveVariant(
         case 'ORDERS_PROCESSING':
             return 'processing';
         case 'ORDERS_RELEASED':
-            return pcsPhase === 'CHECK_IN' ? 'welcome-aboard' : 'orders-received';
+            if (pcsPhase === 'CHECK_IN') return 'welcome-aboard';
+            if (pcsPhase === 'TRANSIT_LEAVE' && pcsSubPhase === 'ACTIVE_TRAVEL') return 'en-route';
+            if (pcsPhase === 'TRANSIT_LEAVE' && pcsSubPhase === 'PLANNING') return 'plan-move';
+            return 'orders-received';
         case 'DISCOVERY':
         default:
             return 'cycle-prep';
@@ -57,15 +64,19 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     const assignmentPhase = useDemoStore((state) => state.assignmentPhaseOverride);
     const activeOrder = usePCSStore((state) => state.activeOrder);
     const obliserv = usePCSStore((state) => state.financials.obliserv);
+    const checklist = usePCSStore((state) => state.checklist);
+    const financials = usePCSStore((state) => state.financials);
     const pcsPhase = usePCSPhase();
+    const pcsSubPhase = useSubPhase();
 
     // Always call — needed for negotiation/on-ramp variants but hooks must be unconditional
     const applications = useAssignmentStore((s) => s.applications);
     const userApplicationIds = useAssignmentStore((s) => s.userApplicationIds);
     const realDecisions = useAssignmentStore((s) => s.realDecisions);
     const currentProfile = useCurrentProfile();
+    const dependentCount = useUserDependents() ?? 0;
 
-    const variant = deriveVariant(assignmentPhase, pcsPhase);
+    const variant = deriveVariant(assignmentPhase, pcsPhase, pcsSubPhase);
 
     // Days on station (welcome-aboard only)
     const daysOnStation = useMemo(() => {
@@ -76,6 +87,16 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         today.setHours(0, 0, 0, 0);
         const diff = Math.floor((today.getTime() - report.getTime()) / (1000 * 60 * 60 * 24));
         return Math.max(1, diff + 1);
+    }, [variant, activeOrder?.reportNLT]);
+
+    // Countdown to report NLT (orders-received + plan-move)
+    const daysToReport = useMemo(() => {
+        if ((variant !== 'plan-move' && variant !== 'orders-received') || !activeOrder?.reportNLT) return null;
+        const nlt = new Date(activeOrder.reportNLT);
+        const today = new Date();
+        nlt.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        return Math.max(0, Math.ceil((nlt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
     }, [variant, activeOrder?.reportNLT]);
 
     switch (variant) {
@@ -118,33 +139,287 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             );
         }
 
-        // ── Orders Received (PCS Phases 1–3) ────────────────────────
-        case 'orders-received': {
-            const destination = activeOrder?.segments.find(s => s.type === 'DESTINATION');
-            const nltDate = destination?.dates.nlt ? new Date(destination.dates.nlt).toLocaleDateString() : 'TBD';
+        // ── Plan Move (TRANSIT_LEAVE + PLANNING) ─────────────────────
+        case 'plan-move': {
             const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
 
+            // PCS planning steps: UCT phases 1 (Orders & OBLISERV) + 2 (Logistics & Finances)
+            const planItems = checklist.filter(i => i.uctPhase === 1 || i.uctPhase === 2);
+            const completedPlanItems = planItems.filter(i => i.status === 'COMPLETE').length;
+            const totalPlanItems = planItems.length;
+
+            // Next action — first NOT_STARTED item from planning phases
+            const nextAction = checklist.find(
+                i => (i.uctPhase === 1 || i.uctPhase === 2) && i.status === 'NOT_STARTED'
+            );
+
+            // HHG micro-status
+            const shipments = financials.hhg?.shipments ?? [];
+            const hasShipments = shipments.length > 0;
+            const hhgLabel = hasShipments
+                ? shipments.some(s => s.status === 'CONFIRMED')
+                    ? '✅ HHG Scheduled'
+                    : shipments.some(s => s.status === 'SUBMITTED')
+                        ? '⏳ HHG Submitted'
+                        : '📋 HHG Drafted'
+                : null;
+
+            // Urgency color escalation for countdown
+            const urgencyColor = daysToReport !== null
+                ? daysToReport < 30
+                    ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400' }
+                    : daysToReport <= 60
+                        ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400' }
+                        : { num: 'text-teal-950 dark:text-white', label: 'text-teal-700 dark:text-teal-300' }
+                : { num: 'text-teal-950 dark:text-white', label: 'text-teal-700 dark:text-teal-300' };
+
             return (
-                <CardShell borderColor="border-amber-400 dark:border-amber-400" isDark={isDark}>
+                <View className="flex flex-col gap-2 mb-1">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-teal-400 dark:border-teal-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(20,184,166,0.08)', 'rgba(20,184,166,0.02)']
+                                : ['rgba(20,184,166,0.14)', 'rgba(20,184,166,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
+                        >
+                            {/* ── Header Row: icon + title aligned with days counter ── */}
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <IconBubble bg="bg-teal-100 dark:bg-teal-900/30">
+                                        <Package size={24} color={isDark ? '#2dd4bf' : '#0d9488'} />
+                                    </IconBubble>
+                                    <View className="flex-1">
+                                        <Headline color="text-teal-900 dark:text-teal-100">Plan Your Move</Headline>
+                                        <Detail>{gainingCommand}</Detail>
+                                    </View>
+                                </View>
+
+                                {daysToReport !== null && (
+                                    <View className="flex-row items-baseline gap-1">
+                                        <Text className={`${urgencyColor.num} text-2xl font-black font-mono tracking-tighter`}>
+                                            {daysToReport}
+                                        </Text>
+                                        <Text className={`${urgencyColor.label} text-[10px] font-bold uppercase tracking-wide`}>
+                                            Days
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* ── Progress + Next Action + CTA Row ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                <View className="flex-1 gap-1">
+                                    {/* Checklist progress */}
+                                    <View className="flex-row items-center gap-1.5">
+                                        <View className="flex-row gap-0.5">
+                                            {planItems.map((item) => (
+                                                <View
+                                                    key={item.id}
+                                                    className={`w-5 h-2 rounded-full ${item.status === 'COMPLETE'
+                                                        ? 'bg-green-500 dark:bg-green-400'
+                                                        : item.status === 'IN_PROGRESS'
+                                                            ? 'bg-teal-400 dark:bg-teal-500'
+                                                            : 'bg-slate-300 dark:bg-slate-600'
+                                                        }`}
+                                                />
+                                            ))}
+                                        </View>
+                                        <Text className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                            {completedPlanItems}/{totalPlanItems} PCS tasks
+                                        </Text>
+                                    </View>
+
+                                    {/* Next action */}
+                                    {nextAction && (
+                                        <Text className="text-teal-700 dark:text-teal-300 text-[11px] font-semibold" numberOfLines={1}>
+                                            Next: {nextAction.label}
+                                        </Text>
+                                    )}
+
+                                    {/* HHG micro-status */}
+                                    {hhgLabel ? (
+                                        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                                            {hhgLabel}
+                                        </Text>
+                                    ) : (
+                                        <Text className="text-red-500 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                                            ⚠️ HHG: Not Started
+                                        </Text>
+                                    )}
+                                </View>
+
+                                {/* CTA — bottom right */}
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(tabs)/(pcs)/pcs')}
+                                    className="bg-teal-600 dark:bg-teal-700 px-3 py-2 rounded-lg border border-teal-500 dark:border-teal-600 ml-3"
+                                >
+                                    <CTAText>My{`\n`}Roadmap</CTAText>
+                                </TouchableOpacity>
+                            </View>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
+            );
+        }
+
+        // ── En Route (TRANSIT_LEAVE + ACTIVE_TRAVEL) ──────────────────
+        case 'en-route': {
+            const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
+            const nltDate = activeOrder?.reportNLT
+                ? new Date(activeOrder.reportNLT).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                : 'TBD';
+
+            return (
+                <CardShell borderColor="border-sky-500 dark:border-sky-400" isDark={isDark}>
                     <View className="flex-row items-center justify-between">
                         <View className="flex-row items-center gap-4 flex-1">
-                            <IconBubble bg="bg-amber-100 dark:bg-amber-900/30">
-                                <MapIcon size={24} color={isDark ? '#fbbf24' : '#d97706'} />
+                            <IconBubble bg="bg-sky-100 dark:bg-sky-900/30">
+                                <Plane size={24} color={isDark ? '#38bdf8' : '#0284c7'} />
                             </IconBubble>
                             <View className="flex-1">
-                                <Headline>Orders Received</Headline>
-                                <Detail>Report to {gainingCommand} by {nltDate}.</Detail>
+                                <Headline color="text-sky-900 dark:text-sky-100">En Route</Headline>
+                                <Detail>Report to {gainingCommand} by {nltDate}</Detail>
                             </View>
                         </View>
 
                         <TouchableOpacity
                             onPress={() => router.push('/(tabs)/(pcs)/pcs')}
-                            className="bg-amber-100 dark:bg-amber-900/40 px-3 py-2 rounded-lg ml-1 border border-amber-200 dark:border-amber-700/50"
+                            className="bg-sky-100 dark:bg-sky-900/40 px-3 py-2 rounded-lg ml-1 border border-sky-200 dark:border-sky-700/50"
                         >
-                            <CTAText color="text-amber-800 dark:text-amber-200">View{'\n'}Roadmap</CTAText>
+                            <CTAText color="text-sky-800 dark:text-sky-200">View{`\n`}Roadmap</CTAText>
                         </TouchableOpacity>
                     </View>
                 </CardShell>
+            );
+        }
+
+        // ── Orders Received (PCS Phase 1) ──────────────────────────
+        case 'orders-received': {
+            const ordGainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
+            const ordBilletTitle = useDemoStore.getState().selectionDetails?.billetTitle ?? null;
+
+            // Urgency color escalation (reuses top-level daysToReport)
+            const ordUrgencyColor = daysToReport !== null
+                ? daysToReport < 30
+                    ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400' }
+                    : daysToReport <= 60
+                        ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400' }
+                        : { num: 'text-amber-950 dark:text-white', label: 'text-amber-700 dark:text-amber-300' }
+                : { num: 'text-amber-950 dark:text-white', label: 'text-amber-700 dark:text-amber-300' };
+
+            // UCT Phase 1 progress
+            const phase1Items = checklist.filter(i => i.uctPhase === 1);
+            const completedPhase1 = phase1Items.filter(i => i.status === 'COMPLETE').length;
+            const totalPhase1 = phase1Items.length;
+            const ordNextAction = checklist.find(
+                i => i.uctPhase === 1 && i.status === 'NOT_STARTED'
+            );
+
+            // Duty type flags
+            const isOconus = activeOrder?.isOconus ?? false;
+            const isSeaDuty = activeOrder?.isSeaDuty ?? false;
+
+            return (
+                <View className="flex flex-col gap-2 mb-1">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-amber-400 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(251,191,36,0.08)', 'rgba(251,191,36,0.02)']
+                                : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
+                        >
+                            {/* ── Header Row: icon + title aligned with days counter ── */}
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <IconBubble bg="bg-amber-100 dark:bg-amber-900/30">
+                                        <FileCheck size={24} color={isDark ? '#fbbf24' : '#d97706'} />
+                                    </IconBubble>
+                                    <View className="flex-1">
+                                        <Headline color="text-amber-900 dark:text-amber-100">Orders Received</Headline>
+                                        <Detail>{ordGainingCommand}</Detail>
+                                        {ordBilletTitle && (
+                                            <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold" numberOfLines={1}>
+                                                {ordBilletTitle}
+                                            </Text>
+                                        )}
+                                    </View>
+                                </View>
+
+                                {daysToReport !== null && (
+                                    <View className="flex-row items-baseline gap-1">
+                                        <Text className={`${ordUrgencyColor.num} text-2xl font-black font-mono tracking-tighter`}>
+                                            {daysToReport}
+                                        </Text>
+                                        <Text className={`${ordUrgencyColor.label} text-[10px] font-bold uppercase tracking-wide`}>
+                                            Days
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+
+                            {/* ── Footer Row: Progress + Next Action + CTA ── */}
+                            <View className="mt-3 flex-row items-end justify-between">
+                                <View className="flex-1 gap-1">
+                                    {/* UCT Phase 1 progress dots */}
+                                    {totalPhase1 > 0 && (
+                                        <View className="flex-row items-center gap-1.5">
+                                            <View className="flex-row gap-0.5">
+                                                {phase1Items.map((item) => (
+                                                    <View
+                                                        key={item.id}
+                                                        className={`w-5 h-2 rounded-full ${item.status === 'COMPLETE'
+                                                            ? 'bg-green-500 dark:bg-green-400'
+                                                            : item.status === 'IN_PROGRESS'
+                                                                ? 'bg-amber-400 dark:bg-amber-500'
+                                                                : 'bg-slate-300 dark:bg-slate-600'
+                                                            }`}
+                                                    />
+                                                ))}
+                                            </View>
+                                            <Text className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                                {completedPhase1}/{totalPhase1} Phase 1
+                                            </Text>
+                                        </View>
+                                    )}
+
+                                    {/* Next action */}
+                                    {ordNextAction && (
+                                        <Text className="text-amber-700 dark:text-amber-300 text-[11px] font-semibold" numberOfLines={1}>
+                                            Next: {ordNextAction.label}
+                                        </Text>
+                                    )}
+
+                                    {/* Duty-type micro-status */}
+                                    {(isOconus || isSeaDuty) ? (
+                                        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                                            {isOconus ? '🌍 OCONUS' : ''}{isOconus && isSeaDuty ? ' · ' : ''}{isSeaDuty ? '⚓ Sea Duty' : ''}
+                                        </Text>
+                                    ) : null}
+                                </View>
+
+                                {/* CTA — bottom right */}
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(tabs)/(pcs)/pcs')}
+                                    className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-lg border border-amber-500 dark:border-amber-600 ml-3"
+                                >
+                                    <CTAText>My{`\n`}Roadmap</CTAText>
+                                </TouchableOpacity>
+                            </View>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
             );
         }
 
@@ -170,7 +445,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             })();
 
             return (
-                <View className="flex flex-col gap-2 my-2">
+                <View className="flex flex-col gap-2 mb-1">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -248,7 +523,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             })();
 
             return (
-                <View className="flex flex-col gap-2 my-2">
+                <View className="flex flex-col gap-2 mb-1">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -543,7 +818,7 @@ function CardShell({
     children: React.ReactNode;
 }) {
     return (
-        <View className="flex flex-col gap-2 my-2">
+        <View className="flex flex-col gap-2 mb-1">
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}

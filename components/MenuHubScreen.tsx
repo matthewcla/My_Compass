@@ -13,9 +13,18 @@ import {
   Settings,
   Shield
 } from 'lucide-react-native';
-import { MotiView } from 'moti';
 import React, { useState } from 'react';
 import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import Animated, {
+  Easing,
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  FadeOutUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
@@ -34,6 +43,24 @@ export default function MenuHubScreen() {
   const toggleDevFloatingIcons = useDemoStore((s) => s.toggleDevFloatingIcons);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // QW4: Reactive privacy mode (was getState() snapshot)
+  const privacyMode = useUserStore((s) => s.user?.privacyMode ?? false);
+  const updateUser = useUserStore((s) => s.updateUser);
+
+  // Animated chevron rotation
+  const chevronRotation = useSharedValue(0);
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${chevronRotation.value}deg` }],
+  }));
+
+  const toggleSettings = () => {
+    const next = !settingsOpen;
+    chevronRotation.value = withTiming(next ? 180 : 0, {
+      duration: 300,
+      easing: Easing.out(Easing.cubic),
+    });
+    setSettingsOpen(next);
+  };
 
   // Dynamic Theme Colors
   const theme = {
@@ -73,10 +100,8 @@ export default function MenuHubScreen() {
         <OnboardingCard />
 
         {/* Settings Section (Expandable) */}
-        <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 400, delay: 100 }}
+        <Animated.View
+          entering={FadeInUp.duration(400).delay(100)}
         >
           <TouchableOpacity
             style={{
@@ -86,7 +111,7 @@ export default function MenuHubScreen() {
               borderBottomRightRadius: settingsOpen ? 0 : 24,
             }}
             className="rounded-t-3xl p-5 flex-row items-center justify-between shadow-sm border border-b-0"
-            onPress={() => setSettingsOpen((v: boolean) => !v)}
+            onPress={toggleSettings}
             activeOpacity={0.7}
           >
             <View className="flex-row items-center">
@@ -95,16 +120,15 @@ export default function MenuHubScreen() {
               </View>
               <Text style={{ color: theme.text }} className="font-bold text-[17px]">Settings</Text>
             </View>
-            <View style={{ backgroundColor: isDark ? '#27272A' : '#F8FAFC', transform: [{ rotate: settingsOpen ? '180deg' : '0deg' }] }} className="p-2 rounded-full">
+            <Animated.View style={[{ backgroundColor: isDark ? '#27272A' : '#F8FAFC', borderRadius: 9999, padding: 8 }, chevronStyle]}>
               <ChevronDown size={20} color={theme.icon} />
-            </View>
+            </Animated.View>
           </TouchableOpacity>
 
           {settingsOpen && (
-            <MotiView
-              from={{ opacity: 0, translateY: -8 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ type: 'timing', duration: 250 }}
+            <Animated.View
+              entering={FadeInDown.duration(250).springify()}
+              exiting={FadeOutUp.duration(150)}
             >
               <View
                 style={{
@@ -123,25 +147,23 @@ export default function MenuHubScreen() {
                     </View>
                   </View>
                   <Switch
-                    value={useUserStore.getState().user?.privacyMode ?? false}
-                    onValueChange={(val) => useUserStore.getState().updateUser({ privacyMode: val })}
+                    value={privacyMode}
+                    onValueChange={(val) => updateUser({ privacyMode: val })}
                     trackColor={{ false: isDark ? '#3f3f46' : '#d1d5db', true: '#2563EB' }}
                     thumbColor="#FFFFFF"
                   />
                 </View>
               </View>
-            </MotiView>
+            </Animated.View>
           )}
 
           {!settingsOpen && <View className="mb-8" />}
-        </MotiView>
+        </Animated.View>
 
         {/* Dev Tools Toggle — only in dev builds */}
         {__DEV__ && (
-          <MotiView
-            from={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'timing', duration: 400, delay: 200 }}
+          <Animated.View
+            entering={FadeInUp.duration(400).delay(200)}
           >
             <View
               style={{
@@ -163,14 +185,12 @@ export default function MenuHubScreen() {
                 thumbColor="#FFFFFF"
               />
             </View>
-          </MotiView>
+          </Animated.View>
         )}
 
         {/* Footer Action */}
-        <MotiView
-          from={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: 'timing', duration: 500, delay: 300 }}
+        <Animated.View
+          entering={FadeIn.duration(500).delay(300)}
         >
           <TouchableOpacity
             style={{
@@ -183,7 +203,7 @@ export default function MenuHubScreen() {
             <LogOut size={20} color="#EF4444" strokeWidth={2.5} />
             <Text className="text-red-600 font-bold text-[17px] ml-3">Log Out</Text>
           </TouchableOpacity>
-        </MotiView>
+        </Animated.View>
 
 
 

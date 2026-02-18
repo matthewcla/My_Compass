@@ -210,24 +210,24 @@ export default function PCSWizardScreen() {
               keyboardDismissMode="interactive"
             >
               {/* 1. Dates */}
-              <View onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
+              <Animated.View entering={FadeInUp.delay(50).duration(300)} onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
                 <PCSStep1Dates embedded={true} />
-              </View>
+              </Animated.View>
 
               {/* 2. Mode */}
-              <View onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
+              <Animated.View entering={FadeInUp.delay(100).duration(300)} onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
                 <PCSStep2Mode embedded={true} />
-              </View>
+              </Animated.View>
 
               {/* 3. Itinerary */}
-              <View onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
+              <Animated.View entering={FadeInUp.delay(150).duration(300)} onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
                 <PCSStep3Itinerary embedded={true} />
-              </View>
+              </Animated.View>
 
               {/* 4. Review */}
-              <View onLayout={(e) => handleSectionLayout(3, e)} className="mb-6">
+              <Animated.View entering={FadeInUp.delay(200).duration(300)} onLayout={(e) => handleSectionLayout(3, e)} className="mb-6">
                 <PCSStep4Review embedded={true} />
-              </View>
+              </Animated.View>
             </Animated.ScrollView>
           </KeyboardAvoidingView>
 

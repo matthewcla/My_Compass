@@ -64,6 +64,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     const assignmentPhase = useDemoStore((state) => state.assignmentPhaseOverride);
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
     const demoTimeline = useDemoStore((state) => state.demoTimelineOverride);
+    const negotiationDetails = useDemoStore((state) => state.negotiationDetails);
     const activeOrder = usePCSStore((state) => state.activeOrder);
     const obliserv = usePCSStore((state) => state.financials.obliserv);
     const checklist = usePCSStore((state) => state.checklist);
@@ -108,6 +109,16 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         today.setHours(0, 0, 0, 0);
         return Math.max(0, Math.ceil((nlt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
     }, [variant, activeOrder?.reportNLT, isDemoMode, demoTimeline]);
+
+    // Days until negotiation window closes
+    const daysUntilClose = useMemo(() => {
+        if (!negotiationDetails?.windowCloseDate) return null;
+        const close = new Date(negotiationDetails.windowCloseDate);
+        const today = new Date();
+        close.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        return Math.max(0, Math.ceil((close.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+    }, [negotiationDetails?.windowCloseDate]);
 
     switch (variant) {
         // ── Welcome Aboard (Phase 4) ────────────────────────────────
@@ -762,7 +773,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── MNA Negotiation ─────────────────────────────────────────
         case 'negotiation': {
-            const negotiationDetails = useDemoStore.getState().negotiationDetails;
 
             // Derive slate status
             const slateCount = userApplicationIds.length;
@@ -780,16 +790,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     year: 'numeric',
                 })
                 : null;
-
-            // Days until window closes
-            const daysUntilClose = useMemo(() => {
-                if (!negotiationDetails?.windowCloseDate) return null;
-                const close = new Date(negotiationDetails.windowCloseDate);
-                const today = new Date();
-                close.setHours(0, 0, 0, 0);
-                today.setHours(0, 0, 0, 0);
-                return Math.max(0, Math.ceil((close.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-            }, [negotiationDetails?.windowCloseDate]);
 
             // Detailer info
             const detailerName = negotiationDetails?.detailer.name ?? null;
@@ -866,7 +866,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
 
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(career)/discovery' as any)}
+                                    onPress={() => router.push('/(assignment)/cycle' as any)}
                                     className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50 ml-3"
                                 >
                                     <CTAText color="text-amber-800 dark:text-amber-200">My{`\n`}Slate</CTAText>

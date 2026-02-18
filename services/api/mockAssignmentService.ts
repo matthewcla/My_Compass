@@ -1,8 +1,7 @@
+import { MOCK_BILLETS } from '@/constants/MockBillets';
 import type { ApiResult, PaginatedApiResult } from '@/types/api';
 import type { Application, Billet } from '@/types/schema';
 import type { IAssignmentService } from './interfaces/IAssignmentService';
-import { MOCK_BILLETS } from '@/constants/MockBillets';
-import { useDemoStore } from '@/store/useDemoStore';
 
 const meta = () => ({
     requestId: `req-${Date.now()}`,
@@ -14,6 +13,9 @@ const meta = () => ({
  * Falls back to full list if no demo user or rating is set.
  */
 const getBilletsForActivePersona = (): Billet[] => {
+    // Lazy require to break circular dependency:
+    // serviceRegistry → mockAssignmentService → useDemoStore → useUserStore → serviceRegistry
+    const { useDemoStore } = require('@/store/useDemoStore');
     const demo = useDemoStore.getState();
     if (demo.isDemoMode && demo.selectedUser?.rating) {
         const rating = demo.selectedUser.rating;

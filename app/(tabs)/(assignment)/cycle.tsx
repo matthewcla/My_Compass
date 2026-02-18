@@ -151,7 +151,7 @@ export default function CycleScreen() {
                     {/* Rail Header */}
                     <View className="flex-row items-center justify-between px-4 py-3">
                         <Text className="text-sm font-bold text-slate-500 uppercase tracking-widest">
-                            Archive
+                            Billet Bench
                         </Text>
                         <TouchableOpacity onPress={() => router.push('/(career)/manifest' as any)}>
                             <Text className="text-sm font-bold text-blue-600 dark:text-blue-400">

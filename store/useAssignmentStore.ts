@@ -342,10 +342,6 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         // If userId provided, hydrate. otherwise just fetch billets.
         set({ isSyncingBillets: true });
 
-        // Reset Pagination
-        const limit = 20;
-        const offset = 0;
-
         // Ensure storage has data (Mock Init)
         // In a real scenario, this step might be "Sync from API to DB"
         const billetCount = await storage.getBilletCount();
@@ -355,13 +351,15 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             }
         }
 
-        const pagedBillets = await storage.getPagedBillets(limit, offset);
+        // Load ALL billets so the full dataset is available for
+        // persona-aware filtering in discovery (rating, pay grade, etc.)
+        const allBillets = await storage.getAllBillets();
 
         // Convert array to record for store
         const billetRecord: Record<string, Billet> = {};
         const newStack: string[] = [];
 
-        pagedBillets.forEach((billet) => {
+        allBillets.forEach((billet) => {
             billetRecord[billet.id] = billet;
             newStack.push(billet.id);
         });

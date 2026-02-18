@@ -9,10 +9,10 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useCinematicDeck } from '@/hooks/useCinematicDeck';
 import { useFeedback } from '@/hooks/useFeedback';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
-import { useCurrentProfile } from '@/store/useDemoStore';
-import { useDemoStore } from '@/store/useDemoStore';
+import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { Billet } from '@/types/schema';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Heart, HelpCircle, Star, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -58,11 +58,9 @@ export default function DiscoveryScreen() {
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const { showFeedback, FeedbackComponent } = useFeedback();
 
-    // Initial Fetch
+    // Initial Fetch — always reload to ensure full dataset
     useEffect(() => {
-        if (billetStack.length === 0) {
-            fetchBillets(activeUserId);
-        }
+        fetchBillets(activeUserId);
     }, []);
 
     // Optimization: Keep applications in ref to prevent handleSwipe from changing on background syncs
@@ -126,8 +124,21 @@ export default function DiscoveryScreen() {
         return [...new Set(Object.values(billets).map(b => b.dutyType).filter(Boolean))] as string[];
     }, [billets]);
 
-    // Reviewed count for progress
-    const reviewedCount = Object.keys(mode === 'real' ? realDecisions : sandboxDecisions).length;
+    // Scoreboard stats — scoped to the currently filtered billet set
+    const stats = useMemo(() => {
+        const decisions = mode === 'real' ? realDecisions : sandboxDecisions;
+        let slated = 0, saved = 0, passed = 0, remaining = 0;
+
+        filteredBillets.forEach(b => {
+            const d = decisions[b.id];
+            if (d === 'super') slated++;
+            else if (d === 'like') saved++;
+            else if (d === 'nope') passed++;
+            else remaining++;
+        });
+
+        return { slated, saved, passed, remaining };
+    }, [filteredBillets, realDecisions, sandboxDecisions, mode]);
 
     // 1b. CATEGORY FILTER (from Hub badge tap)
     const categoryFilteredBillets = useMemo((): Billet[] => {
@@ -240,22 +251,40 @@ export default function DiscoveryScreen() {
                         savedCount={savedCount}
                     />
 
-                    {/* Progress Indicator */}
-                    <View className="px-6 py-2 flex-row items-center justify-between">
-                        <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">
-                            {categoryFilter
-                                ? `${activeBillets.length} ${categoryLabels[categoryFilter] ?? ''} billets`
-                                : `${reviewedCount} of ${filteredBillets.length} reviewed`
-                            }
-                        </Text>
-                        {!categoryFilter && (
-                            <View className="flex-1 ml-3 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <View
-                                    className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
-                                    style={{ width: `${filteredBillets.length > 0 ? (reviewedCount / filteredBillets.length) * 100 : 0}%` }}
-                                />
-                            </View>
-                        )}
+                    {/* Scoreboard Strip */}
+                    <View className="px-4 py-1.5 flex-row items-center gap-2">
+                        <ScoreChip
+                            icon={<Star size={12} color={isDark ? '#60a5fa' : '#2563EB'} />}
+                            count={stats.slated}
+                            isDark={isDark}
+                            bg={isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)'}
+                            textColor={isDark ? '#93C5FD' : '#1D4ED8'}
+                            onPress={() => setCategoryFilter('wow')}
+                        />
+                        <ScoreChip
+                            icon={<Heart size={12} color={isDark ? '#4ADE80' : '#16A34A'} />}
+                            count={stats.saved}
+                            isDark={isDark}
+                            bg={isDark ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)'}
+                            textColor={isDark ? '#86EFAC' : '#15803D'}
+                            onPress={() => setCategoryFilter('liked')}
+                        />
+                        <ScoreChip
+                            icon={<X size={12} color={isDark ? '#F87171' : '#DC2626'} />}
+                            count={stats.passed}
+                            isDark={isDark}
+                            bg={isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.08)'}
+                            textColor={isDark ? '#FCA5A5' : '#B91C1C'}
+                            onPress={() => setCategoryFilter('passed')}
+                        />
+                        <ScoreChip
+                            icon={<HelpCircle size={12} color={isDark ? '#94A3B8' : '#64748B'} />}
+                            count={stats.remaining}
+                            isDark={isDark}
+                            bg={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(100,116,139,0.08)'}
+                            textColor={isDark ? '#CBD5E1' : '#475569'}
+                            onPress={() => setCategoryFilter('remaining')}
+                        />
                     </View>
 
                     {/* Category Filter Pill */}
@@ -380,5 +409,41 @@ export default function DiscoveryScreen() {
                 />
             </ScreenGradient>
         </GestureHandlerRootView>
+    );
+}
+
+/* ─── ScoreChip ──────────────────────────────────────────────────────────── */
+
+function ScoreChip({
+    icon,
+    count,
+    isDark,
+    bg,
+    textColor,
+    onPress,
+}: {
+    icon: React.ReactNode;
+    count: number;
+    isDark: boolean;
+    bg: string;
+    textColor: string;
+    onPress?: () => void;
+}) {
+    const isEmpty = count === 0;
+
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            disabled={isEmpty}
+            activeOpacity={0.7}
+            className="flex-1 flex-row items-center justify-center gap-1.5 py-3 rounded-xl"
+            style={[
+                { backgroundColor: bg },
+                isEmpty ? { opacity: 0.35 } : undefined,
+            ]}
+        >
+            {icon}
+            <Text style={{ color: textColor }} className="text-sm font-black">{count}</Text>
+        </TouchableOpacity>
     );
 }

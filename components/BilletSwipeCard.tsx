@@ -41,7 +41,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
 const VELOCITY_THRESHOLD = 800;
-const HEADER_HEIGHT = 224;
+const HEADER_HEIGHT = 192;
 const TRIGGER_BAR_HEIGHT = 50;
 const DISMISS_CONFIG = { duration: 200, easing: Easing.in(Easing.cubic) };
 
@@ -337,7 +337,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                             <Image source={data.image} className="w-full h-full" contentFit="cover" />
                             <View className="absolute inset-0 bg-black/30" />
 
-                            <View className="absolute top-6 left-6 flex-row gap-2">
+                            <View className="absolute top-4 left-5 flex-row gap-2">
                                 <View className="px-3 py-1.5 bg-blue-600 rounded-xl shadow-lg">
                                     <Text className="text-white text-[10px] font-black uppercase tracking-widest">{data.type}</Text>
                                 </View>
@@ -349,7 +349,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                                 )}
                             </View>
 
-                            <View className="absolute top-6 right-6">
+                            <View className="absolute top-4 right-5">
                                 {billet.advertisementStatus === 'projected' ? (
                                     <View className="px-3 py-1.5 bg-purple-600 rounded-xl shadow-lg border border-purple-400 mb-2 items-center justify-center">
                                         <Text className="text-white text-[10px] font-black uppercase tracking-widest">Projected</Text>
@@ -362,10 +362,10 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                                 )}
                             </View>
 
-                            <View className="absolute bottom-6 left-6 right-6">
-                                <Text className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">{data.billetId}</Text>
-                                <Text className="text-3xl font-black text-white leading-tight uppercase tracking-tight">{data.title}</Text>
-                                <View className="flex-row items-center gap-1 mt-1">
+                            <View className="absolute bottom-4 left-5 right-5">
+                                <Text className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-0.5">{data.billetId}</Text>
+                                <Text className="text-2xl font-black text-white leading-tight uppercase tracking-tight">{data.title}</Text>
+                                <View className="flex-row items-center gap-1 mt-0.5">
                                     <MapPin size={14} color={COLORS.blue400} />
                                     <Text className="text-white/80 text-sm font-bold">{data.location}</Text>
                                 </View>

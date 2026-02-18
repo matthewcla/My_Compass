@@ -82,6 +82,9 @@ jest.mock('@/services/storage', () => ({
             const all = Object.values(billetStore);
             return all.slice(offset, offset + limit);
         }),
+        getAllBillets: jest.fn().mockImplementation(async () => {
+            return Object.values(billetStore);
+        }),
         saveApplication: jest.fn().mockImplementation(async (app: any) => {
             applicationStore[app.id] = app;
         }),

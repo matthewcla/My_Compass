@@ -142,24 +142,81 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         }
 
         // ── Orders Processing ───────────────────────────────────────
-        case 'processing':
-            return (
-                <CardShell borderColor="border-amber-400 dark:border-amber-400" isDark={isDark}>
-                    <View className="flex-row items-center gap-4 flex-1">
-                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/30">
-                            <FileCheck size={24} color={isDark ? '#fbbf24' : '#d97706'} />
-                        </IconBubble>
-                        <View className="flex-1">
-                            <Headline>Orders Processing</Headline>
-                            <Detail>Awaiting release from PERS</Detail>
-                        </View>
-                    </View>
+        case 'processing': {
+            const procSelectionDetails = useDemoStore.getState().selectionDetails;
+            const procGainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
+            const procBilletTitle = procSelectionDetails?.billetTitle;
+            const procEstDate = procSelectionDetails?.estimatedOrdersDate
+                ? new Date(procSelectionDetails.estimatedOrdersDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                : null;
 
-                    <Pill bg="bg-amber-100 dark:bg-amber-900/40" border="border-amber-200 dark:border-amber-700/50">
-                        <PillText color="text-amber-800 dark:text-amber-200">Pending</PillText>
-                    </Pill>
-                </CardShell>
+            // Derive human-readable pipeline label
+            const procPipelineLabel = (() => {
+                switch (procSelectionDetails?.pipelineStatus) {
+                    case 'MATCH_ANNOUNCED': return 'Match Announced';
+                    case 'CO_ENDORSEMENT': return 'Awaiting CO Endorsement';
+                    case 'PERS_PROCESSING': return 'PERS Processing';
+                    case 'ORDERS_DRAFTING': return 'Orders Being Drafted';
+                    case 'ORDERS_RELEASED': return 'Orders Released';
+                    default: return null;
+                }
+            })();
+
+            return (
+                <View className="flex flex-col gap-2 my-2">
+                    <GlassView
+                        intensity={80}
+                        tint={isDark ? 'dark' : 'light'}
+                        className="border-l-4 border-amber-400 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                    >
+                        <LinearGradient
+                            colors={isDark
+                                ? ['rgba(251,191,36,0.08)', 'rgba(251,191,36,0.02)']
+                                : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
+                        >
+                            <View className="flex-row items-center justify-between">
+                                <View className="flex-row items-center gap-4 flex-1">
+                                    <IconBubble bg="bg-amber-100 dark:bg-amber-900/30">
+                                        <FileCheck size={24} color={isDark ? '#fbbf24' : '#d97706'} />
+                                    </IconBubble>
+                                    <View className="flex-1">
+                                        <Headline>Orders Processing</Headline>
+                                        <Detail>{procGainingCommand}</Detail>
+                                        {procBilletTitle && (
+                                            <Text className="text-amber-800 dark:text-amber-200 text-[11px] font-semibold" numberOfLines={1}>
+                                                {procBilletTitle}
+                                            </Text>
+                                        )}
+                                        {procPipelineLabel && (
+                                            <Text className="text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider mt-1">
+                                                ⏱ {procPipelineLabel}
+                                            </Text>
+                                        )}
+                                    </View>
+                                </View>
+
+                                <View className="items-end gap-2">
+                                    <Pill bg="bg-amber-100 dark:bg-amber-900/40" border="border-amber-200 dark:border-amber-700/50">
+                                        <PillText color="text-amber-800 dark:text-amber-200">
+                                            {procEstDate ? `Est. ${procEstDate}` : 'Pending'}
+                                        </PillText>
+                                    </Pill>
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/(tabs)/(assignment)' as any)}
+                                        className="bg-amber-100 dark:bg-amber-900/40 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50"
+                                    >
+                                        <CTAText color="text-amber-800 dark:text-amber-200">Track{'\n'}Progress</CTAText>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </LinearGradient>
+                    </GlassView>
+                </View>
             );
+        }
 
         // ── You've Been Selected (Celebratory) ────────────────────
         case 'selected': {

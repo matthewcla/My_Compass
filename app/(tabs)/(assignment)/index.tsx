@@ -13,7 +13,7 @@ import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { useDemoStore } from '@/store/useDemoStore';
 import { AssignmentPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {
     Anchor,
     BookOpen,
@@ -24,7 +24,7 @@ import {
     Search,
     Star,
 } from 'lucide-react-native';
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -104,11 +104,24 @@ function getPhaseContent(
                 },
             };
 
-        case 'ORDERS_PROCESSING':
+        case 'ORDERS_PROCESSING': {
+            const procSel = useDemoStore.getState().selectionDetails;
+            const procStep = (() => {
+                switch (procSel?.pipelineStatus) {
+                    case 'MATCH_ANNOUNCED': return 'Match Announced';
+                    case 'CO_ENDORSEMENT': return 'Awaiting CO Endorsement';
+                    case 'PERS_PROCESSING': return 'PERS Processing';
+                    case 'ORDERS_DRAFTING': return 'Orders Being Drafted';
+                    case 'ORDERS_RELEASED': return 'Orders Released';
+                    default: return null;
+                }
+            })();
             return {
                 icon: <FileSearch size={28} color={isDark ? '#fbbf24' : '#d97706'} />,
                 hero: 'Orders Being Processed',
-                explainer: 'You\'ve been matched. PERS is generating your orders — hang tight.',
+                explainer: procStep
+                    ? `Your orders are in the pipeline — currently at "${procStep}". Track the full pipeline below.`
+                    : 'Your orders are being routed through the approval chain. Track the full pipeline below.',
                 accentColors: {
                     gradient: isDark
                         ? ['rgba(251,191,36,0.10)', 'rgba(251,191,36,0.02)']
@@ -121,6 +134,7 @@ function getPhaseContent(
                     ctaBg: 'bg-amber-600 dark:bg-amber-700',
                 },
             };
+        }
 
         case 'ORDERS_RELEASED':
             return {
@@ -167,6 +181,14 @@ export default function AssignmentDashboard() {
     const router = useRouter();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const scrollRef = useRef<any>(null);
+
+    // Scroll to top whenever this tab gains focus
+    useFocusEffect(
+        useCallback(() => {
+            scrollRef.current?.scrollTo?.({ y: 0, animated: false });
+        }, [])
+    );
     const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
     const negotiationDetails = useDemoStore(state => state.negotiationDetails);
 
@@ -217,7 +239,7 @@ export default function AssignmentDashboard() {
     const showDiscoveryStats = assignmentPhase === 'DISCOVERY'
         || assignmentPhase === 'ON_RAMP';
     const showDiscoveryEntry = isNegotiation;
-    const showSelectionDetail = assignmentPhase === 'SELECTION';
+    const showSelectionDetail = assignmentPhase === 'SELECTION' || assignmentPhase === 'ORDERS_PROCESSING';
 
     const phaseSubtitle = (() => {
         switch (assignmentPhase) {
@@ -256,6 +278,7 @@ export default function AssignmentDashboard() {
                     contentContainerStyle,
                 }) => (
                     <Animated.ScrollView
+                        ref={scrollRef}
                         showsVerticalScrollIndicator={false}
                         scrollEventThrottle={scrollEventThrottle}
                         onScroll={onScroll}
@@ -270,7 +293,7 @@ export default function AssignmentDashboard() {
                         ]}
                     >
                         {/* Top spacer — don't use paddingTop here, scaffold owns it */}
-                        <View style={{ height: 10 }} />
+                        <View style={{ height: 8 }} />
                         <GlassView
                             intensity={80}
                             tint={isDark ? 'dark' : 'light'}
@@ -525,8 +548,10 @@ function getNextSteps(
             ];
         case 'ORDERS_PROCESSING':
             return [
-                'PERS is generating your official orders.',
-                'Once released, your PCS roadmap will activate.',
+                'Your orders are routing through the approval chain — check the pipeline tracker above for the current step.',
+                'Start researching your gaining command\'s location, housing, and local schools.',
+                'If PCSing with dependents, begin your EFMP screening early.',
+                'Once released, your PCS roadmap will activate automatically.',
             ];
         case 'ORDERS_RELEASED':
             return [

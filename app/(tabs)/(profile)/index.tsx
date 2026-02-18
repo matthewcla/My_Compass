@@ -3,7 +3,7 @@ import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
     Award,
     BookOpen,
@@ -24,7 +24,7 @@ import {
     User,
     Users
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
     Pressable,
     ScrollView,
@@ -215,6 +215,14 @@ export default function ProfileScreen() {
     const selectedUser = useDemoStore((s) => s.selectedUser);
     const isDemoMode = useDemoStore((s) => s.isDemoMode);
     const [activeTab, setActiveTab] = useState<'professional' | 'personal'>('professional');
+    const scrollRef = useRef<any>(null);
+
+    // Scroll to top whenever this tab gains focus
+    useFocusEffect(
+        useCallback(() => {
+            scrollRef.current?.scrollTo?.({ y: 0, animated: false });
+        }, [])
+    );
 
     // Career data — from DemoUser when demo mode, empty otherwise
     const demoUser = isDemoMode ? selectedUser : null;
@@ -557,6 +565,7 @@ export default function ProfileScreen() {
                     scrollEnabled, scrollEventThrottle, contentContainerStyle,
                 }) => (
                     <Animated.ScrollView
+                        ref={scrollRef}
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
                         onScrollEndDrag={onScrollEndDrag}

@@ -22,14 +22,14 @@ import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {
     Briefcase,
     FileText,
     Map as MapIcon,
     User
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, Platform, Pressable, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -88,6 +88,12 @@ export default function HubDashboard() {
     }, [isDemoMode, selectedPhase, initializeOrders]);
 
 
+    // Scroll to top whenever this tab gains focus
+    useFocusEffect(
+        useCallback(() => {
+            listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
+        }, [])
+    );
 
     const globalSearchConfig = useGlobalSpotlightHeaderSearch();
 

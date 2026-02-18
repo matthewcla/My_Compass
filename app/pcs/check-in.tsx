@@ -16,7 +16,6 @@ import {
     Monitor,
     Shield,
     SmilePlus,
-    Users
 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -51,15 +50,9 @@ const DEPARTMENTS: Department[] = [
         label: 'Admin / Quarterdeck',
         icon: Building2,
         description: 'Report with your orders. Admin will start your service record update and issue your check-in sheet.',
-        documents: ['PCS Orders (original + 3 copies)', 'Military ID (CAC)', 'DD-214 (if prior separation)'],
+        documents: ['PCS Orders (original)', 'Military ID (CAC)', 'DD-214 (if prior separation)'],
     },
-    {
-        id: 'personnel',
-        label: 'Personnel (PSD)',
-        icon: Users,
-        description: 'Update your service record, verify dependents, and process your Page 2.',
-        documents: ['Marriage certificate (if applicable)', 'Birth certificates (dependents)', 'Page 2 worksheet'],
-    },
+
     {
         id: 'medical',
         label: 'Medical',

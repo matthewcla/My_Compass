@@ -31,7 +31,7 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { Alert, Platform, Pressable, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -68,10 +68,13 @@ export default function HubDashboard() {
     const isDemoMode = useDemoStore(state => state.isDemoMode);
     const selectedPhase = useDemoStore(state => state.selectedPhase);
     const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
+    const demoTimeline = useDemoStore(state => state.demoTimelineOverride);
     const initializeOrders = usePCSStore(state => state.initializeOrders);
     const obliserv = usePCSStore(state => state.financials.obliserv);
     const pcsPhase = usePCSPhase();
     const subPhase = useSubPhase();
+    // QW4: Reactive liquidation state (must be above early returns per Rules of Hooks)
+    const liquidationStatus = usePCSStore((s) => s.financials.liquidation?.currentStatus);
 
     // Hydrate defaults on mount
     React.useEffect(() => {
@@ -96,6 +99,184 @@ export default function HubDashboard() {
     );
 
     const globalSearchConfig = useGlobalSpotlightHeaderSearch();
+
+    // QW1: Wrapped in useCallback to prevent FlashList re-creating the callback on every render
+    // QW2: Each widget section gets a FadeInUp stagger for polished entrance
+    // IMPORTANT: Must be above early returns to satisfy Rules of Hooks
+    const renderItem = useCallback(({ item, index }: { item: any; index: number }) => {
+        const isPCSPhase = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
+        const delay = index * 60;
+
+        switch (item) {
+            case 'menu':
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()} className="mb-2">
+                        {/* Row 1 */}
+                        <View className="flex-row justify-between mb-4">
+                            <View style={{ width: '47%', aspectRatio: 1 }}>
+                                <MenuTile
+                                    label="My Assignment"
+                                    icon={Briefcase}
+                                    subtitle={
+                                        assignmentPhase === 'SELECTION'
+                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? 'Action Required' : "You're Selected!")
+                                            : assignmentPhase === 'NEGOTIATION' ? 'Cycle Open'
+                                                : assignmentPhase === 'ON_RAMP' ? 'Opening Soon'
+                                                    : undefined
+                                    }
+                                    accent={
+                                        assignmentPhase === 'SELECTION'
+                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? '#DC2626' : '#D97706')
+                                            : assignmentPhase === 'NEGOTIATION' ? '#EA580C'
+                                                : assignmentPhase === 'ON_RAMP' ? '#D97706'
+                                                    : undefined
+                                    }
+                                    onPress={() => handleTilePress('/(assignment)')}
+                                />
+                            </View>
+                            <View style={{ width: '47%', aspectRatio: 1 }}>
+                                <MenuTile
+                                    label="My PCS"
+                                    icon={MapIcon}
+                                    subtitle={isPCSPhase ? "Action Required" : undefined}
+                                    onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
+                                    accent={isPCSPhase ? '#D97706' : undefined}
+                                />
+                            </View>
+                        </View>
+                        {/* Row 2 */}
+                        <View className="flex-row justify-between">
+                            <View style={{ width: '47%', aspectRatio: 1 }}>
+                                <MenuTile
+                                    label="My Leave & Admin"
+                                    icon={FileText}
+                                    onPress={() => handleTilePress('/(admin)')}
+                                />
+                            </View>
+                            <View style={{ width: '47%', aspectRatio: 1 }}>
+                                <MenuTile
+                                    label="My Profile"
+                                    icon={User}
+                                    onPress={() => handleTilePress('/(profile)')}
+                                />
+                            </View>
+                        </View>
+                    </Animated.View>
+                );
+            case 'discoveryStatus':
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <DiscoveryStatusCard
+                            onStartExploring={() => handleTilePress('/(career)/discovery')}
+                            onBadgeTap={(category: DiscoveryBadgeCategory, count: number) => {
+                                if (count === 0) {
+                                    const labels: Record<DiscoveryBadgeCategory, string> = {
+                                        wow: 'WOW!', liked: 'Liked', passed: 'Passed', remaining: 'remaining'
+                                    };
+                                    Alert.alert('Nothing here yet', `You don't have any ${labels[category]} billets yet. Start exploring!`);
+                                    return;
+                                }
+                                router.push({ pathname: '/(career)/discovery', params: { filter: category } } as any);
+                            }}
+                        />
+                    </Animated.View>
+                );
+            case 'receiptCapture': {
+                const { ReceiptScannerWidget } = require('@/components/pcs/widgets/ReceiptScannerWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <ReceiptScannerWidget />
+                    </Animated.View>
+                );
+            }
+            case 'tierRightNow':
+            case 'tierThisWeek':
+            case 'tierTracking': {
+                const tierLabel = item === 'tierRightNow' ? '⚓  Right Now'
+                    : item === 'tierThisWeek' ? '📋  This Week'
+                        : '📡  Tracking';
+                return (
+                    <View className="flex-row items-center mt-1 mb-0.5">
+                        <View className="bg-slate-800/60 dark:bg-slate-700/40 rounded-full px-3 py-1.5 border border-slate-600/30 dark:border-slate-500/20">
+                            <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-300 dark:text-slate-300">
+                                {tierLabel}
+                            </Text>
+                        </View>
+                        <View className="flex-1 h-px bg-slate-700/30 dark:bg-slate-600/20 ml-3" />
+                    </View>
+                );
+            }
+
+            case 'baseWelcomeKit': {
+                const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <BaseWelcomeKit />
+                    </Animated.View>
+                );
+            }
+            case 'travelClaimUrgency': {
+                const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <TravelClaimHUDWidget />
+                    </Animated.View>
+                );
+            }
+            case 'liquidationTracker': {
+                const { LiquidationTrackerWidget } = require('@/components/pcs/widgets/LiquidationTrackerWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <LiquidationTrackerWidget />
+                    </Animated.View>
+                );
+            }
+            case 'missionBrief': {
+                const { PCSMissionBrief } = require('@/components/pcs/widgets/PCSMissionBrief');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <PCSMissionBrief />
+                    </Animated.View>
+                );
+            }
+            case 'obliserv':
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <ObliservBanner variant="widget" />
+                    </Animated.View>
+                );
+            case 'leave':
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <LeaveCard
+                            balance={data?.leave?.currentBalance ?? 0}
+                            leaveBalance={leaveBalance}
+                            requests={leaveRequests}
+                            allRequests={leaveRequests}
+                            onPressRequest={(req) => {
+                                if (req.status === 'draft') {
+                                    router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
+                                } else {
+                                    router.push(`/leave/${req.id}` as any);
+                                }
+                            }}
+                            onQuickRequest={handleQuickLeavePress}
+                            onFullRequest={() => router.push('/leave/request' as any)}
+                            onExpand={(expanded) => {
+                                if (expanded) {
+                                    setTimeout(() => {
+                                        listRef.current?.scrollToEnd({ animated: true });
+                                    }, 300);
+                                }
+                            }}
+                        />
+                    </Animated.View>
+                );
+            default:
+                return null;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isDemoMode, selectedPhase, assignmentPhase, obliserv, pcsPhase, subPhase, data, leaveRequests, leaveBalance]);
 
     // Navigation Handlers
     const handleTilePress = (route: string) => {
@@ -169,9 +350,8 @@ export default function HubDashboard() {
         sections.push('tierThisWeek');
         sections.push('baseWelcomeKit');
         sections.push('travelClaimUrgency');
-        // Only show liquidation widget when there's an active liquidation to track
-        const liquidation = usePCSStore.getState().financials.liquidation;
-        const hasActiveLiquidation = liquidation && liquidation.currentStatus !== 'NOT_STARTED';
+        // Reactive liquidation check (QW4: no longer uses getState())
+        const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
         if (hasActiveLiquidation) {
             sections.push('tierTracking');
             sections.push('liquidationTracker');
@@ -181,162 +361,18 @@ export default function HubDashboard() {
     sections.push('tierTracking');
     sections.push('leave');
 
-    const renderItem = ({ item }: { item: any }) => {
-        const isPCSPhase = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
-
-        switch (item) {
-            case 'menu':
-                return (
-                    <View className="mb-2">
-                        {/* Row 1 */}
-                        <View className="flex-row justify-between mb-4">
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Assignment"
-                                    icon={Briefcase}
-                                    subtitle={
-                                        assignmentPhase === 'SELECTION'
-                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? 'Action Required' : "You're Selected!")
-                                            : assignmentPhase === 'NEGOTIATION' ? 'Cycle Open'
-                                                : assignmentPhase === 'ON_RAMP' ? 'Opening Soon'
-                                                    : undefined
-                                    }
-                                    accent={
-                                        assignmentPhase === 'SELECTION'
-                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? '#DC2626' : '#D97706')
-                                            : assignmentPhase === 'NEGOTIATION' ? '#EA580C'
-                                                : assignmentPhase === 'ON_RAMP' ? '#D97706'
-                                                    : undefined
-                                    }
-                                    onPress={() => handleTilePress('/(assignment)')}
-                                />
-                            </View>
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My PCS"
-                                    icon={MapIcon}
-                                    subtitle={isPCSPhase ? "Action Required" : undefined}
-                                    onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
-                                    accent={isPCSPhase ? '#D97706' : undefined}
-                                />
-                            </View>
-                        </View>
-                        {/* Row 2 */}
-                        <View className="flex-row justify-between">
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Leave & Admin"
-                                    icon={FileText}
-                                    onPress={() => handleTilePress('/(admin)')}
-                                />
-                            </View>
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Profile"
-                                    icon={User}
-                                    onPress={() => handleTilePress('/(profile)')}
-                                />
-                            </View>
-                        </View>
-                    </View>
-                );
-            case 'discoveryStatus':
-                return (
-                    <DiscoveryStatusCard
-                        onStartExploring={() => handleTilePress('/(career)/discovery')}
-                        onBadgeTap={(category: DiscoveryBadgeCategory, count: number) => {
-                            if (count === 0) {
-                                const labels: Record<DiscoveryBadgeCategory, string> = {
-                                    wow: 'WOW!', liked: 'Liked', passed: 'Passed', remaining: 'remaining'
-                                };
-                                Alert.alert('Nothing here yet', `You don't have any ${labels[category]} billets yet. Start exploring!`);
-                                return;
-                            }
-                            router.push({ pathname: '/(career)/discovery', params: { filter: category } } as any);
-                        }}
-                    />
-                );
-            case 'receiptCapture': {
-                const { ReceiptScannerWidget } = require('@/components/pcs/widgets/ReceiptScannerWidget');
-                return <ReceiptScannerWidget />;
-            }
-            case 'tierRightNow':
-            case 'tierThisWeek':
-            case 'tierTracking': {
-                const tierLabel = item === 'tierRightNow' ? '⚓  Right Now'
-                    : item === 'tierThisWeek' ? '📋  This Week'
-                        : '📡  Tracking';
-                return (
-                    <View className="flex-row items-center mt-1 mb-0.5">
-                        <View className="bg-slate-800/60 dark:bg-slate-700/40 rounded-full px-3 py-1.5 border border-slate-600/30 dark:border-slate-500/20">
-                            <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-300 dark:text-slate-300">
-                                {tierLabel}
-                            </Text>
-                        </View>
-                        <View className="flex-1 h-px bg-slate-700/30 dark:bg-slate-600/20 ml-3" />
-                    </View>
-                );
-            }
-
-            case 'baseWelcomeKit': {
-                const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
-                return <BaseWelcomeKit />;
-            }
-            case 'travelClaimUrgency': {
-                const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
-                return <TravelClaimHUDWidget />;
-            }
-            case 'liquidationTracker': {
-                const { LiquidationTrackerWidget } = require('@/components/pcs/widgets/LiquidationTrackerWidget');
-                return <LiquidationTrackerWidget />;
-            }
-            case 'missionBrief': {
-                const { PCSMissionBrief } = require('@/components/pcs/widgets/PCSMissionBrief');
-                return <PCSMissionBrief />;
-            }
-            case 'obliserv':
-                return <ObliservBanner variant="widget" />;
-            case 'leave':
-                return (
-                    <LeaveCard
-                        balance={data?.leave?.currentBalance ?? 0}
-                        leaveBalance={leaveBalance}
-                        requests={leaveRequests}
-                        allRequests={leaveRequests}
-                        onPressRequest={(req) => {
-                            if (req.status === 'draft') {
-                                router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
-                            } else {
-                                router.push(`/leave/${req.id}` as any);
-                            }
-                        }}
-                        onQuickRequest={handleQuickLeavePress}
-                        onFullRequest={() => router.push('/leave/request' as any)}
-                        onExpand={(expanded) => {
-                            if (expanded) {
-                                setTimeout(() => {
-                                    listRef.current?.scrollToEnd({ animated: true });
-                                }, 300);
-                            }
-                        }}
-                    />
-                );
-            default:
-                return null;
-        }
-    };
 
     return (
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
-                minTopBarHeight={70}
+                minTopBarHeight={80}
                 topBar={
                     <View className="bg-slate-50 dark:bg-slate-950">
-                        <View className="px-4 pt-2">
+                        <View className="px-4">
                             <StatusCard
                                 nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                                daysUntilOpen={data?.cycle?.daysRemaining ?? 12}
+                                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
                             />
                         </View>
                         <ScreenHeader
@@ -386,20 +422,26 @@ export default function HubDashboard() {
             {/* Floating demo panel — outside CollapsibleScaffold */}
             <PCSDevPanel />
 
-            {/* Quick Leave Overlay (Replaces Native Modal to fix Navigation Context loss) */}
+            {/* QW3: Animated Quick Leave Overlay (was static View) */}
             {quickDraft && (
-                <View className="absolute inset-0 z-50 flex-1 justify-center items-center bg-black/60">
+                <Animated.View
+                    entering={FadeIn.duration(200)}
+                    exiting={FadeOut.duration(150)}
+                    className="absolute inset-0 z-50 flex-1 justify-center items-center bg-black/60"
+                >
                     <Pressable
                         className="absolute inset-0"
                         onPress={() => setQuickDraft(null)}
                     />
-                    <QuickLeaveTicket
-                        draft={quickDraft}
-                        onSubmit={handleQuickLeaveSubmit}
-                        onEdit={handleQuickLeaveEdit}
-                        onClose={() => setQuickDraft(null)}
-                    />
-                </View>
+                    <Animated.View entering={FadeInUp.duration(250).springify()}>
+                        <QuickLeaveTicket
+                            draft={quickDraft}
+                            onSubmit={handleQuickLeaveSubmit}
+                            onEdit={handleQuickLeaveEdit}
+                            onClose={() => setQuickDraft(null)}
+                        />
+                    </Animated.View>
+                </Animated.View>
             )}
         </ScreenGradient>
     );

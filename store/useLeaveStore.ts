@@ -110,7 +110,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     ...INITIAL_STATE,
 
     fetchLeaveData: async (userId: string) => {
-        console.log('[Store] fetchLeaveData called for:', userId);
+        if (__DEV__) console.log('[Store] fetchLeaveData called for:', userId);
         set({ isSyncingBalance: true });
 
         try {
@@ -135,18 +135,18 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
                     lastSyncTimestamp: now,
                     syncStatus: 'synced',
                 };
-                console.log('[Store] Using Demo Balance:', demoBalance);
+                if (__DEV__) console.log('[Store] Using Demo Balance:', demoBalance);
                 // Simulate API delay/result structure
                 result = { success: true, data: demoBalance };
             } else {
                 result = await services.leave.fetchBalance(userId);
             }
 
-            console.log('[Store] fetchLeaveBalance result:', result);
+            if (__DEV__) console.log('[Store] fetchLeaveBalance result:', result);
 
             if (result.success) {
                 const balance = result.data;
-                console.log('[Store] Updating balance in store:', balance);
+                if (__DEV__) console.log('[Store] Updating balance in store:', balance);
 
                 // 2. Update Store
                 set({
@@ -157,7 +157,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
                 // 3. Persist to Storage
                 await storage.saveLeaveBalance(balance);
-                console.log('[Store] Saved balance to storage');
+                if (__DEV__) console.log('[Store] Saved balance to storage');
             } else {
                 console.error('Failed to fetch leave balance:', result.error);
                 set({ isSyncingBalance: false });

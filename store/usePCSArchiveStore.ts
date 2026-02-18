@@ -319,6 +319,14 @@ export const usePCSArchiveStore = create<PCSArchiveState>()(
     {
       name: 'pcs-archive-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        if (version === 0 || version === undefined) {
+          const state = persisted as any;
+          if (!Array.isArray(state.historicalOrders)) state.historicalOrders = [];
+        }
+        return persisted;
+      },
       partialize: (state) => ({
         historicalOrders: state.historicalOrders,
         selectedOrderId: null, // Don't persist selection

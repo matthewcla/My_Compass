@@ -179,6 +179,8 @@ function getPhaseContent(
 
 // ── Component ────────────────────────────────────────────────────────────────
 
+const SLOT_INDICES = Array.from({ length: MAX_SLATE_SIZE }, (_, i) => i);
+
 export default function AssignmentDashboard() {
     const router = useRouter();
     const colorScheme = useColorScheme();
@@ -235,8 +237,6 @@ export default function AssignmentDashboard() {
         : null;
 
     // Slot indices for the dot visualization
-    const SLOT_INDICES = Array.from({ length: MAX_SLATE_SIZE }, (_, i) => i);
-
     const showDetailer = isNegotiation;
     const showDiscoveryStats = assignmentPhase === 'DISCOVERY'
         || assignmentPhase === 'ON_RAMP';

@@ -2,9 +2,13 @@ import { useColorScheme } from '@/components/useColorScheme';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { ListOrdered, SlidersHorizontal, X } from 'lucide-react-native';
-import { MotiView } from 'moti';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+} from 'react-native-reanimated';
 
 interface DiscoveryHeaderProps {
     mode: 'real' | 'sandbox';
@@ -28,6 +32,21 @@ export function DiscoveryHeader({
     const isDark = colorScheme === 'dark';
     const router = useRouter();
 
+    // Animated toggle pill
+    const translateX = useSharedValue(isSandbox ? 100 : 0);
+
+    useEffect(() => {
+        translateX.value = withSpring(isSandbox ? 100 : 0, {
+            damping: 20,
+            stiffness: 300,
+            mass: 0.8,
+        });
+    }, [isSandbox]);
+
+    const pillStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: translateX.value }],
+    }));
+
     const handleToggle = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onToggleMode();
@@ -35,9 +54,6 @@ export function DiscoveryHeader({
 
     const handlePressExit = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        // Ensure we can navigate back. If explicit /hub exists, go there.
-        // Or just router.back() if pushed.
-        // User requested "Exit Control", typically implies closing the flow.
         router.back();
     };
 
@@ -77,24 +93,18 @@ export function DiscoveryHeader({
                 className={`relative flex-row items-center rounded-full border h-10 w-[200px] ${toggleTrackBg}`}
             >
                 {/* Sliding Pill Background of the Active Tab */}
-                <MotiView
-                    animate={{
-                        translateX: isSandbox ? 100 : 0,
-                    }}
-                    transition={{
-                        type: 'spring',
-                        damping: 20,
-                        stiffness: 300,
-                        mass: 0.8
-                    }}
-                    style={{
-                        position: 'absolute',
-                        width: 96,
-                        height: 32,
-                        left: 2,
-                        borderRadius: 9999,
-                        backgroundColor: isSandbox ? '#4f46e5' : (isDark ? '#2563eb' : '#0f172a'),
-                    }}
+                <Animated.View
+                    style={[
+                        {
+                            position: 'absolute',
+                            width: 96,
+                            height: 32,
+                            left: 2,
+                            borderRadius: 9999,
+                            backgroundColor: isSandbox ? '#4f46e5' : (isDark ? '#2563eb' : '#0f172a'),
+                        },
+                        pillStyle,
+                    ]}
                 />
 
                 {/* Text Labels (Overlay) */}

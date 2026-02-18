@@ -130,6 +130,10 @@ class MockStorage implements IStorageService {
         this.inboxMessages = this.inboxMessages.map(m => m.id === id ? { ...m, isRead } : m);
     }
 
+    async updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void> {
+        this.inboxMessages = this.inboxMessages.map(m => m.id === id ? { ...m, isPinned } : m);
+    }
+
     // Career Events
     async saveCareerEvents(events: CareerEvent[]): Promise<void> {
         this.careerEvents = events;

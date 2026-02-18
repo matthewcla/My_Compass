@@ -1,8 +1,8 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import { BookOpen, HelpCircle, Lightbulb } from 'lucide-react-native';
+import { MotiView } from 'moti';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 
 const OnboardingCard = () => {
     const colorScheme = useColorScheme();
@@ -21,6 +21,7 @@ const OnboardingCard = () => {
         if (__DEV__) {
             console.log(`Navigate to ${item}`);
         }
+        // Navigation logic can be added here later
     };
 
     const items = [
@@ -30,8 +31,10 @@ const OnboardingCard = () => {
     ];
 
     return (
-        <Animated.View
-            entering={FadeInUp.duration(400)}
+        <MotiView
+            from={{ opacity: 0, translateY: -10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 400 }}
             style={[
                 styles.card,
                 { backgroundColor: theme.card, borderColor: theme.border }
@@ -63,7 +66,7 @@ const OnboardingCard = () => {
                     </TouchableOpacity>
                 ))}
             </View>
-        </Animated.View>
+        </MotiView>
     );
 };
 

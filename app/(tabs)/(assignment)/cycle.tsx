@@ -9,6 +9,9 @@ import { Alert, ScrollView, Text, TouchableOpacity, View, useColorScheme } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
+const SLOTS_COUNT = 7;
+const SLOTS_INDICES = Array.from({ length: SLOTS_COUNT }, (_, i) => i);
+
 export default function CycleScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
@@ -47,9 +50,8 @@ export default function CycleScreen() {
             .sort((a, b) => (a.preferenceRank || 99) - (b.preferenceRank || 99));
     }, [applications]);
 
-    const slots = Array.from({ length: 7 }, (_, i) => {
+    const slots = SLOTS_INDICES.map((i) => {
         const rank = i + 1;
-        const app = activeApps.find(a => a.preferenceRank === rank); // Or simply activeApps[i] since we re-rank on demote
         // Ideally we rely on the index of sorted array to fill slots 1-N, and empty N+1...7
         const assignedApp = activeApps[i];
 

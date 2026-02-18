@@ -565,7 +565,7 @@ export const usePCSStore = create<PCSState>()(
         const user = getActiveUser();
 
         if (!user || !user.eaos) {
-          console.log('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
+          if (__DEV__) console.log('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
           return;
         }
 
@@ -573,7 +573,7 @@ export const usePCSStore = create<PCSState>()(
         // to the sailor's PRD as the projected report date (SELECTION phase).
         const reportDateStr = activeOrder?.reportNLT ?? user.prd;
         if (!reportDateStr) {
-          console.log('[OBLISERV] No reportDate and no PRD — bailing');
+          if (__DEV__) console.log('[OBLISERV] No reportDate and no PRD — bailing');
           return;
         }
 
@@ -588,13 +588,15 @@ export const usePCSStore = create<PCSState>()(
         // If EAOS is BEFORE the required service date, OBLISERV is required
         const isObliservRequired = eaosDate < requiredServiceDate;
 
-        console.log('[OBLISERV] Check:', {
-          user: user.displayName,
-          reportDateStr,
-          eaos: user.eaos,
-          requiredServiceDate: requiredServiceDate.toISOString(),
-          isObliservRequired,
-        });
+        if (__DEV__) {
+          console.log('[OBLISERV] Check:', {
+            user: user.displayName,
+            reportDateStr,
+            eaos: user.eaos,
+            requiredServiceDate: requiredServiceDate.toISOString(),
+            isObliservRequired,
+          });
+        }
 
         // Compute what status should be based on requirement
         // Note: If user submits an extension/reenlistment, obliserv-request.tsx
@@ -604,11 +606,11 @@ export const usePCSStore = create<PCSState>()(
         // Bail early if nothing changed — prevents re-render loops
         const current = financials.obliserv;
         if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) {
-          console.log('[OBLISERV] No change — skipping update');
+          if (__DEV__) console.log('[OBLISERV] No change — skipping update');
           return;
         }
 
-        console.log('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
+        if (__DEV__) console.log('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
 
         set({
           financials: {

@@ -340,8 +340,8 @@ export default function HubDashboard() {
     }
 
     const sections = ['menu'];
-    // Show DiscoveryStatusCard on Hub during Discovery through Selection phases
-    if (!assignmentPhase || assignmentPhase === 'DISCOVERY' || assignmentPhase === 'ON_RAMP' || assignmentPhase === 'NEGOTIATION' || assignmentPhase === 'SELECTION') {
+    // Show DiscoveryStatusCard on Hub during Discovery through Negotiation phases
+    if (!assignmentPhase || assignmentPhase === 'DISCOVERY' || assignmentPhase === 'ON_RAMP' || assignmentPhase === 'NEGOTIATION') {
         sections.push('discoveryStatus');
     }
     // Show standalone receipt capture on Home Hub during Phase 3 (ACTIVE_TRAVEL) only.

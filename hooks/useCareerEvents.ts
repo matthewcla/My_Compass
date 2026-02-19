@@ -1,6 +1,6 @@
 import { useCareerStore } from '@/store/useCareerStore';
 import { CareerEvent } from '@/types/career';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 export interface Section<T> {
     title: string;
@@ -10,8 +10,8 @@ export interface Section<T> {
 export function groupEventsByMonth(events: CareerEvent[]): Section<CareerEvent>[] {
     const groups: Record<string, CareerEvent[]> = {};
 
-    // Sort by date first
-    const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Sort by date first (ISO string comparison is sufficient and much faster than new Date())
+    const sortedEvents = [...events].sort((a, b) => a.date.localeCompare(b.date));
 
     sortedEvents.forEach(event => {
         const date = new Date(event.date);
@@ -40,7 +40,7 @@ export function useCareerEvents() {
         await fetchEvents({ force: true });
     }, [fetchEvents]);
 
-    const groupedEvents = groupEventsByMonth(events);
+    const groupedEvents = useMemo(() => groupEventsByMonth(events), [events]);
 
     return {
         events,

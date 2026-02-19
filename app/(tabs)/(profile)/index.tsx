@@ -2,8 +2,11 @@ import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { VerifiedBadge } from '@/components/icons/VerifiedBadge';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ControlPill, InfoRow, MilestoneRow, SectionCard, TimelineEntry } from '@/components/profile/ProfileHelpers';
+import { ProfileTimelineTab } from '@/components/profile/ProfileTimelineTab';
 import { ScreenGradient } from '@/components/ScreenGradient';
+import { DemoUser } from '@/constants/DemoData';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
+import { useProfileTimelineStore } from '@/store/useProfileTimelineStore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import {
@@ -86,7 +89,8 @@ export default function ProfileScreen() {
     const user = useCurrentProfile();
     const selectedUser = useDemoStore((s) => s.selectedUser);
     const isDemoMode = useDemoStore((s) => s.isDemoMode);
-    const [activeTab, setActiveTab] = useState<'professional' | 'personal'>('professional');
+    const [activeTab, setActiveTab] = useState<'professional' | 'personal' | 'timeline'>('professional');
+    const loadTimeline = useProfileTimelineStore((s) => s.loadTimeline);
     const scrollRef = useRef<any>(null);
 
     // Scroll to top whenever this tab gains focus
@@ -107,6 +111,14 @@ export default function ProfileScreen() {
     // Memoized callbacks for ControlPill
     const handleProfessionalPress = useCallback(() => setActiveTab('professional'), []);
     const handlePersonalPress = useCallback(() => setActiveTab('personal'), []);
+    const handleTimelinePress = useCallback(() => {
+        setActiveTab('timeline');
+        // Load timeline from the current demo user data
+        const demoData = isDemoMode ? selectedUser : null;
+        if (demoData) {
+            loadTimeline(demoData as DemoUser);
+        }
+    }, [isDemoMode, selectedUser, loadTimeline]);
     const handlePreferencesPress = useCallback(() => router.push('/(profile)/preferences' as any), []);
     const handleSurveysPress = useCallback(() => router.push('/(profile)/surveys' as any), []);
 
@@ -557,6 +569,7 @@ export default function ProfileScreen() {
                         >
                             <ControlPill label="Professional" isActive={activeTab === 'professional'} onPress={handleProfessionalPress} isDark={isDark} />
                             <ControlPill label="Personal" isActive={activeTab === 'personal'} onPress={handlePersonalPress} isDark={isDark} />
+                            <ControlPill label="Timeline" isActive={activeTab === 'timeline'} onPress={handleTimelinePress} isDark={isDark} />
                             <ControlPill label="Preferences" isActive={false} onPress={handlePreferencesPress} isDark={isDark} disabled />
                             <ControlPill label="Surveys" isActive={false} onPress={handleSurveysPress} isDark={isDark} disabled />
                         </ScrollView>
@@ -565,7 +578,12 @@ export default function ProfileScreen() {
                         <View style={{ height: 1, backgroundColor: isDark ? '#1E293B' : '#E2E8F0', marginHorizontal: 20, marginBottom: 16 }} />
 
                         {/* ── Tab Content ──────────────────────────────────── */}
-                        {activeTab === 'professional' ? renderProfessionalTab : renderPersonalTab}
+                        {activeTab === 'timeline'
+                            ? <ProfileTimelineTab isDark={isDark} />
+                            : activeTab === 'professional'
+                                ? renderProfessionalTab
+                                : renderPersonalTab
+                        }
 
                     </Animated.ScrollView>
                 )}

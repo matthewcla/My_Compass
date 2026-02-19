@@ -90,6 +90,54 @@ Reference: `services/syncQueue.ts`
 
 ---
 
+## Data Governance (USN Framework Alignment)
+
+Per the USN Data Governance Framework and root `CLAUDE.md` Rule 4.11:
+
+### Validate Before Persisting
+
+Every store that writes data to storage must validate with Zod before persisting:
+
+```tsx
+import { FeatureSchema } from '@/types/schema';
+
+// In store action:
+const validated = FeatureSchema.safeParse(data);
+if (validated.success) {
+  await storage.saveData('feature', validated.data);
+} else {
+  SecureLogger.warn('[FeatureStore] Invalid data, not persisting', { errors: validated.error });
+}
+```
+
+### Single Source of Truth
+
+Each data domain has **one** authoritative store. Never create a second store for the same entity. If you need cross-domain data, read from the authoritative store via selectors.
+
+### Transformation Discipline
+
+Data transformations belong in `utils/` or `services/`, not inline in store actions. Store actions orchestrate — they call transformation functions, they don't contain business logic. This keeps data lineage traceable.
+
+### Sync Queue is the Only Path
+
+All offline mutations go through `services/syncQueue.ts`. Never build ad-hoc retry logic in store actions.
+
+### Staleness Awareness
+
+When hydrating from cache, consider tracking data freshness:
+
+```tsx
+interface FeatureState {
+  data: SomeType | null;
+  lastSynced: number | null; // timestamp of last successful fetch
+  isLoading: boolean;
+}
+```
+
+This supports the VAULTIS "Timeliness" dimension — consumers can assess how fresh the data is.
+
+---
+
 ## Existing Stores
 
 | Store | Domain | Key Patterns |

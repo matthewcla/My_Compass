@@ -173,6 +173,20 @@ Use strict Navy terms in all UI copy, variable names, comments, and documentatio
 | TLA | Temp Housing, Hotel Allowance |
 | HHG | Household Goods, Furniture |
 | NSIPS | HR System |
+| VAULTIS | Visible, Accessible, Understandable, Linked, Trustworthy, Interoperable, Secure |
+| CDE | Critical Data Element — highest-impact data the Navy depends on |
+| CUI | Controlled Unclassified Information |
+| DSA | Data Sharing Agreement — formal contract for system-to-system data exchange |
+| ICAM | Identity, Credential, and Access Management |
+| ABAC | Attribute-Based Access Control (fine-grained, policy-based) |
+| RBAC | Role-Based Access Control (organizational structure-based) |
+| Zero Trust | Security model requiring continuous verification, no implicit trust |
+| DIL | Disconnected, Intermittent, Low-Bandwidth (operating environment) |
+| MDM | Master Data Management — single source of truth for key entities |
+| RAI | Responsible AI |
+| IDES | Interface Data Exchange Standards |
+| Data Steward | Official accountable for data quality, security, and usage in a domain |
+| Data Lineage | Traceable path of data from source to current location |
 
 ### 4.9 Follow Existing Patterns
 
@@ -187,6 +201,41 @@ Use strict Navy terms in all UI copy, variable names, comments, and documentatio
 - **NEVER:** `import { X } from '../../../components/Y'`
 - **ALWAYS:** `import { X } from '@/components/Y'`
 - The `@/` alias maps to the project root.
+
+### 4.11 USN Data Governance Compliance
+
+This app must align with the USN Data Governance Framework. These rules apply when designing data models, storage, APIs, and sync logic. See `docs/USN_DATA_GOVERNANCE_SUMMARY.md` for full reference.
+
+**VAULTIS — Every data asset must be:**
+
+| Principle | What It Means for My Compass |
+|-----------|------------------------------|
+| **Visible** | Every data entity has a typed definition in `types/` and a home in a Zustand store |
+| **Accessible** | Data is available through typed service interfaces, not buried in implementation details |
+| **Understandable** | Zod schemas document data shape; field names are self-describing |
+| **Linked** | Related data uses consistent foreign keys and references across stores |
+| **Trustworthy** | All external data validated with Zod at the boundary before entering the app |
+| **Interoperable** | All data access goes through standardized service interfaces (see `services/api/CLAUDE.md`) |
+| **Secure** | Storage tiers enforced (Rule 4.5, 4.6); Zero Trust assumed for all external data |
+
+**Data Quality Awareness (7 DOW Dimensions):**
+
+When designing schemas and validation, consider: **Accuracy, Completeness, Conformity, Consistency, Uniqueness, Integrity, Timeliness.** These are awareness principles — agents should think about them when creating or modifying data models, not mandatory Zod rules yet.
+
+**Zero Trust for Data:**
+- **NEVER** trust data from external APIs without Zod validation
+- Principle of least privilege — components access only what they need via store selectors
+- All data mutations should be auditable (future: AuditLogService per `docs/TECHNICAL_DEBT.md` TD-008)
+
+**Edge-First / DIL (Disconnected, Intermittent, Low-Bandwidth):**
+- Reinforces Rule 4.7. The USN Data Governance Framework formally mandates DIL support for all Navy systems.
+- Data federation over duplication where practical — query at source, cache locally
+- Sync queue handles mutations when offline; local storage handles reads
+
+**Data Lineage:**
+- Business logic belongs in `utils/` and `services/`, not scattered in UI components
+- Zod schemas in `types/` are the source of truth for data shape
+- Data transformations should be traceable — avoid opaque transforms buried in components
 
 ---
 
@@ -325,6 +374,8 @@ Before creating any new component, flow, widget, or tool — check the relevant 
 | Planned but unbuilt widgets | `docs/WIDGETS_NOT_IMPLEMENTED.md` | When scoping new widget work |
 | Built tools | `docs/TOOLS_IMPLEMENTED.md` | Before building a new tool |
 | Planned but unbuilt tools | `docs/TOOLS_NOT_IMPLEMENTED.md` | When scoping new tool work |
+| USN Data Governance (VAULTIS, Zero Trust, Data Quality) | `docs/USN_DATA_GOVERNANCE_SUMMARY.md` | Before designing data models, APIs, or storage patterns |
+| API integration governance, service contracts, DSA patterns | `services/api/CLAUDE.md` | Before building or modifying service implementations |
 
 ---
 
@@ -347,7 +398,7 @@ components/             # Reusable components (see components/CLAUDE.md)
 store/                  # Zustand stores (see store/CLAUDE.md)
 hooks/                  # Custom React hooks
 services/               # Business logic & API clients
-  api/                  # REST client, interfaces, mocks, registry
+  api/                  # REST client, interfaces, mocks, registry (see services/api/CLAUDE.md)
   syncQueue.ts          # Offline mutation queue
   storage.ts            # Unified SQLite + AsyncStorage interface
 types/                  # TypeScript types & Zod schemas

@@ -182,7 +182,7 @@ export default function DiscoveryScreen() {
 
         // Defer: No visual transition — store re-queues the billet
         if (direction === 'down') {
-            await swipe(currentBillet.id, direction, activeUserId);
+            await swipe(currentBillet.id, direction, activeUserId, { skipPromotion: !isSlatePhase });
             if (mode === 'real') {
                 showFeedback('Deferred. You\'ll see this one again later.', 'info');
             }
@@ -193,7 +193,7 @@ export default function DiscoveryScreen() {
         deck.next();
 
         // 2. Store Update
-        await swipe(currentBillet.id, direction, activeUserId);
+        await swipe(currentBillet.id, direction, activeUserId, { skipPromotion: !isSlatePhase });
 
         // 3. Phase-gated Feedback
         if (mode === 'real') {

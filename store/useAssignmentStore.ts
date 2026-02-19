@@ -13,7 +13,7 @@ import { create } from 'zustand';
 // CONSTANTS
 // =============================================================================
 
-export const MAX_SLATE_SIZE = 5;
+export const MAX_SLATE_SIZE = 7;
 
 // =============================================================================
 // UTILITIES
@@ -66,7 +66,7 @@ interface AssignmentActions {
     /**
      * Handle user swipe action on a billet
      */
-    swipe: (billetId: string, direction: SwipeDirection, userId: string) => Promise<void>;
+    swipe: (billetId: string, direction: SwipeDirection, userId: string, options?: { skipPromotion?: boolean }) => Promise<void>;
 
     /**
      * Switch between Real and Sandbox modes.
@@ -426,7 +426,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
     },
 
-    swipe: async (billetId: string, direction: SwipeDirection, userId: string) => {
+    swipe: async (billetId: string, direction: SwipeDirection, userId: string, options?: { skipPromotion?: boolean }) => {
         const { cursor, realDecisions, sandboxDecisions, promoteToSlate, mode, billetStack } = get();
 
         // DEFER: Move billet to back of deck, no decision recorded
@@ -453,16 +453,25 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
             // 3. Handle Side Effects
             if (direction === 'up') {
-                const wasPromoted = await promoteToSlate(billetId, userId);
-                if (!wasPromoted) {
-                    // Fallback to Manifest as 'super' (Favorite)
-                    newDecisions[billetId] = 'super';
-                    set({
-                        cursor: cursor + 1,
-                        realDecisions: newDecisions
-                    });
+                if (!options?.skipPromotion) {
+                    const wasPromoted = await promoteToSlate(billetId, userId);
+                    if (!wasPromoted) {
+                        // Fallback to Manifest as 'super' (Favorite)
+                        newDecisions[billetId] = 'super';
+                        set({
+                            cursor: cursor + 1,
+                            realDecisions: newDecisions
+                        });
+                    } else {
+                        // Promoted successfully
+                        newDecisions[billetId] = 'super';
+                        set({
+                            cursor: cursor + 1,
+                            realDecisions: newDecisions
+                        });
+                    }
                 } else {
-                    // Promoted successfully
+                    // skipPromotion: bookmark only (Discovery / On-Ramp phases)
                     newDecisions[billetId] = 'super';
                     set({
                         cursor: cursor + 1,

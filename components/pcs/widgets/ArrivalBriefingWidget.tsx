@@ -1,3 +1,4 @@
+import { useDemoStore } from '@/store/useDemoStore';
 import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
 import type { LucideIcon } from 'lucide-react-native';
 import {
@@ -59,9 +60,14 @@ export function ArrivalBriefingWidget() {
     const activeOrder = useActiveOrder();
     const checklist = usePCSStore((s) => s.checklist);
 
-    // Derive arrival day count from reportNLT (an estimate — the Sailor might
-    // arrive before or after, but this gives a reference anchor).
+    const isDemoMode = useDemoStore((s) => s.isDemoMode);
+    const demoTimeline = useDemoStore((s) => s.demoTimelineOverride);
+
+    // Derive arrival day count — use demo timeline when available
     const daysSinceArrival = useMemo(() => {
+        if (isDemoMode && demoTimeline && demoTimeline.daysOnStation > 0) {
+            return demoTimeline.daysOnStation;
+        }
         if (!activeOrder?.reportNLT) return null;
         const report = new Date(activeOrder.reportNLT);
         if (Number.isNaN(report.getTime())) return null;
@@ -70,7 +76,7 @@ export function ArrivalBriefingWidget() {
         report.setHours(0, 0, 0, 0);
         const diff = Math.floor((today.getTime() - report.getTime()) / (1000 * 60 * 60 * 24));
         return Math.max(1, diff + 1); // Day 1 = report date
-    }, [activeOrder?.reportNLT]);
+    }, [activeOrder?.reportNLT, isDemoMode, demoTimeline]);
 
     // Check which timeline steps are completed via matching checklist items
     const completedSteps = useMemo(() => {

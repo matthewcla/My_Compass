@@ -1,4 +1,5 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
+import { VerifiedBadge } from '@/components/icons/VerifiedBadge';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ControlPill, InfoRow, MilestoneRow, SectionCard, TimelineEntry } from '@/components/profile/ProfileHelpers';
 import { ScreenGradient } from '@/components/ScreenGradient';
@@ -513,9 +514,12 @@ export default function ProfileScreen() {
 
                         {/* ── Identity Header ──────────────────────────────── */}
                         <View style={{ paddingHorizontal: 20, marginTop: 12 }}>
-                            <Text style={{ color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 24, fontWeight: '800', letterSpacing: -0.3 }}>
-                                {user.displayName}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={{ color: isDark ? '#FFFFFF' : '#0F172A', fontSize: 24, fontWeight: '800', letterSpacing: -0.3 }}>
+                                    {user.displayName}
+                                </Text>
+                                <VerifiedBadge size={22} />
+                            </View>
                             <Text style={{ color: isDark ? '#CBD5E1' : '#475569', fontSize: 15, fontWeight: '500', marginTop: 3 }}>
                                 {user.rank} · {ratingFull || user.rating}
                             </Text>

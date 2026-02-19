@@ -40,7 +40,6 @@ export default function DiscoveryScreen() {
         undo,
         realDecisions,
         sandboxDecisions,
-        fetchBillets,
         showProjected,
         toggleShowProjected,
         updateSandboxFilters,
@@ -58,10 +57,10 @@ export default function DiscoveryScreen() {
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const { showFeedback, FeedbackComponent } = useFeedback();
 
-    // Initial Fetch — always reload to ensure full dataset
-    useEffect(() => {
-        fetchBillets(activeUserId);
-    }, []);
+    // Billets are hydrated by the Hub on mount/focus — no re-fetch needed here.
+    // A second fetchBillets() call was causing the store's billet pool to shift
+    // mid-render, producing a mismatch between this scoreboard and the
+    // DiscoveryStatusCard widget on the Hub.
 
     // Optimization: Keep applications in ref to prevent handleSwipe from changing on background syncs
     const applicationsRef = useRef(applications);
@@ -124,21 +123,22 @@ export default function DiscoveryScreen() {
         return [...new Set(Object.values(billets).map(b => b.dutyType).filter(Boolean))] as string[];
     }, [billets]);
 
-    // Scoreboard stats — scoped to the currently filtered billet set
+    // Scoreboard stats — scoped to ALL billets (consistent with Hub DiscoveryStatusCard)
     const stats = useMemo(() => {
         const decisions = mode === 'real' ? realDecisions : sandboxDecisions;
-        let slated = 0, saved = 0, passed = 0, remaining = 0;
+        const total = Object.keys(billets).length;
+        let slated = 0, saved = 0, passed = 0;
 
-        filteredBillets.forEach(b => {
-            const d = decisions[b.id];
+        Object.values(decisions).forEach(d => {
             if (d === 'super') slated++;
             else if (d === 'like') saved++;
             else if (d === 'nope') passed++;
-            else remaining++;
+            // 'defer' intentionally not counted — deferred billets re-appear
         });
 
+        const remaining = total - (slated + saved + passed);
         return { slated, saved, passed, remaining };
-    }, [filteredBillets, realDecisions, sandboxDecisions, mode]);
+    }, [billets, realDecisions, sandboxDecisions, mode]);
 
     // 1b. CATEGORY FILTER (from Hub badge tap)
     const categoryFilteredBillets = useMemo((): Billet[] => {
@@ -249,7 +249,6 @@ export default function DiscoveryScreen() {
                         onOpenFilters={() => setIsFiltersOpen(true)}
                         onOpenShortlist={() => router.push('/(assignment)/cycle' as any)}
                         savedCount={savedCount}
-                        hideSlate={assignmentPhase === 'DISCOVERY'}
                     />
 
                     {/* Scoreboard Strip */}

@@ -1,6 +1,7 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useDemoStore } from '@/store/useDemoStore';
 import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -39,19 +40,27 @@ export function PCSMissionBrief() {
     const isDark = colorScheme === 'dark';
     const router = useRouter();
 
+    const isDemoMode = useDemoStore((s) => s.isDemoMode);
+    const demoTimeline = useDemoStore((s) => s.demoTimelineOverride);
+
     // ── Derived Data ──────────────────────────────────────────────
 
     const stats = useMemo(() => {
         if (!activeOrder) return null;
 
-        // Countdown
-        const reportDate = new Date(activeOrder.reportNLT);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        reportDate.setHours(0, 0, 0, 0);
-        const daysRemaining = Math.max(0, Math.ceil(
-            (reportDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-        ));
+        // Countdown — use demo timeline when available
+        let daysRemaining: number;
+        if (isDemoMode && demoTimeline && demoTimeline.daysToReport > 0) {
+            daysRemaining = demoTimeline.daysToReport;
+        } else {
+            const reportDate = new Date(activeOrder.reportNLT);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            reportDate.setHours(0, 0, 0, 0);
+            daysRemaining = Math.max(0, Math.ceil(
+                (reportDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+            ));
+        }
 
         // Determine current UCT phase (highest incomplete)
         const phase1Items = checklist.filter((c) => c.uctPhase === 1);
@@ -81,7 +90,7 @@ export function PCSMissionBrief() {
             progress: total > 0 ? completed / total : 0,
             nextAction,
         };
-    }, [activeOrder, checklist]);
+    }, [activeOrder, checklist, isDemoMode, demoTimeline]);
 
     if (!stats) return null;
 

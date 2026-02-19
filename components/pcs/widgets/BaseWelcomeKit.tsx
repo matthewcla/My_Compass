@@ -1,6 +1,7 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useDemoStore } from '@/store/useDemoStore';
 import { useActiveOrder } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -48,8 +49,15 @@ export function BaseWelcomeKit() {
   const hasLocation = quarterdeckLocation?.latitude && quarterdeckLocation?.longitude;
   const hasSponsor = sponsor?.phone || sponsor?.email;
 
+  const isDemoMode = useDemoStore((s) => s.isDemoMode);
+  const demoTimeline = useDemoStore((s) => s.demoTimelineOverride);
+
   // Day 1: override uniform to seasonal dress uniform
+  // Use demo timeline when available
   const daysOnStation = useMemo(() => {
+    if (isDemoMode && demoTimeline && demoTimeline.daysOnStation > 0) {
+      return demoTimeline.daysOnStation;
+    }
     if (!activeOrder?.reportNLT) return 0;
     const report = new Date(activeOrder.reportNLT);
     const today = new Date();
@@ -57,7 +65,7 @@ export function BaseWelcomeKit() {
     today.setHours(0, 0, 0, 0);
     const diff = Math.floor((today.getTime() - report.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(1, diff + 1);
-  }, [activeOrder?.reportNLT]);
+  }, [activeOrder?.reportNLT, isDemoMode, demoTimeline]);
 
   const displayUniform = useMemo(() => {
     if (daysOnStation === 1) {

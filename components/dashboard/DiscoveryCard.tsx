@@ -33,20 +33,21 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
         let slated = 0;
         let saved = 0;
         let passed = 0;
-        let deferred = 0;
 
         Object.values(realDecisions).forEach(decision => {
             if (decision === 'super') slated++;
             else if (decision === 'like') saved++;
             else if (decision === 'nope') passed++;
-            else if (decision === 'defer') deferred++;
+            // 'defer' intentionally not counted — deferred billets re-appear
+            // in the deck, so they count as remaining
         });
 
-        const remaining = total - (slated + saved + passed + deferred);
+        const remaining = total - (slated + saved + passed);
         return { total, slated, saved, passed, remaining };
     }, [realDecisions, billets]);
 
     const hasActivity = stats.slated + stats.saved + stats.passed > 0;
+    const hasBillets = stats.total > 0;
 
     const animatedButtonStyle = useAnimatedStyle(() => ({
         transform: [{ scale: scale.value }],
@@ -91,9 +92,9 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
                 </Text>
             </View>
 
-            {hasActivity ? (
-                /* ── Active State: Badge Grid ─────────────────────────── */
-                <View className="relative z-10 flex-row px-5 pt-3 pb-5 gap-3">
+            {/* Badge Grid — always visible when billets are loaded */}
+            {hasBillets && (
+                <View className="relative z-10 flex-row px-5 pt-3 pb-3 gap-3">
                     <StatBadge
                         icon={<Star size={16} color={isDark ? '#60a5fa' : '#2563EB'} />}
                         count={stats.slated}
@@ -131,9 +132,11 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
                         onPress={() => onBadgeTap?.('remaining', stats.remaining)}
                     />
                 </View>
-            ) : (
-                /* ── Zero State: Explore CTA ──────────────────────────── */
-                <View className="relative z-10 px-5 pt-4 pb-5">
+            )}
+
+            {/* Start Exploring CTA — shown when no swipes yet */}
+            {!hasActivity && (
+                <View className="relative z-10 px-5 pb-5">
                     <Pressable
                         onPress={onStartExploring}
                         onPressIn={() => { scale.value = withSpring(0.97); }}

@@ -130,7 +130,7 @@ export function DiscoveryHeader({
                     <SlidersHorizontal size={18} color={iconColor} strokeWidth={2.5} />
                 </TouchableOpacity>
 
-                {/* Slate (Cycle) — hidden during Discovery phase */}
+                {/* Slate / Shortlist — always visible so sailors can review sorts */}
                 {!hideSlate && (
                     <TouchableOpacity
                         onPress={handlePressShortlist}

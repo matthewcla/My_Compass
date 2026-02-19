@@ -40,7 +40,6 @@ export default function DiscoveryScreen() {
         undo,
         realDecisions,
         sandboxDecisions,
-        fetchBillets,
         showProjected,
         toggleShowProjected,
         updateSandboxFilters,
@@ -58,10 +57,10 @@ export default function DiscoveryScreen() {
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const { showFeedback, FeedbackComponent } = useFeedback();
 
-    // Initial Fetch — always reload to ensure full dataset
-    useEffect(() => {
-        fetchBillets(activeUserId);
-    }, []);
+    // Billets are hydrated by the Hub on mount/focus — no re-fetch needed here.
+    // A second fetchBillets() call was causing the store's billet pool to shift
+    // mid-render, producing a mismatch between this scoreboard and the
+    // DiscoveryStatusCard widget on the Hub.
 
     // Optimization: Keep applications in ref to prevent handleSwipe from changing on background syncs
     const applicationsRef = useRef(applications);

@@ -16,7 +16,7 @@ export function PCSActiveState() {
             entering={FadeIn.duration(400)}
             exiting={FadeOut.duration(200)}
         >
-            <View style={{ paddingTop: 32 }}>
+            <View>
                 <PCSHeroBanner />
                 <UnifiedContextualTrack />
             </View>

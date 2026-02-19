@@ -330,6 +330,101 @@ Widgets are small, glanceable components that can render in two modes:
 
 **Implementation rule:** Every widget must read from its Zustand store, ensuring data consistency between widget and full views. Never pass data as props when a store selector exists.
 
+### 2.4 Hero Status Card (Dashboard Phase Tile)
+
+The `StatusCard` is the top-of-dashboard hero tile that communicates the Sailor's current lifecycle phase at a glance. It uses a **phase-aware variant** system — each PCS phase renders a distinct card with its own accent color, icon, CTA, and scoped task progress.
+
+**Reference:** [StatusCard.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/components/dashboard/StatusCard.tsx)
+
+#### Layout Structure
+
+Every variant follows a **two-row layout** inside a `GlassView` with a `LinearGradient` wash and a colored left border (`border-l-4`):
+
+| Row | Left | Right |
+|-----|------|-------|
+| **Header** | `IconBubble` + Headline + Detail (subtitle) | Hero metric (e.g., days counter) |
+| **Footer** | Progress dots + Next action + micro-statuses | CTA button (bottom-right, `items-end`) |
+
+#### Color-per-Phase Mapping
+
+Each variant uses a **single accent hue** applied consistently to: left border, gradient wash, icon bubble, headline, progress-dot active state, next-action text, and CTA button. Adjacent phases must have **distinct** accent colors to maintain the "progression" signal.
+
+| # | Variant | Accent | Border | Icon Colors (dark / light) |
+|---|---------|--------|--------|---------------------------|
+| 1 | `cycle-prep` | Blue | `border-blue-400` | `#60a5fa` / `#2563eb` |
+| 2 | `cycle-open` | Indigo | `border-indigo-500` | `#818cf8` / `#4f46e5` |
+| 3 | `negotiation` | Amber | `border-amber-400` | `#fbbf24` / `#d97706` |
+| 4 | `selected` | Emerald | `border-emerald-400` | `#A7F3D0→#10B981` gradient |
+| 5 | `processing` | Zinc | `border-zinc-400` | `#a1a1aa` / `#52525b` |
+| 6 | `orders-received` | Amber | `border-amber-400` | `#fbbf24` / `#d97706` |
+| 7 | `plan-move` | Teal | `border-teal-400` | `#2dd4bf` / `#0d9488` |
+| 8 | `en-route` | Sky | `border-sky-400` | `#38bdf8` / `#0284c7` |
+| 9 | `welcome-aboard` | Green | `border-green-400` | `#4ade80` / `#15803d` |
+
+#### Urgency Escalation (Days Counter)
+
+When a variant displays a countdown (e.g., days to report NLT), the counter color escalates:
+
+| Threshold | Color | Meaning |
+|-----------|-------|---------|
+| > 60 days | Phase accent (e.g., teal) | On track |
+| 30–60 days | Orange (`text-orange-600 dark:text-orange-400`) | Time to act |
+| < 30 days | Red (`text-red-600 dark:text-red-400`) | Urgent |
+
+#### Task Scoping Rule
+
+Progress dots and "Next action" must scope to the **UCT phases relevant to the current variant**, not all checklist items:
+
+- `plan-move` → UCT phases 1 + 2 (Orders & OBLISERV + Logistics & Finances)
+- `en-route` → UCT phase 3 (Transit & Leave)
+- `welcome-aboard` → UCT phase 4 (Check-in & Claim)
+
+**Anti-patterns:**
+- ❌ Showing all checklist items regardless of phase — overwhelms the Sailor
+- ❌ Using the same accent color for adjacent phases — kills the "progression" signal
+- ❌ Placing the CTA in the header row — header is for status, footer is for action
+
+### 2.5 Status Bar Shim (Scroll Safety)
+
+Every screen that uses scrollable content (FlashList, FlatList, ScrollView) **must** include a **status bar shim** — an opaque `View` anchored behind the system status bar area (Dynamic Island, battery indicator, clock, signal icons) to prevent content from visibly scrolling beneath system chrome.
+
+**How it works:**
+
+The shim's height is derived from `useSafeAreaInsets().top`, so it automatically adapts to the device — taller on iPhones with Dynamic Island, shorter on older notch models, zero on Android devices without a cutout.
+
+**Implementation:**
+
+For screens using `CollapsibleScaffold`, the shim is built in via the `statusBarShimBackgroundColor` prop:
+
+```tsx
+<CollapsibleScaffold
+    statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
+    ...
+>
+```
+
+For standalone scroll screens without `CollapsibleScaffold`, add a manual shim:
+
+```tsx
+const insets = useSafeAreaInsets();
+
+<View style={{
+    position: 'absolute', top: 0, left: 0, right: 0,
+    height: insets.top,
+    backgroundColor: isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0],
+    zIndex: 10,
+}} />
+```
+
+**Color matching rule:** The shim color must match the screen's background (gradient start color or solid background) so the boundary is invisible — the user sees content smoothly disappearing, not a hard edge.
+
+**Anti-patterns:**
+- ❌ Omitting the shim on scrollable screens — content visibly passes behind the Dynamic Island
+- ❌ Using a fixed color (e.g., `#000000`) that doesn't match the screen background — creates a visible band
+- ❌ Using `SafeAreaView` alone without a shim — `SafeAreaView` insets content but doesn't prevent scroll-behind
+
+**Reference:** [hub/index.tsx line 367](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/app/(tabs)/(hub)/index.tsx#L367)
+
 ---
 
 ## 3. Visual Design System

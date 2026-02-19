@@ -35,7 +35,7 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
  * Only visible in __DEV__ or when enableDevSettings is true.
  */
 export function PCSDevPanel() {
-    const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings ?? __DEV__;
+    const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings || __DEV__;
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
 
     // Auto-enable demo mode in dev builds — no manual toggle needed

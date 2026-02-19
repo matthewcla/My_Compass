@@ -304,6 +304,15 @@ class WebStorage implements IStorageService {
     }
   }
 
+  async updateInboxMessagePinStatus(id: string, isPinned: boolean): Promise<void> {
+    const messages = await this.getInboxMessages();
+    const index = messages.findIndex((m) => m.id === id);
+    if (index >= 0) {
+      messages[index].isPinned = isPinned;
+      await this.saveInboxMessages(messages);
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Career Events
   // ---------------------------------------------------------------------------

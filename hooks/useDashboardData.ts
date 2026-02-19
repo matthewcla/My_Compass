@@ -3,7 +3,7 @@ import { storage } from '@/services/storage';
 import { useUserStore } from '@/store/useUserStore';
 import { DashboardData } from '@/types/dashboard';
 import { logger } from '@/utils/logger';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 // ---------------------------------------------------------------------------
@@ -94,6 +94,9 @@ export function useDashboardData() {
   const [loading, setLoading] = useState(!prefetchCache); // Not loading if cache hit
   const [error, setError] = useState<string | null>(null);
 
+  // Guard against multiple fetches during hydration cascade
+  const hasFetchedRef = useRef(false);
+
   const fetchDashboardData = useCallback(async () => {
     if (!session) {
       setError('No active session');
@@ -115,11 +118,8 @@ export function useDashboardData() {
       // -----------------------------------------------------------------------
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const demoStore = require('@/store/useDemoStore').useDemoStore; // Inline require to avoid circular dependency issues if any, though explicit import is better. 
-      // Actually, let's just use the store instance we already imported or can import.
-      // Better to stick to the top level import if possible, but let's check imports first.
-
-      const { selectedUser, isDemoMode } = require('@/store/useDemoStore').useDemoStore.getState();
+      const { useDemoStore } = require('@/store/useDemoStore');
+      const { selectedUser, isDemoMode } = useDemoStore.getState();
 
       const mockData: DashboardData = {
         cycle: {
@@ -175,20 +175,25 @@ export function useDashboardData() {
   }, [session, user]);
 
   useEffect(() => {
-    if (session && user) {
-      // If prefetch cache hit, we already have data - just mark not loading
-      if (prefetchCache) {
-        setData(prefetchCache);
-        setLoading(false);
-        // Still fetch fresh data in background (stale-while-revalidate)
-        fetchDashboardData();
-        return;
-      }
+    if (!session || !user) return;
 
-      // No prefetch cache - fetch immediately (no InteractionManager delay)
+    // Prevent duplicate fetches during hydration cascade
+    // (session and user both change rapidly on startup)
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    if (prefetchCache) {
+      setData(prefetchCache);
+      setLoading(false);
+      // Still fetch fresh data in background (stale-while-revalidate)
       fetchDashboardData();
+      return;
     }
+
+    // No prefetch cache - fetch immediately (no InteractionManager delay)
+    fetchDashboardData();
   }, [session, user, fetchDashboardData]);
 
   return { data, loading, error, refetch: fetchDashboardData };
 }
+

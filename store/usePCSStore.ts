@@ -565,7 +565,7 @@ export const usePCSStore = create<PCSState>()(
         const user = getActiveUser();
 
         if (!user || !user.eaos) {
-          console.log('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
+          if (__DEV__) console.log('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
           return;
         }
 
@@ -573,7 +573,7 @@ export const usePCSStore = create<PCSState>()(
         // to the sailor's PRD as the projected report date (SELECTION phase).
         const reportDateStr = activeOrder?.reportNLT ?? user.prd;
         if (!reportDateStr) {
-          console.log('[OBLISERV] No reportDate and no PRD — bailing');
+          if (__DEV__) console.log('[OBLISERV] No reportDate and no PRD — bailing');
           return;
         }
 
@@ -588,13 +588,15 @@ export const usePCSStore = create<PCSState>()(
         // If EAOS is BEFORE the required service date, OBLISERV is required
         const isObliservRequired = eaosDate < requiredServiceDate;
 
-        console.log('[OBLISERV] Check:', {
-          user: user.displayName,
-          reportDateStr,
-          eaos: user.eaos,
-          requiredServiceDate: requiredServiceDate.toISOString(),
-          isObliservRequired,
-        });
+        if (__DEV__) {
+          console.log('[OBLISERV] Check:', {
+            user: user.displayName,
+            reportDateStr,
+            eaos: user.eaos,
+            requiredServiceDate: requiredServiceDate.toISOString(),
+            isObliservRequired,
+          });
+        }
 
         // Compute what status should be based on requirement
         // Note: If user submits an extension/reenlistment, obliserv-request.tsx
@@ -604,11 +606,11 @@ export const usePCSStore = create<PCSState>()(
         // Bail early if nothing changed — prevents re-render loops
         const current = financials.obliserv;
         if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) {
-          console.log('[OBLISERV] No change — skipping update');
+          if (__DEV__) console.log('[OBLISERV] No change — skipping update');
           return;
         }
 
-        console.log('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
+        if (__DEV__) console.log('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
 
         set({
           financials: {
@@ -1125,6 +1127,29 @@ export const usePCSStore = create<PCSState>()(
     {
       name: 'pcs-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persisted: any, version: number) => {
+        if (version === 0 || version === undefined) {
+          // Backfill fields that may not exist in older persisted state
+          const state = persisted as any;
+          if (!state.financials) state.financials = {};
+          const f = state.financials;
+          if (!f.advancePay) f.advancePay = { requested: false, amount: 0, months: 1, repaymentMonths: 12, repaymentJustification: null, timing: 'STANDARD', timingJustification: null, justification: null };
+          if (!f.dla) f.dla = { eligible: false, estimatedAmount: 0, receivedFY: false };
+          if (!f.obliserv) f.obliserv = { required: false, eaos: '', status: 'PENDING' };
+          if (f.totalMalt === undefined) f.totalMalt = 0;
+          if (f.totalPerDiem === undefined) f.totalPerDiem = 0;
+          if (!f.hhg) f.hhg = { maxWeightAllowance: 0, estimatedWeight: 0, isOverLimit: false, shipments: [], estimatedExcessCost: 0 };
+          if (!Array.isArray(f.hhg.shipments)) f.hhg.shipments = [];
+          if (f.movingCosts === undefined) f.movingCosts = null;
+          if (f.liquidation === undefined) f.liquidation = null;
+          if (f.dependentsRelocating === undefined) f.dependentsRelocating = null;
+          if (!state.travelClaim) state.travelClaim = { draft: null, status: 'idle' };
+          if (state.cachedOrders === undefined) state.cachedOrders = null;
+          if (!Array.isArray(state.receipts)) state.receipts = [];
+        }
+        return persisted;
+      },
     }
   )
 );

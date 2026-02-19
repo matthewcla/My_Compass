@@ -1,8 +1,16 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView } from 'moti';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, {
+  Easing,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 // ---------------------------------------------------------------------------
 // HIGH-FIDELITY HUB SKELETON
@@ -36,15 +44,27 @@ function SkeletonBlock({ index, height, children, style }: SkeletonBlockProps) {
     ? ['transparent', 'rgba(255,255,255,0.05)', 'transparent'] as const
     : ['transparent', 'rgba(255,255,255,0.4)', 'transparent'] as const;
 
+  // Shimmer animation via Reanimated
+  const shimmerTranslate = useSharedValue(-200);
+
+  useEffect(() => {
+    shimmerTranslate.value = withRepeat(
+      withSequence(
+        withTiming(-200, { duration: 0 }),
+        withTiming(400, { duration: SHIMMER_DURATION, easing: Easing.linear }),
+      ),
+      -1, // infinite
+      false,
+    );
+  }, []);
+
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shimmerTranslate.value }],
+  }));
+
   return (
-    <MotiView
-      from={{ opacity: 0, translateY: 20 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{
-        type: 'timing',
-        duration: ANIMATION_DURATION,
-        delay: ANIMATION_DELAY_BASE + (index * ANIMATION_DELAY_INCREMENT),
-      }}
+    <Animated.View
+      entering={FadeInUp.duration(ANIMATION_DURATION).delay(ANIMATION_DELAY_BASE + (index * ANIMATION_DELAY_INCREMENT))}
       style={[
         {
           height,
@@ -56,16 +76,8 @@ function SkeletonBlock({ index, height, children, style }: SkeletonBlockProps) {
       ]}
     >
       {/* Shimmer Effect */}
-      <MotiView
-        from={{ translateX: -200 }}
-        animate={{ translateX: 400 }}
-        transition={{
-          type: 'timing',
-          duration: SHIMMER_DURATION,
-          loop: true,
-          delay: index * 200,
-        }}
-        style={StyleSheet.absoluteFill}
+      <Animated.View
+        style={[StyleSheet.absoluteFill, shimmerStyle]}
       >
         <LinearGradient
           colors={shimmerColors}
@@ -73,9 +85,9 @@ function SkeletonBlock({ index, height, children, style }: SkeletonBlockProps) {
           end={{ x: 1, y: 0 }}
           style={[StyleSheet.absoluteFill, { width: 200 }]}
         />
-      </MotiView>
+      </Animated.View>
       {children}
-    </MotiView>
+    </Animated.View>
   );
 }
 

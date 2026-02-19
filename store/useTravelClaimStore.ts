@@ -520,6 +520,17 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
         {
             name: STORAGE_KEY,
             storage: createJSONStorage(() => AsyncStorage),
+            version: 1,
+            migrate: (persisted: any, version: number) => {
+                if (version === 0 || version === undefined) {
+                    const state = persisted as any;
+                    if (!state.travelClaims) state.travelClaims = {};
+                    if (!Array.isArray(state.userClaimIds)) state.userClaimIds = [];
+                    if (state.activeDraftId === undefined) state.activeDraftId = null;
+                    if (state.lastClaimSyncAt === undefined) state.lastClaimSyncAt = null;
+                }
+                return persisted;
+            },
             // Only persist the state slices, not actions
             partialize: (state) => ({
                 travelClaims: state.travelClaims,

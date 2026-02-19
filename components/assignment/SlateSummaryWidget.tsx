@@ -1,5 +1,6 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
+import { useDemoStore } from '@/store/useDemoStore';
 import { ChevronRight } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -12,6 +13,9 @@ const SLOT_INDICES = Array.from({ length: MAX_SLATE_SIZE }, (_, i) => i);
 
 export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps) {
     const { applications, slateDeadline, userApplicationIds, submitSlate } = useAssignmentStore();
+
+    const isDemoMode = useDemoStore((s) => s.isDemoMode);
+    const negotiationDetails = useDemoStore((s) => s.negotiationDetails);
 
     // Logic: Calculate Filled Slots based on userApplicationIds
     const filledCount = userApplicationIds.length;
@@ -28,8 +32,12 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
     });
 
     // Logic: Calculate Time Remaining
+    // In demo mode, use negotiation windowCloseDate to match StatusCard
     const now = new Date();
-    const deadline = new Date(slateDeadline);
+    const deadlineStr = (isDemoMode && negotiationDetails?.windowCloseDate)
+        ? negotiationDetails.windowCloseDate
+        : slateDeadline;
+    const deadline = new Date(deadlineStr);
     const diffMs = deadline.getTime() - now.getTime();
     const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     const hoursRemaining = Math.ceil(diffMs / (1000 * 60 * 60));

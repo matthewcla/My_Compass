@@ -17,6 +17,7 @@ import { DemoPhase } from '@/constants/DemoData';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useSession } from '@/lib/ctx';
+import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
@@ -82,6 +83,12 @@ export default function HubDashboard() {
             fetchUserDefaults(user.id);
         }
     }, [user?.id, fetchUserDefaults]);
+
+    // Hydrate billets so DiscoveryStatusCard scoreboard is populated
+    const fetchBillets = useAssignmentStore(state => state.fetchBillets);
+    React.useEffect(() => {
+        fetchBillets();
+    }, [fetchBillets]);
 
     // Initialize PCS Orders if in PCS Demo Phase
     React.useEffect(() => {
@@ -369,7 +376,7 @@ export default function HubDashboard() {
                 minTopBarHeight={80}
                 topBar={
                     <View className="bg-slate-50 dark:bg-slate-950">
-                        <View className="px-4">
+                        <View className="px-4 pt-4">
                             <StatusCard
                                 nextCycle={data?.cycle?.cycleId ?? '24-02'}
                                 daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}

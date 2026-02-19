@@ -351,15 +351,24 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
             }
         }
 
-        // Load ALL billets so the full dataset is available for
-        // persona-aware filtering in discovery (rating, pay grade, etc.)
+        // Load ALL billets from storage, then filter to active persona's rating
         const allBillets = await storage.getAllBillets();
+
+        // Persona-aware filtering: only show billets for the active user's rating
+        const { useDemoStore } = require('@/store/useDemoStore');
+        const demo = useDemoStore.getState();
+        let personaBillets = allBillets;
+        if (demo.isDemoMode && demo.selectedUser?.rating) {
+            const rating = demo.selectedUser.rating;
+            const filtered = allBillets.filter((b: Billet) => b.targetRating === rating);
+            if (filtered.length > 0) personaBillets = filtered;
+        }
 
         // Convert array to record for store
         const billetRecord: Record<string, Billet> = {};
         const newStack: string[] = [];
 
-        allBillets.forEach((billet) => {
+        personaBillets.forEach((billet: Billet) => {
             billetRecord[billet.id] = billet;
             newStack.push(billet.id);
         });

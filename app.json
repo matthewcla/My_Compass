@@ -17,7 +17,7 @@
       "icon": "./assets/images/my-icon-1024.png",
       "supportsTablet": true,
       "bundleIdentifier": "mil.navy.mycompass",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "NSCameraUsageDescription": "My Compass uses the camera for event check-in and travel claim receipt scanning.",
         "NSPhotoLibraryUsageDescription": "My Compass may save images to your photo library and allows you to attach receipt photos to travel claims.",

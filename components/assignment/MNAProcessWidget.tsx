@@ -82,16 +82,16 @@ export default function MNAProcessWidget() {
                         <View className="items-center" style={{ flex: 0 }}>
                             <View
                                 className={`w-3.5 h-3.5 rounded-full ${i === ACTIVE_STEP
-                                        ? 'bg-amber-500 dark:bg-amber-400'
-                                        : i < ACTIVE_STEP
-                                            ? 'bg-green-500 dark:bg-green-400'
-                                            : 'border-2 border-slate-300 dark:border-slate-600'
+                                    ? 'bg-amber-500 dark:bg-amber-400'
+                                    : i < ACTIVE_STEP
+                                        ? 'bg-green-500 dark:bg-green-400'
+                                        : 'border-2 border-slate-300 dark:border-slate-600'
                                     }`}
                             />
                             <Text
                                 className={`text-[9px] font-bold mt-1 ${i === ACTIVE_STEP
-                                        ? 'text-amber-700 dark:text-amber-300'
-                                        : 'text-slate-400 dark:text-slate-500'
+                                    ? 'text-amber-700 dark:text-amber-300'
+                                    : 'text-slate-400 dark:text-slate-500'
                                     }`}
                                 numberOfLines={1}
                             >
@@ -102,8 +102,8 @@ export default function MNAProcessWidget() {
                         {i < STEPS.length - 1 && (
                             <View
                                 className={`h-0.5 flex-1 mx-1 ${i < ACTIVE_STEP
-                                        ? 'bg-green-400 dark:bg-green-600'
-                                        : 'bg-slate-200 dark:bg-slate-700'
+                                    ? 'bg-green-400 dark:bg-green-600'
+                                    : 'bg-slate-200 dark:bg-slate-700'
                                     }`}
                             />
                         )}
@@ -118,14 +118,14 @@ export default function MNAProcessWidget() {
 
             {/* Expanded Detail */}
             {expanded && (
-                <View className="mt-4 gap-3">
+                <View className="mt-4 gap-4">
                     {STEPS.map((step, i) => (
                         <View key={step.label} className="flex-row gap-3">
                             <View className="items-center" style={{ width: 20 }}>
                                 <View
                                     className={`w-5 h-5 rounded-full items-center justify-center ${i === ACTIVE_STEP
-                                            ? 'bg-amber-500 dark:bg-amber-400'
-                                            : 'bg-slate-200 dark:bg-slate-700'
+                                        ? 'bg-amber-500 dark:bg-amber-400'
+                                        : 'bg-slate-200 dark:bg-slate-700'
                                         }`}
                                 >
                                     <Text className={`text-[10px] font-black ${i === ACTIVE_STEP ? 'text-white' : 'text-slate-500 dark:text-slate-400'
@@ -136,12 +136,12 @@ export default function MNAProcessWidget() {
                             </View>
                             <View className="flex-1">
                                 <Text className={`text-sm font-bold ${i === ACTIVE_STEP
-                                        ? 'text-amber-800 dark:text-amber-200'
-                                        : 'text-slate-700 dark:text-slate-300'
+                                    ? 'text-amber-800 dark:text-amber-200'
+                                    : 'text-slate-700 dark:text-slate-300'
                                     }`}>
                                     {step.label}
                                 </Text>
-                                <Text className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5">
+                                <Text className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
                                     {step.description}
                                 </Text>
                             </View>
@@ -149,7 +149,7 @@ export default function MNAProcessWidget() {
                     ))}
 
                     {/* Reassurance footer */}
-                    <View className="bg-amber-50 dark:bg-amber-900/10 p-3 rounded-xl border border-amber-100 dark:border-amber-800/30 mt-1">
+                    <View className="bg-amber-50 dark:bg-amber-900/10 p-3 rounded-xl border border-amber-100 dark:border-amber-800/30 mt-4">
                         <Text className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                             💡 You have 3 cycles over 6 months to be matched. If you're not selected in
                             one cycle, your slate automatically carries forward to the next.

@@ -1,6 +1,7 @@
 import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
 import MNAProcessWidget from '@/components/assignment/MNAProcessWidget';
 import ReadinessWidget from '@/components/assignment/ReadinessWidget';
+import SelectionChecklistWidget from '@/components/assignment/SelectionChecklistWidget';
 import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
@@ -13,22 +14,40 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { useDemoStore } from '@/store/useDemoStore';
-import { AssignmentPhase } from '@/types/pcs';
+import { usePCSStore } from '@/store/usePCSStore';
+import { AssignmentPhase, OrdersPipelineStatus } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
+    AlertTriangle,
     Anchor,
     BookOpen,
+    CheckCircle2,
     Compass,
     FileSearch,
     Layers,
     Rocket,
     Search,
+    ShieldCheck,
     Star,
 } from 'lucide-react-native';
 import React, { useCallback, useRef } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+
+// ── Pipeline Step Config ─────────────────────────────────────────────────────
+
+const PIPELINE_STEPS: { key: OrdersPipelineStatus; label: string; short: string; context: string }[] = [
+    { key: 'MATCH_ANNOUNCED', label: 'Match Announced', short: 'Matched', context: 'Your match has been announced.' },
+    { key: 'CO_ENDORSEMENT', label: 'CO Endorsement', short: 'CO', context: 'Your current command is reviewing your transfer.' },
+    { key: 'PERS_PROCESSING', label: 'PERS Processing', short: 'PERS', context: 'Detailers are finalizing your assignment details.' },
+    { key: 'ORDERS_DRAFTING', label: 'Orders Drafting', short: 'Drafting', context: 'Your official orders are currently being written.' },
+    { key: 'ORDERS_RELEASED', label: 'Orders Released', short: 'Released', context: 'Your orders have been officially released.' },
+];
+
+function getStepIndex(status: OrdersPipelineStatus): number {
+    return PIPELINE_STEPS.findIndex(s => s.key === status);
+}
 
 // ── Phase Content Configuration ──────────────────────────────────────────────
 
@@ -108,22 +127,15 @@ function getPhaseContent(
 
         case 'ORDERS_PROCESSING': {
             const procSel = useDemoStore.getState().selectionDetails;
-            const procStep = (() => {
-                switch (procSel?.pipelineStatus) {
-                    case 'MATCH_ANNOUNCED': return 'Match Announced';
-                    case 'CO_ENDORSEMENT': return 'Awaiting CO Endorsement';
-                    case 'PERS_PROCESSING': return 'PERS Processing';
-                    case 'ORDERS_DRAFTING': return 'Orders Being Drafted';
-                    case 'ORDERS_RELEASED': return 'Orders Released';
-                    default: return null;
-                }
-            })();
+            const activeIndex = procSel ? getStepIndex(procSel.pipelineStatus) : -1;
+            const activeStepInfo = activeIndex >= 0 ? PIPELINE_STEPS[activeIndex] : null;
+
             return {
                 icon: <FileSearch size={28} color={isDark ? '#fbbf24' : '#d97706'} />,
-                hero: 'Orders Being Processed',
-                explainer: procStep
-                    ? `Your orders are in the pipeline — currently at "${procStep}". Track the full pipeline below.`
-                    : 'Your orders are being routed through the approval chain. Track the full pipeline below.',
+                hero: 'Routing Orders',
+                explainer: activeStepInfo
+                    ? activeStepInfo.context
+                    : 'Your orders are processing normally through the pipeline. No action is required from you at this time.',
                 accentColors: {
                     gradient: isDark
                         ? ['rgba(251,191,36,0.10)', 'rgba(251,191,36,0.02)']
@@ -131,9 +143,9 @@ function getPhaseContent(
                     border: 'border-amber-500 dark:border-amber-400',
                     iconBg: 'bg-amber-100 dark:bg-amber-900/30',
                     text: 'text-amber-900 dark:text-amber-100',
-                    ctaLabel: 'Track Progress',
-                    ctaRoute: '/(assignment)/cycle',
-                    ctaBg: 'bg-amber-600 dark:bg-amber-700',
+                    ctaLabel: '', // No CTA needed, pipeline is inline
+                    ctaRoute: '',
+                    ctaBg: '',
                 },
             };
         }
@@ -195,6 +207,11 @@ export default function AssignmentDashboard() {
     );
     const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
     const negotiationDetails = useDemoStore(state => state.negotiationDetails);
+    const selectionDetails = useDemoStore(state => state.selectionDetails);
+
+    // OBLISERV state
+    const obliserv = usePCSStore(state => state.financials.obliserv);
+    const obliservBlocked = obliserv.required && obliserv.status !== 'COMPLETE';
 
     // Slate state for dynamic content during Negotiation
     const applications = useAssignmentStore(s => s.applications);
@@ -221,6 +238,7 @@ export default function AssignmentDashboard() {
 
     const phase = getPhaseContent(assignmentPhase, isDark);
     const isNegotiation = assignmentPhase === 'NEGOTIATION';
+    const isProcessing = assignmentPhase === 'ORDERS_PROCESSING';
 
     // Dynamic explainer for Negotiation
     const closeDate = negotiationDetails?.windowCloseDate
@@ -323,6 +341,34 @@ export default function AssignmentDashboard() {
                                     {negotiationExplainer ?? phase.explainer}
                                 </Text>
 
+                                {/* ── Selection: OBLISERV Gate ── */}
+                                {assignmentPhase === 'SELECTION' && obliservBlocked ? (
+                                    <View className="bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3 border border-red-200 dark:border-red-800/40">
+                                        <View className="flex-row items-center gap-2 mb-1.5">
+                                            <AlertTriangle size={14} color={isDark ? '#fca5a5' : '#dc2626'} />
+                                            <Text className="text-red-800 dark:text-red-200 text-xs font-black uppercase tracking-wider">
+                                                Action Required
+                                            </Text>
+                                        </View>
+                                        <Text className="text-red-700 dark:text-red-300 text-xs leading-relaxed mb-4">
+                                            Your service obligation doesn't cover this assignment. Extend or reenlist before orders can be processed.
+                                        </Text>
+                                        <TouchableOpacity
+                                            onPress={() => router.push('/pcs-wizard/obliserv-check' as any)}
+                                            className="bg-red-600 dark:bg-red-700 py-2.5 px-4 rounded-lg self-start"
+                                        >
+                                            <Text className="text-white text-xs font-bold">Extend to Accept</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : assignmentPhase === 'SELECTION' && obliserv.required ? (
+                                    <View className="flex-row items-center gap-2 bg-green-50 dark:bg-green-900/20 rounded-xl px-4 py-2.5 border border-green-100 dark:border-green-800/30">
+                                        <ShieldCheck size={14} color={isDark ? '#4ade80' : '#16a34a'} />
+                                        <Text className="text-green-800 dark:text-green-300 text-xs font-bold">
+                                            Service Obligation Met — orders can proceed
+                                        </Text>
+                                    </View>
+                                ) : null}
+
                                 {/* ── Negotiation: Inline Slate Visualization ── */}
                                 {isNegotiation && (
                                     <View className="mb-4">
@@ -381,8 +427,83 @@ export default function AssignmentDashboard() {
                                     </View>
                                 )}
 
-                                {/* CTA — hidden for SELECTION and NEGOTIATION (inline above) */}
-                                {assignmentPhase !== 'SELECTION' && !isNegotiation && (
+                                {/* ── Orders Processing: Inline Pipeline Tracker ── */}
+                                {isProcessing && selectionDetails && (
+                                    <View className="mb-4 mt-2">
+                                        <Text className="text-xs font-bold text-amber-700/70 dark:text-amber-400/70 uppercase tracking-wider mb-4">
+                                            Orders Pipeline
+                                        </Text>
+                                        <View className="flex-row items-center mb-5">
+                                            {PIPELINE_STEPS.map((step, i) => {
+                                                const activeIndex = getStepIndex(selectionDetails.pipelineStatus);
+                                                const isComplete = i < activeIndex;
+                                                const isActive = i === activeIndex;
+
+                                                return (
+                                                    <React.Fragment key={step.key}>
+                                                        {/* Step dot + label */}
+                                                        <View className="items-center flex-1">
+                                                            <View
+                                                                className={`w-7 h-7 rounded-full items-center justify-center border-2 ${isComplete
+                                                                    ? 'bg-amber-500 border-amber-500 dark:bg-amber-600 dark:border-amber-600'
+                                                                    : isActive
+                                                                        ? 'bg-white border-amber-500 dark:bg-slate-800 dark:border-amber-500'
+                                                                        : 'bg-slate-100 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700'
+                                                                    }`}
+                                                            >
+                                                                {isComplete ? (
+                                                                    <CheckCircle2 size={14} color="#FFFFFF" />
+                                                                ) : (
+                                                                    <Text className={`text-[10px] font-black ${isActive
+                                                                        ? 'text-amber-600 dark:text-amber-400'
+                                                                        : 'text-slate-400 dark:text-slate-500'
+                                                                        }`}>
+                                                                        {i + 1}
+                                                                    </Text>
+                                                                )}
+                                                            </View>
+                                                            <Text
+                                                                className={`text-[9px] font-bold mt-1.5 text-center ${isActive
+                                                                    ? 'text-amber-800 dark:text-amber-300'
+                                                                    : isComplete
+                                                                        ? 'text-amber-700/70 dark:text-amber-400/70'
+                                                                        : 'text-slate-400 dark:text-slate-500'
+                                                                    }`}
+                                                                numberOfLines={1}
+                                                            >
+                                                                {step.short}
+                                                            </Text>
+                                                        </View>
+                                                        {/* Connector line */}
+                                                        {i < PIPELINE_STEPS.length - 1 && (
+                                                            <View
+                                                                className={`h-[2px] flex-1 -mx-2 mt-[-16px] ${isComplete
+                                                                    ? 'bg-amber-400 dark:bg-amber-600'
+                                                                    : 'bg-amber-200/50 dark:bg-slate-700'
+                                                                    }`}
+                                                            />
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </View>
+
+                                        {/* Timeline Estimate */}
+                                        {selectionDetails.estimatedOrdersDate && (
+                                            <View className="bg-white/60 dark:bg-black/20 rounded-xl px-4 py-3 border border-amber-200 dark:border-amber-800/30">
+                                                <Text className="text-amber-900 dark:text-amber-100 text-xs font-semibold leading-relaxed">
+                                                    Orders typically release 4–6 weeks after selection.{' '}
+                                                    <Text className="font-black">
+                                                        Est. {new Date(selectionDetails.estimatedOrdersDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                    </Text>
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                )}
+
+                                {/* CTA — hidden for SELECTION, PROCESSING and NEGOTIATION (inline above) */}
+                                {assignmentPhase !== 'SELECTION' && !isNegotiation && !isProcessing && (
                                     <TouchableOpacity
                                         onPress={() => router.push(phase.accentColors.ctaRoute as any)}
                                         className={`${phase.accentColors.ctaBg} py-3.5 px-6 rounded-xl self-start`}
@@ -435,6 +556,11 @@ export default function AssignmentDashboard() {
 
                         {showSelectionDetail && (
                             <SelectionDetailWidget />
+                        )}
+
+                        {/* Interactive Verification Widget for Selection & Processing phases */}
+                        {(assignmentPhase === 'SELECTION' || assignmentPhase === 'ORDERS_PROCESSING') && (
+                            <SelectionChecklistWidget />
                         )}
 
                         {/* ── What Happens Next (contextual footer) ──────────── */}
@@ -548,19 +674,8 @@ function getNextSteps(
                 ];
             }
         case 'SELECTION':
-            return [
-                'Research your gaining command\'s location, housing options, and local schools.',
-                'If PCSing with dependents, start your EFMP screening early.',
-                'Begin gathering documents for your check-out process.',
-                'Contact the gaining command\'s sponsor coordinator when orders arrive.',
-            ];
         case 'ORDERS_PROCESSING':
-            return [
-                'Your orders are routing through the approval chain — check the pipeline tracker above for the current step.',
-                'Start researching your gaining command\'s location, housing, and local schools.',
-                'If PCSing with dependents, begin your EFMP screening early.',
-                'Once released, your PCS roadmap will activate automatically.',
-            ];
+            return []; // Plain text replaced by the interactive SelectionChecklistWidget
         case 'ORDERS_RELEASED':
             return [
                 'Review your orders and report-by date.',

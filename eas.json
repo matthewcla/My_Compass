@@ -30,6 +30,13 @@
     }
   },
   "submit": {
+    "development": {
+      "ios": {
+        "appleId": "matthewcla@gmail.com",
+        "ascAppId": "6759069546",
+        "appleTeamId": "LPN4Q9CRGG"
+      }
+    },
     "production": {
       "ios": {
         "appleId": "matthewcla@gmail.com",

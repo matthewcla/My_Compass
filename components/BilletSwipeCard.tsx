@@ -32,18 +32,19 @@ import Animated, {
     runOnJS,
     useAnimatedStyle,
     useSharedValue,
-    withSpring,
-    withTiming
+    withSpring
 } from 'react-native-reanimated';
 
 // --- Constants ---
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
-const VELOCITY_THRESHOLD = 800;
+const SWIPE_Y_THRESHOLD = SCREEN_HEIGHT * 0.2;
+const VELOCITY_THRESHOLD = 600;
 const HEADER_HEIGHT = 192;
 const TRIGGER_BAR_HEIGHT = 50;
-const DISMISS_CONFIG = { duration: 200, easing: Easing.in(Easing.cubic) };
+const DISMISS_CONFIG = { duration: 150, easing: Easing.out(Easing.quad) };
+const SNAP_BACK_CONFIG = { damping: 25, stiffness: 400, mass: 0.8 };
 
 const COLORS = {
     white: '#FFFFFF',
@@ -146,7 +147,6 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
 
     // --- TAP GESTURE: Triggers in top trigger zone (below header) ---
     const tap = Gesture.Tap()
-        .maxDuration(300)
         .onEnd((event: GestureUpdateEvent<TapGestureHandlerEventPayload>) => {
             const tapY = event.y;
             if (tapY >= HEADER_HEIGHT && tapY <= HEADER_HEIGHT + TRIGGER_BAR_HEIGHT) {
@@ -155,7 +155,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
         });
 
     const gestureAxis = useSharedValue<0 | 1 | 2>(0); // 0: null, 1: x-axis, 2: y-axis
-    const LOCK_THRESHOLD = 10;
+    const LOCK_THRESHOLD = 15;
 
     // --- PAN GESTURE: For swiping the card ---
     const pan = Gesture.Pan()
@@ -194,19 +194,20 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
         .onEnd((event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
             const velocityX = event.velocityX;
             const velocityY = event.velocityY;
+            const exitSpringConfig = { damping: 20, stiffness: 200, overshootClamping: true };
 
             // Only trigger actions if we are locked to that axis
             // Upward swipe (Super Like)
-            if (gestureAxis.value === 2 && (velocityY < -VELOCITY_THRESHOLD || translateY.value < -200)) {
-                translateY.value = withTiming(-1000, DISMISS_CONFIG, () => {
+            if (gestureAxis.value === 2 && (velocityY < -VELOCITY_THRESHOLD || translateY.value < -SWIPE_Y_THRESHOLD)) {
+                translateY.value = withSpring(-1000, { ...exitSpringConfig, velocity: velocityY }, () => {
                     runOnJS(handleSwipeComplete)('up');
                 });
                 return;
             }
 
             // Downward swipe (Defer / Not Ready)
-            if (gestureAxis.value === 2 && (velocityY > VELOCITY_THRESHOLD || translateY.value > 200)) {
-                translateY.value = withTiming(1000, DISMISS_CONFIG, () => {
+            if (gestureAxis.value === 2 && (velocityY > VELOCITY_THRESHOLD || translateY.value > SWIPE_Y_THRESHOLD)) {
+                translateY.value = withSpring(1000, { ...exitSpringConfig, velocity: velocityY }, () => {
                     translateY.value = 0; // Reset before re-render to prevent flash
                     runOnJS(handleSwipeComplete)('down');
                 });
@@ -215,25 +216,25 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
 
             if (gestureAxis.value === 1) {
                 if (velocityX > VELOCITY_THRESHOLD || translateX.value > SWIPE_THRESHOLD) {
-                    translateX.value = withTiming(SCREEN_WIDTH * 1.5, DISMISS_CONFIG, () => {
+                    translateX.value = withSpring(SCREEN_WIDTH * 1.5, { ...exitSpringConfig, velocity: velocityX }, () => {
                         runOnJS(handleSwipeComplete)('right');
                     });
                     return;
                 }
 
                 if (velocityX < -VELOCITY_THRESHOLD || translateX.value < -SWIPE_THRESHOLD) {
-                    translateX.value = withTiming(-SCREEN_WIDTH * 1.5, DISMISS_CONFIG, () => {
+                    translateX.value = withSpring(-SCREEN_WIDTH * 1.5, { ...exitSpringConfig, velocity: velocityX }, () => {
                         runOnJS(handleSwipeComplete)('left');
                     });
                     return;
                 }
             }
 
-            translateX.value = withSpring(0, { damping: 20, stiffness: 200 });
-            translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
+            translateX.value = withSpring(0, SNAP_BACK_CONFIG);
+            translateY.value = withSpring(0, SNAP_BACK_CONFIG);
         });
 
-    const composedGesture = Gesture.Exclusive(tap, pan);
+    const composedGesture = Gesture.Simultaneous(tap, pan);
 
     const cardStyle = useAnimatedStyle(() => {
         const rotate = active && gestureAxis.value === 1

@@ -213,7 +213,7 @@ export function ScreenHeader({
                                             color={colors.text}
                                             size={isInline ? 20 : 24}
                                             strokeWidth={2.5}
-                                            style={{ opacity: pressed ? 0.7 : 1 }}
+                                            style={{ opacity: pressed ? 0.7 : 1, marginLeft: -2 }}
                                         />
                                     );
                                 }}

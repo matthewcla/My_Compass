@@ -60,7 +60,7 @@ interface PhaseContent {
         iconBg: string;
         text: string;
         ctaLabel: string;
-        ctaRoute: string;
+        ctaRoute: any;
         ctaBg: string;
     };
 }
@@ -83,7 +83,7 @@ function getPhaseContent(
                     iconBg: 'bg-amber-100 dark:bg-amber-900/30',
                     text: 'text-amber-900 dark:text-amber-100',
                     ctaLabel: 'Explore Billets',
-                    ctaRoute: '/(career)/discovery',
+                    ctaRoute: { pathname: '/(career)/discovery', params: { returnPath: '/(tabs)/(assignment)' } },
                     ctaBg: 'bg-amber-600 dark:bg-amber-700',
                 },
             };
@@ -181,7 +181,7 @@ function getPhaseContent(
                     iconBg: 'bg-blue-100 dark:bg-blue-900/30',
                     text: 'text-blue-900 dark:text-blue-100',
                     ctaLabel: 'Start Exploring',
-                    ctaRoute: '/(career)/discovery',
+                    ctaRoute: { pathname: '/(career)/discovery', params: { returnPath: '/(tabs)/(assignment)' } },
                     ctaBg: 'bg-blue-600 dark:bg-blue-700',
                 },
             };
@@ -524,10 +524,10 @@ export default function AssignmentDashboard() {
 
                         {showDiscoveryStats && (
                             <DiscoveryStatusCard
-                                onStartExploring={() => router.push('/(career)/discovery' as any)}
+                                onStartExploring={() => router.push({ pathname: '/(career)/discovery', params: { returnPath: '/(tabs)/(assignment)' } } as any)}
                                 onBadgeTap={(category: DiscoveryBadgeCategory, count: number) => {
                                     if (count === 0) return;
-                                    router.push({ pathname: '/(career)/discovery', params: { filter: category } } as any);
+                                    router.push({ pathname: '/(career)/discovery', params: { filter: category, returnPath: '/(tabs)/(assignment)' } } as any);
                                 }}
                             />
                         )}

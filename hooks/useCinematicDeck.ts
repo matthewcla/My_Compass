@@ -35,11 +35,16 @@ export function useCinematicDeck({ totalSteps, onComplete, onExit }: UseCinemati
         }
     }, [totalSteps]);
 
+    const reset = useCallback(() => {
+        setStep(0);
+    }, []);
+
     return {
         step,
         next,
         back,
         goTo,
+        reset,
         isFirst: step === 0,
         isLast: step === totalSteps - 1,
     };

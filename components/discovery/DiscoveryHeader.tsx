@@ -1,7 +1,7 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
-import { ListOrdered, SlidersHorizontal, X } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ChevronLeft, ListOrdered, SlidersHorizontal } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -31,6 +31,7 @@ export function DiscoveryHeader({
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const router = useRouter();
+    const params = useLocalSearchParams<{ returnPath?: string }>();
 
     // Animated toggle pill
     const translateX = useSharedValue(isSandbox ? 100 : 0);
@@ -54,7 +55,14 @@ export function DiscoveryHeader({
 
     const handlePressExit = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        router.back();
+        if (params.returnPath) {
+            router.navigate(params.returnPath as any);
+        } else if (router.canGoBack()) {
+            router.back();
+        } else {
+            // Fallback
+            router.navigate('/(tabs)/(assignment)');
+        }
     };
 
     const handlePressFilter = () => {
@@ -84,7 +92,7 @@ export function DiscoveryHeader({
                 onPress={handlePressExit}
                 className={`w-10 h-10 items-center justify-center rounded-full border active:opacity-80 ${iconBtnBg}`}
             >
-                <X size={20} color={iconColor} strokeWidth={2.5} />
+                <ChevronLeft size={24} color={iconColor} strokeWidth={2.5} style={{ marginLeft: -2 }} />
             </TouchableOpacity>
 
             {/* Center: Animated Mode Toggle */}

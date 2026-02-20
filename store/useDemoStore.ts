@@ -49,6 +49,11 @@ interface DemoState {
   assignmentPhaseOverride: AssignmentPhase | null;
   selectionDetails: SelectionDetails | null;
   negotiationDetails: NegotiationDetails | null;
+  selectionChecklist: {
+    contactVerified: boolean;
+    dependentsVerified: boolean;
+    sponsorContacted: boolean;
+  };
   lifecycleStep: number;
   demoTimelineOverride: LifecycleTimeline | null;
   showDevFloatingIcons: boolean;
@@ -68,6 +73,8 @@ interface DemoState {
   advanceLiquidationStatus: () => void;
   loadMockHistoricalOrders: () => void;
   toggleDevFloatingIcons: () => void;
+  toggleSelectionChecklist: (key: keyof DemoState['selectionChecklist']) => void;
+  resetSelectionChecklist: () => void;
 }
 
 export const useDemoStore = create<DemoState>()(
@@ -84,6 +91,11 @@ export const useDemoStore = create<DemoState>()(
       assignmentPhaseOverride: null,
       selectionDetails: null,
       negotiationDetails: null,
+      selectionChecklist: {
+        contactVerified: false,
+        dependentsVerified: false,
+        sponsorContacted: false,
+      },
       lifecycleStep: 0,
       demoTimelineOverride: null,
       showDevFloatingIcons: true,
@@ -138,6 +150,21 @@ export const useDemoStore = create<DemoState>()(
         pcsSubPhaseOverride: null,
         uctPhaseOverride: null,
         activeDemoScenarioId: null,
+      }),
+
+      toggleSelectionChecklist: (key) => set((state) => ({
+        selectionChecklist: {
+          ...state.selectionChecklist,
+          [key]: !state.selectionChecklist[key]
+        }
+      })),
+
+      resetSelectionChecklist: () => set({
+        selectionChecklist: {
+          contactVerified: false,
+          dependentsVerified: false,
+          sponsorContacted: false,
+        }
       }),
 
       setLifecycleStep: (step) => {

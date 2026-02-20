@@ -4,7 +4,7 @@
 
     <STACK>React Native (Expo SDK 50+), TypeScript (Strict), NativeWind</STACK>
 
-    <TARGETS>iOS (Primary), Android, Web App, Mobile PWA</TARGETS>
+    <TARGETS>iOS (Primary), Android</TARGETS>
 
     <DATA>Supabase (Remote), SQLite (Local Cache)</DATA>
 

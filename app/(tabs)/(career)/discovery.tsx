@@ -144,20 +144,21 @@ export default function DiscoveryScreen() {
     const categoryFilteredBillets = useMemo((): Billet[] => {
         if (!categoryFilter) return filteredBillets;
 
+        const activeDecisions = mode === 'real' ? realDecisions : sandboxDecisions;
         const allBillets = Object.values(billets);
         switch (categoryFilter) {
             case 'wow':
-                return allBillets.filter(b => realDecisions[b.id] === 'super');
+                return allBillets.filter(b => activeDecisions[b.id] === 'super');
             case 'liked':
-                return allBillets.filter(b => realDecisions[b.id] === 'like');
+                return allBillets.filter(b => activeDecisions[b.id] === 'like');
             case 'passed':
-                return allBillets.filter(b => realDecisions[b.id] === 'nope');
+                return allBillets.filter(b => activeDecisions[b.id] === 'nope');
             case 'remaining':
-                return allBillets.filter(b => !realDecisions[b.id]);
+                return allBillets.filter(b => !activeDecisions[b.id]);
             default:
                 return filteredBillets;
         }
-    }, [categoryFilter, filteredBillets, billets, realDecisions]);
+    }, [categoryFilter, filteredBillets, billets, realDecisions, sandboxDecisions, mode]);
 
     const activeBillets = categoryFilter ? categoryFilteredBillets : filteredBillets;
     const categoryLabels: Record<string, string> = {
@@ -173,6 +174,11 @@ export default function DiscoveryScreen() {
         totalSteps: activeBillets.length,
         onComplete: handleDeckComplete
     });
+
+    // Reset deck step when filter changes so we don't start out of bounds
+    useEffect(() => {
+        deck.reset();
+    }, [categoryFilter, mode]);
 
     const currentBillet = activeBillets[deck.step];
 
@@ -203,8 +209,13 @@ export default function DiscoveryScreen() {
                     const activeAppCount = Object.values(applicationsRef.current).filter(a =>
                         ['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)
                     ).length;
-                    if (activeAppCount <= 7) {
-                        showFeedback(`Drafted! Added to Slate (${Math.min(activeAppCount + 1, 7)}/7)`, 'success');
+
+                    // The slate count does not include the card we JUST swiped (it hasn't fully propagated to the store state here yet)
+                    // So we show the NEW total which is activeAppCount + 1
+                    const newTotal = activeAppCount + 1;
+
+                    if (newTotal <= 7) {
+                        showFeedback(`Drafted! Added to Slate (${newTotal}/7)`, 'success');
                     } else {
                         showFeedback('Slate Full. Added to Manifest instead.', 'warning');
                     }
@@ -307,19 +318,20 @@ export default function DiscoveryScreen() {
                         {/* Deck Area */}
                         <View className="h-[85%] items-center relative w-full">
                             <View className="w-full flex-1 max-w-md px-4 pb-12">
-                                {/* Render current card */}
+                                {/* Deck Container */}
                                 <View className="flex-1 relative w-full h-full">
                                     {/* Back Card (Next + 1) - Deepest */}
                                     {filteredBillets[deck.step + 2] && !categoryFilter && (
                                         <View
-                                            className="absolute w-full h-full bg-slate-50 dark:bg-slate-800 rounded-[40px] border border-slate-200 dark:border-slate-700 shadow-sm"
+                                            className="absolute w-full h-full"
                                             style={{
                                                 zIndex: 0,
-                                                opacity: 0.3,
                                                 transform: [{ translateY: 70 }, { scale: 0.9 }],
                                             }}
                                             pointerEvents="none"
-                                        />
+                                        >
+                                            <View className="w-full h-full bg-slate-50 dark:bg-slate-800 rounded-[40px] border border-slate-200 dark:border-slate-700 shadow-sm opacity-30" />
+                                        </View>
                                     )}
 
                                     {/* Back Card (Next) - Middle */}
@@ -328,17 +340,13 @@ export default function DiscoveryScreen() {
                                             className="absolute w-full h-full"
                                             style={{
                                                 zIndex: 5,
-                                                opacity: 0.9,
                                                 transform: [{ translateY: 35 }, { scale: 0.95 }],
-                                                shadowOpacity: 0.1,
-                                                shadowOffset: { width: 0, height: 4 },
-                                                elevation: 5
                                             }}
                                             pointerEvents="none"
                                         >
                                             <BilletSwipeCard
-                                                key={filteredBillets[deck.step + 1].id}
-                                                index={0}
+                                                key={`bg-${filteredBillets[deck.step + 1].id}`}
+                                                index={1}
                                                 active={false}
                                                 billet={filteredBillets[deck.step + 1]}
                                                 onSwipe={NO_OP}
@@ -349,9 +357,12 @@ export default function DiscoveryScreen() {
 
                                     {/* Front Card (Current) - Active */}
                                     {currentBillet ? (
-                                        <View className="flex-1 z-10">
+                                        <View
+                                            className="absolute w-full h-full"
+                                            style={{ zIndex: 10 }}
+                                        >
                                             <BilletSwipeCard
-                                                key={currentBillet.id}
+                                                key={`fg-${currentBillet.id}`}
                                                 index={0}
                                                 active={true}
                                                 billet={currentBillet}

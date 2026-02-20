@@ -174,7 +174,7 @@ export default function HubDashboard() {
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <DiscoveryStatusCard
-                            onStartExploring={() => handleTilePress('/(career)/discovery')}
+                            onStartExploring={() => router.push({ pathname: '/(career)/discovery', params: { returnPath: '/(tabs)/(hub)' } } as any)}
                             onBadgeTap={(category: DiscoveryBadgeCategory, count: number) => {
                                 if (count === 0) {
                                     const labels: Record<DiscoveryBadgeCategory, string> = {
@@ -183,7 +183,7 @@ export default function HubDashboard() {
                                     Alert.alert('Nothing here yet', `You don't have any ${labels[category]} billets yet. Start exploring!`);
                                     return;
                                 }
-                                router.push({ pathname: '/(career)/discovery', params: { filter: category } } as any);
+                                router.push({ pathname: '/(career)/discovery', params: { filter: category, returnPath: '/(tabs)/(hub)' } } as any);
                             }}
                         />
                     </Animated.View>

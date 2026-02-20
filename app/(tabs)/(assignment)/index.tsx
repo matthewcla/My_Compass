@@ -27,9 +27,8 @@ import {
     FileSearch,
     Layers,
     Rocket,
-    Search,
     ShieldCheck,
-    Star,
+    Star
 } from 'lucide-react-native';
 import React, { useCallback, useRef } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -257,8 +256,9 @@ export default function AssignmentDashboard() {
     // Slot indices for the dot visualization
     const showDetailer = isNegotiation;
     const showDiscoveryStats = assignmentPhase === 'DISCOVERY'
-        || assignmentPhase === 'ON_RAMP';
-    const showDiscoveryEntry = isNegotiation;
+        || assignmentPhase === 'ON_RAMP'
+        || assignmentPhase === 'ORDERS_RELEASED'
+        || isNegotiation;
     const showSelectionDetail = assignmentPhase === 'SELECTION' || assignmentPhase === 'ORDERS_PROCESSING';
     const isOnRamp = assignmentPhase === 'ON_RAMP';
 
@@ -538,21 +538,6 @@ export default function AssignmentDashboard() {
                             <DetailerContactWidget />
                         )}
 
-                        {showDiscoveryEntry && (
-                            <TouchableOpacity
-                                onPress={() => router.push('/(career)/discovery' as any)}
-                                className="flex-row items-center justify-between bg-indigo-50 dark:bg-indigo-900/20 px-5 py-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800"
-                                style={{ minHeight: 44 }}
-                            >
-                                <View className="flex-row items-center gap-2.5">
-                                    <Search size={16} color={isDark ? '#a5b4fc' : '#4f46e5'} />
-                                    <Text className="text-indigo-700 dark:text-indigo-300 font-semibold text-sm">
-                                        Browse More Billets
-                                    </Text>
-                                </View>
-                                <Text className="text-indigo-400 dark:text-indigo-500 text-xs">→</Text>
-                            </TouchableOpacity>
-                        )}
 
                         {showSelectionDetail && (
                             <SelectionDetailWidget />
@@ -680,6 +665,7 @@ function getNextSteps(
             return [
                 'Review your orders and report-by date.',
                 'Head to the PCS Roadmap to begin planning your move.',
+                'Start exploring billets for your next tour—bookmark jobs to build your smart bench early.',
             ];
         default:
             return [

@@ -17,7 +17,7 @@ configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false });
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
 import { useColorScheme } from '@/components/useColorScheme';
-import { SessionProvider } from '@/lib/ctx';
+import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
@@ -47,13 +47,15 @@ SplashScreen.preventAutoHideAsync().catch(() => {
   /* Ignore error - splash screen is already hidden */
 });
 
-export default function RootLayout() {
+// Extracted inner layout to consume Session context
+function InnerLayout() {
   const [fontsLoaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
   const [dbInitialized, setDbInitialized] = useState(false);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
+  const { isLoading: isSessionLoading } = useSession();
 
   // Track splash state to prevent double-hide race conditions
   const isSplashHidden = useRef(false);
@@ -75,7 +77,6 @@ export default function RootLayout() {
         }
       } catch (e) {
         console.error('Failed to initialize database:', e);
-        // On web, or if DB fails, we still might want to show the UI for testing/audit purposes
         if (!cancelled) {
           setDbInitialized(true);
         }
@@ -83,8 +84,6 @@ export default function RootLayout() {
     };
 
     void initStorage();
-
-    // Initialize PCS Cache
     usePCSStore.getState().initializeOrdersCache();
 
     return () => {
@@ -98,27 +97,25 @@ export default function RootLayout() {
     await safeSplashHide();
   }, []);
 
-  // Safety Timeout: Force hide splash if app hangs for 2 seconds
+  // Safety Timeout: Force hide splash if app hangs for 5 seconds (increased from 2)
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!isSplashHidden.current) {
-        console.warn('Splash Screen Force Hide: Safety Timeout Triggered (2000ms)');
+        console.warn('Splash Screen Force Hide: Safety Timeout Triggered (5000ms)');
         hideSplash().catch(e => console.warn('hideSplash failed in timeout:', e));
       }
-    }, 2000);
+    }, 5000);
 
     return () => clearTimeout(timeout);
   }, [hideSplash]);
 
-  // Orchestration: Hide Splash only when EVERYTHING is ready
+  // Orchestration: Hide Splash only when EVERYTHING is ready (including auth session)
   useEffect(() => {
-    if (fontsLoaded && dbInitialized && isLayoutReady) {
+    if (fontsLoaded && dbInitialized && isLayoutReady && !isSessionLoading) {
       hideSplash().catch(e => console.warn('hideSplash failed in orchestration:', e));
       registerForPushNotificationsAsync();
     }
-  }, [fontsLoaded, dbInitialized, isLayoutReady, hideSplash]);
-
-
+  }, [fontsLoaded, dbInitialized, isLayoutReady, isSessionLoading, hideSplash]);
 
   const onLayoutRootView = useCallback(async () => {
     setIsLayoutReady(true);
@@ -127,24 +124,32 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
+    <>
+      <AuthGuard />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
+      <View
+        className="flex-1 bg-white dark:bg-black"
+        onLayout={onLayoutRootView}
+        style={{ position: 'relative' }}
+      >
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+          <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="leave" />
+          <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
+        </Stack>
+        <SpotlightOverlay />
+      </View>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SessionProvider>
-          <AuthGuard />
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
-          <View
-            className="flex-1 bg-white dark:bg-black"
-            onLayout={onLayoutRootView}
-            style={{ position: 'relative' }} // Ensure overlay if needed, though default flex-1 column is fine
-          >
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-              <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
-              <Stack.Screen name="leave" />
-              <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
-            </Stack>
-            <SpotlightOverlay />
-          </View>
+          <InnerLayout />
         </SessionProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

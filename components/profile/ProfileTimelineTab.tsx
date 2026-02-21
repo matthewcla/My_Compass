@@ -238,7 +238,7 @@ export const ProfileTimelineTab = memo(function ProfileTimelineTab({
     return (
         <View style={{ paddingHorizontal: 16 }}>
             {/* ── Filter Chips ──────────────────────────────── */}
-            <View style={{ height: 44 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}

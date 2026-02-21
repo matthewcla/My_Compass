@@ -562,17 +562,19 @@ export default function ProfileScreen() {
                         </View>
 
                         {/* ── Horizontal Scrollable Controls ────────────────── */}
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 16 }}
-                        >
-                            <ControlPill label="Professional" isActive={activeTab === 'professional'} onPress={handleProfessionalPress} isDark={isDark} />
-                            <ControlPill label="Personal" isActive={activeTab === 'personal'} onPress={handlePersonalPress} isDark={isDark} />
-                            <ControlPill label="Timeline" isActive={activeTab === 'timeline'} onPress={handleTimelinePress} isDark={isDark} />
-                            <ControlPill label="Preferences" isActive={false} onPress={handlePreferencesPress} isDark={isDark} disabled />
-                            <ControlPill label="Surveys" isActive={false} onPress={handleSurveysPress} isDark={isDark} disabled />
-                        </ScrollView>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 16 }}
+                            >
+                                <ControlPill label="Professional" isActive={activeTab === 'professional'} onPress={handleProfessionalPress} isDark={isDark} />
+                                <ControlPill label="Personal" isActive={activeTab === 'personal'} onPress={handlePersonalPress} isDark={isDark} />
+                                <ControlPill label="Timeline" isActive={activeTab === 'timeline'} onPress={handleTimelinePress} isDark={isDark} />
+                                <ControlPill label="Preferences" isActive={false} onPress={handlePreferencesPress} isDark={isDark} disabled />
+                                <ControlPill label="Surveys" isActive={false} onPress={handleSurveysPress} isDark={isDark} disabled />
+                            </ScrollView>
+                        </View>
 
                         {/* ── Divider ─────────────────────────────────────── */}
                         <View style={{ height: 1, backgroundColor: isDark ? '#1E293B' : '#E2E8F0', marginHorizontal: 20, marginBottom: 16 }} />

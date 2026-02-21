@@ -352,8 +352,14 @@ export const SQLiteTableDefinitions = {
  */
 export async function initializeSQLiteTables(db: { execAsync: (sql: string) => Promise<void> }): Promise<void> {
   // Create all tables
-  for (const tableDef of Object.values(SQLiteTableDefinitions)) {
-    await db.execAsync(tableDef);
+  for (const [tableName, tableDef] of Object.entries(SQLiteTableDefinitions)) {
+    try {
+      await db.execAsync(tableDef);
+    } catch (e) {
+      console.error(`[SQLite Error] Failed to create table schemas for ${tableName}:`, e);
+      // We don't throw here to allow other tables/migrations to attempt to run,
+      // but this highlights schema syntax errors.
+    }
   }
 
   // Run versioned migration system

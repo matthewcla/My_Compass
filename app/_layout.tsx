@@ -123,6 +123,10 @@ function InnerLayout() {
 
   const colorScheme = useColorScheme();
 
+  if (!fontsLoaded || !dbInitialized) {
+    return null;
+  }
+
   return (
     <>
       <AuthGuard />

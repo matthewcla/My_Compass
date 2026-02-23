@@ -11,9 +11,16 @@ export function useColorScheme(): 'light' | 'dark' {
     const effectiveScheme = themeMode === 'system' ? (systemColorScheme ?? 'light') : themeMode;
 
     useEffect(() => {
-        // Sync our derived effective scheme with NativeWind so tailwind updates
-        setColorScheme(effectiveScheme);
+        // Sync our derived effective scheme with NativeWind so tailwind updates.
+        // Guard against race condition: the NativeWind CSS (with darkMode flag)
+        // may not have been injected into the runtime yet on first render.
+        try {
+            setColorScheme(effectiveScheme);
+        } catch {
+            // darkMode flag not yet available — will succeed on next render cycle
+        }
     }, [effectiveScheme, setColorScheme]);
 
     return effectiveScheme;
 }
+

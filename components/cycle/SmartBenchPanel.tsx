@@ -3,7 +3,8 @@ import { SmartBenchItem } from '@/store/useAssignmentStore';
 import { Billet } from '@/types/schema';
 import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react-native';
 import React, { useEffect } from 'react';
-import { Dimensions, FlatList, Platform, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { Dimensions, Platform, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { BenchCard } from './BenchCard';
@@ -168,7 +169,7 @@ export const SmartBenchPanel: React.FC<SmartBenchPanelProps> = ({ items, onSelec
                         pointerEvents: isExpanded.value ? 'auto' : 'none',
                         flex: 1
                     }))}>
-                        <FlatList
+                        <FlashList
                             data={items}
                             renderItem={({ item }) => (
                                 <View className="flex-1 p-2" style={{ maxWidth: '50%' }}>
@@ -180,10 +181,11 @@ export const SmartBenchPanel: React.FC<SmartBenchPanelProps> = ({ items, onSelec
                                 </View>
                             )}
                             numColumns={2}
+                            // @ts-expect-error
+                            estimatedItemSize={144}
                             keyExtractor={(item) => item.billet.id}
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 20, paddingTop: 10 }}
-                            columnWrapperStyle={{ justifyContent: 'space-between' }}
                         />
                         <TouchableOpacity onPress={onSeeAll} className="items-center py-4 border-t border-slate-100 dark:border-slate-800">
                             <Text className="text-blue-600 font-semibold">View All in Discovery</Text>

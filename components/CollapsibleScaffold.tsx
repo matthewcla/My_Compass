@@ -17,10 +17,12 @@ import {
     ViewStyle
 } from 'react-native';
 import Animated, {
+    runOnJS,
     useAnimatedScrollHandler,
     useAnimatedStyle,
     useComposedEventHandler,
     useSharedValue,
+    withSpring
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -122,14 +124,67 @@ export function CollapsibleScaffold({
     const scrollableHeaderHeight = Math.max(animatedHeaderHeight - clampedMinTopBarHeight, 0);
     const headerCollapseDistance = useSharedValue(0);
     const prevHeaderScrollY = useSharedValue(0);
+    const isSnapping = useSharedValue(false);
 
-    const { onScroll: scrollControlHandler } = useScrollControl();
+    const { onScroll: scrollControlHandler, forceSnapTabBar } = useScrollControl();
+
+    // Tightly tuned spring configuration for a crisp, cinematic 
+    // UI response that feels premium and massless
+    const SPRING_CONFIG = { mass: 0.8, damping: 20, stiffness: 200 };
+
     const headerScrollHandler = useAnimatedScrollHandler({
         onBeginDrag: (event) => {
+            isSnapping.value = false;
             prevHeaderScrollY.value = event.contentOffset.y;
         },
+        onEndDrag: (event) => {
+            if (!diffClampEnabled) return;
+            isSnapping.value = true;
+
+            const velocity = event.velocity?.y ?? 0;
+            let isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+
+            // Flicks override distance thresholds
+            if (velocity > 0.5) {
+                isHidden = true;
+            } else if (velocity < -0.5) {
+                isHidden = false;
+            }
+
+            const targetDistance = isHidden ? scrollableHeaderHeight : 0;
+
+            headerCollapseDistance.value = withSpring(targetDistance, SPRING_CONFIG, (finished) => {
+                if (finished) isSnapping.value = false;
+            });
+
+            if (forceSnapTabBar) {
+                // We use timing for the tab bar as it needs slightly softer 
+                // easing out of the bottom inset to match OS standards
+                runOnJS(forceSnapTabBar)(isHidden);
+            }
+        },
+        onMomentumEnd: () => {
+            if (!diffClampEnabled || isSnapping.value) return;
+            isSnapping.value = true;
+
+            const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+            const targetDistance = isHidden ? scrollableHeaderHeight : 0;
+
+            headerCollapseDistance.value = withSpring(targetDistance, SPRING_CONFIG, (finished) => {
+                if (finished) isSnapping.value = false;
+            });
+
+            if (forceSnapTabBar) {
+                runOnJS(forceSnapTabBar)(isHidden);
+            }
+        },
         onScroll: (event) => {
-            if (!diffClampEnabled) {
+            if (!diffClampEnabled || isSnapping.value) {
+                // Keep keeping track of real scroll Y even if ignoring delta
+                const currentY = event.contentOffset.y;
+                if (Number.isFinite(currentY) && currentY > 0) {
+                    prevHeaderScrollY.value = currentY;
+                }
                 return;
             }
 
@@ -150,7 +205,7 @@ export function CollapsibleScaffold({
                 scrollableHeaderHeight,
             );
         },
-    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeight]);
+    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeight, forceSnapTabBar]);
 
     const composedOnScrollHandler = useComposedEventHandler(
         [headerScrollHandler as any, scrollControlHandler as any]
@@ -183,13 +238,10 @@ export function CollapsibleScaffold({
                 return previousHeight;
             }
 
-            // Prevent transient layout shrink reports during drag from collapsing
-            // the range abruptly. We accept growth and first measurement.
-            if (previousHeight <= 0) {
-                return nextHeight;
-            }
-
-            return Math.max(previousHeight, nextHeight);
+            // We explicitly allow shrinkage here now because if the StatusCard
+            // renders different variants (or shifts after fonts load), locking to 
+            // the maximum observed layout height creates unbreakable ghost space
+            return nextHeight;
         });
     }, []);
 

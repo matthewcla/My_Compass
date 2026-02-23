@@ -1,5 +1,6 @@
 import OnboardingCard from '@/components/onboarding/OnboardingCard';
 import { ScreenGradient } from '@/components/ScreenGradient';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
@@ -137,8 +138,12 @@ export default function MenuHubScreen() {
                 }}
                 className="rounded-b-3xl px-5 pb-5 pt-3 border border-t-0 mb-8"
               >
+
+                {/* Theme Mode Toggle */}
+                <ThemeToggle />
+
                 {/* Privacy Mode Toggle */}
-                <View className="flex-row items-center justify-between py-2">
+                <View className="flex-row items-center justify-between py-2 mt-2 border-t border-slate-100 dark:border-slate-800 pt-4">
                   <View className="flex-row items-center gap-3 flex-1 mr-4">
                     <Shield size={18} color={isDark ? '#60A5FA' : '#2563EB'} />
                     <View className="flex-1">
@@ -160,8 +165,8 @@ export default function MenuHubScreen() {
           {!settingsOpen && <View className="mb-8" />}
         </Animated.View>
 
-        {/* Dev Tools Toggle — only in dev builds */}
-        {__DEV__ && (
+        {/* Dev Tools Toggle */}
+        {enableDevSettings && (
           <Animated.View
             entering={FadeInUp.duration(400).delay(200)}
           >

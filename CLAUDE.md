@@ -1,22 +1,429 @@
-# CLAUDE.md — My Compass
+# CLAUDE.md — My Compass Constitution
 
-## Project Overview
+> This is the single authoritative instruction file for all AI agents working on this codebase.
+> Every rule here is mandatory. When in doubt, re-read Section 1.
 
-My Compass is a **universal military personnel management app** (iOS, Android, Web) built with a single React Native codebase. It serves U.S. Navy sailors with assignment management, leave requests, career planning, and communications — all designed for **offline-first** use aboard ships and in austere environments.
+---
 
-## Tech Stack (Strict — No Deviations)
+## 1. Priority Hierarchy
 
-- **Framework:** React Native 0.81 via Expo SDK 54, TypeScript 5.9 (strict)
-- **Navigation:** Expo Router 6 (file-based routing in `app/`)
-- **Styling:** NativeWind 4 (Tailwind CSS for React Native) — no CSS files
-- **State:** Zustand 5 — stores in `store/use[Feature]Store.ts`
-- **Icons:** Lucide-React-Native — no other icon libraries
-- **Animations:** React Native Reanimated 4 + Moti
-- **Forms:** React Hook Form + Zod 4 validation
-- **Storage:** expo-sqlite (persistent), AsyncStorage (non-sensitive KV), expo-secure-store (tokens/PII)
-- **Lists:** @shopify/flash-list for performant long lists
+When rules conflict, the higher priority **always wins**. No exceptions.
 
-## Commands
+| Priority | Principle | Meaning |
+|----------|-----------|---------|
+| **P5** | Security & PII Protection | Never compromise. No shortcuts. No "just for debugging." |
+| **P4** | Offline-First | Every feature must work without a network connection. |
+| **P3** | Platform Compliance | React Native only. No HTML, no CSS files, no web-only APIs. |
+| **P2** | Existing Patterns | Follow established conventions before inventing new ones. |
+| **P1** | Simplicity | Fewer abstractions, fewer dependencies, fewer lines of code. |
+| **P0** | Speed of Delivery | Ship fast, but never at the cost of P1–P5. |
+
+**Conflict resolution examples:**
+
+- Need a quick feature but it requires network? → Build offline-first anyway. **(P4 > P0)**
+- Cleaner code if we add a new library? → Use what we have. **(P2 > P1)**
+- Faster to log user data for debugging? → Never log PII. **(P5 > P0)**
+- Simpler to use `<div>` for web? → Use `<View>` always. **(P3 > P1)**
+- New pattern would be "better"? → Match existing patterns first. **(P2 > P1)**
+
+---
+
+## 2. Identity
+
+- **What:** Universal military personnel management app (iOS, Android, Web) from a single React Native codebase
+- **Who:** U.S. Navy sailors — active duty enlisted and officers
+- **Where:** Ships, bases, austere environments with unreliable or no connectivity
+- **Philosophy:** "Glass Cockpit" — high-density, zero-scroll situational awareness (see `docs/DESIGN_STANDARDS.md`)
+- **Current state:** Offline-first with mock data. No live API connections. Pre-ATO.
+- **Design surface:** Mobile-first. Web is a deployment target, not the primary design surface.
+
+---
+
+## 3. Tech Stack (Immutable — No Additions Without Explicit Approval)
+
+| Layer | Technology | Version | Notes |
+|-------|-----------|---------|-------|
+| Framework | React Native via Expo | RN 0.81, SDK 54 | Managed workflow |
+| Language | TypeScript | 5.9 strict | No `any` types without justification |
+| Navigation | Expo Router | 6 | File-based routing in `app/` |
+| Styling | NativeWind | 4 | Tailwind for RN via `className` prop |
+| State | Zustand | 5 | Stores in `store/use[Feature]Store.ts` |
+| Icons | Lucide-React-Native | — | No other icon libraries |
+| Animations | Reanimated 4 + Moti | — | Worklets for 60fps |
+| Forms | React Hook Form + Zod | Zod 4 | Schema-first validation |
+| Lists | @shopify/flash-list | — | Required for lists >20 items |
+
+### Storage Tiers
+
+| Tier | Technology | Use For | Never Use For |
+|------|-----------|---------|---------------|
+| **Tier 1** | `expo-secure-store` | Auth tokens, session credentials, PII | — |
+| **Tier 2** | `expo-sqlite` (encrypted) | Persistent structured data (leave, PCS, user records) | — |
+| **Tier 3** | `AsyncStorage` | UI preferences, theme, non-sensitive cache | Tokens, PII, or any sensitive data |
+
+---
+
+## 4. Constitutional Rules
+
+Every rule uses the format: **NEVER / ALWAYS / WHY**. These are immutable.
+
+### 4.1 No HTML Elements
+
+- **NEVER:** `<div>`, `<span>`, `<h1>`, `<p>`, `<ul>`, `<li>`, `<img>`, `<a>`, `<button>`, `<input>`, `<form>`
+- **ALWAYS:** `<View>`, `<Text>`, `<Image>`, `<ScrollView>`, `<Pressable>`, `<Link>` (expo-router), `<TextInput>`
+- **WHY:** HTML elements crash on iOS/Android. There is no DOM in React Native.
+
+```tsx
+// ❌ WRONG — crashes on native
+<div className="flex-1"><span>Hello</span></div>
+
+// ✅ RIGHT
+<View className="flex-1"><Text>Hello</Text></View>
+```
+
+### 4.2 No CSS Files or Styled-Components
+
+- **NEVER:** Create `.css` files, import `.css`, use `styled-components`, use `emotion`
+- **ALWAYS:** Use `className` prop with Tailwind classes via NativeWind
+- **EXCEPTION:** `global.css` exists for CSS custom property definitions only
+
+```tsx
+// ❌ WRONG
+import './styles.css';
+const StyledView = styled(View)`background: white;`;
+
+// ✅ RIGHT
+<View className="flex-1 bg-white dark:bg-slate-900">
+```
+
+### 4.3 No Web-Only APIs
+
+- **NEVER:** `document.*`, `window.*`, `localStorage`, `sessionStorage`, `react-router-dom`, `onClick`
+- **ALWAYS:** `Platform.OS` checks, `.native.tsx`/`.web.tsx` file extensions, `onPress`
+- **WHY:** These APIs do not exist in the React Native runtime.
+
+### 4.4 Routing is Expo Router Only
+
+- **NEVER:** `react-router-dom`, `<a href>`, direct `react-navigation` calls, manual `navigation.navigate()`
+- **ALWAYS:** `expo-router` `<Link>` component, `router.push()`, `router.replace()`, file-based routes in `app/`
+- Routes live in the `app/` directory using file-system convention.
+
+### 4.5 PII is Forbidden in Logs
+
+- **NEVER:** `console.log(user)`, `console.log(user.dodId)`, `console.error(JSON.stringify(userData))`
+- **ALWAYS:** Use `SecureLogger` from `@/utils/logger` — it auto-redacts SSN, DoD ID, email, and phone patterns
+- **PII fields:** SSN, DoD ID, email, phone, full name, home address, emergency contact info
+- If you must log a user reference, log only the UUID, never the full object.
+
+```tsx
+// ❌ WRONG
+console.log('[UserStore] loaded user:', user);
+
+// ✅ RIGHT
+import { SecureLogger } from '@/utils/logger';
+SecureLogger.info('[UserStore] loaded user', { id: user.id });
+```
+
+### 4.6 Secrets are Never Hardcoded
+
+- **NEVER:** `const API_KEY = 'abc123'`, `Authorization: 'Bearer sk-...'`, secrets in comments or test fixtures
+- **ALWAYS:** `process.env.EXPO_PUBLIC_*` for public config, environment variables for secrets
+
+### 4.7 Offline-First is Mandatory
+
+- **NEVER:** Assume network is available. Never block UI on a network request. Never show a blank screen because fetch failed.
+- **ALWAYS:** Load from local storage first → display cached data → fetch in background → merge and persist.
+- Mutations go through the sync queue (`@/services/syncQueue`) so they persist and retry when offline.
+
+```tsx
+// ❌ WRONG — blocks on network, blank screen if offline
+fetchData: async () => {
+  const res = await fetch(url);
+  set({ data: await res.json() });
+},
+
+// ✅ RIGHT — cache-first, background refresh
+fetchData: async () => {
+  const cached = await storage.getData('feature');
+  if (cached) set({ data: cached });
+  try {
+    const fresh = await services.feature.getData();
+    set({ data: fresh });
+    await storage.saveData('feature', fresh);
+  } catch { /* cached data still displayed */ }
+},
+```
+
+### 4.8 Navy Terminology is Required
+
+Use strict Navy terms in all UI copy, variable names, comments, and documentation.
+
+| ✅ Use | ❌ Never Use |
+|--------|-------------|
+| Leave | Vacation, PTO, Time Off |
+| Detailer | Recruiter, HR Rep |
+| PRD (Projected Rotation Date) | End Date, Contract End |
+| Billet | Position, Job, Role |
+| Command | Company, Organization |
+| Sailor | Employee, User, Worker (in UI copy) |
+| Orders | Transfer Request |
+| OBLISERV | Obligation, Contract Extension |
+| PCS (Permanent Change of Station) | Transfer, Relocation, Move |
+| DLA | Moving Allowance |
+| TLA | Temp Housing, Hotel Allowance |
+| HHG | Household Goods, Furniture |
+| NSIPS | HR System |
+| VAULTIS | Visible, Accessible, Understandable, Linked, Trustworthy, Interoperable, Secure |
+| CDE | Critical Data Element — highest-impact data the Navy depends on |
+| CUI | Controlled Unclassified Information |
+| DSA | Data Sharing Agreement — formal contract for system-to-system data exchange |
+| ICAM | Identity, Credential, and Access Management |
+| ABAC | Attribute-Based Access Control (fine-grained, policy-based) |
+| RBAC | Role-Based Access Control (organizational structure-based) |
+| Zero Trust | Security model requiring continuous verification, no implicit trust |
+| DIL | Disconnected, Intermittent, Low-Bandwidth (operating environment) |
+| MDM | Master Data Management — single source of truth for key entities |
+| RAI | Responsible AI |
+| IDES | Interface Data Exchange Standards |
+| Data Steward | Official accountable for data quality, security, and usage in a domain |
+| Data Lineage | Traceable path of data from source to current location |
+
+### 4.9 Follow Existing Patterns
+
+- **NEVER:** Invent new state management, new component architecture, new styling approach, or new form library
+- **ALWAYS:** Search `store/`, `components/`, and `app/` for existing patterns before building anything new
+- Before creating a new component, search for a similar one first.
+- Before creating a new store, review `store/useLeaveStore.ts` for the canonical pattern.
+- Before building a new flow, check `docs/FLOWS_IMPLEMENTED.md` and `docs/FLOWS_NOT_IMPLEMENTED.md`.
+
+### 4.10 Imports Use Path Aliases
+
+- **NEVER:** `import { X } from '../../../components/Y'`
+- **ALWAYS:** `import { X } from '@/components/Y'`
+- The `@/` alias maps to the project root.
+
+### 4.11 USN Data Governance Compliance
+
+This app must align with the USN Data Governance Framework. These rules apply when designing data models, storage, APIs, and sync logic. See `docs/USN_DATA_GOVERNANCE_SUMMARY.md` for full reference.
+
+**VAULTIS — Every data asset must be:**
+
+| Principle | What It Means for My Compass |
+|-----------|------------------------------|
+| **Visible** | Every data entity has a typed definition in `types/` and a home in a Zustand store |
+| **Accessible** | Data is available through typed service interfaces, not buried in implementation details |
+| **Understandable** | Zod schemas document data shape; field names are self-describing |
+| **Linked** | Related data uses consistent foreign keys and references across stores |
+| **Trustworthy** | All external data validated with Zod at the boundary before entering the app |
+| **Interoperable** | All data access goes through standardized service interfaces (see `services/api/CLAUDE.md`) |
+| **Secure** | Storage tiers enforced (Rule 4.5, 4.6); Zero Trust assumed for all external data |
+
+**Data Quality Awareness (7 DOW Dimensions):**
+
+When designing schemas and validation, consider: **Accuracy, Completeness, Conformity, Consistency, Uniqueness, Integrity, Timeliness.** These are awareness principles — agents should think about them when creating or modifying data models, not mandatory Zod rules yet.
+
+**Zero Trust for Data:**
+- **NEVER** trust data from external APIs without Zod validation
+- Principle of least privilege — components access only what they need via store selectors
+- All data mutations should be auditable (future: AuditLogService per `docs/TECHNICAL_DEBT.md` TD-008)
+
+**Edge-First / DIL (Disconnected, Intermittent, Low-Bandwidth):**
+- Reinforces Rule 4.7. The USN Data Governance Framework formally mandates DIL support for all Navy systems.
+- Data federation over duplication where practical — query at source, cache locally
+- Sync queue handles mutations when offline; local storage handles reads
+
+**Data Lineage:**
+- Business logic belongs in `utils/` and `services/`, not scattered in UI components
+- Zod schemas in `types/` are the source of truth for data shape
+- Data transformations should be traceable — avoid opaque transforms buried in components
+
+### 4.12 Agent Autonomy & File Mutability
+
+- **NEVER:** Modify `CLAUDE.md` files or any documentation in the `docs/` directory unless explicitly instructed by the user.
+- **ALWAYS:** Ask for permission before updating structural guidelines or core instructions.
+- **WHY:** Agents should focus on implementation, not unilaterally rewriting project governance.
+
+### 4.13 AI-Assisted Development Robustness
+
+- **NEVER:** Rely on partial edits that might miss closing brackets, or overwrite helper variables without full context.
+- **ALWAYS:** Watch out for the **'Generic Closing Bracket' Hazard** and **'Partial Edit Scope Trap'**. When using code replacement tools, ensure your target blocks uniquely identify the exact code to be replaced, including all necessary closing tags/brackets.
+- **WHY:** Automated edits can corrupt syntax if they target ambiguous code blocks or fail to close React Native components properly.
+
+---
+
+## 5. Standard Operating Procedures
+
+### 5.1 Component Pattern
+
+```tsx
+// File: components/[feature]/MyComponent.tsx
+import { View, Text, Pressable } from 'react-native';
+
+interface MyComponentProps {
+  title: string;
+  onAction?: () => void;
+}
+
+export function MyComponent({ title, onAction }: MyComponentProps) {
+  return (
+    <Pressable onPress={onAction} className="p-4 bg-white dark:bg-slate-800 rounded-xl">
+      <Text className="text-base font-semibold text-slate-900 dark:text-white">
+        {title}
+      </Text>
+    </Pressable>
+  );
+}
+```
+
+- Named exports (never default exports)
+- Props interface defined above component
+- `className` for all styling, `dark:` prefix for dark mode
+- PascalCase filename matching component name
+
+### 5.2 Store Pattern (Zustand)
+
+```tsx
+// File: store/use[Feature]Store.ts
+import { create } from 'zustand';
+
+interface FeatureState {
+  data: SomeType | null;
+  isLoading: boolean;
+}
+
+interface FeatureActions {
+  fetchData: () => Promise<void>;
+  reset: () => void;
+}
+
+export const useFeatureStore = create<FeatureState & FeatureActions>((set, get) => ({
+  // --- State ---
+  data: null,
+  isLoading: false,
+
+  // --- Actions ---
+  fetchData: async () => {
+    set({ isLoading: true });
+    // 1. Load cache first (offline-first)
+    const cached = await storage.getData('feature');
+    if (cached) set({ data: cached });
+    // 2. Background fetch
+    const fresh = await services.feature.getData();
+    set({ data: fresh, isLoading: false });
+    await storage.saveData('feature', fresh);
+  },
+  reset: () => set({ data: null, isLoading: false }),
+}));
+
+// Selector hooks for granular re-renders
+export const useFeatureData = () => useFeatureStore(s => s.data);
+export const useFeatureLoading = () => useFeatureStore(s => s.isLoading);
+```
+
+- Separate `State` and `Actions` interfaces
+- Section comments: `// --- State ---`, `// --- Actions ---`
+- Offline-first: load from storage → display → fetch background → persist
+- Export selector hooks for granular subscriptions
+- See `store/CLAUDE.md` for full store conventions.
+
+### 5.3 Flow Pattern (Wizard)
+
+All multi-step forms use the **continuous-scroll wizard** pattern. Before building a new flow:
+
+1. Identify its type from the **Flow Type Taxonomy** in `docs/DESIGN_STANDARDS.md` §2.2.2
+2. Follow the canonical implementation for that type
+3. Required elements: `WizardStatusBar`, scroll-tracked sections, auto-save drafts (800ms debounce), exit confirmation modal, success celebration
+
+**Five flow types:** Confirmation, Request, Estimator, Document Generation, Screening.
+
+Reference implementation: `app/leave/request.tsx`
+
+### 5.4 Service Layer Pattern
+
+- All data access goes through typed interfaces in `services/api/interfaces/`
+- Mock implementations in `services/api/mock[Feature]Service.ts`
+- Registry in `services/api/serviceRegistry.ts` — swap mock for real here
+- **NEVER** call mock services directly from stores; always go through the registry
+- See `docs/API_INTEGRATION_ROADMAP.md` for the mock-to-real transition plan.
+
+### 5.5 Naming Conventions
+
+| Artifact | Convention | Example |
+|----------|-----------|---------|
+| Store | `use[Feature]Store.ts` | `useLeaveStore.ts` |
+| Hook | `use[Feature].ts` | `useDiffClampScroll.ts` |
+| Component | `PascalCase.tsx` | `ScreenHeader.tsx` |
+| Type file | `lowercase.ts` | `schema.ts`, `pcs.ts` |
+| Service | `mock[Feature]Service.ts` | `mockLeaveService.ts` |
+| Interface | `I[Feature]Service.ts` | `IAssignmentService.ts` |
+| Route | lowercase / `[param]` | `pcs-wizard/[segmentId]` |
+
+### 5.6 Styling
+
+- Mobile-first layout (`flex-col`), adapt for tablet/web with `md:` breakpoints
+- Dark mode via `dark:` prefix and `useColorScheme()` hook
+- Theme colors defined as CSS variables in `global.css`, extended in `tailwind.config.js`
+- Custom shadows: `apple-sm`, `apple-md`, `apple-lg`
+- Haptic feedback on interactive elements via `expo-haptics` with `Platform.OS !== 'web'` guard
+
+---
+
+## 6. Reference Map
+
+Before creating any new component, flow, widget, or tool — check the relevant docs below. The "not implemented" docs contain design specs for planned features; follow those specs rather than designing from scratch.
+
+| Topic | Document | When to Read |
+|-------|----------|-------------|
+| UI philosophy, flow types, animations, component conventions | `docs/DESIGN_STANDARDS.md` | Before building any UI or flow |
+| Security controls, PII protection, crypto status | `docs/SECURITY_POSTURE.md` | Before touching auth, storage, or logging |
+| ATO/RMF/STIG compliance gaps | `docs/ATO_READINESS.md` | Before security architecture decisions |
+| Mock-to-real API transition plan | `docs/API_INTEGRATION_ROADMAP.md` | Before modifying service layer |
+| Known tech debt (P0–P3) | `docs/TECHNICAL_DEBT.md` | Before refactoring or when encountering workarounds |
+| Full dependency inventory with risk | `docs/DEPENDENCY_MANIFEST.md` | Before adding or upgrading dependencies |
+| Built flows with routes and stores | `docs/FLOWS_IMPLEMENTED.md` | Before building a new flow |
+| Planned but unbuilt flows | `docs/FLOWS_NOT_IMPLEMENTED.md` | When scoping new flow work |
+| Built widgets (40+) | `docs/WIDGETS_IMPLEMENTED.md` | Before building a new widget |
+| Planned but unbuilt widgets | `docs/WIDGETS_NOT_IMPLEMENTED.md` | When scoping new widget work |
+| Built tools | `docs/TOOLS_IMPLEMENTED.md` | Before building a new tool |
+| Planned but unbuilt tools | `docs/TOOLS_NOT_IMPLEMENTED.md` | When scoping new tool work |
+| USN Data Governance (VAULTIS, Zero Trust, Data Quality) | `docs/USN_DATA_GOVERNANCE_SUMMARY.md` | Before designing data models, APIs, or storage patterns |
+| API integration governance, service contracts, DSA patterns | `services/api/CLAUDE.md` | Before building or modifying service implementations |
+
+---
+
+## 7. Project Structure
+
+```
+app/                    # Expo Router file-based routes (entry point)
+  (tabs)/               # Tab groups: (hub), (assignment), (career), (pcs), (admin), (profile), (calendar)
+  leave/                # Leave request flow
+  pcs-wizard/           # PCS wizard flows
+  travel-claim/         # Travel claim flow
+  inbox/                # Inbox/messaging
+  _layout.tsx           # Root layout (providers, AuthGuard)
+  sign-in.tsx           # Auth entry
+components/             # Reusable components (see components/CLAUDE.md)
+  ui/                   # Generic UI primitives
+  wizard/               # Wizard step components
+  pcs/                  # PCS feature components
+  [feature]/            # Feature-specific component groups
+store/                  # Zustand stores (see store/CLAUDE.md)
+hooks/                  # Custom React hooks
+services/               # Business logic & API clients
+  api/                  # REST client, interfaces, mocks, registry (see services/api/CLAUDE.md)
+  syncQueue.ts          # Offline mutation queue
+  storage.ts            # Unified SQLite + AsyncStorage interface
+types/                  # TypeScript types & Zod schemas
+config/                 # App configuration (auth, API endpoints)
+constants/              # Colors, enums, demo data
+utils/                  # Pure utilities (logger, formatting, calculations)
+lib/                    # Auth context, encryption, storage hooks
+docs/                   # Developer documentation (see Section 6)
+```
+
+---
+
+## 8. Commands
 
 | Command | Purpose |
 |---------|---------|
@@ -28,122 +435,17 @@ My Compass is a **universal military personnel management app** (iOS, Android, W
 | `npx jest` | Run tests |
 | `npx tsc --noEmit` | Type-check without emitting |
 
-## Project Structure
+---
 
-```
-app/                    # Expo Router file-based routes (entry point)
-  (tabs)/               # Tab navigator groups: (hub), (assignment), (career), (pcs), (admin), (profile), (calendar), inbox
-  leave/                # Leave request flow
-  sign-in.tsx           # Auth entry
-  _layout.tsx           # Root layout (providers, AuthGuard)
-components/             # Reusable React Native components
-  ui/                   # Generic UI primitives
-  spotlight/            # Spotlight search overlay
-  [feature]/            # Feature-specific components
-store/                  # Zustand stores (use[Feature]Store.ts)
-hooks/                  # Custom React hooks (use[Feature].ts)
-services/               # Business logic, API clients, storage
-  api/                  # REST API client & typed endpoints
-  storage.ts            # SQLite + AsyncStorage unified interface
-types/                  # TypeScript types & Zod schemas
-config/                 # App configuration (auth, etc.)
-constants/              # Color definitions, enums
-utils/                  # Pure utility functions (logger, formatting)
-lib/                    # Auth context, encryption, storage hooks
-scripts/                # Dev scripts, benchmarks, mocks
-```
-
-## Critical Rules
-
-### No HTML — Native Only
-- **NEVER** use `<div>`, `<span>`, `<h1>`, `<ul>`, `<li>`, `<img>`, `<a>` — they crash on iOS/Android
-- **ALWAYS** use `<View>`, `<Text>`, `<Image>`, `<ScrollView>`, `<Pressable>`, `<Link>` (from expo-router)
-
-### No CSS Files
-- **NEVER** create `.css` files or use styled-components
-- **ALWAYS** style via `className` prop with Tailwind classes (NativeWind)
-- Exception: `global.css` defines CSS custom properties for theming
-
-### No Web-Only APIs
-- **NEVER** use `document.*`, `window.*`, `react-router-dom`
-- Use `Platform.OS` checks or `.native.tsx` / `.web.tsx` file extensions when platform-specific code is needed
-
-### Imports
-- Use `@/` path alias for all project imports (e.g., `@/components`, `@/store`, `@/types`)
-
-## Security & PII (CRITICAL)
-
-- **Zero Trust:** Network is hostile. Trust no inputs. Enforce HTTPS/TLS.
-- **PII is FORBIDDEN in logs:** SSN, DoD ID, Email, Phone — never in `console.log/warn/error`
-  - Use `SecureLogger` from `@/utils/logger` which auto-redacts PII patterns
-- **Auth tokens:** expo-secure-store (native) or encrypted cookies (web) — NEVER plain AsyncStorage
-- **Data at rest:** SQLite (encrypted) or SecureStore for sensitive data
-- **Secrets:** Always `process.env`, never hardcoded
-
-## Conventions
-
-### Naming
-- **Stores:** `use[Feature]Store.ts` (e.g., `useLeaveStore.ts`)
-- **Hooks:** `use[Feature].ts` (e.g., `useDiffClampScroll.ts`)
-- **Components:** PascalCase `.tsx` (e.g., `ScreenHeader.tsx`)
-- **Types/Services/Utils:** lowercase `.ts` (e.g., `storage.ts`, `schema.ts`)
-
-### Component Pattern
-```tsx
-import { View, Text } from 'react-native';
-import { useSomeStore } from '@/store/useSomeStore';
-
-interface Props { /* typed props */ }
-
-export function MyComponent({ prop }: Props) {
-  const data = useSomeStore(s => s.data);
-  return (
-    <View className="flex-1 bg-white dark:bg-black">
-      <Text className="text-lg font-semibold">{data}</Text>
-    </View>
-  );
-}
-```
-
-### Store Pattern (Zustand)
-```tsx
-export const useFeatureStore = create<State>((set, get) => ({
-  data: null,
-  isLoading: false,
-  fetchData: async () => {
-    set({ isLoading: true });
-    // ... fetch logic
-    set({ data, isLoading: false });
-  },
-}));
-// Export selector hooks for granular subscriptions
-export const useFeatureData = () => useFeatureStore(s => s.data);
-```
-
-### Styling
-- Mobile-first layout (`flex-col`), adapt for tablet/web with `md:` breakpoints
-- Dark mode via `dark:` prefix and `useColorScheme()` hook
-- Theme colors defined as CSS variables in `global.css`
-- Custom shadows: `apple-sm`, `apple-md`, `apple-lg`
-- Haptic feedback on interactive elements via `expo-haptics` with `Platform.OS` guard
-
-### Navy Terminology
-Use strict Navy terms throughout the codebase:
-- "Leave" (not Vacation/PTO)
-- "Detailer" (not Recruiter)
-- "PRD" — Projected Rotation Date (not End Date)
-- "Billet" (not Position/Job)
-- "Command" (not Company/Organization)
-
-## Testing
+## 9. Testing
 
 - **Framework:** Jest with `react-native` preset
-- **Test location:** `__tests__/` directory and `components/__tests__/`
+- **Location:** `__tests__/` directory and `components/__tests__/`
 - **Pattern:** `**/__tests__/**/*.test.ts(x)`
-- **Path alias:** `@/*` mapped in jest.config.js
+- **Path alias:** `@/*` mapped in `jest.config.js`
 
-## Deployment
+## 10. Deployment
 
 - **Web:** Vercel — builds via `expo export --platform web`, outputs to `dist/`
 - **Mobile:** Expo managed workflow
-- **Deep linking:** `mycompass://` scheme configured in app.json
+- **Deep linking:** `mycompass://` scheme configured in `app.json`

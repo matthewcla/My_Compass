@@ -63,6 +63,9 @@ export default function HubDashboard() {
             .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     }, [userLeaveRequestIds, leaveRequestsMap]);
 
+    // Track the dynamic height of the ScreenHeader so the StatusCard can perfectly flush away
+    const [minHeaderHeight, setMinHeaderHeight] = React.useState(82);
+
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
@@ -373,7 +376,7 @@ export default function HubDashboard() {
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
-                minTopBarHeight={80}
+                minTopBarHeight={minHeaderHeight}
                 topBar={
                     <View className="bg-slate-50 dark:bg-slate-950">
                         <View className="px-4 pt-4">
@@ -382,12 +385,14 @@ export default function HubDashboard() {
                                 daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
                             />
                         </View>
-                        <ScreenHeader
-                            title=""
-                            subtitle=""
-                            withSafeArea={false}
-                            searchConfig={globalSearchConfig}
-                        />
+                        <View onLayout={(e) => setMinHeaderHeight(Math.round(e.nativeEvent.layout.height))}>
+                            <ScreenHeader
+                                title=""
+                                subtitle=""
+                                withSafeArea={false}
+                                searchConfig={globalSearchConfig}
+                            />
+                        </View>
                     </View>
                 }
                 contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -410,6 +415,7 @@ export default function HubDashboard() {
                             <View style={{ height: typeof leadingItem === 'string' && leadingItem.startsWith('tier') ? 18 : 24 }} />
                         )}
                         ListHeaderComponent={<View style={{ height: 8 }} />}
+                        ListFooterComponent={<View style={{ height: 250 }} />}
 
                         estimatedItemSize={150}
                         style={{ flex: 1 }}

@@ -310,13 +310,13 @@ const generateDummyMessages = (): InboxMessage[] => {
         const persona = personaFn(user, daysAgo);
         // Merge: persona-specific + shared, sorted by timestamp descending
         return [...persona, ...shared].sort(
-            (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+            (a, b) => b.timestamp.localeCompare(a.timestamp)
         );
     }
 
     // Fallback for non-demo users: shared messages only
     return shared.sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        (a, b) => b.timestamp.localeCompare(a.timestamp)
     );
 };
 

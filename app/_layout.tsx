@@ -16,6 +16,7 @@ configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false });
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
+import { ThemeTransitionOverlay } from '@/components/ThemeTransitionOverlay';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
@@ -143,6 +144,7 @@ function InnerLayout() {
           <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
         </Stack>
         <SpotlightOverlay />
+        <ThemeTransitionOverlay />
       </View>
     </>
   );

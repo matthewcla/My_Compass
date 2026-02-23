@@ -22,7 +22,7 @@ import Animated, {
     useAnimatedStyle,
     useComposedEventHandler,
     useSharedValue,
-    withTiming,
+    withSpring
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -124,47 +124,67 @@ export function CollapsibleScaffold({
     const scrollableHeaderHeight = Math.max(animatedHeaderHeight - clampedMinTopBarHeight, 0);
     const headerCollapseDistance = useSharedValue(0);
     const prevHeaderScrollY = useSharedValue(0);
+    const isSnapping = useSharedValue(false);
 
     const { onScroll: scrollControlHandler, forceSnapTabBar } = useScrollControl();
+
+    // Tightly tuned spring configuration for a crisp, cinematic 
+    // UI response that feels premium and massless
+    const SPRING_CONFIG = { mass: 0.8, damping: 20, stiffness: 200 };
+
     const headerScrollHandler = useAnimatedScrollHandler({
         onBeginDrag: (event) => {
+            isSnapping.value = false;
             prevHeaderScrollY.value = event.contentOffset.y;
         },
         onEndDrag: (event) => {
             if (!diffClampEnabled) return;
-            if (event.velocity && Math.abs(event.velocity.y) > 0.5) {
-                return;
+            isSnapping.value = true;
+
+            const velocity = event.velocity?.y ?? 0;
+            let isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+
+            // Flicks override distance thresholds
+            if (velocity > 0.5) {
+                isHidden = true;
+            } else if (velocity < -0.5) {
+                isHidden = false;
             }
 
-            const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+            const targetDistance = isHidden ? scrollableHeaderHeight : 0;
 
-            if (isHidden) {
-                headerCollapseDistance.value = withTiming(scrollableHeaderHeight, { duration: 250 });
-            } else {
-                headerCollapseDistance.value = withTiming(0, { duration: 250 });
-            }
+            headerCollapseDistance.value = withSpring(targetDistance, SPRING_CONFIG, (finished) => {
+                if (finished) isSnapping.value = false;
+            });
 
-            // Synchronize the bottom tab bar to precisely match the top bar's snap decision
             if (forceSnapTabBar) {
+                // We use timing for the tab bar as it needs slightly softer 
+                // easing out of the bottom inset to match OS standards
                 runOnJS(forceSnapTabBar)(isHidden);
             }
         },
         onMomentumEnd: () => {
-            if (!diffClampEnabled) return;
-            const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+            if (!diffClampEnabled || isSnapping.value) return;
+            isSnapping.value = true;
 
-            if (isHidden) {
-                headerCollapseDistance.value = withTiming(scrollableHeaderHeight, { duration: 250 });
-            } else {
-                headerCollapseDistance.value = withTiming(0, { duration: 250 });
-            }
+            const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+            const targetDistance = isHidden ? scrollableHeaderHeight : 0;
+
+            headerCollapseDistance.value = withSpring(targetDistance, SPRING_CONFIG, (finished) => {
+                if (finished) isSnapping.value = false;
+            });
 
             if (forceSnapTabBar) {
                 runOnJS(forceSnapTabBar)(isHidden);
             }
         },
         onScroll: (event) => {
-            if (!diffClampEnabled) {
+            if (!diffClampEnabled || isSnapping.value) {
+                // Keep keeping track of real scroll Y even if ignoring delta
+                const currentY = event.contentOffset.y;
+                if (Number.isFinite(currentY) && currentY > 0) {
+                    prevHeaderScrollY.value = currentY;
+                }
                 return;
             }
 

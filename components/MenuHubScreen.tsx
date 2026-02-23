@@ -160,8 +160,8 @@ export default function MenuHubScreen() {
           {!settingsOpen && <View className="mb-8" />}
         </Animated.View>
 
-        {/* Dev Tools Toggle — only in dev builds */}
-        {__DEV__ && (
+        {/* Dev Tools Toggle */}
+        {enableDevSettings && (
           <Animated.View
             entering={FadeInUp.duration(400).delay(200)}
           >

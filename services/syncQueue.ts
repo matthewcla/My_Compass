@@ -35,7 +35,7 @@ const BASE_RETRY_DELAY = 2_000; // 2s
 // =============================================================================
 
 class SyncQueueService {
-    private queue: SyncOperation[] = [];
+    private queue: Map<string, SyncOperation> = new Map();
     private listeners: Set<SyncQueueListener> = new Set();
     private executor: SyncExecutor | null = null;
     private processing = false;
@@ -53,7 +53,7 @@ class SyncQueueService {
 
     subscribe(listener: SyncQueueListener): () => void {
         this.listeners.add(listener);
-        listener(this.queue);
+        listener(Array.from(this.queue.values()));
         return () => {
             this.listeners.delete(listener);
         };
@@ -74,7 +74,7 @@ class SyncQueueService {
             errorMessage: null,
         };
 
-        this.queue.push(operation);
+        this.queue.set(id, operation);
         await this.persist();
         this.notifyListeners();
 
@@ -87,9 +87,12 @@ class SyncQueueService {
 
         try {
             const now = Date.now();
-            const readyOps = this.queue.filter(
-                (op) => op.status === 'pending' && op.nextRetryAt <= now
-            );
+            const readyOps = [];
+            for (const op of this.queue.values()) {
+                if (op.status === 'pending' && op.nextRetryAt <= now) {
+                    readyOps.push(op);
+                }
+            }
 
             for (const op of readyOps) {
                 op.status = 'in_flight';
@@ -100,7 +103,7 @@ class SyncQueueService {
                 try {
                     await this.executor(op.type, op.payload);
                     // Success — remove from queue
-                    this.queue = this.queue.filter((o) => o.id !== op.id);
+                    this.queue.delete(op.id);
                 } catch (err) {
                     op.errorMessage = err instanceof Error ? err.message : 'Unknown error';
 
@@ -123,8 +126,8 @@ class SyncQueueService {
     }
 
     async retryDeadLetter(id: string): Promise<boolean> {
-        const op = this.queue.find((o) => o.id === id && o.status === 'dead_letter');
-        if (!op) return false;
+        const op = this.queue.get(id);
+        if (!op || op.status !== 'dead_letter') return false;
 
         op.status = 'pending';
         op.attemptCount = 0;
@@ -138,15 +141,27 @@ class SyncQueueService {
     }
 
     getQueue(): SyncOperation[] {
-        return [...this.queue];
+        return Array.from(this.queue.values());
     }
 
     getPendingCount(): number {
-        return this.queue.filter((op) => op.status === 'pending' || op.status === 'in_flight').length;
+        let count = 0;
+        for (const op of this.queue.values()) {
+            if (op.status === 'pending' || op.status === 'in_flight') {
+                count++;
+            }
+        }
+        return count;
     }
 
     getDeadLetterCount(): number {
-        return this.queue.filter((op) => op.status === 'dead_letter').length;
+        let count = 0;
+        for (const op of this.queue.values()) {
+            if (op.status === 'dead_letter') {
+                count++;
+            }
+        }
+        return count;
     }
 
     // =========================================================================
@@ -158,11 +173,14 @@ class SyncQueueService {
             const raw = await AsyncStorage.getItem(STORAGE_KEY);
             if (raw) {
                 const parsed: SyncOperation[] = JSON.parse(raw);
-                // Reset any in_flight back to pending on hydration (app restarted)
-                this.queue = parsed.map((op) => ({
-                    ...op,
-                    status: op.status === 'in_flight' ? 'pending' : op.status,
-                }));
+                this.queue.clear();
+                for (const op of parsed) {
+                    // Reset any in_flight back to pending on hydration (app restarted)
+                    if (op.status === 'in_flight') {
+                        op.status = 'pending';
+                    }
+                    this.queue.set(op.id, op);
+                }
                 this.notifyListeners();
             }
         } catch (e) {
@@ -172,7 +190,7 @@ class SyncQueueService {
 
     private async persist(): Promise<void> {
         try {
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(this.queue));
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(this.queue.values())));
         } catch (e) {
             console.error('[SyncQueue] Failed to persist queue:', e);
         }
@@ -183,7 +201,7 @@ class SyncQueueService {
     // =========================================================================
 
     private notifyListeners(): void {
-        const snapshot = [...this.queue];
+        const snapshot = Array.from(this.queue.values());
         for (const listener of this.listeners) {
             listener(snapshot);
         }

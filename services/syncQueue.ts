@@ -34,8 +34,9 @@ const BASE_RETRY_DELAY = 2_000; // 2s
 // SYNC QUEUE SERVICE
 // =============================================================================
 
-class SyncQueueService {
+export class SyncQueueService {
     private queue: Map<string, SyncOperation> = new Map();
+    private persistTimer: ReturnType<typeof setTimeout> | null = null;
     private listeners: Set<SyncQueueListener> = new Set();
     private executor: SyncExecutor | null = null;
     private processing = false;
@@ -188,12 +189,18 @@ class SyncQueueService {
         }
     }
 
-    private async persist(): Promise<void> {
-        try {
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(this.queue.values())));
-        } catch (e) {
-            console.error('[SyncQueue] Failed to persist queue:', e);
+    private persist(): void {
+        if (this.persistTimer) {
+            clearTimeout(this.persistTimer);
         }
+
+        this.persistTimer = setTimeout(async () => {
+            try {
+                await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(this.queue.values())));
+            } catch (e) {
+                console.error('[SyncQueue] Failed to persist queue:', e);
+            }
+        }, 500);
     }
 
     // =========================================================================

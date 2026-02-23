@@ -23,6 +23,7 @@ interface ScrollControlContextType {
     reservedBottomInset: SharedValue<number>;
     setTabBarMetrics: (maxHeight: number, collapsedInset: number) => void;
     resetBar: () => void;
+    forceSnapTabBar: (isHidden: boolean) => void;
 }
 
 const ScrollControlContext = createContext<ScrollControlContextType | undefined>(undefined);
@@ -73,6 +74,12 @@ export function ScrollControlProvider({ children }: ScrollControlProviderProps) 
         reservedBottomInset.value = tabBarMaxHeight.value;
     }, [isTabBarCollapsed, reservedBottomInset, tabBarMaxHeight, translateY]);
 
+    const forceSnapTabBar = useCallback((isHidden: boolean) => {
+        const targetHeight = isHidden ? tabBarMaxHeight.value : 0;
+        translateY.value = withTiming(targetHeight, { duration: 250 });
+        isTabBarCollapsed.value = isHidden;
+    }, [isTabBarCollapsed, tabBarMaxHeight, translateY]);
+
     const contextValue = useMemo<ScrollControlContextType>(() => {
         return {
             translateY,
@@ -82,11 +89,13 @@ export function ScrollControlProvider({ children }: ScrollControlProviderProps) 
             reservedBottomInset,
             setTabBarMetrics,
             resetBar,
+            forceSnapTabBar,
         };
     }, [
         isTabBarCollapsed,
         reservedBottomInset,
         resetBar,
+        forceSnapTabBar,
         setTabBarMetrics,
         tabBarCollapsedInset,
         tabBarMaxHeight,
@@ -113,6 +122,7 @@ export function useScrollControl() {
         tabBarMaxHeight,
         isTabBarCollapsed,
         reservedBottomInset,
+        forceSnapTabBar,
     } = context;
 
     const prevScrollY = useSharedValue(0);
@@ -123,8 +133,13 @@ export function useScrollControl() {
             prevScrollY.value = event.contentOffset.y;
             isDragging.value = true;
         },
-        onEndDrag: () => {
+        onEndDrag: (event) => {
             isDragging.value = false;
+            // Snapping is now driven entirely by the top bar in CollapsibleScaffold
+            // to ensure massive header vs small tabbar stay perfectly in sync.
+        },
+        onMomentumEnd: () => {
+            // Snapping driven entirely by CollapsibleScaffold.
         },
         onScroll: (event) => {
             const currentScrollY = event.contentOffset.y;
@@ -153,9 +168,13 @@ export function useScrollControl() {
             const delta = currentScrollY - prevScrollY.value;
             prevScrollY.value = currentScrollY;
 
-            // During momentum (not actively dragging), ignore negative deltas
-            // to prevent iOS bottom-bounce from undoing collapse
-            if (delta < 0 && !isDragging.value) {
+            // During momentum (not actively dragging), detect bottom bounce
+            // to prevent iOS from undoing collapse
+            const contentHeight = event.contentSize.height;
+            const viewHeight = event.layoutMeasurement.height;
+            const isAtBottomBounce = currentScrollY >= (contentHeight - viewHeight - 20);
+
+            if (delta < 0 && !isDragging.value && isAtBottomBounce) {
                 return;
             }
 
@@ -179,6 +198,7 @@ export function useScrollControl() {
 
     return {
         onScroll,
+        forceSnapTabBar,
     };
 }
 

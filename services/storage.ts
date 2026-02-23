@@ -1398,7 +1398,7 @@ class MockStorage implements IStorageService {
 // WEB IMPLEMENTATION (localStorage)
 // =============================================================================
 
-class WebStorage implements IStorageService {
+export class WebStorage implements IStorageService {
   async init(): Promise<void> {
     // No-op for localStorage
   }
@@ -1446,20 +1446,87 @@ class WebStorage implements IStorageService {
   // --- Applications ---
   async saveApplication(app: Application): Promise<void> {
     this.setItem(`app_${app.id}`, app);
+    // Update user index if it exists
+    const indexKey = `user_apps_idx_${app.userId}`;
+    const index = this.getItem<string[]>(indexKey);
+    if (index && !index.includes(app.id)) {
+      index.push(app.id);
+      this.setItem(indexKey, index);
+    }
   }
+
   async saveApplications(apps: Application[]): Promise<void> {
-    apps.forEach(app => this.setItem(`app_${app.id}`, app));
+    // Group by user to optimize index updates
+    const appsByUser = new Map<string, Application[]>();
+    for (const app of apps) {
+      if (!appsByUser.has(app.userId)) {
+        appsByUser.set(app.userId, []);
+      }
+      appsByUser.get(app.userId)!.push(app);
+    }
+
+    for (const [userId, userApps] of appsByUser) {
+      const indexKey = `user_apps_idx_${userId}`;
+      const index = this.getItem<string[]>(indexKey);
+
+      for (const app of userApps) {
+        this.setItem(`app_${app.id}`, app);
+        if (index && !index.includes(app.id)) {
+          index.push(app.id);
+        }
+      }
+
+      if (index) {
+        this.setItem(indexKey, index);
+      }
+    }
   }
+
   async getApplication(id: string): Promise<Application | null> {
     return this.getItem<Application>(`app_${id}`);
   }
+
   async getUserApplications(userId: string): Promise<Application[]> {
+    const indexKey = `user_apps_idx_${userId}`;
+    const index = this.getItem<string[]>(indexKey);
+
+    if (index) {
+      // Fast path: use index
+      const apps = index
+        .map(id => this.getItem<Application>(`app_${id}`))
+        .filter(a => a !== null) as Application[];
+
+      // Self-healing: if we found nulls (deleted apps), update the index
+      if (apps.length !== index.length) {
+        this.setItem(indexKey, apps.map(a => a.id));
+      }
+      return apps;
+    }
+
+    // Slow path: scan all keys (fallback/migration)
     const keys = Object.keys(localStorage);
-    return keys.filter(k => k.startsWith('app_'))
+    const apps = keys.filter(k => k.startsWith('app_'))
       .map(k => this.getItem<Application>(k)!)
       .filter(a => a.userId === userId);
+
+    // Build index for next time
+    this.setItem(indexKey, apps.map(a => a.id));
+
+    return apps;
   }
+
   async deleteApplication(appId: string): Promise<void> {
+    const app = this.getItem<Application>(`app_${appId}`);
+    if (app) {
+      const indexKey = `user_apps_idx_${app.userId}`;
+      const index = this.getItem<string[]>(indexKey);
+      if (index) {
+        const newIndex = index.filter(id => id !== appId);
+        if (newIndex.length !== index.length) {
+          this.setItem(indexKey, newIndex);
+        }
+      }
+    }
     localStorage.removeItem(`app_${appId}`);
   }
 

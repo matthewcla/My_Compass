@@ -81,6 +81,23 @@ export function deriveSubPhase(currentDraft: PCSSegment | null): TRANSITSubPhase
   return today >= departureDate ? 'ACTIVE_TRAVEL' : 'PLANNING';
 }
 
+/**
+ * Manual deep clone of a PCSSegment for performance.
+ * Replaces slow JSON.parse(JSON.stringify(segment)).
+ */
+function cloneSegment(segment: PCSSegment): PCSSegment {
+  return {
+    ...segment,
+    location: { ...segment.location },
+    dates: { ...segment.dates },
+    entitlements: { ...segment.entitlements },
+    userPlan: {
+      ...segment.userPlan,
+      stops: segment.userPlan.stops ? segment.userPlan.stops.map((s) => ({ ...s })) : [],
+    },
+  };
+}
+
 interface Financials {
   advancePay: {
     requested: boolean;
@@ -631,11 +648,7 @@ export const usePCSStore = create<PCSState>()(
 
         const segment = activeOrder.segments.find(s => s.id === segmentId);
         if (segment) {
-          const draft = JSON.parse(JSON.stringify(segment));
-          // Ensure stops array exists
-          if (!draft.userPlan.stops) {
-            draft.userPlan.stops = [];
-          }
+          const draft = cloneSegment(segment);
           set({ currentDraft: draft });
         }
       },

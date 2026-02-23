@@ -5,12 +5,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 interface UIState {
-    isAccountDrawerOpen: boolean;
     activeSpoke: string | null;
     themeMode: ThemeMode;
-    openAccountDrawer: () => void;
-    closeAccountDrawer: () => void;
-    toggleAccountDrawer: () => void;
     setActiveSpoke: (spoke: string | null) => void;
     setThemeMode: (mode: ThemeMode) => void;
 }
@@ -18,12 +14,8 @@ interface UIState {
 export const useUIStore = create<UIState>()(
     persist(
         (set) => ({
-            isAccountDrawerOpen: false,
             activeSpoke: null,
             themeMode: 'system',
-            openAccountDrawer: () => set({ isAccountDrawerOpen: true }),
-            closeAccountDrawer: () => set({ isAccountDrawerOpen: false }),
-            toggleAccountDrawer: () => set((state) => ({ isAccountDrawerOpen: !state.isAccountDrawerOpen })),
             setActiveSpoke: (spoke) => set({ activeSpoke: spoke }),
             setThemeMode: (mode) => set({ themeMode: mode }),
         }),

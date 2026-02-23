@@ -17,10 +17,12 @@ import {
     ViewStyle
 } from 'react-native';
 import Animated, {
+    runOnJS,
     useAnimatedScrollHandler,
     useAnimatedStyle,
     useComposedEventHandler,
     useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -123,10 +125,43 @@ export function CollapsibleScaffold({
     const headerCollapseDistance = useSharedValue(0);
     const prevHeaderScrollY = useSharedValue(0);
 
-    const { onScroll: scrollControlHandler } = useScrollControl();
+    const { onScroll: scrollControlHandler, forceSnapTabBar } = useScrollControl();
     const headerScrollHandler = useAnimatedScrollHandler({
         onBeginDrag: (event) => {
             prevHeaderScrollY.value = event.contentOffset.y;
+        },
+        onEndDrag: (event) => {
+            if (!diffClampEnabled) return;
+            if (event.velocity && Math.abs(event.velocity.y) > 0.5) {
+                return;
+            }
+
+            const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+
+            if (isHidden) {
+                headerCollapseDistance.value = withTiming(scrollableHeaderHeight, { duration: 250 });
+            } else {
+                headerCollapseDistance.value = withTiming(0, { duration: 250 });
+            }
+
+            // Synchronize the bottom tab bar to precisely match the top bar's snap decision
+            if (forceSnapTabBar) {
+                runOnJS(forceSnapTabBar)(isHidden);
+            }
+        },
+        onMomentumEnd: () => {
+            if (!diffClampEnabled) return;
+            const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+
+            if (isHidden) {
+                headerCollapseDistance.value = withTiming(scrollableHeaderHeight, { duration: 250 });
+            } else {
+                headerCollapseDistance.value = withTiming(0, { duration: 250 });
+            }
+
+            if (forceSnapTabBar) {
+                runOnJS(forceSnapTabBar)(isHidden);
+            }
         },
         onScroll: (event) => {
             if (!diffClampEnabled) {
@@ -150,7 +185,7 @@ export function CollapsibleScaffold({
                 scrollableHeaderHeight,
             );
         },
-    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeight]);
+    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeight, forceSnapTabBar]);
 
     const composedOnScrollHandler = useComposedEventHandler(
         [headerScrollHandler as any, scrollControlHandler as any]
@@ -183,13 +218,10 @@ export function CollapsibleScaffold({
                 return previousHeight;
             }
 
-            // Prevent transient layout shrink reports during drag from collapsing
-            // the range abruptly. We accept growth and first measurement.
-            if (previousHeight <= 0) {
-                return nextHeight;
-            }
-
-            return Math.max(previousHeight, nextHeight);
+            // We explicitly allow shrinkage here now because if the StatusCard
+            // renders different variants (or shifts after fonts load), locking to 
+            // the maximum observed layout height creates unbreakable ghost space
+            return nextHeight;
         });
     }, []);
 

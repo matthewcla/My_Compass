@@ -3,6 +3,12 @@
   "compilerOptions": {
     "strict": true,
     "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": [
+      "react",
+      "jest",
+      "crypto-js"
+    ],
     "paths": {
       "@/*": [
         "./*"

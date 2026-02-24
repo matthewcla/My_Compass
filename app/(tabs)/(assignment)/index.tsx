@@ -257,7 +257,6 @@ export default function AssignmentDashboard() {
     const showDetailer = isNegotiation;
     const showDiscoveryStats = assignmentPhase === 'DISCOVERY'
         || assignmentPhase === 'ON_RAMP'
-        || assignmentPhase === 'ORDERS_RELEASED'
         || isNegotiation;
     const showSelectionDetail = assignmentPhase === 'SELECTION' || assignmentPhase === 'ORDERS_PROCESSING';
     const isOnRamp = assignmentPhase === 'ON_RAMP';

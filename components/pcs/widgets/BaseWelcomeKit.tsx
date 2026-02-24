@@ -23,8 +23,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 // ─── Reporting Instructions (Day-1 Tips) ───────────────────────
 
 const REPORT_TIPS = [
-  'Bring 5 copies of your orders',
-  'Report in uniform of the day',
+  'Bring the original copy of your orders',
+  'Report in dress uniform',
   'Have your military ID / CAC ready',
   "Know your sponsor's contact info",
 ];
@@ -68,13 +68,10 @@ export function BaseWelcomeKit() {
   }, [activeOrder?.reportNLT, isDemoMode, demoTimeline]);
 
   const displayUniform = useMemo(() => {
-    if (daysOnStation === 1) {
-      const month = new Date().getMonth(); // 0-indexed
-      // Oct(9)–Mar(2) = Blues, Apr(3)–Sep(8) = Whites
-      return month >= 3 && month <= 8 ? 'Service Dress Whites' : 'Service Dress Blues';
-    }
-    return uniformOfDay?.trim() || null;
-  }, [daysOnStation, uniformOfDay]);
+    const month = new Date().getMonth(); // 0-indexed
+    // Oct(9)–Mar(2) = Blues, Apr(3)–Sep(8) = Whites
+    return month >= 3 && month <= 8 ? 'Service Dress Whites' : 'Service Dress Blues';
+  }, []);
 
   // ── Handlers ──────────────────────────────────────────────────
 
@@ -179,7 +176,7 @@ export function BaseWelcomeKit() {
               <View className="flex-row items-center">
                 <Shirt size={18} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                 <Text className="ml-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {daysOnStation === 1 ? 'Report In' : 'Uniform of the Day'}
+                  Reporting Uniform
                 </Text>
               </View>
               <Text className="mt-1.5 text-base font-bold text-slate-900 dark:text-white">

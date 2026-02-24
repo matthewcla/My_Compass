@@ -14,7 +14,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
-    "@shopify/flash-list": "^2.0.2",
+    "@shopify/flash-list": "2.0.2",
     "@types/crypto-js": "^4.2.2",
     "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.1",

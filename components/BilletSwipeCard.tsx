@@ -127,8 +127,17 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
     const cardHeight = useSharedValue(0);
     const translateX = useSharedValue(0);
     const translateY = useSharedValue(0);
-    const cardScale = useSharedValue(index === 0 ? 1 : 0.95);
-    const cardOffsetY = useSharedValue(index === 0 ? 0 : 20);
+    const cardScale = useSharedValue(index === 0 ? 1 : index === 1 ? 0.95 : 0.9);
+    const cardOffsetY = useSharedValue(index === 0 ? 0 : index === 1 ? 35 : 70);
+
+    // Physically animate position and scale as the card promotes up the deck
+    React.useEffect(() => {
+        const targetScale = index === 0 ? 1 : index === 1 ? 0.95 : 0.9;
+        const targetOffset = index === 0 ? 0 : index === 1 ? 35 : 70;
+
+        cardScale.value = withSpring(targetScale, { damping: 20, stiffness: 200, mass: 1 });
+        cardOffsetY.value = withSpring(targetOffset, { damping: 20, stiffness: 200, mass: 1 });
+    }, [index, cardScale, cardOffsetY]);
 
     const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
         onSwipe(direction);

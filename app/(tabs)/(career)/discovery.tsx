@@ -347,13 +347,17 @@ export default function DiscoveryScreen() {
                                     {filteredBillets[deck.step + 2] && !categoryFilter && (
                                         <View
                                             className="absolute w-full h-full"
-                                            style={{
-                                                zIndex: 0,
-                                                transform: [{ translateY: 70 }, { scale: 0.9 }],
-                                            }}
+                                            style={{ zIndex: 0 }}
                                             pointerEvents="none"
                                         >
-                                            <View className="w-full h-full bg-slate-50 dark:bg-slate-800 rounded-[40px] border border-slate-200 dark:border-slate-700 shadow-sm opacity-30" />
+                                            <BilletSwipeCard
+                                                key={`bg-${filteredBillets[deck.step + 2].id}-${deck.step + 2}`}
+                                                index={2}
+                                                active={false}
+                                                billet={filteredBillets[deck.step + 2]}
+                                                onSwipe={NO_OP}
+                                                isSandbox={mode === 'sandbox'}
+                                            />
                                         </View>
                                     )}
 
@@ -361,14 +365,11 @@ export default function DiscoveryScreen() {
                                     {filteredBillets[deck.step + 1] && !categoryFilter && (
                                         <View
                                             className="absolute w-full h-full"
-                                            style={{
-                                                zIndex: 5,
-                                                transform: [{ translateY: 35 }, { scale: 0.95 }],
-                                            }}
+                                            style={{ zIndex: 5 }}
                                             pointerEvents="none"
                                         >
                                             <BilletSwipeCard
-                                                key={`bg-${filteredBillets[deck.step + 1].id}`}
+                                                key={`bg-${filteredBillets[deck.step + 1].id}-${deck.step + 1}`}
                                                 index={1}
                                                 active={false}
                                                 billet={filteredBillets[deck.step + 1]}

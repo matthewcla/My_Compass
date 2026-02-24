@@ -145,20 +145,20 @@ export default function DiscoveryScreen() {
         if (!categoryFilter) return filteredBillets;
 
         const activeDecisions = mode === 'real' ? realDecisions : sandboxDecisions;
-        const allBillets = Object.values(billets);
+
         switch (categoryFilter) {
             case 'wow':
-                return allBillets.filter(b => activeDecisions[b.id] === 'super');
+                return filteredBillets.filter(b => activeDecisions[b.id] === 'super');
             case 'liked':
-                return allBillets.filter(b => activeDecisions[b.id] === 'like');
+                return filteredBillets.filter(b => activeDecisions[b.id] === 'like');
             case 'passed':
-                return allBillets.filter(b => activeDecisions[b.id] === 'nope');
+                return filteredBillets.filter(b => activeDecisions[b.id] === 'nope');
             case 'remaining':
-                return allBillets.filter(b => !activeDecisions[b.id]);
+                return filteredBillets.filter(b => !activeDecisions[b.id]);
             default:
                 return filteredBillets;
         }
-    }, [categoryFilter, filteredBillets, billets, realDecisions, sandboxDecisions, mode]);
+    }, [categoryFilter, filteredBillets, realDecisions, sandboxDecisions, mode]);
 
     const activeBillets = categoryFilter ? categoryFilteredBillets : filteredBillets;
     const categoryLabels: Record<string, string> = {
@@ -195,8 +195,25 @@ export default function DiscoveryScreen() {
             return;
         }
 
+        // Determine if the current action will REMOVE the item from the active filter.
+        // If it removes the item, the array shrinks, so the next item naturally falls into `deck.step`.
+        // If it DOES NOT remove the item, we must manually advance `deck.step`.
+        let willShrink = false;
+        if (categoryFilter === 'remaining') {
+            // Any swipe sets a decision, so it ALWAYS removes it from 'remaining'
+            willShrink = true;
+        } else if (categoryFilter === 'wow' && direction !== 'up') {
+            willShrink = true;
+        } else if (categoryFilter === 'liked' && direction !== 'right') {
+            willShrink = true;
+        } else if (categoryFilter === 'passed' && direction !== 'left') {
+            willShrink = true;
+        }
+
         // 1. Visual Transition
-        deck.next();
+        if (!willShrink) {
+            deck.next();
+        }
 
         // 2. Store Update
         await swipe(currentBillet.id, direction, activeUserId, { skipPromotion: !isSlatePhase });
@@ -229,7 +246,7 @@ export default function DiscoveryScreen() {
                 showFeedback(isSlatePhase ? 'Archived. Go to Manifest to recover.' : 'Passed.', 'info');
             }
         }
-    }, [deck.next, currentBillet, mode, swipe, showFeedback, isSlatePhase]);
+    }, [deck.next, currentBillet, mode, swipe, showFeedback, isSlatePhase, categoryFilter]);
 
     const handleUndo = () => {
         deck.back();
@@ -239,6 +256,12 @@ export default function DiscoveryScreen() {
     // Calculate Saved Count (Shortlist) for Header
     const activeDecisions = mode === 'real' ? realDecisions : sandboxDecisions;
     const savedCount = Object.values(activeDecisions).filter(d => d === 'like' || d === 'super').length;
+
+    console.log('--- DISCOVERY SCREEN RENDER ---');
+    console.log('categoryFilter:', categoryFilter);
+    console.log('activeBillets.length:', activeBillets.length);
+    console.log('deck.step:', deck.step);
+    console.log('currentBillet ID:', currentBillet?.id);
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>

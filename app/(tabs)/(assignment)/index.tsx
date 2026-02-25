@@ -12,6 +12,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { useGlobalBackAction } from '@/hooks/useGlobalBackAction';
 import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { useDemoStore } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
@@ -197,6 +198,7 @@ export default function AssignmentDashboard() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const scrollRef = useRef<any>(null);
+    const backAction = useGlobalBackAction();
 
     // Scroll to top whenever this tab gains focus
     useFocusEffect(
@@ -283,6 +285,7 @@ export default function AssignmentDashboard() {
                         title="MY ASSIGNMENT"
                         subtitle={phaseSubtitle}
                         withSafeArea={false}
+                        leftAction={backAction}
                     />
                 }
                 contentContainerStyle={{ paddingHorizontal: 16 }}

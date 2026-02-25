@@ -5,6 +5,7 @@ import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { PCSActiveState } from '@/components/pcs/states/PCSActiveState';
 import { PCSArchiveState } from '@/components/pcs/states/PCSArchiveState';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useGlobalBackAction } from '@/hooks/useGlobalBackAction';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { selectHasActiveOrders, usePCSStore } from '@/store/usePCSStore';
@@ -39,6 +40,8 @@ export default function PcsScreen() {
         return hasActiveOrders;
     }, [isDemoMode, pcsContextOverride, hasActiveOrders]);
 
+    const backAction = useGlobalBackAction();
+
     useEffect(() => {
         // Clear stale header store state from the previous screen
         resetHeader();
@@ -60,6 +63,7 @@ export default function PcsScreen() {
                             title="My PCS"
                             subtitle="Relocation Manager"
                             withSafeArea={false}
+                            leftAction={backAction}
                         />
                     </View>
                 }

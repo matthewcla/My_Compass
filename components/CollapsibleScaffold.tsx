@@ -17,7 +17,6 @@ import {
     ViewStyle
 } from 'react-native';
 import Animated, {
-    runOnJS,
     useAnimatedScrollHandler,
     useAnimatedStyle,
     useComposedEventHandler,
@@ -158,9 +157,7 @@ export function CollapsibleScaffold({
             });
 
             if (forceSnapTabBar) {
-                // We use timing for the tab bar as it needs slightly softer 
-                // easing out of the bottom inset to match OS standards
-                runOnJS(forceSnapTabBar)(isHidden);
+                forceSnapTabBar(isHidden);
             }
         },
         onMomentumEnd: () => {
@@ -175,7 +172,7 @@ export function CollapsibleScaffold({
             });
 
             if (forceSnapTabBar) {
-                runOnJS(forceSnapTabBar)(isHidden);
+                forceSnapTabBar(isHidden);
             }
         },
         onScroll: (event) => {

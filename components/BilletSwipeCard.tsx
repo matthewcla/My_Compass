@@ -2,6 +2,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { Billet } from '@/types/schema';
 import { enrichBillet } from '@/utils/billetAdapter';
 import { getShadow } from '@/utils/getShadow';
+import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import {
     Award,
@@ -129,15 +130,18 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
     const translateY = useSharedValue(0);
     const cardScale = useSharedValue(index === 0 ? 1 : index === 1 ? 0.95 : 0.9);
     const cardOffsetY = useSharedValue(index === 0 ? 0 : index === 1 ? 35 : 70);
+    const cardOpacity = useSharedValue(index === 0 ? 1 : index === 1 ? 0.8 : 0.4);
 
-    // Physically animate position and scale as the card promotes up the deck
+    // Physically animate position, scale, and opacity as the card promotes up the deck
     React.useEffect(() => {
         const targetScale = index === 0 ? 1 : index === 1 ? 0.95 : 0.9;
         const targetOffset = index === 0 ? 0 : index === 1 ? 35 : 70;
+        const targetOpacity = index === 0 ? 1 : index === 1 ? 0.8 : 0.4;
 
         cardScale.value = withSpring(targetScale, { damping: 20, stiffness: 200, mass: 1 });
         cardOffsetY.value = withSpring(targetOffset, { damping: 20, stiffness: 200, mass: 1 });
-    }, [index, cardScale, cardOffsetY]);
+        cardOpacity.value = withSpring(targetOpacity, { damping: 20, stiffness: 200, mass: 1 });
+    }, [index, cardScale, cardOffsetY, cardOpacity]);
 
     const handleSwipeComplete = useCallback((direction: 'left' | 'right' | 'up' | 'down') => {
         onSwipe(direction);
@@ -165,6 +169,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
         });
 
     const gestureAxis = useSharedValue<0 | 1 | 2>(0); // 0: null, 1: x-axis, 2: y-axis
+    const hapticFired = useSharedValue(false);
     const LOCK_THRESHOLD = 15;
 
     // --- PAN GESTURE: For swiping the card ---
@@ -172,6 +177,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
         .enabled(active && !isDrawerOpen)
         .onStart(() => {
             gestureAxis.value = 0;
+            hapticFired.value = false;
         })
         .onUpdate((event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
             // RAILROADING LOGIC:
@@ -187,11 +193,13 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                 }
             }
 
+            // Apply physical resistance curve (makes the card feel heavy)
+            // The further they pull, the more resistance they feel
+            const resistance = 0.85;
+
             // Apply movement based on locked axis.
-            // When locking occurs, we smoothly return the off-axis to 0 to prevent violent jumps.
             if (gestureAxis.value === 1) {
-                translateX.value = event.translationX;
-                // Only spring to 0 if we aren't already there to avoid unnecessary worklets
+                translateX.value = event.translationX * resistance;
                 if (Math.abs(translateY.value) > 1) {
                     translateY.value = withSpring(0, SNAP_BACK_CONFIG);
                 }
@@ -199,11 +207,20 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                 if (Math.abs(translateX.value) > 1) {
                     translateX.value = withSpring(0, SNAP_BACK_CONFIG);
                 }
-                translateY.value = event.translationY;
+                translateY.value = event.translationY * resistance;
             } else {
-                // Pre-lock: allow full 1:1 tactile movement
-                translateX.value = event.translationX;
-                translateY.value = event.translationY;
+                // Pre-lock: allow full tactile movement
+                translateX.value = event.translationX * resistance;
+                translateY.value = event.translationY * resistance;
+            }
+
+            // Haptic Feedback when crossing the action threshold
+            if (!hapticFired.value) {
+                if ((gestureAxis.value === 1 && Math.abs(translateX.value) > SWIPE_THRESHOLD) ||
+                    (gestureAxis.value === 2 && Math.abs(translateY.value) > SWIPE_Y_THRESHOLD)) {
+                    runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
+                    hapticFired.value = true;
+                }
             }
         })
         .onEnd((event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
@@ -267,6 +284,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                 { rotate: `${rotate}deg` },
                 { scale: cardScale.value },
             ],
+            opacity: cardOpacity.value,
             zIndex: active ? 100 : 1,
         };
     });

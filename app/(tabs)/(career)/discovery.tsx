@@ -343,59 +343,32 @@ export default function DiscoveryScreen() {
                             <View className="w-full flex-1 max-w-md px-4 pb-12">
                                 {/* Deck Container */}
                                 <View className="flex-1 relative w-full h-full">
-                                    {/* Back Card (Next + 1) - Deepest */}
-                                    {filteredBillets[deck.step + 2] && !categoryFilter && (
-                                        <View
-                                            className="absolute w-full h-full"
-                                            style={{ zIndex: 0 }}
-                                            pointerEvents="none"
-                                        >
-                                            <BilletSwipeCard
-                                                key={filteredBillets[deck.step + 2].id}
-                                                index={2}
-                                                active={false}
-                                                billet={filteredBillets[deck.step + 2]}
-                                                onSwipe={NO_OP}
-                                                isSandbox={mode === 'sandbox'}
-                                            />
-                                        </View>
-                                    )}
+                                    {activeBillets.slice(deck.step, deck.step + 3).reverse().map((billet, reversedIndex, array) => {
+                                        const offset = array.length - 1 - reversedIndex; // 0 for front, 1 for middle, 2 for back
 
-                                    {/* Back Card (Next) - Middle */}
-                                    {filteredBillets[deck.step + 1] && !categoryFilter && (
-                                        <View
-                                            className="absolute w-full h-full"
-                                            style={{ zIndex: 5 }}
-                                            pointerEvents="none"
-                                        >
-                                            <BilletSwipeCard
-                                                key={filteredBillets[deck.step + 1].id}
-                                                index={1}
-                                                active={false}
-                                                billet={filteredBillets[deck.step + 1]}
-                                                onSwipe={NO_OP}
-                                                isSandbox={mode === 'sandbox'}
-                                            />
-                                        </View>
-                                    )}
+                                        // On category filters, we don't render background cards
+                                        if (categoryFilter && offset > 0) return null;
 
-                                    {/* Front Card (Current) - Active */}
-                                    {currentBillet ? (
-                                        <View
-                                            className="absolute w-full h-full"
-                                            style={{ zIndex: 10 }}
-                                        >
-                                            <BilletSwipeCard
-                                                key={currentBillet.id}
-                                                index={0}
-                                                active={true}
-                                                billet={currentBillet}
-                                                onSwipe={handleSwipe}
-                                                isSandbox={mode === 'sandbox'}
-                                            />
-                                        </View>
-                                    ) : (
-                                        <View className="flex-1 justify-center items-center z-10">
+                                        return (
+                                            <View
+                                                key={billet.id}
+                                                className="absolute w-full h-full"
+                                                style={{ zIndex: 10 - offset }}
+                                                pointerEvents={offset === 0 ? 'auto' : 'none'}
+                                            >
+                                                <BilletSwipeCard
+                                                    index={offset}
+                                                    active={offset === 0}
+                                                    billet={billet}
+                                                    onSwipe={offset === 0 ? handleSwipe : NO_OP}
+                                                    isSandbox={mode === 'sandbox'}
+                                                />
+                                            </View>
+                                        );
+                                    })}
+
+                                    {(!currentBillet || activeBillets.length === 0) && (
+                                        <View className="flex-1 justify-center items-center z-10 pointer-events-none">
                                             <View className="px-6 py-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
                                                 <Text className="text-slate-500 font-bold text-center">No more billets found.</Text>
                                                 <Text className="text-slate-400 text-xs text-center mt-2">Adjust filters or check back later.</Text>

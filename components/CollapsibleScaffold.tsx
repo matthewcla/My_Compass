@@ -124,19 +124,22 @@ export function CollapsibleScaffold({
     const headerCollapseDistance = useSharedValue(0);
     const prevHeaderScrollY = useSharedValue(0);
     const isSnapping = useSharedValue(false);
+    const isDraggingLayout = useSharedValue(false);
 
     const { onScroll: scrollControlHandler, forceSnapTabBar } = useScrollControl();
 
     // Tightly tuned spring configuration for a crisp, cinematic 
     // UI response that feels premium and massless
-    const SPRING_CONFIG = { mass: 0.8, damping: 20, stiffness: 200 };
+    const SPRING_CONFIG = { mass: 0.5, damping: 25, stiffness: 300 };
 
     const headerScrollHandler = useAnimatedScrollHandler({
         onBeginDrag: (event) => {
             isSnapping.value = false;
+            isDraggingLayout.value = true;
             prevHeaderScrollY.value = event.contentOffset.y;
         },
         onEndDrag: (event) => {
+            isDraggingLayout.value = false;
             if (!diffClampEnabled) return;
             isSnapping.value = true;
 
@@ -152,27 +155,28 @@ export function CollapsibleScaffold({
 
             const targetDistance = isHidden ? scrollableHeaderHeight : 0;
 
-            headerCollapseDistance.value = withSpring(targetDistance, SPRING_CONFIG, (finished) => {
+            headerCollapseDistance.value = withSpring(targetDistance, { ...SPRING_CONFIG, velocity }, (finished) => {
                 if (finished) isSnapping.value = false;
             });
 
             if (forceSnapTabBar) {
-                forceSnapTabBar(isHidden);
+                forceSnapTabBar(isHidden, velocity);
             }
         },
-        onMomentumEnd: () => {
+        onMomentumEnd: (event) => {
             if (!diffClampEnabled || isSnapping.value) return;
             isSnapping.value = true;
 
+            const velocity = event.velocity?.y ?? 0;
             const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
             const targetDistance = isHidden ? scrollableHeaderHeight : 0;
 
-            headerCollapseDistance.value = withSpring(targetDistance, SPRING_CONFIG, (finished) => {
+            headerCollapseDistance.value = withSpring(targetDistance, { ...SPRING_CONFIG, velocity }, (finished) => {
                 if (finished) isSnapping.value = false;
             });
 
             if (forceSnapTabBar) {
-                forceSnapTabBar(isHidden);
+                forceSnapTabBar(isHidden, velocity);
             }
         },
         onScroll: (event) => {
@@ -196,13 +200,23 @@ export function CollapsibleScaffold({
             const delta = currentY - prevHeaderScrollY.value;
             prevHeaderScrollY.value = currentY;
 
+            // During momentum (not actively dragging), detect bottom bounce
+            // to prevent iOS from undoing collapse
+            const contentHeight = event.contentSize.height;
+            const viewHeight = event.layoutMeasurement.height;
+            const isAtBottomBounce = currentY >= (contentHeight - viewHeight - 20);
+
+            if (delta < 0 && !isDraggingLayout.value && isAtBottomBounce) {
+                return;
+            }
+
             headerCollapseDistance.value = clamp(
                 headerCollapseDistance.value + delta,
                 0,
                 scrollableHeaderHeight,
             );
         },
-    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeight, forceSnapTabBar]);
+    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeight, forceSnapTabBar, isDraggingLayout]);
 
     const composedOnScrollHandler = useComposedEventHandler(
         [headerScrollHandler as any, scrollControlHandler as any]

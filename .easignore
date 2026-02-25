@@ -39,3 +39,11 @@ yarn-error.*
 
 # Misc
 *.tsbuildinfo
+
+# AI Agents & Assistants (Massive file counts)
+.agent/
+.claude/
+.jules/
+
+# Tests & Mocks
+__tests__/

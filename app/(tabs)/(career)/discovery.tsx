@@ -145,20 +145,20 @@ export default function DiscoveryScreen() {
         if (!categoryFilter) return filteredBillets;
 
         const activeDecisions = mode === 'real' ? realDecisions : sandboxDecisions;
-        const allBillets = Object.values(billets);
+
         switch (categoryFilter) {
             case 'wow':
-                return allBillets.filter(b => activeDecisions[b.id] === 'super');
+                return filteredBillets.filter(b => activeDecisions[b.id] === 'super');
             case 'liked':
-                return allBillets.filter(b => activeDecisions[b.id] === 'like');
+                return filteredBillets.filter(b => activeDecisions[b.id] === 'like');
             case 'passed':
-                return allBillets.filter(b => activeDecisions[b.id] === 'nope');
+                return filteredBillets.filter(b => activeDecisions[b.id] === 'nope');
             case 'remaining':
-                return allBillets.filter(b => !activeDecisions[b.id]);
+                return filteredBillets.filter(b => !activeDecisions[b.id]);
             default:
                 return filteredBillets;
         }
-    }, [categoryFilter, filteredBillets, billets, realDecisions, sandboxDecisions, mode]);
+    }, [categoryFilter, filteredBillets, realDecisions, sandboxDecisions, mode]);
 
     const activeBillets = categoryFilter ? categoryFilteredBillets : filteredBillets;
     const categoryLabels: Record<string, string> = {
@@ -195,8 +195,25 @@ export default function DiscoveryScreen() {
             return;
         }
 
+        // Determine if the current action will REMOVE the item from the active filter.
+        // If it removes the item, the array shrinks, so the next item naturally falls into `deck.step`.
+        // If it DOES NOT remove the item, we must manually advance `deck.step`.
+        let willShrink = false;
+        if (categoryFilter === 'remaining') {
+            // Any swipe sets a decision, so it ALWAYS removes it from 'remaining'
+            willShrink = true;
+        } else if (categoryFilter === 'wow' && direction !== 'up') {
+            willShrink = true;
+        } else if (categoryFilter === 'liked' && direction !== 'right') {
+            willShrink = true;
+        } else if (categoryFilter === 'passed' && direction !== 'left') {
+            willShrink = true;
+        }
+
         // 1. Visual Transition
-        deck.next();
+        if (!willShrink) {
+            deck.next();
+        }
 
         // 2. Store Update
         await swipe(currentBillet.id, direction, activeUserId, { skipPromotion: !isSlatePhase });
@@ -229,7 +246,7 @@ export default function DiscoveryScreen() {
                 showFeedback(isSlatePhase ? 'Archived. Go to Manifest to recover.' : 'Passed.', 'info');
             }
         }
-    }, [deck.next, currentBillet, mode, swipe, showFeedback, isSlatePhase]);
+    }, [deck.next, currentBillet, mode, swipe, showFeedback, isSlatePhase, categoryFilter]);
 
     const handleUndo = () => {
         deck.back();
@@ -239,6 +256,12 @@ export default function DiscoveryScreen() {
     // Calculate Saved Count (Shortlist) for Header
     const activeDecisions = mode === 'real' ? realDecisions : sandboxDecisions;
     const savedCount = Object.values(activeDecisions).filter(d => d === 'like' || d === 'super').length;
+
+    console.log('--- DISCOVERY SCREEN RENDER ---');
+    console.log('categoryFilter:', categoryFilter);
+    console.log('activeBillets.length:', activeBillets.length);
+    console.log('deck.step:', deck.step);
+    console.log('currentBillet ID:', currentBillet?.id);
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
@@ -320,58 +343,32 @@ export default function DiscoveryScreen() {
                             <View className="w-full flex-1 max-w-md px-4 pb-12">
                                 {/* Deck Container */}
                                 <View className="flex-1 relative w-full h-full">
-                                    {/* Back Card (Next + 1) - Deepest */}
-                                    {filteredBillets[deck.step + 2] && !categoryFilter && (
-                                        <View
-                                            className="absolute w-full h-full"
-                                            style={{
-                                                zIndex: 0,
-                                                transform: [{ translateY: 70 }, { scale: 0.9 }],
-                                            }}
-                                            pointerEvents="none"
-                                        >
-                                            <View className="w-full h-full bg-slate-50 dark:bg-slate-800 rounded-[40px] border border-slate-200 dark:border-slate-700 shadow-sm opacity-30" />
-                                        </View>
-                                    )}
+                                    {activeBillets.slice(deck.step, deck.step + 3).reverse().map((billet, reversedIndex, array) => {
+                                        const offset = array.length - 1 - reversedIndex; // 0 for front, 1 for middle, 2 for back
 
-                                    {/* Back Card (Next) - Middle */}
-                                    {filteredBillets[deck.step + 1] && !categoryFilter && (
-                                        <View
-                                            className="absolute w-full h-full"
-                                            style={{
-                                                zIndex: 5,
-                                                transform: [{ translateY: 35 }, { scale: 0.95 }],
-                                            }}
-                                            pointerEvents="none"
-                                        >
-                                            <BilletSwipeCard
-                                                key={`bg-${filteredBillets[deck.step + 1].id}`}
-                                                index={1}
-                                                active={false}
-                                                billet={filteredBillets[deck.step + 1]}
-                                                onSwipe={NO_OP}
-                                                isSandbox={mode === 'sandbox'}
-                                            />
-                                        </View>
-                                    )}
+                                        // On category filters, we don't render background cards
+                                        if (categoryFilter && offset > 0) return null;
 
-                                    {/* Front Card (Current) - Active */}
-                                    {currentBillet ? (
-                                        <View
-                                            className="absolute w-full h-full"
-                                            style={{ zIndex: 10 }}
-                                        >
-                                            <BilletSwipeCard
-                                                key={`fg-${currentBillet.id}`}
-                                                index={0}
-                                                active={true}
-                                                billet={currentBillet}
-                                                onSwipe={handleSwipe}
-                                                isSandbox={mode === 'sandbox'}
-                                            />
-                                        </View>
-                                    ) : (
-                                        <View className="flex-1 justify-center items-center z-10">
+                                        return (
+                                            <View
+                                                key={billet.id}
+                                                className="absolute w-full h-full"
+                                                style={{ zIndex: 10 - offset }}
+                                                pointerEvents={offset === 0 ? 'auto' : 'none'}
+                                            >
+                                                <BilletSwipeCard
+                                                    index={offset}
+                                                    active={offset === 0}
+                                                    billet={billet}
+                                                    onSwipe={offset === 0 ? handleSwipe : NO_OP}
+                                                    isSandbox={mode === 'sandbox'}
+                                                />
+                                            </View>
+                                        );
+                                    })}
+
+                                    {(!currentBillet || activeBillets.length === 0) && (
+                                        <View className="flex-1 justify-center items-center z-10 pointer-events-none">
                                             <View className="px-6 py-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
                                                 <Text className="text-slate-500 font-bold text-center">No more billets found.</Text>
                                                 <Text className="text-slate-400 text-xs text-center mt-2">Adjust filters or check back later.</Text>

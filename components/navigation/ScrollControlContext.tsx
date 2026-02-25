@@ -6,14 +6,14 @@ import {
 } from '@/components/navigation/collapseMath';
 import React, { createContext, ReactNode, useCallback, useContext, useMemo } from 'react';
 import {
-    Easing,
     SharedValue,
     useAnimatedScrollHandler,
     useSharedValue,
-    withTiming,
+    withSpring
 } from 'react-native-reanimated';
 
 const DEFAULT_TAB_BAR_HEIGHT = 72;
+const CRITICAL_SPRING = { mass: 0.5, damping: 25, stiffness: 300 };
 
 interface ScrollControlContextType {
     translateY: SharedValue<number>;
@@ -23,7 +23,7 @@ interface ScrollControlContextType {
     reservedBottomInset: SharedValue<number>;
     setTabBarMetrics: (maxHeight: number, collapsedInset: number) => void;
     resetBar: () => void;
-    forceSnapTabBar: (isHidden: boolean) => void;
+    forceSnapTabBar: (isHidden: boolean, velocity?: number) => void;
 }
 
 const ScrollControlContext = createContext<ScrollControlContextType | undefined>(undefined);
@@ -65,18 +65,16 @@ export function ScrollControlProvider({ children }: ScrollControlProviderProps) 
     }, [isTabBarCollapsed, reservedBottomInset, tabBarCollapsedInset, tabBarMaxHeight, translateY]);
 
     const resetBar = useCallback(() => {
-        translateY.value = withTiming(0, {
-            duration: 300,
-            easing: Easing.out(Easing.quad),
-        });
+        translateY.value = withSpring(0, CRITICAL_SPRING);
 
         isTabBarCollapsed.value = false;
         reservedBottomInset.value = tabBarMaxHeight.value;
     }, [isTabBarCollapsed, reservedBottomInset, tabBarMaxHeight, translateY]);
 
-    const forceSnapTabBar = useCallback((isHidden: boolean) => {
+    const forceSnapTabBar = useCallback((isHidden: boolean, velocity: number = 0) => {
+        'worklet';
         const targetHeight = isHidden ? tabBarMaxHeight.value : 0;
-        translateY.value = withTiming(targetHeight, { duration: 250 });
+        translateY.value = withSpring(targetHeight, { ...CRITICAL_SPRING, velocity });
         isTabBarCollapsed.value = isHidden;
     }, [isTabBarCollapsed, tabBarMaxHeight, translateY]);
 

@@ -124,7 +124,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         // ── Welcome Aboard (Phase 4) ────────────────────────────────
         case 'welcome-aboard': {
             const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
-            const uniformOfDay = activeOrder?.gainingCommand.uniformOfDay?.trim() || null;
+            const uniformMonth = new Date().getMonth();
+            const reportingUniform = uniformMonth >= 3 && uniformMonth <= 8 ? 'Service Dress Whites' : 'Service Dress Blues';
 
             // UCT Phase 4 progress (Check-in & Claim)
             const phase4Items = checklist.filter(i => i.uctPhase === 4);
@@ -198,10 +199,10 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                         </Text>
                                     )}
 
-                                    {/* Uniform of the day */}
-                                    {uniformOfDay && (
+                                    {/* Reporting Uniform */}
+                                    {reportingUniform && (
                                         <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-                                            👔 {uniformOfDay}
+                                            👔 Reporting Uniform: {reportingUniform}
                                         </Text>
                                     )}
                                 </View>

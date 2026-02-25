@@ -351,7 +351,7 @@ export default function DiscoveryScreen() {
                                             pointerEvents="none"
                                         >
                                             <BilletSwipeCard
-                                                key={`bg-${filteredBillets[deck.step + 2].id}-${deck.step + 2}`}
+                                                key={filteredBillets[deck.step + 2].id}
                                                 index={2}
                                                 active={false}
                                                 billet={filteredBillets[deck.step + 2]}
@@ -369,7 +369,7 @@ export default function DiscoveryScreen() {
                                             pointerEvents="none"
                                         >
                                             <BilletSwipeCard
-                                                key={`bg-${filteredBillets[deck.step + 1].id}-${deck.step + 1}`}
+                                                key={filteredBillets[deck.step + 1].id}
                                                 index={1}
                                                 active={false}
                                                 billet={filteredBillets[deck.step + 1]}
@@ -386,7 +386,7 @@ export default function DiscoveryScreen() {
                                             style={{ zIndex: 10 }}
                                         >
                                             <BilletSwipeCard
-                                                key={`fg-${currentBillet.id}`}
+                                                key={currentBillet.id}
                                                 index={0}
                                                 active={true}
                                                 billet={currentBillet}

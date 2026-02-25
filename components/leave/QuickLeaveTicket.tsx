@@ -109,7 +109,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
     }, [startDate, endDate, daysCount, draft.leaveType, draft.id, leaveBalance, leaveRequests]);
 
     return (
-        <View style={{ alignSelf: 'stretch', marginHorizontal: 20 }}>
+        <View className="w-full">
             {/* Glass Cockpit Card */}
             <View
                 className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-800"

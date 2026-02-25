@@ -446,7 +446,7 @@ export default function HubDashboard() {
                         className="absolute inset-0"
                         onPress={() => setQuickDraft(null)}
                     />
-                    <Animated.View entering={FadeInUp.duration(250).springify()}>
+                    <Animated.View entering={FadeInUp.duration(250).springify()} className="w-full px-5 max-w-[420px]">
                         <QuickLeaveTicket
                             draft={quickDraft}
                             onSubmit={handleQuickLeaveSubmit}

@@ -11,11 +11,8 @@ web-build/
 .vercel/
 
 # Native build artifacts (rebuilt by EAS)
-ios/Pods/
-ios/build/
-android/app/build/
-android/.gradle/
-android/build/
+ios/
+android/
 
 # Documentation
 *.md

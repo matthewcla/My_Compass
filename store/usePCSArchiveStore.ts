@@ -18,6 +18,7 @@
 
 import { storage } from '@/services/storage';
 import { HistoricalPCSOrder, PCSDocument } from '@/types/pcs';
+import { SecureLogger } from '@/utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMemo } from 'react';
 import { create } from 'zustand';
@@ -91,7 +92,7 @@ export const usePCSArchiveStore = create<PCSArchiveState>()(
           const orders = await storage.getUserHistoricalPCSOrders(userId);
           set({ historicalOrders: orders, isLoading: false });
         } catch (error) {
-          console.error('[PCSArchiveStore] Failed to fetch historical orders:', error);
+          SecureLogger.error('[PCSArchiveStore] Failed to fetch historical orders:', error);
           set({ isLoading: false });
         }
       },

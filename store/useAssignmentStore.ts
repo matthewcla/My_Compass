@@ -1,6 +1,7 @@
 import { MOCK_BILLETS } from '@/constants/MockBillets';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
+import { SecureLogger } from '@/utils/logger';
 import {
     Application,
     Billet,
@@ -245,7 +246,7 @@ const persistDecisions = async () => {
             batch.map(item => storage.saveAssignmentDecision(item.userId, item.billetId, item.decision))
         );
     } catch (e) {
-        console.error('[Store] Failed to persist decisions batch', e);
+        SecureLogger.error('[Store] Failed to persist decisions batch', e);
         // In a real app, we might want to retry or put them back in queue
     }
 };
@@ -334,7 +335,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                 userApplicationIds: apps ? apps.map(a => a.id) : [],
             });
         } catch (e) {
-            console.error('[Store] Failed to hydrate user data:', e);
+            SecureLogger.error('[Store] Failed to hydrate user data:', e);
         }
     },
 
@@ -585,14 +586,14 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
 
         // 0. Safety Guard: Sandbox Mode cannot promote to real slate
         if (mode === 'sandbox') {
-            console.warn('[Store] Blocked promoteToSlate in Sandbox Mode');
+            SecureLogger.warn('[Store] Blocked promoteToSlate in Sandbox Mode');
             return false;
         }
 
         // 1. Block projected billets
         const billet = billets[billetId];
         if (billet && billet.advertisementStatus === 'projected') {
-            console.warn('[Store] Blocked promoteToSlate for projected billet');
+            SecureLogger.warn('[Store] Blocked promoteToSlate for projected billet');
             return false;
         }
 
@@ -630,7 +631,7 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         });
 
         // 6. Persist
-        storage.saveApplication(newApp).catch(console.error);
+        storage.saveApplication(newApp).catch(e => SecureLogger.error('[Store] Failed to save application', e));
 
         return true;
     },
@@ -805,9 +806,9 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
         try {
             await storage.saveApplications(appsToSave);
         } catch (e) {
-            console.error('[Store] Failed to persist submitted slate', e);
+            SecureLogger.error('[Store] Failed to persist submitted slate', e);
             const appIds = appsToSave.map(a => a.id);
-            syncQueue.enqueue('assignment:submitSlate', { appIds }).catch(console.error);
+            syncQueue.enqueue('assignment:submitSlate', { appIds }).catch(e => SecureLogger.error('[Store] Failed to enqueue submitSlate', e));
         } finally {
             set({
                 applications: updatedApps,

@@ -1,6 +1,7 @@
 import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
 import { CareerEvent } from '@/types/career';
+import { SecureLogger } from '@/utils/logger';
 import { create } from 'zustand';
 
 interface CareerState {
@@ -57,7 +58,7 @@ export const useCareerStore = create<CareerState>((set, get) => ({
             if (get().events.length === 0) {
                 set({ isLoading: false, error: 'Failed to fetch career events' });
             } else {
-                console.warn('Failed to fetch fresh career events', error);
+                SecureLogger.warn('[CareerStore] Failed to fetch fresh career events', error);
                 set({ isLoading: false });
             }
         }

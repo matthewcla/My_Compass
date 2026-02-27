@@ -61,7 +61,7 @@ export default function SignInScreen() {
     // Robustly handle undefined state during hydration
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
-    const backgroundColor = isDark ? '#0A1628' : '#EFF6FF';
+    const backgroundColor = isDark ? '#0A1628' : '#EEF1F7';
 
     // UI Constants - High Contrast for "Wow" Factor
     const buttonBaseColor = isDark ? 'rgba(255,255,255,0.1)' : '#1e3a8a'; // Navy Blue (Blue 900) for Day Mode

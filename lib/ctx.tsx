@@ -6,15 +6,19 @@ import { useStorageState } from './useStorageState';
 const AuthContext = createContext<{
     signInWithOkta: () => Promise<void>;
     signOut: () => void;
+    acknowledgeConsent: () => void;
     session?: string | null;
     isLoading: boolean;
     isSigningIn: boolean;
+    consentAcknowledged: boolean;
 }>({
     signInWithOkta: async () => { },
     signOut: () => null,
+    acknowledgeConsent: () => null,
     session: null,
     isLoading: false,
     isSigningIn: false,
+    consentAcknowledged: false,
 });
 
 // This hook can be used to access the user info.
@@ -33,6 +37,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
     const [[isLoading, session], setSession] = useStorageState('session');
     const [isSigningIn, setIsSigningIn] = useState(false);
     const [hasLoggedOut, setHasLoggedOut] = useState(false);
+    // In-memory only — resets every session (required by AC-8)
+    const [consentAcknowledged, setConsentAcknowledged] = useState(false);
 
 
 
@@ -84,11 +90,14 @@ export function SessionProvider({ children }: PropsWithChildren) {
                 signInWithOkta,
                 signOut: () => {
                     setHasLoggedOut(true);
+                    setConsentAcknowledged(false);
                     setSession(null);
                 },
+                acknowledgeConsent: () => setConsentAcknowledged(true),
                 session,
                 isLoading,
                 isSigningIn,
+                consentAcknowledged,
             }}>
             {children}
         </AuthContext.Provider>

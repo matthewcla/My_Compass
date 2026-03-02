@@ -2,6 +2,7 @@ import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
 import { useDemoStore } from '@/store/useDemoStore';
+import { SecureLogger } from '@/utils/logger';
 import { getLeaveDefaults } from '@/constants/MockLeaveDefaults';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import {
@@ -110,7 +111,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     ...INITIAL_STATE,
 
     fetchLeaveData: async (userId: string) => {
-        if (__DEV__) console.log('[Store] fetchLeaveData called for:', userId);
+        if (__DEV__) SecureLogger.info('[Store] fetchLeaveData called for:', userId);
         set({ isSyncingBalance: true });
 
         try {
@@ -135,18 +136,18 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
                     lastSyncTimestamp: now,
                     syncStatus: 'synced',
                 };
-                if (__DEV__) console.log('[Store] Using Demo Balance:', demoBalance);
+                if (__DEV__) SecureLogger.info('[Store] Using Demo Balance:', demoBalance);
                 // Simulate API delay/result structure
                 result = { success: true, data: demoBalance };
             } else {
                 result = await services.leave.fetchBalance(userId);
             }
 
-            if (__DEV__) console.log('[Store] fetchLeaveBalance result:', result);
+            if (__DEV__) SecureLogger.info('[Store] fetchLeaveBalance result:', result);
 
             if (result.success) {
                 const balance = result.data;
-                if (__DEV__) console.log('[Store] Updating balance in store:', balance);
+                if (__DEV__) SecureLogger.info('[Store] Updating balance in store:', balance);
 
                 // 2. Update Store
                 set({
@@ -157,13 +158,13 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
                 // 3. Persist to Storage
                 await storage.saveLeaveBalance(balance);
-                if (__DEV__) console.log('[Store] Saved balance to storage');
+                if (__DEV__) SecureLogger.info('[Store] Saved balance to storage');
             } else {
-                console.error('Failed to fetch leave balance:', result.error);
+                SecureLogger.error('[LeaveStore] Failed to fetch leave balance:', result.error);
                 set({ isSyncingBalance: false });
             }
         } catch (error) {
-            console.error('Error fetching leave data:', error);
+            SecureLogger.error('[LeaveStore] Error fetching leave data:', error);
             set({ isSyncingBalance: false });
         }
     },
@@ -180,7 +181,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
             set({ userDefaults: defaults });
         } catch (error) {
-            console.error('Failed to fetch user defaults', error);
+            SecureLogger.error('[LeaveStore] Failed to fetch user defaults', error);
         }
     },
 
@@ -210,7 +211,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
                 isSyncingRequests: false
             });
         } catch (error) {
-            console.error('Failed to fetch user requests:', error);
+            SecureLogger.error('[LeaveStore] Failed to fetch user requests:', error);
             set({ isSyncingRequests: false });
         }
     },
@@ -342,7 +343,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             await storage.saveLeaveRequest(optimisticRequest);
             await storage.saveLeaveDefaults(userId, newDefaults);
         } catch (e) {
-            console.error('Failed to save optimistic leave request or defaults to storage', e);
+            SecureLogger.error('[LeaveStore] Failed to save optimistic leave request or defaults to storage', e);
         }
 
         try {
@@ -418,7 +419,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
             }
 
         } catch (error) {
-            console.error('submitRequest transaction error:', error);
+            SecureLogger.error('[LeaveStore] submitRequest transaction error:', error);
             set({ isSyncingRequests: false });
 
             // Enqueue for retry instead of dead-ending at error
@@ -442,7 +443,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         const existing = state.leaveRequests[draftId];
 
         if (!existing) {
-            console.error('[useLeaveStore] Draft not found:', draftId);
+            SecureLogger.error('[useLeaveStore] Draft not found:', draftId);
             return;
         }
 
@@ -471,7 +472,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         try {
             await storage.saveLeaveRequest(updatedRequest);
         } catch (error) {
-            console.error('[useLeaveStore] Failed to persist draft update:', error);
+            SecureLogger.error('[useLeaveStore] Failed to persist draft update:', error);
         }
     },
 
@@ -487,7 +488,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         try {
             await storage.saveLeaveRequest(draft);
         } catch (error) {
-            console.error('[useLeaveStore] Failed to persist new draft:', error);
+            SecureLogger.error('[useLeaveStore] Failed to persist new draft:', error);
         }
     },
 
@@ -529,7 +530,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         try {
             await storage.deleteLeaveRequest(draftId);
         } catch (error) {
-            console.error('[useLeaveStore] Failed to delete draft:', error);
+            SecureLogger.error('[useLeaveStore] Failed to delete draft:', error);
         }
     },
 
@@ -587,13 +588,13 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
                 // Update storage again with synced status
                 await storage.saveLeaveRequest({ ...updatedRequest, syncStatus: 'synced', lastSyncTimestamp: result.data.canceledAt });
             } else {
-                console.error('API failed to cancel request');
+                SecureLogger.error('[LeaveStore] API failed to cancel request');
                 set({ isSyncingRequests: false });
                 // Note: We leave it as optimistically cancelled. 
                 // A real implementation might revert or mark syncStatus: 'error'.
             }
         } catch (error) {
-            console.error('Failed to cancel request:', error);
+            SecureLogger.error('[LeaveStore] Failed to cancel request:', error);
             set({ isSyncingRequests: false });
         }
     },

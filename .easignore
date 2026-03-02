@@ -11,11 +11,8 @@ web-build/
 .vercel/
 
 # Native build artifacts (rebuilt by EAS)
-ios/Pods/
-ios/build/
-android/app/build/
-android/.gradle/
-android/build/
+ios/
+android/
 
 # Documentation
 *.md
@@ -39,3 +36,11 @@ yarn-error.*
 
 # Misc
 *.tsbuildinfo
+
+# AI Agents & Assistants (Massive file counts)
+.agent/
+.claude/
+.jules/
+
+# Tests & Mocks
+__tests__/

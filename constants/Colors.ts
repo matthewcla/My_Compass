@@ -1,8 +1,8 @@
 const systemGray = '#8E8E93';
 const systemGray6Light = '#F2F2F7';
 const systemGray6Dark = '#1C1C1E';
-const systemBlueLight = '#007AFF';
-const systemBlueDark = '#0A84FF';
+const systemBlueLight = '#1A4E8A';
+const systemBlueDark = '#5B8FCF';
 const navyBlue = '#0A1628';
 const navyLight = '#1E3A5F';
 const navyGold = '#C9A227';
@@ -10,8 +10,8 @@ const navyGold = '#C9A227';
 export const Colors = {
   // Canvas gradient stops (shared with ScreenGradient)
   gradient: {
-    light: ['#f8fafc', '#e2e8f0'] as const, // Slate-50 → Slate-200
-    dark: ['#0f172a', '#020617'] as const,   // Slate-900 → Slate-950
+    light: ['#EEF1F7', '#DDE3EE'] as const, // Cool blue-gray — naval, professional
+    dark: ['#0C1A2B', '#060E18'] as const,   // Navy abyss — blue-tinted, not generic slate
   },
   blue: {
     500: '#3b82f6',
@@ -46,7 +46,7 @@ export const Colors = {
     accentText: systemBlueLight,
     surface: '#FFFFFF',
     surfaceBorder: '#E2E8F0',
-    iconBubble: '#EFF6FF',
+    iconBubble: '#E8EDF6',
     iconBubbleLocked: '#F1F5F9',
 
     status: {
@@ -76,13 +76,13 @@ export const Colors = {
     accentText: '#FFFFFF',
     surface: '#1E293B',
     surfaceBorder: '#334155',
-    iconBubble: 'rgba(59, 130, 246, 0.2)',
+    iconBubble: 'rgba(91, 143, 207, 0.18)',
     iconBubbleLocked: '#334155',
 
     status: {
-      success: '#4ade80',
-      warning: '#fbbf24',
-      error: '#f87171',
+      success: '#3AAE6C',
+      warning: '#C8921C',
+      error: '#C84444',
     }
   },
 };

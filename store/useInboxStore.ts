@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { InboxMessage } from '@/types/inbox';
 import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
+import { SecureLogger } from '@/utils/logger';
 
 const MAX_INBOX_MESSAGES = 500;
 
@@ -74,7 +75,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
             if (get().messages.length === 0) {
                 set({ isLoading: false, error: 'Failed to fetch messages' });
             } else {
-                console.warn('Failed to fetch fresh messages', error);
+                SecureLogger.warn('[InboxStore] Failed to fetch fresh messages', error);
                 set({ isLoading: false });
             }
         }
@@ -84,7 +85,7 @@ export const useInboxStore = create<InboxState>((set, get) => ({
         const messages = get().messages;
         const newMessages = messages.map(m => m.id === id ? { ...m, isRead: true } : m);
         set({ messages: newMessages });
-        storage.updateInboxMessageReadStatus(id, true).catch(e => console.error('Failed to save read status', e));
+        storage.updateInboxMessageReadStatus(id, true).catch(e => SecureLogger.error('[InboxStore] Failed to save read status', e));
     },
 
     togglePin: (id: string) => {
@@ -94,6 +95,6 @@ export const useInboxStore = create<InboxState>((set, get) => ({
 
         const newMessages = messages.map(m => m.id === id ? { ...m, isPinned: !m.isPinned } : m);
         set({ messages: newMessages });
-        storage.updateInboxMessagePinStatus(id, !message.isPinned).catch(e => console.error('Failed to save pin status', e));
+        storage.updateInboxMessagePinStatus(id, !message.isPinned).catch(e => SecureLogger.error('[InboxStore] Failed to save pin status', e));
     }
 }));

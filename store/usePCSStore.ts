@@ -5,6 +5,7 @@ import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
 import { bridgeReceiptsToExpenses } from '@/utils/receiptBridge';
+import { SecureLogger } from '@/utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useMemo } from 'react';
@@ -582,7 +583,7 @@ export const usePCSStore = create<PCSState>()(
         const user = getActiveUser();
 
         if (!user || !user.eaos) {
-          if (__DEV__) console.log('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
+          if (__DEV__) SecureLogger.info('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
           return;
         }
 
@@ -590,7 +591,7 @@ export const usePCSStore = create<PCSState>()(
         // to the sailor's PRD as the projected report date (SELECTION phase).
         const reportDateStr = activeOrder?.reportNLT ?? user.prd;
         if (!reportDateStr) {
-          if (__DEV__) console.log('[OBLISERV] No reportDate and no PRD — bailing');
+          if (__DEV__) SecureLogger.info('[OBLISERV] No reportDate and no PRD — bailing');
           return;
         }
 
@@ -606,8 +607,7 @@ export const usePCSStore = create<PCSState>()(
         const isObliservRequired = eaosDate < requiredServiceDate;
 
         if (__DEV__) {
-          console.log('[OBLISERV] Check:', {
-            user: user.displayName,
+          SecureLogger.info('[OBLISERV] Check:', {
             reportDateStr,
             eaos: user.eaos,
             requiredServiceDate: requiredServiceDate.toISOString(),
@@ -623,11 +623,11 @@ export const usePCSStore = create<PCSState>()(
         // Bail early if nothing changed — prevents re-render loops
         const current = financials.obliserv;
         if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) {
-          if (__DEV__) console.log('[OBLISERV] No change — skipping update');
+          if (__DEV__) SecureLogger.info('[OBLISERV] No change — skipping update');
           return;
         }
 
-        if (__DEV__) console.log('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
+        if (__DEV__) SecureLogger.info('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
 
         set({
           financials: {
@@ -1089,7 +1089,7 @@ export const usePCSStore = create<PCSState>()(
           set({ cachedOrders: cached });
           return { success: true, cached };
         } catch (error) {
-          console.error('[PCSStore] Failed to cache orders:', error);
+          SecureLogger.error('[PCSStore] Failed to cache orders:', error);
           return { success: false, error };
         }
       },
@@ -1133,7 +1133,7 @@ export const usePCSStore = create<PCSState>()(
             }
           }
         } catch (error) {
-          console.error('[PCSStore] Failed to initialize orders cache:', error);
+          SecureLogger.error('[PCSStore] Failed to initialize orders cache:', error);
         }
       },
     }),

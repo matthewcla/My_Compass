@@ -25,6 +25,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { syncQueue } from '@/services/syncQueue';
+import { SecureLogger } from '@/utils/logger';
 import {
     CreateTravelClaimPayload,
     Expense,
@@ -200,7 +201,7 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
                 const existing = state.travelClaims[claimId];
 
                 if (!existing) {
-                    console.error('[useTravelClaimStore] Draft not found:', claimId);
+                    SecureLogger.error('[useTravelClaimStore] Draft not found:', claimId);
                     return;
                 }
 
@@ -350,7 +351,7 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
                     });
                 } catch (error) {
                     // ── STEP 4: FAILURE — enqueue for retry ──────────────────
-                    console.error('[useTravelClaimStore] submitClaim error:', error);
+                    SecureLogger.error('[useTravelClaimStore] submitClaim error:', error);
 
                     set((state) => ({
                         travelClaims: {
@@ -425,7 +426,7 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
                 const state = get();
                 const existing = state.travelClaims[claimId];
                 if (!existing) {
-                    console.error('[useTravelClaimStore] Claim not found for addExpense:', claimId);
+                    SecureLogger.error('[useTravelClaimStore] Claim not found for addExpense:', claimId);
                     return;
                 }
 
@@ -440,7 +441,7 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
                 const state = get();
                 const existing = state.travelClaims[claimId];
                 if (!existing) {
-                    console.error('[useTravelClaimStore] Claim not found for removeExpense:', claimId);
+                    SecureLogger.error('[useTravelClaimStore] Claim not found for removeExpense:', claimId);
                     return;
                 }
 

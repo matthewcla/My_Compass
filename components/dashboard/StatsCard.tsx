@@ -28,7 +28,7 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
             intensity={60}
             tint={isDark ? 'dark' : 'light'}
             className="rounded-xl p-5 border border-slate-200/50 dark:border-slate-700/50 flex flex-col justify-between"
-            style={getShadow({ shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 })}
+            style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.12 : 0.14, shadowRadius: 10, elevation: 4 })}
         >
             <View className="flex-row justify-between items-start mb-2">
                 <View>
@@ -56,7 +56,7 @@ export function StatsCard({ liked, superLiked, passed, onPressSuperLiked }: Stat
                             cx="16"
                             cy="16"
                             r={radius}
-                            stroke="#10B981"
+                            stroke={isDark ? '#3AAE6C' : '#16A34A'}
                             strokeWidth={strokeWidth}
                             fill="transparent"
                             strokeDasharray={`${Math.PI * radius}, ${Math.PI * radius}`}

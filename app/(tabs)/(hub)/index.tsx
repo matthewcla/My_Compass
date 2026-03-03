@@ -34,6 +34,8 @@ import React, { useCallback, useState } from 'react';
 import { Alert, Platform, Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getShadow } from '@/utils/getShadow';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useShallow } from 'zustand/react/shallow';
 
 const AnimatedFlashList = (Platform.OS === 'web'
@@ -379,7 +381,7 @@ export default function HubDashboard() {
                 minTopBarHeight={minHeaderHeight}
                 topBar={
                     <View className="bg-slate-50 dark:bg-slate-950">
-                        <View className="px-4 pt-4">
+                        <View className="px-4 pt-4" style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })}>
                             <StatusCard
                                 nextCycle={data?.cycle?.cycleId ?? '24-02'}
                                 daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
@@ -431,6 +433,19 @@ export default function HubDashboard() {
                     />
                 )}
             </CollapsibleScaffold>
+
+            {/* Bottom depth fade — suggests more content below, matches ScreenGradient end stop */}
+            <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 140 }}>
+                <LinearGradient
+                    colors={isDark
+                        ? ['transparent', 'rgba(6,14,24,0.88)']
+                        : ['transparent', 'rgba(221,227,238,0.82)']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={{ flex: 1 }}
+                />
+            </View>
 
             {/* Floating demo panel — outside CollapsibleScaffold */}
             <PCSDevPanel />

@@ -221,7 +221,7 @@ export function ScreenHeader({
                         )}
                         <View className={isInline ? "flex-row items-baseline gap-2" : ""}>
                             {title ? (
-                                <Text className={`${isInline ? 'text-lg' : 'text-2xl'} font-black text-slate-900 dark:text-white uppercase tracking-tight`}>
+                                <Text className={`${isInline ? 'text-lg' : 'text-2xl'} font-bold text-slate-900 dark:text-white tracking-tight`}>
                                     {title}
                                 </Text>
                             ) : null}

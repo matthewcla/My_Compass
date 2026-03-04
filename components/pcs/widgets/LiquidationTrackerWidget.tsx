@@ -50,21 +50,25 @@ export function LiquidationTrackerWidget() {
 
   return (
     <GlassView
-      intensity={75}
+      intensity={80}
       tint={isDark ? 'dark' : 'light'}
-      className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10"
+      className="rounded-2xl overflow-hidden mx-4 mb-8"
+      style={{
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+      }}
     >
       {/* Header */}
-      <View className="bg-emerald-50/30 dark:bg-emerald-900/20 px-4 py-3.5">
+      <View className="bg-slate-900/70 p-5 pb-4">
         <View className="flex-row items-center">
-          <View className="w-12 h-12 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 items-center justify-center mr-3">
+          <View className="w-12 h-12 rounded-xl bg-white/10 dark:bg-slate-800/60 border border-slate-200/20 items-center justify-center mr-3">
             <DollarSign size={22} color={isDark ? '#6ee7b7' : '#059669'} strokeWidth={2.2} />
           </View>
           <View className="flex-1">
-            <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-500 dark:text-slate-300">
+            <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-300">
               NPPSC Liquidation
             </Text>
-            <Text className="mt-0.5 text-base font-bold text-slate-900 dark:text-white">
+            <Text className="mt-0.5 text-base font-bold text-white">
               {statusMessage.title}
             </Text>
           </View>
@@ -72,7 +76,7 @@ export function LiquidationTrackerWidget() {
       </View>
 
       {/* Content */}
-      <View className="p-4">
+      <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-4 pb-4 border-t border-slate-200/50 dark:border-slate-700/50">
         {/* Horizontal Stepper */}
         <View className="mb-4">
           <View className="flex-row items-center justify-between">
@@ -85,11 +89,11 @@ export function LiquidationTrackerWidget() {
                 ? 'bg-green-500'
                 : isCurrent
                   ? 'bg-blue-500'
-                  : 'bg-slate-200 dark:bg-slate-700';
+                  : 'bg-slate-200/50 dark:bg-slate-700/50';
 
               const connectorBgColor = isCompleted
                 ? 'bg-green-500'
-                : 'bg-slate-200 dark:bg-slate-700';
+                : 'bg-slate-200/50 dark:bg-slate-700/50';
 
               return (
                 <React.Fragment key={step.status}>
@@ -103,12 +107,12 @@ export function LiquidationTrackerWidget() {
                       ) : isCurrent ? (
                         <Clock size={18} color="#ffffff" strokeWidth={2.5} />
                       ) : (
-                        <Text className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                        <Text className="text-sm font-bold text-slate-400 dark:text-slate-400">
                           {index + 1}
                         </Text>
                       )}
                     </View>
-                    <Text className="mt-2 text-[10px] font-semibold text-center text-slate-600 dark:text-slate-300">
+                    <Text className="mt-2 text-[10px] font-semibold text-center text-slate-600 dark:text-slate-300 w-24 absolute top-10">
                       {step.label}
                     </Text>
                   </View>
@@ -116,8 +120,8 @@ export function LiquidationTrackerWidget() {
                   {/* Connector Line */}
                   {index < liquidation.steps.length - 1 && (
                     <View
-                      className={`h-1 ${connectorBgColor}`}
-                      style={{ flex: 1, marginTop: -24 }}
+                      className={`h-[3px] ${connectorBgColor}`}
+                      style={{ flex: 1, marginTop: -22, marginHorizontal: -10, zIndex: -1 }}
                     />
                   )}
                 </React.Fragment>
@@ -127,15 +131,15 @@ export function LiquidationTrackerWidget() {
         </View>
 
         {/* Status Message */}
-        <View className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-          <Text className="text-sm leading-5 text-slate-700 dark:text-slate-200">
+        <View className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 border border-slate-200 dark:border-slate-700/60 mt-6">
+          <Text className="text-sm leading-5 text-slate-700 dark:text-slate-300">
             {statusMessage.description}
           </Text>
         </View>
 
         {/* Estimated Payment Date */}
         {liquidation.estimatedPaymentDate && liquidation.currentStatus !== 'PAID' && (
-          <View className="mt-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800/40">
+          <View className="mt-3 bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
             <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
               Estimated Payment
             </Text>
@@ -151,7 +155,7 @@ export function LiquidationTrackerWidget() {
 
         {/* Actual Payment Amount (when paid) */}
         {liquidation.currentStatus === 'PAID' && liquidation.actualPaymentAmount && (
-          <View className="mt-3 bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-200 dark:border-green-800/40">
+          <View className="mt-3 bg-green-500/10 rounded-lg p-3 border border-green-500/20">
             <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
               Payment Amount
             </Text>

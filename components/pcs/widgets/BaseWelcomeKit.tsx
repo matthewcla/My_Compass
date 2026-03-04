@@ -128,26 +128,30 @@ export function BaseWelcomeKit() {
   return (
     <Animated.View entering={FadeInDown.delay(50).springify()}>
       <GlassView
-        intensity={75}
+        intensity={80}
         tint={isDark ? 'dark' : 'light'}
-        className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10"
+        className="rounded-2xl overflow-hidden mx-4 mb-8"
+        style={{
+          borderWidth: 1,
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+        }}
       >
         {/* Header */}
-        <View className="bg-blue-50/30 dark:bg-blue-900/20 px-5 py-4">
+        <View className="bg-slate-900/70 p-5 pb-4">
           <View className="flex-row items-center">
-            <View className="w-12 h-12 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 items-center justify-center mr-3">
+            <View className="w-12 h-12 rounded-xl bg-white/10 dark:bg-slate-800/60 border border-slate-200/20 items-center justify-center mr-3">
               <Building2 size={22} color={isDark ? '#93c5fd' : '#2563eb'} strokeWidth={2.2} />
             </View>
             <View className="flex-1">
-              <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-500 dark:text-slate-300">
+              <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-300">
                 Base Welcome Kit
               </Text>
-              <Text className="mt-0.5 text-base font-bold text-slate-900 dark:text-white">
+              <Text className="mt-0.5 text-base font-bold text-white">
                 {name}
               </Text>
               {address && (
                 <Text
-                  className="mt-0.5 text-xs text-slate-500 dark:text-slate-400"
+                  className="mt-0.5 text-xs text-slate-400"
                   numberOfLines={2}
                 >
                   {address}
@@ -157,11 +161,11 @@ export function BaseWelcomeKit() {
             {/* Status chip — CHECK IN (tappable) */}
             <ScalePressable
               onPress={() => router.push('/pcs/check-in' as any)}
-              className="bg-green-600/90 dark:bg-green-700/80 rounded-lg px-2.5 py-1.5 ml-2"
+              className="bg-green-500/20 border border-green-500/30 rounded-lg px-2.5 py-1.5 ml-2"
               accessibilityRole="button"
               accessibilityLabel="Go to check-in flow"
             >
-              <Text className="text-[11px] font-black text-white tracking-wide">
+              <Text className="text-[11px] font-black text-green-400 tracking-wide">
                 CHECK IN
               </Text>
             </ScalePressable>
@@ -169,10 +173,10 @@ export function BaseWelcomeKit() {
         </View>
 
         {/* Content */}
-        <View className="p-5" style={{ gap: 14 }}>
+        <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-4 pb-4 border-t border-slate-200/50 dark:border-slate-700/50" style={{ gap: 14 }}>
           {/* Uniform of the Day */}
           {displayUniform && (
-            <View className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700">
+            <View className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700/60">
               <View className="flex-row items-center">
                 <Shirt size={18} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                 <Text className="ml-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -189,7 +193,7 @@ export function BaseWelcomeKit() {
           {hasLocation && (
             <ScalePressable
               onPress={handleMapPress}
-              className="bg-green-50 dark:bg-green-900/20 rounded-lg px-3.5 py-3 border border-green-200 dark:border-green-800/40"
+              className="bg-green-500/10 rounded-lg px-3.5 py-3 border border-green-500/20"
               style={{ minHeight: 44 }}
               accessibilityRole="button"
               accessibilityLabel="Navigate to Quarterdeck"
@@ -213,9 +217,9 @@ export function BaseWelcomeKit() {
                 Command Sponsor
               </Text>
 
-              <View className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700">
+              <View className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700/60">
                 <View className="flex-row items-center">
-                  <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center mr-3">
+                  <View className="w-10 h-10 rounded-full bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 items-center justify-center mr-3">
                     <User size={18} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                   </View>
 
@@ -231,15 +235,15 @@ export function BaseWelcomeKit() {
                   </View>
 
                   {/* Compact contact icon buttons */}
-                  <View className="flex-row gap-1.5">
+                  <View className="flex-row gap-2">
                     {sponsor?.phone && (
                       <ScalePressable
                         onPress={() => handlePhonePress(sponsor.phone!)}
-                        className="w-9 h-9 rounded-full bg-green-50 dark:bg-green-900/20 items-center justify-center"
+                        className="w-9 h-9 rounded-full bg-green-500/10 items-center justify-center border border-green-500/20"
                         accessibilityRole="button"
                         accessibilityLabel={`Call ${sponsor.name}`}
                       >
-                        <Phone size={15} color={isDark ? '#86efac' : '#15803d'} strokeWidth={2.2} />
+                        <Phone size={14} color={isDark ? '#86efac' : '#15803d'} strokeWidth={2.2} />
                       </ScalePressable>
                     )}
                     {sponsor?.phone && (
@@ -250,21 +254,21 @@ export function BaseWelcomeKit() {
                           }
                           Linking.openURL(`sms:${sponsor.phone}`).catch(() => undefined);
                         }}
-                        className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/20 items-center justify-center"
+                        className="w-9 h-9 rounded-full bg-blue-500/10 items-center justify-center border border-blue-500/20"
                         accessibilityRole="button"
                         accessibilityLabel={`Text ${sponsor.name}`}
                       >
-                        <MessageSquare size={15} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
+                        <MessageSquare size={14} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
                       </ScalePressable>
                     )}
                     {sponsor?.email && (
                       <ScalePressable
                         onPress={() => handleEmailPress(sponsor.email!)}
-                        className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
+                        className="w-9 h-9 rounded-full bg-slate-500/10 items-center justify-center border border-slate-500/20"
                         accessibilityRole="button"
                         accessibilityLabel={`Email ${sponsor.name}`}
                       >
-                        <Mail size={15} color={isDark ? '#cbd5e1' : '#475569'} strokeWidth={2.2} />
+                        <Mail size={14} color={isDark ? '#cbd5e1' : '#475569'} strokeWidth={2.2} />
                       </ScalePressable>
                     )}
                   </View>
@@ -277,7 +281,7 @@ export function BaseWelcomeKit() {
           {quarterdeckPhone && (
             <ScalePressable
               onPress={() => handlePhonePress(quarterdeckPhone)}
-              className="bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3.5 py-3 border border-blue-200 dark:border-blue-800/40 flex-row items-center justify-between"
+              className="bg-blue-500/10 rounded-lg px-3.5 py-3 border border-blue-500/20 flex-row items-center justify-between"
               style={{ minHeight: 44 }}
               accessibilityRole="button"
               accessibilityLabel="Call Quarterdeck"
@@ -293,7 +297,7 @@ export function BaseWelcomeKit() {
           )}
 
           {/* Reporting Instructions */}
-          <View className="bg-blue-50/50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200/60 dark:border-blue-800/30">
+          <View className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
             <View className="flex-row items-center mb-3">
               <ClipboardList size={18} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
               <Text className="ml-2 text-xs font-bold uppercase tracking-[1.4px] text-blue-800 dark:text-blue-300">
@@ -303,7 +307,7 @@ export function BaseWelcomeKit() {
             <View style={{ gap: 8 }}>
               {REPORT_TIPS.map((tip, i) => (
                 <View key={i} className="flex-row items-start">
-                  <View className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 items-center justify-center mr-2.5 mt-px">
+                  <View className="w-5 h-5 rounded-full bg-blue-500/20 items-center justify-center mr-2.5 mt-px">
                     <Text className="text-[10px] font-black text-blue-700 dark:text-blue-300">{i + 1}</Text>
                   </View>
                   <Text className="text-sm font-medium text-slate-800 dark:text-slate-200 flex-1">

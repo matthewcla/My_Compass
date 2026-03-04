@@ -85,11 +85,11 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
                 <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     Billet Explorer
                 </Text>
-                <Text className={`text-[11px] font-medium mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {hasActivity
-                        ? 'Tap a category to review your picks.'
-                        : 'Swipe through billets to build your shortlist.'}
-                </Text>
+                {!hasActivity && (
+                    <Text className={`text-[11px] font-medium mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Swipe through billets to build your shortlist.
+                    </Text>
+                )}
             </View>
 
             {/* Badge Grid — always visible when billets are loaded */}
@@ -194,10 +194,21 @@ function StatBadge({
             onPress={onPress}
             disabled={isEmpty}
             activeOpacity={0.7}
-            className="flex-1 rounded-xl py-3 items-center"
+            className="flex-1 rounded-xl py-3 items-center overflow-hidden"
             style={[
-                { backgroundColor: bg },
-                isEmpty ? { opacity: 0.35 } : undefined,
+                {
+                    backgroundColor: bg,
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                    ...getShadow({
+                        shadowColor: isDark ? '#000' : '#475569',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: isDark ? 0.3 : 0.08,
+                        shadowRadius: 4,
+                        elevation: 2,
+                    })
+                },
+                isEmpty ? { opacity: 0.35, elevation: 0, shadowOpacity: 0 } : undefined,
             ]}
         >
             {icon}

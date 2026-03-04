@@ -44,6 +44,9 @@ export default function HubDashboard() {
     const insets = useSafeAreaInsets();
     const { data, loading, error } = useDashboardData();
 
+    type FilterTab = 'HUB' | 'CAREER' | 'ADMIN';
+    const [activeFilter, setActiveFilter] = useState<FilterTab>('HUB');
+
     const [quickDraft, setQuickDraft] = useState<LeaveRequest | null>(null);
     const listRef = React.useRef<any>(null);
 
@@ -156,11 +159,139 @@ export default function HubDashboard() {
                 );
             }
 
+            case 'digitalOrdersWallet': {
+                const { DigitalOrdersWallet } = require('@/components/pcs/widgets/DigitalOrdersWallet');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <DigitalOrdersWallet />
+                    </Animated.View>
+                );
+            }
+            case 'pcsFinancialSnapshot': {
+                const { PCSFinancialSnapshot } = require('@/components/pcs/widgets/PCSFinancialSnapshot');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <PCSFinancialSnapshot />
+                    </Animated.View>
+                );
+            }
+            case 'gainingCommandCard': {
+                const { GainingCommandCard } = require('@/components/pcs/widgets/GainingCommandCard');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <GainingCommandCard />
+                    </Animated.View>
+                );
+            }
+            case 'hhgWeightGauge': {
+                const { HHGWeightGaugeWidget } = require('@/components/pcs/widgets/HHGWeightGaugeWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <HHGWeightGaugeWidget />
+                    </Animated.View>
+                );
+            }
+            case 'leaveImpact': {
+                const { LeaveImpactWidget } = require('@/components/pcs/widgets/LeaveImpactWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <LeaveImpactWidget />
+                    </Animated.View>
+                );
+            }
+            case 'slateSummary': {
+                const SlateSummaryWidget = require('@/components/assignment/SlateSummaryWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <SlateSummaryWidget />
+                    </Animated.View>
+                );
+            }
+            case 'digitalSeaBag': {
+                const { DigitalSeaBagWidget } = require('@/components/pcs/widgets/DigitalSeaBagWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <DigitalSeaBagWidget />
+                    </Animated.View>
+                );
+            }
+            case 'adminFeed': {
+                const AdminFeedWidget = require('@/components/admin/AdminFeedWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <AdminFeedWidget />
+                    </Animated.View>
+                );
+            }
+            case 'mnaProcess': {
+                const MNAProcessWidget = require('@/components/assignment/MNAProcessWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <MNAProcessWidget />
+                    </Animated.View>
+                );
+            }
+            case 'careerReadiness': {
+                const ReadinessWidget = require('@/components/assignment/ReadinessWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <ReadinessWidget />
+                    </Animated.View>
+                );
+            }
+            case 'detailerContact': {
+                const DetailerContactWidget = require('@/components/assignment/DetailerContactWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <DetailerContactWidget />
+                    </Animated.View>
+                );
+            }
+            case 'selectionDetail': {
+                const SelectionDetailWidget = require('@/components/assignment/SelectionDetailWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <SelectionDetailWidget />
+                    </Animated.View>
+                );
+            }
+            case 'selectionChecklist': {
+                const SelectionChecklistWidget = require('@/components/assignment/SelectionChecklistWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <SelectionChecklistWidget />
+                    </Animated.View>
+                );
+            }
+            case 'pcsHeroBanner': {
+                const { PCSHeroBanner } = require('@/components/pcs/PCSHeroBanner');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <PCSHeroBanner />
+                    </Animated.View>
+                );
+            }
             case 'baseWelcomeKit': {
                 const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <BaseWelcomeKit />
+                    </Animated.View>
+                );
+            }
+            case 'arrivalBriefing': {
+                const { ArrivalBriefingWidget } = require('@/components/pcs/widgets/ArrivalBriefingWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <ArrivalBriefingWidget />
+                    </Animated.View>
+                );
+            }
+            case 'travelClaimHUD': {
+                const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <TravelClaimHUDWidget />
                     </Animated.View>
                 );
             }
@@ -177,6 +308,14 @@ export default function HubDashboard() {
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <LiquidationTrackerWidget />
+                    </Animated.View>
+                );
+            }
+            case 'pcsTaskTracker': {
+                const { PCSTaskTracker } = require('@/components/pcs/widgets/PCSTaskTracker');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <PCSTaskTracker />
                     </Animated.View>
                 );
             }
@@ -245,6 +384,109 @@ export default function HubDashboard() {
         router.push('/leave' as any);
     };
 
+    const sections = React.useMemo(() => {
+        const feed: string[] = ['menu'];
+
+        if (activeFilter === 'HUB') {
+            // Priority 0: Critical Action Items
+            feed.push('obliserv');
+
+            // Priority 1: PCS Active Window Navigation
+            if (pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
+                feed.push('pcsHeroBanner');
+                feed.push('tierThisWeek');
+                feed.push('baseWelcomeKit');
+                feed.push('gainingCommandCard');
+                feed.push('digitalOrdersWallet');
+                feed.push('pcsFinancialSnapshot');
+                feed.push('hhgWeightGauge');
+                feed.push('leaveImpact');
+                if (subPhase === 'ACTIVE_TRAVEL' || pcsPhase === 'CHECK_IN') {
+                    feed.push('travelClaimUrgency');
+                }
+                const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
+                if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
+                    feed.push('tierTracking');
+                    feed.push('liquidationTracker');
+                }
+            }
+
+            // Priority 2: Mission Brief (Active Orders Processing)
+            if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
+                feed.push('pcsHeroBanner');
+                feed.push('missionBrief');
+                feed.push('gainingCommandCard');
+                feed.push('digitalOrdersWallet');
+                feed.push('hhgWeightGauge');
+            }
+
+            // Priority 3: Career Discovery
+            if (assignmentPhase === 'ON_RAMP') {
+                feed.push('careerReadiness');
+                feed.push('discoveryStatus');
+            } else if (assignmentPhase === 'NEGOTIATION') {
+                feed.push('slateSummary');
+            }
+
+            if (!pcsPhase) {
+                feed.push('digitalSeaBag');
+            }
+
+            // Priority 4: General Admin / Leave
+            feed.push('tierTracking');
+            if (pcsPhase && pcsPhase !== 'CHECK_IN') {
+                feed.push('pcsTaskTracker');
+            }
+            feed.push('leave');
+        }
+        else if (activeFilter === 'CAREER') {
+            // Priority 0: Critical Action Items
+            feed.push('obliserv');
+
+            // In the CAREER tab, we exclusively show Career-focused widgets.
+            if (!assignmentPhase || assignmentPhase === 'DISCOVERY' || assignmentPhase === 'ON_RAMP') {
+                feed.push('mnaProcess');
+                feed.push('careerReadiness');
+                feed.push('discoveryStatus');
+            }
+            if (assignmentPhase === 'NEGOTIATION') {
+                feed.push('slateSummary');
+                feed.push('discoveryStatus');
+                feed.push('detailerContact');
+            }
+            if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '')) {
+                feed.push('slateSummary');
+                feed.push('selectionDetail');
+                feed.push('selectionChecklist');
+            }
+            if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
+                feed.push('missionBrief');
+            }
+            if (pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
+                feed.push('baseWelcomeKit');
+            }
+            // Once we migrate the BilletSwipeCard and NegotiationStatus, they will go here.
+        }
+        else if (activeFilter === 'ADMIN') {
+            // In the ADMIN tab, we exclusively show administrative paperwork.
+            feed.push('adminFeed');
+
+            if (subPhase === 'ACTIVE_TRAVEL' || pcsPhase === 'CHECK_IN') {
+                feed.push('travelClaimUrgency');
+            }
+            const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
+            if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
+                feed.push('liquidationTracker');
+            }
+            // leave is currently integrated into the top global nav buttons, so it may be redundant here
+            // but we'll leave it for now until a user asks to remove it.
+            feed.push('leave');
+            // Once we migrate Eval widgets, they will go here.
+        }
+
+        return feed;
+    }, [activeFilter, assignmentPhase, pcsPhase, subPhase, liquidationStatus]);
+
     // Loading state
     if (loading && !data) {
         return (
@@ -266,35 +508,6 @@ export default function HubDashboard() {
             </ScreenGradient>
         );
     }
-
-    const sections = ['menu'];
-    // Show DiscoveryStatusCard on Hub during Discovery through Negotiation phases
-    if (!assignmentPhase || assignmentPhase === 'DISCOVERY' || assignmentPhase === 'ON_RAMP' || assignmentPhase === 'NEGOTIATION') {
-        sections.push('discoveryStatus');
-    }
-    // Show standalone receipt capture on Home Hub during Phase 3 (ACTIVE_TRAVEL) only.
-    // Phase 2 (PLANNING) shares TRANSIT_LEAVE but doesn't need receipt capture yet.
-    // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
-    if (pcsPhase === 'TRANSIT_LEAVE' && subPhase === 'ACTIVE_TRAVEL') sections.push('receiptCapture');
-    // Surface Mission Brief on Home Hub from Selection onward only
-    if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
-        sections.push('missionBrief');
-    }
-    // Surface Phase 4 urgency widgets on the Home Hub — streamlined
-    if (pcsPhase === 'CHECK_IN') {
-        sections.push('tierThisWeek');
-        sections.push('baseWelcomeKit');
-        sections.push('travelClaimUrgency');
-        // Reactive liquidation check (QW4: no longer uses getState())
-        const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
-        if (hasActiveLiquidation) {
-            sections.push('tierTracking');
-            sections.push('liquidationTracker');
-        }
-    }
-    // Tracking header always visible above leave
-    sections.push('tierTracking');
-    sections.push('leave');
 
 
     return (
@@ -339,33 +552,35 @@ export default function HubDashboard() {
 
                                     {/* Active Hub Chip */}
                                     <TouchableOpacity
+                                        onPress={() => setActiveFilter('HUB')}
                                         style={{
-                                            backgroundColor: '#0A84FF',
+                                            backgroundColor: activeFilter === 'HUB' ? '#0A84FF' : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
                                         }}
-                                        className="h-10 px-5 rounded-full flex-row items-center justify-center"
+                                        className={`h-10 px-5 rounded-full flex-row items-center justify-center ${activeFilter === 'HUB' ? '' : 'border border-black/5 dark:border-white/10'}`}
                                     >
-                                        <Text style={{ color: '#ffffff' }} className="font-semibold text-[15px]">Hub</Text>
+                                        <Text style={{ color: activeFilter === 'HUB' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'HUB' ? 'font-semibold' : 'font-medium'} text-[15px]`}>Hub</Text>
                                     </TouchableOpacity>
 
-                                    {/* Career Chip (Inactive) */}
+                                    {/* Career Chip */}
                                     <TouchableOpacity
+                                        onPress={() => setActiveFilter('CAREER')}
                                         style={{
-                                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                                            backgroundColor: activeFilter === 'CAREER' ? '#0A84FF' : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
                                         }}
-                                        className="h-10 px-5 rounded-full flex-row items-center justify-center border border-black/5 dark:border-white/10"
+                                        className={`h-10 px-5 rounded-full flex-row items-center justify-center ${activeFilter === 'CAREER' ? '' : 'border border-black/5 dark:border-white/10'}`}
                                     >
-                                        <Text style={{ color: isDark ? '#94A3B8' : '#64748B' }} className="font-medium text-[15px]">My Career</Text>
+                                        <Text style={{ color: activeFilter === 'CAREER' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'CAREER' ? 'font-semibold' : 'font-medium'} text-[15px]`}>My Career</Text>
                                     </TouchableOpacity>
 
                                     {/* Admin Chip */}
                                     <TouchableOpacity
-                                        onPress={() => router.push('/(admin)' as any)}
+                                        onPress={() => setActiveFilter('ADMIN')}
                                         style={{
-                                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                                            backgroundColor: activeFilter === 'ADMIN' ? '#0A84FF' : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
                                         }}
-                                        className="h-10 px-5 rounded-full flex-row items-center justify-center border border-black/5 dark:border-white/10"
+                                        className={`h-10 px-5 rounded-full flex-row items-center justify-center ${activeFilter === 'ADMIN' ? '' : 'border border-black/5 dark:border-white/10'}`}
                                     >
-                                        <Text style={{ color: isDark ? '#94A3B8' : '#64748B' }} className="font-medium text-[15px]">My Admin</Text>
+                                        <Text style={{ color: activeFilter === 'ADMIN' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'ADMIN' ? 'font-semibold' : 'font-medium'} text-[15px]`}>My Admin</Text>
                                     </TouchableOpacity>
                                 </Animated.ScrollView>
                             </Animated.View>

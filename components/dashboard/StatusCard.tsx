@@ -338,7 +338,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* CTA — bottom right */}
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(pcs)/pcs')}
+                                    onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
                                     className="bg-teal-600 dark:bg-teal-700 px-3 py-2 rounded-lg border border-teal-500 dark:border-teal-600 ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
@@ -467,7 +467,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* CTA — bottom right */}
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(pcs)/pcs')}
+                                    onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
                                     className="bg-sky-600 dark:bg-sky-700 px-3 py-2 rounded-lg border border-sky-500 dark:border-sky-600 ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
@@ -591,7 +591,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* CTA — bottom right */}
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(pcs)/pcs')}
+                                    onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
                                     className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-lg border border-amber-500 dark:border-amber-600 ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
@@ -854,24 +854,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                             Window closes {closeDate}
                                         </Text>
                                     )}
-
-                                    {/* Detailer Line */}
-                                    {detailerName && (
-                                        <Text
-                                            className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider"
-                                            numberOfLines={1}
-                                        >
-                                            ⏳ {detailerName}{detailerOffice ? ` · ${detailerOffice}` : ''}
-                                        </Text>
-                                    )}
                                 </View>
-
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(assignment)/cycle' as any)}
-                                    className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50 ml-3"
-                                >
-                                    <CTAText color="text-amber-800 dark:text-amber-200">My{`\n`}Slate</CTAText>
-                                </TouchableOpacity>
                             </View>
                         </LinearGradient>
                     </GlassView>
@@ -949,17 +932,26 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                         </>
                                     ) : (
                                         <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium leading-[14px]">
-                                            When the window opens, you'll build and submit your ranked slate.
+                                            Cycle opens soon. Finalize your preferences and resume now.
                                         </Text>
                                     )}
                                 </View>
 
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(profile)/preferences')}
-                                    className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 ml-3"
-                                >
-                                    <CTAText color="text-indigo-800 dark:text-indigo-200">Get{`\n`}Ready</CTAText>
-                                </TouchableOpacity>
+                                {hasPrepped ? (
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/(career)/discovery' as any)}
+                                        className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 ml-3"
+                                    >
+                                        <CTAText color="text-indigo-800 dark:text-indigo-200">Review{`\n`}Picks</CTAText>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/(tabs)/(profile)/preferences' as any)}
+                                        className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 ml-3"
+                                    >
+                                        <CTAText color="text-indigo-800 dark:text-indigo-200">Get{`\n`}Ready</CTAText>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </LinearGradient>
                     </GlassView>
@@ -973,12 +965,10 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         default: {
             // Derive PRD from profile, fall back to mock
             const prdDate = currentProfile?.prd ? new Date(currentProfile.prd) : null;
-            const prdLabel = prdDate
-                ? prdDate.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
-                : 'Oct 2027';
-            const monthsOut = prdDate
+            const monthsToPrd = prdDate
                 ? Math.max(0, Math.round((prdDate.getTime() - Date.now()) / (30.44 * 86400000)))
                 : 19;
+            const monthsToMna = Math.max(0, monthsToPrd - 12);
 
             return (
                 <View className="flex flex-col gap-2">
@@ -1003,32 +993,18 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </IconBubble>
                                     <View className="flex-1">
                                         <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle Opens</Headline>
-                                        <Detail>PRD {prdLabel}</Detail>
+                                        <Detail>Your PRD is in ~{monthsToPrd} months</Detail>
                                     </View>
                                 </View>
 
                                 <View className="flex-row items-baseline gap-1">
                                     <Text className="text-blue-950 dark:text-white text-2xl font-black font-mono tracking-tighter">
-                                        ~{monthsOut}
+                                        ~{monthsToMna}
                                     </Text>
                                     <Text className="text-blue-700 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wide">
                                         Months
                                     </Text>
                                 </View>
-                            </View>
-
-                            {/* ── Footer Row: coaching + CTA ── */}
-                            <View className="mt-3 flex-row items-end justify-between">
-                                <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium flex-1 leading-[14px]">
-                                    Explore billets now — no action required yet.
-                                </Text>
-
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(career)/discovery' as any)}
-                                    className="bg-blue-600 dark:bg-blue-700 px-3 py-2 rounded-lg border border-blue-500 dark:border-blue-600 ml-3"
-                                >
-                                    <CTAText>Start{`\n`}Exploring</CTAText>
-                                </TouchableOpacity>
                             </View>
                         </LinearGradient>
                     </GlassView>

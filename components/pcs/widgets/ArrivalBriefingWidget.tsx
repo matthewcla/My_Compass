@@ -1,3 +1,4 @@
+import { GlassView } from '@/components/ui/GlassView';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
 import type { LucideIcon } from 'lucide-react-native';
@@ -91,123 +92,86 @@ export function ArrivalBriefingWidget() {
 
     return (
         <Animated.View entering={FadeInDown.delay(100).springify()}>
-            <View
+            <GlassView
+                intensity={80}
+                tint={isDark ? 'dark' : 'light'}
+                className="rounded-2xl overflow-hidden mx-4 mb-8"
                 style={{
-                    backgroundColor: isDark ? 'rgba(30,41,59,0.6)' : '#FFFFFF',
                     borderWidth: 1,
-                    borderColor: isDark ? '#334155' : '#E2E8F0',
-                    borderRadius: 16,
-                    padding: 20,
-                    marginBottom: 4,
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
                 }}
             >
-                {/* Header */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <CalendarClock size={18} color={isDark ? '#60A5FA' : '#2563EB'} />
-                        <Text
-                            style={{
-                                fontSize: 15,
-                                fontWeight: '800',
-                                color: isDark ? '#FFFFFF' : '#0F172A',
-                            }}
-                        >
-                            Arrival Briefing
-                        </Text>
-                    </View>
-
-                    {daysSinceArrival !== null && (
-                        <View
-                            style={{
-                                backgroundColor: isDark ? 'rgba(59,130,246,0.15)' : '#EFF6FF',
-                                paddingHorizontal: 10,
-                                paddingVertical: 3,
-                                borderRadius: 10,
-                            }}
-                        >
-                            <Text
-                                style={{
-                                    fontSize: 12,
-                                    fontWeight: '700',
-                                    color: isDark ? '#60A5FA' : '#2563EB',
-                                }}
-                            >
-                                Day {daysSinceArrival}
+                <View className="bg-white/40 dark:bg-slate-900/60 p-5">
+                    {/* Header */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                        <View className="flex-row items-center" style={{ gap: 8 }}>
+                            <View className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 items-center justify-center border border-blue-500/20">
+                                <CalendarClock size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+                            </View>
+                            <Text className="text-[15px] font-extrabold text-slate-900 dark:text-white">
+                                Arrival Briefing
                             </Text>
                         </View>
-                    )}
-                </View>
 
-                {/* Timeline */}
-                {TIMELINE_STEPS.map((step, index) => {
-                    const isLast = index === TIMELINE_STEPS.length - 1;
-                    const Icon = step.icon;
-                    const done = completedSteps.has(step.id);
-
-                    return (
-                        <Animated.View
-                            key={step.id}
-                            entering={FadeIn.delay(200 + index * 80)}
-                        >
-                            <View style={{ flexDirection: 'row' }}>
-                                {/* Left: dot + line */}
-                                <View style={{ alignItems: 'center', width: 20, marginRight: 10 }}>
-                                    <View
-                                        style={{
-                                            width: 10,
-                                            height: 10,
-                                            borderRadius: 5,
-                                            backgroundColor: done
-                                                ? '#22C55E'
-                                                : isDark ? '#475569' : '#CBD5E1',
-                                            marginTop: 4,
-                                        }}
-                                    />
-                                    {!isLast && (
-                                        <View
-                                            style={{
-                                                width: 2,
-                                                flex: 1,
-                                                backgroundColor: isDark ? '#334155' : '#E2E8F0',
-                                                marginVertical: 2,
-                                            }}
-                                        />
-                                    )}
-                                </View>
-
-                                {/* Right: content */}
-                                <View style={{ flex: 1, paddingBottom: isLast ? 0 : 16 }}>
-                                    <Text
-                                        style={{
-                                            fontSize: 11,
-                                            fontWeight: '700',
-                                            color: done
-                                                ? '#22C55E'
-                                                : isDark ? '#60A5FA' : '#3B82F6',
-                                            letterSpacing: 0.5,
-                                            marginBottom: 2,
-                                        }}
-                                    >
-                                        {step.timeframe}
-                                    </Text>
-                                    <Text
-                                        style={{
-                                            fontSize: 13,
-                                            fontWeight: '600',
-                                            color: done
-                                                ? isDark ? '#6B7280' : '#9CA3AF'
-                                                : isDark ? '#E2E8F0' : '#334155',
-                                            textDecorationLine: done ? 'line-through' : 'none',
-                                        }}
-                                    >
-                                        {step.label}
-                                    </Text>
-                                </View>
+                        {daysSinceArrival !== null && (
+                            <View className="bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20">
+                                <Text className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                                    Day {daysSinceArrival}
+                                </Text>
                             </View>
-                        </Animated.View>
-                    );
-                })}
-            </View>
+                        )}
+                    </View>
+
+                    {/* Timeline */}
+                    <View className="bg-white/60 dark:bg-slate-950/40 rounded-xl p-4 border border-slate-200/50 dark:border-slate-700/50">
+                        {TIMELINE_STEPS.map((step, index) => {
+                            const isLast = index === TIMELINE_STEPS.length - 1;
+                            const Icon = step.icon;
+                            const done = completedSteps.has(step.id);
+
+                            return (
+                                <Animated.View
+                                    key={step.id}
+                                    entering={FadeIn.delay(200 + index * 80)}
+                                >
+                                    <View style={{ flexDirection: 'row' }}>
+                                        {/* Left: dot + line */}
+                                        <View style={{ alignItems: 'center', width: 24, marginRight: 12 }}>
+                                            <View className="w-8 h-8 rounded-full items-center justify-center -ml-2" style={{ backgroundColor: done ? 'rgba(34,197,94,0.15)' : 'transparent' }}>
+                                                <View
+                                                    className={`w-3 h-3 rounded-full ${done ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                                    style={{ marginTop: 4 }}
+                                                />
+                                            </View>
+                                            {!isLast && (
+                                                <View
+                                                    className="w-[2px] flex-1 bg-slate-200 dark:bg-slate-700"
+                                                    style={{ marginVertical: 2, marginRight: 8 }}
+                                                />
+                                            )}
+                                        </View>
+
+                                        {/* Right: content */}
+                                        <View style={{ flex: 1, paddingBottom: isLast ? 0 : 20 }}>
+                                            <Text
+                                                className={`text-[11px] font-bold tracking-[0.5px] mb-1 ${done ? 'text-green-600 dark:text-green-500' : 'text-blue-600 dark:text-blue-400'}`}
+                                                style={{ textTransform: 'uppercase' }}
+                                            >
+                                                {step.timeframe}
+                                            </Text>
+                                            <Text
+                                                className={`text-[13.5px] font-semibold ${done ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-800 dark:text-slate-200'}`}
+                                            >
+                                                {step.label}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </Animated.View>
+                            );
+                        })}
+                    </View>
+                </View>
+            </GlassView>
         </Animated.View>
     );
 }

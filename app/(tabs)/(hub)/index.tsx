@@ -15,7 +15,6 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { DemoPhase } from '@/constants/DemoData';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useSession } from '@/lib/ctx';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
@@ -108,7 +107,6 @@ export default function HubDashboard() {
         }, [])
     );
 
-    const globalSearchConfig = useGlobalSpotlightHeaderSearch();
 
     // QW1: Wrapped in useCallback to prevent FlashList re-creating the callback on every render
     // QW2: Each widget section gets a FadeInUp stagger for polished entrance
@@ -390,7 +388,6 @@ export default function HubDashboard() {
                                 title=""
                                 subtitle=""
                                 withSafeArea={false}
-                                searchConfig={globalSearchConfig}
                             />
                         </View>
                     </View>

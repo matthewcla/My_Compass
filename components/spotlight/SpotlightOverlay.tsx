@@ -897,7 +897,7 @@ export function SpotlightOverlay() {
                 right: 0,
                 bottom: 0,
                 left: 0,
-                zIndex: 200,
+                zIndex: 10000,
             }}
         >
             {/* Backdrop — dims below search bar */}

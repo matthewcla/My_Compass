@@ -15,11 +15,11 @@ import '../ignoreWarnings';
 configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false });
 SecureLogger.patchGlobalConsole();
 
-import { SecureLogger } from '@/utils/logger';
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import { SessionTimeoutOverlay } from '@/components/SessionTimeoutOverlay';
 import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
 import { ThemeTransitionOverlay } from '@/components/ThemeTransitionOverlay';
+import { KeyboardActionToolbar } from '@/components/ui/KeyboardActionToolbar';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { SessionProvider, useSession } from '@/lib/ctx';
@@ -27,6 +27,7 @@ import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
 import { usePCSStore } from '@/store/usePCSStore';
+import { SecureLogger } from '@/utils/logger';
 import { View } from 'react-native';
 
 // SI-11: Custom error boundary — safe messaging, no raw error/stack trace exposed
@@ -160,10 +161,12 @@ function InnerLayout() {
           remainingSeconds={remainingSeconds}
           onExtend={resetTimer}
         />
+        <KeyboardActionToolbar />
       </View>
     </>
   );
 }
+
 
 export default function RootLayout() {
   return (

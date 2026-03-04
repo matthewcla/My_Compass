@@ -139,8 +139,3 @@ export default function AssignmentsScreen() {
     </>
   );
 }
-
-    </>
-  );
-}
-

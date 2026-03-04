@@ -403,8 +403,6 @@ export default function HubDashboard() {
                     feed.push('hhgWeightGauge');
                 }
 
-                feed.push('leaveImpact');
-
                 const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
                 if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
                     feed.push('tierTracking');
@@ -419,11 +417,16 @@ export default function HubDashboard() {
                 feed.push('missionBrief');
             }
             if (assignmentPhase === 'ORDERS_RELEASED' && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
-                feed.push('digitalOrdersWallet');
+                // Deduplicate widgets already shown in Priority 1 setup
+                if (subPhase !== 'ACTIVE_TRAVEL') {
+                    feed.push('digitalOrdersWallet');
 
-                // Contextual HHG widget
-                if (dependentCount > 0 || hasShipments) {
-                    feed.push('hhgWeightGauge');
+                    // Contextual HHG widget
+                    if (dependentCount > 0 || hasShipments) {
+                        feed.push('hhgWeightGauge');
+                    }
+
+                    feed.push('leaveImpact');
                 }
             }
 

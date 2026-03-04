@@ -17,7 +17,6 @@ SecureLogger.patchGlobalConsole();
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
 import { SessionTimeoutOverlay } from '@/components/SessionTimeoutOverlay';
-import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
 import { ThemeTransitionOverlay } from '@/components/ThemeTransitionOverlay';
 import { KeyboardActionToolbar } from '@/components/ui/KeyboardActionToolbar';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -154,7 +153,6 @@ function InnerLayout() {
           <Stack.Screen name="leave" />
           <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
         </Stack>
-        <SpotlightOverlay />
         <ThemeTransitionOverlay />
         <SessionTimeoutOverlay
           visible={showWarning}

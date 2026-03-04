@@ -1,0 +1,735 @@
+import { useColorScheme } from '@/components/useColorScheme';
+import { useSession } from '@/lib/ctx';
+import { useCareerStore } from '@/store/useCareerStore';
+import { useHeaderStore } from '@/store/useHeaderStore';
+import { useInboxStore } from '@/store/useInboxStore';
+import { useSpotlightStore } from '@/store/useSpotlightStore';
+import { useUserStore } from '@/store/useUserStore';
+import {
+    RankedSpotlightItem,
+    SpotlightItem,
+    SpotlightScope,
+    SpotlightSection
+} from '@/types/spotlight';
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import {
+    CalendarDays,
+    ChevronRight,
+    Compass,
+    Inbox as InboxIcon,
+    Settings,
+    Sparkles
+} from 'lucide-react-native';
+import React from 'react';
+import {
+    Keyboard,
+    Platform,
+    Pressable,
+    ScrollView,
+    Text,
+    View,
+} from 'react-native';
+import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
+
+const SECTION_ORDER: SpotlightSection[] = ['Actions', 'Navigation', 'Settings', 'Calendar', 'Inbox'];
+const MAX_RESULTS = 30;
+
+const SCOPE_OPTIONS: Array<{ value: SpotlightScope; label: string }> = [
+    { value: 'all', label: 'All' },
+    { value: 'navigation', label: 'Navigation' },
+    { value: 'actions', label: 'Actions' },
+    { value: 'settings', label: 'Settings' },
+    { value: 'calendar', label: 'Calendar' },
+    { value: 'inbox', label: 'Inbox' },
+];
+
+const normalize = (value: string) => value.trim().toLowerCase();
+
+const fuzzySequenceScore = (value: string, query: string): number => {
+    if (!value || !query) return 0;
+
+    let valueIndex = 0;
+    let queryIndex = 0;
+    let score = 0;
+
+    while (valueIndex < value.length && queryIndex < query.length) {
+        if (value[valueIndex] === query[queryIndex]) {
+            score += valueIndex > 0 && value[valueIndex - 1] === query[queryIndex - 1] ? 4 : 2;
+            queryIndex += 1;
+        }
+        valueIndex += 1;
+    }
+
+    return queryIndex === query.length ? score : 0;
+};
+
+const getSectionBaseScore = (section: SpotlightSection): number => {
+    switch (section) {
+        case 'Actions':
+            return 50;
+        case 'Navigation':
+            return 45;
+        case 'Settings':
+            return 40;
+        case 'Calendar':
+            return 35;
+        case 'Inbox':
+            return 30;
+        default:
+            return 0;
+    }
+};
+
+const getFreshnessBoost = (updatedAt?: number): number => {
+    if (!updatedAt) return 0;
+    const ageInDays = (Date.now() - updatedAt) / (1000 * 60 * 60 * 24);
+    return Math.max(0, 18 - ageInDays);
+};
+
+const matchesScope = (item: SpotlightItem, scope: SpotlightScope): boolean => {
+    if (scope === 'all') return true;
+    if (scope === 'navigation') return item.section === 'Navigation';
+    if (scope === 'actions') return item.section === 'Actions';
+    if (scope === 'settings') return item.section === 'Settings';
+    if (scope === 'calendar') return item.section === 'Calendar';
+    if (scope === 'inbox') return item.section === 'Inbox';
+    return true;
+};
+
+const rankItem = (item: SpotlightItem, queryTokens: string[], recentIndex: number): number | null => {
+    const title = normalize(item.title);
+    const subtitle = normalize(item.subtitle || '');
+    const keywordText = normalize((item.keywords || []).join(' '));
+
+    if (queryTokens.length === 0) {
+        let score = getSectionBaseScore(item.section) + getFreshnessBoost(item.updatedAt);
+        if (recentIndex >= 0) {
+            score += 150 - recentIndex * 12;
+        }
+        return score;
+    }
+
+    let total = getSectionBaseScore(item.section);
+    if (recentIndex >= 0) {
+        total += 20 - recentIndex * 2;
+    }
+
+    for (const token of queryTokens) {
+        let tokenScore = 0;
+
+        if (title === token) tokenScore = Math.max(tokenScore, 200);
+        if (title.startsWith(token)) tokenScore = Math.max(tokenScore, 140);
+        if (title.includes(token)) tokenScore = Math.max(tokenScore, 105);
+        if (subtitle.includes(token)) tokenScore = Math.max(tokenScore, 70);
+        if (keywordText.includes(token)) tokenScore = Math.max(tokenScore, 85);
+
+        const fuzzyTitleScore = fuzzySequenceScore(title, token);
+        if (fuzzyTitleScore > 0) {
+            tokenScore = Math.max(tokenScore, 35 + Math.min(35, fuzzyTitleScore));
+        }
+
+        const fuzzyKeywordScore = fuzzySequenceScore(keywordText, token);
+        if (fuzzyKeywordScore > 0) {
+            tokenScore = Math.max(tokenScore, 20 + Math.min(20, fuzzyKeywordScore));
+        }
+
+        if (tokenScore === 0) {
+            return null;
+        }
+
+        total += tokenScore;
+    }
+
+    total += getFreshnessBoost(item.updatedAt);
+    return total;
+};
+
+const rankSpotlightItems = (
+    items: SpotlightItem[],
+    query: string,
+    scope: SpotlightScope,
+    recentItemIds: string[]
+): RankedSpotlightItem[] => {
+    const queryTokens = normalize(query).split(/\s+/).filter(Boolean);
+    const scored: RankedSpotlightItem[] = [];
+
+    for (const item of items) {
+        if (!matchesScope(item, scope)) continue;
+        const recentIndex = recentItemIds.indexOf(item.id);
+        const score = rankItem(item, queryTokens, recentIndex);
+        if (score === null) continue;
+        scored.push({ ...item, score });
+    }
+
+    scored.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if ((b.updatedAt || 0) !== (a.updatedAt || 0)) return (b.updatedAt || 0) - (a.updatedAt || 0);
+        return a.title.localeCompare(b.title);
+    });
+
+    return scored.slice(0, MAX_RESULTS);
+};
+
+const formatEventDate = (value: string): string => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return 'Unknown date';
+
+    return parsed.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    });
+};
+
+const formatInboxDate = (value: string): string => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return 'Unknown date';
+
+    return parsed.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    });
+};
+
+const SectionGlyph = ({ section, activeColor }: { section: SpotlightSection; activeColor: string }) => {
+    switch (section) {
+        case 'Actions':
+            return <Sparkles size={14} color={activeColor} strokeWidth={2.3} />;
+        case 'Navigation':
+            return <Compass size={14} color={activeColor} strokeWidth={2.3} />;
+        case 'Settings':
+            return <Settings size={14} color={activeColor} strokeWidth={2.3} />;
+        case 'Calendar':
+            return <CalendarDays size={14} color={activeColor} strokeWidth={2.3} />;
+        case 'Inbox':
+            return <InboxIcon size={14} color={activeColor} strokeWidth={2.3} />;
+        default:
+            return null;
+    }
+};
+
+const HighlightedLabel = ({
+    text,
+    query,
+    className,
+    highlightClassName,
+}: {
+    text: string;
+    query: string;
+    className: string;
+    highlightClassName: string;
+}) => {
+    const firstToken = normalize(query).split(/\s+/).filter(Boolean)[0];
+    if (!firstToken) {
+        return <Text className={className}>{text}</Text>;
+    }
+
+    const lowered = text.toLowerCase();
+    const matchIndex = lowered.indexOf(firstToken);
+    if (matchIndex < 0) {
+        return <Text className={className}>{text}</Text>;
+    }
+
+    const before = text.slice(0, matchIndex);
+    const match = text.slice(matchIndex, matchIndex + firstToken.length);
+    const after = text.slice(matchIndex + firstToken.length);
+
+    return (
+        <Text className={className}>
+            {before}
+            <Text className={highlightClassName}>{match}</Text>
+            {after}
+        </Text>
+    );
+};
+
+interface SpotlightResultsProps {
+    onClose?: () => void;
+}
+
+export function SpotlightResults({ onClose }: SpotlightResultsProps) {
+    const keyboard = useAnimatedKeyboard();
+    const keyboardSpacerStyle = useAnimatedStyle(() => ({
+        height: Math.max(24, keyboard.height.value + 24),
+    }));
+
+    const { session } = useSession();
+    const router = useRouter();
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
+    const isOpen = useSpotlightStore((state) => state.isOpen);
+    const query = useSpotlightStore((state) => state.query);
+    const scope = useSpotlightStore((state) => state.scope);
+    const activeIndex = useSpotlightStore((state) => state.activeIndex);
+    const recentItemIds = useSpotlightStore((state) => state.recentItemIds);
+    const close = useSpotlightStore((state) => state.close);
+    const setScope = useSpotlightStore((state) => state.setScope);
+    const setActiveIndex = useSpotlightStore((state) => state.setActiveIndex);
+    const registerRecent = useSpotlightStore((state) => state.registerRecent);
+    const blurGlobalSearchInput = useHeaderStore((state) => state.blurGlobalSearchInput);
+    const registerGlobalSearchSubmit = useHeaderStore((state) => state.registerGlobalSearchSubmit);
+    const registerGlobalSearchDismiss = useHeaderStore((state) => state.registerGlobalSearchDismiss);
+
+    const messages = useInboxStore((state) => state.messages);
+    const fetchMessages = useInboxStore((state) => state.fetchMessages);
+    const events = useCareerStore((state) => state.events);
+    const fetchEvents = useCareerStore((state) => state.fetchEvents);
+    const user = useUserStore((state) => state.user);
+    const updateUser = useUserStore((state) => state.updateUser);
+
+    const rankedItemsRef = React.useRef<RankedSpotlightItem[]>([]);
+
+    const navigationItems = React.useMemo<SpotlightItem[]>(
+        () => [
+            {
+                id: 'nav:home',
+                kind: 'navigation',
+                section: 'Navigation',
+                title: 'Home Hub',
+                subtitle: 'Dashboard and status overview',
+                keywords: ['home', 'hub', 'dashboard'],
+                run: () => router.push('/(hub)' as any),
+            },
+            {
+                id: 'nav:calendar',
+                kind: 'navigation',
+                section: 'Navigation',
+                title: 'Calendar',
+                subtitle: 'Career events and musters',
+                keywords: ['events', 'schedule', 'muster'],
+                run: () => router.push('/calendar' as any),
+            },
+            {
+                id: 'nav:inbox',
+                kind: 'navigation',
+                section: 'Navigation',
+                title: 'Inbox',
+                subtitle: 'Messages and official correspondence',
+                keywords: ['messages', 'navadmin', 'alnav'],
+                run: () => router.push('/inbox' as any),
+            },
+            {
+                id: 'nav:menu',
+                kind: 'navigation',
+                section: 'Navigation',
+                title: 'Menu Hub',
+                subtitle: 'App modules and shortcuts',
+                keywords: ['menu', 'modules', 'tools'],
+                run: () => router.push('/menu' as any),
+            },
+            {
+                id: 'nav:assignment',
+                kind: 'navigation',
+                section: 'Navigation',
+                title: 'My Assignment',
+                subtitle: 'Assignment dashboard and cycle',
+                keywords: ['assignment', 'cycle', 'discover'],
+                run: () => router.push('/(assignment)' as any),
+            },
+            {
+                id: 'nav:profile-preferences',
+                kind: 'navigation',
+                section: 'Navigation',
+                title: 'Profile Preferences',
+                subtitle: 'Duty and region preferences',
+                keywords: ['profile', 'preferences', 'regions', 'duty'],
+                run: () => router.push('/(profile)/preferences' as any),
+            },
+        ],
+        [router]
+    );
+
+    const actionItems = React.useMemo<SpotlightItem[]>(
+        () => [
+            {
+                id: 'action:refresh-inbox',
+                kind: 'action',
+                section: 'Actions',
+                title: 'Refresh Inbox Data',
+                subtitle: 'Pull latest correspondence records',
+                keywords: ['sync', 'refresh', 'messages'],
+                run: async () => {
+                    await fetchMessages({ force: true });
+                    router.push('/inbox' as any);
+                },
+            },
+            {
+                id: 'action:refresh-calendar',
+                kind: 'action',
+                section: 'Actions',
+                title: 'Refresh Calendar Data',
+                subtitle: 'Sync career events and musters',
+                keywords: ['sync', 'refresh', 'events'],
+                run: async () => {
+                    await fetchEvents({ force: true });
+                    router.push('/calendar' as any);
+                },
+            },
+            {
+                id: 'action:new-leave-request',
+                kind: 'action',
+                section: 'Actions',
+                title: 'Start Leave Request',
+                subtitle: 'Open leave request wizard',
+                keywords: ['leave', 'request', 'admin'],
+                run: () => router.push('/leave/request' as any),
+            },
+        ],
+        [fetchEvents, fetchMessages, router]
+    );
+
+    const settingsItems = React.useMemo<SpotlightItem[]>(
+        () => [
+            {
+                id: 'setting:privacy-mode',
+                kind: 'setting',
+                section: 'Settings',
+                title: `Privacy Mode (${user?.privacyMode ? 'On' : 'Off'})`,
+                subtitle: 'Toggle greeting privacy in Home Hub',
+                keywords: ['privacy', 'name', 'rank', 'greeting'],
+                run: () => {
+                    updateUser({ privacyMode: !(user?.privacyMode ?? false) });
+                },
+            },
+            {
+                id: 'setting:preferences',
+                kind: 'setting',
+                section: 'Settings',
+                title: 'Preference Settings',
+                subtitle: 'Open duty type and region settings',
+                keywords: ['settings', 'preferences', 'profile', 'region', 'duty'],
+                run: () => router.push('/(profile)/preferences' as any),
+            },
+        ],
+        [router, updateUser, user?.privacyMode]
+    );
+
+    const calendarItems = React.useMemo<SpotlightItem[]>(
+        () =>
+            events.map((event) => ({
+                id: `calendar:${event.eventId}`,
+                kind: 'calendar_event' as const,
+                section: 'Calendar' as const,
+                title: event.title,
+                subtitle: `${formatEventDate(event.date)} • ${event.location}`,
+                keywords: [
+                    event.eventType.replace(/_/g, ' '),
+                    event.priority,
+                    event.attendanceStatus,
+                    event.location,
+                ],
+                updatedAt: new Date(event.date).getTime(),
+                run: () => router.push('/calendar' as any),
+            })),
+        [events, router]
+    );
+
+    const inboxItems = React.useMemo<SpotlightItem[]>(
+        () =>
+            [...messages]
+                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                .map((message) => ({
+                    id: `inbox:${message.id}`,
+                    kind: 'inbox_message' as const,
+                    section: 'Inbox' as const,
+                    title: message.subject,
+                    subtitle: `${message.type} • ${formatInboxDate(message.timestamp)}`,
+                    keywords: [message.type, message.body],
+                    updatedAt: new Date(message.timestamp).getTime(),
+                    run: () => router.push(`/inbox/${message.id}` as any),
+                })),
+        [messages, router]
+    );
+
+    const allItems = React.useMemo(
+        () => [...actionItems, ...navigationItems, ...settingsItems, ...calendarItems, ...inboxItems],
+        [actionItems, navigationItems, settingsItems, calendarItems, inboxItems]
+    );
+
+    const rankedItems = React.useMemo(
+        () => rankSpotlightItems(allItems, query, scope, recentItemIds),
+        [allItems, query, scope, recentItemIds]
+    );
+
+    rankedItemsRef.current = rankedItems;
+
+    const groupedSections = React.useMemo(() => {
+        const grouped = new Map<SpotlightSection, RankedSpotlightItem[]>(
+            SECTION_ORDER.map((section) => [section, []])
+        );
+
+        rankedItems.forEach((item) => {
+            grouped.get(item.section)?.push(item);
+        });
+
+        return SECTION_ORDER.map((section) => ({
+            section,
+            items: grouped.get(section) || [],
+        })).filter((entry) => entry.items.length > 0);
+    }, [rankedItems]);
+
+    const rows = React.useMemo(() => {
+        const result: Array<
+            | { type: 'section'; section: SpotlightSection; id: string }
+            | { type: 'item'; item: RankedSpotlightItem; id: string; itemIndex: number }
+        > = [];
+
+        let itemIndex = 0;
+        groupedSections.forEach(({ section, items }) => {
+            result.push({ type: 'section', section, id: `section:${section}` });
+            items.forEach((item) => {
+                result.push({ type: 'item', item, id: `item:${item.id}`, itemIndex });
+                itemIndex += 1;
+            });
+        });
+
+        return result;
+    }, [groupedSections]);
+
+    const fireSelectionHaptic = React.useCallback(() => {
+        if (Platform.OS === 'web') return;
+        Haptics.selectionAsync().catch(() => undefined);
+    }, []);
+
+    const dismissSpotlight = React.useCallback(() => {
+        blurGlobalSearchInput();
+        Keyboard.dismiss();
+        close();
+        onClose?.();
+    }, [blurGlobalSearchInput, close, onClose]);
+
+    const executeItem = React.useCallback(
+        (item: RankedSpotlightItem) => {
+            fireSelectionHaptic();
+            registerRecent(item.id);
+            close();
+            onClose?.();
+            Promise.resolve(item.run()).catch(() => undefined);
+        },
+        [close, fireSelectionHaptic, registerRecent, onClose]
+    );
+
+    // Fetch data when spotlight opens
+    React.useEffect(() => {
+        if (!isOpen || !session) return;
+        fetchMessages().catch(() => undefined);
+        fetchEvents().catch(() => undefined);
+    }, [fetchEvents, fetchMessages, isOpen, session]);
+
+    // Register submit handler
+    React.useEffect(() => {
+        if (!isOpen) {
+            registerGlobalSearchSubmit(null);
+            return;
+        }
+        registerGlobalSearchSubmit(() => {
+            const selected = rankedItemsRef.current[activeIndex] || rankedItemsRef.current[0];
+            if (selected) void executeItem(selected);
+        });
+        return () => registerGlobalSearchSubmit(null);
+    }, [isOpen, activeIndex, executeItem, registerGlobalSearchSubmit]);
+
+    // Register dismiss handler
+    React.useEffect(() => {
+        if (!isOpen) {
+            registerGlobalSearchDismiss(null);
+            return;
+        }
+        registerGlobalSearchDismiss(() => {
+            dismissSpotlight();
+        });
+        return () => registerGlobalSearchDismiss(null);
+    }, [isOpen, dismissSpotlight, registerGlobalSearchDismiss]);
+
+    // Active index bounds check
+    React.useEffect(() => {
+        if (!isOpen) return;
+
+        if (rankedItems.length === 0) {
+            setActiveIndex(0);
+            return;
+        }
+
+        if (activeIndex > rankedItems.length - 1) {
+            setActiveIndex(rankedItems.length - 1);
+        }
+    }, [activeIndex, isOpen, rankedItems.length, setActiveIndex]);
+
+    if (!session || !isOpen) return null;
+
+    const runQuickRoute = (route: string) => {
+        blurGlobalSearchInput();
+        Keyboard.dismiss();
+        close();
+        onClose?.();
+        router.push(route as any);
+    };
+
+    const renderEmptyState = (
+        <View className="px-6 py-12 items-center">
+            <Text className="text-slate-900 dark:text-white font-semibold mb-2">
+                {query ? `No results for "${query}"` : 'Start typing to search'}
+            </Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-center mb-4">
+                Search app navigation, settings, calendar events, and inbox messages.
+            </Text>
+
+            {query ? (
+                <View className="flex-row flex-wrap justify-center gap-2">
+                    <Pressable
+                        onPress={() => {
+                            void runQuickRoute('/calendar');
+                        }}
+                        className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                    >
+                        <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            Go to Calendar
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={() => {
+                            void runQuickRoute('/inbox');
+                        }}
+                        className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                    >
+                        <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            Open Inbox
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={() => {
+                            void runQuickRoute('/(profile)/preferences');
+                        }}
+                        className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                    >
+                        <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            Search Settings
+                        </Text>
+                    </Pressable>
+                </View>
+            ) : null}
+        </View>
+    );
+
+    const renderResultRows = (
+        <ScrollView
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1, width: '100%' }}
+        >
+            {rows.length === 0
+                ? renderEmptyState
+                : rows.map((row) => {
+                    if (row.type === 'section') {
+                        return (
+                            <View key={row.id} className="px-5 pt-4 pb-2 flex-row items-center gap-2">
+                                <SectionGlyph
+                                    section={row.section}
+                                    activeColor={isDark ? '#94a3b8' : '#64748b'}
+                                />
+                                <Text className="text-[11px] font-black uppercase tracking-[1.5px] text-slate-500 dark:text-slate-400">
+                                    {row.section}
+                                </Text>
+                            </View>
+                        );
+                    }
+
+                    const isActive = row.itemIndex === activeIndex;
+                    return (
+                        <Pressable
+                            key={row.id}
+                            onPress={() => {
+                                void executeItem(row.item);
+                            }}
+                            onPressIn={() => setActiveIndex(row.itemIndex)}
+                            onHoverIn={() => setActiveIndex(row.itemIndex)}
+                            className={`mx-4 mb-2 rounded-2xl border ${isActive
+                                ? 'bg-blue-50/10 dark:bg-blue-900/40 border-blue-200/30 dark:border-blue-700/50'
+                                : 'bg-black/5 dark:bg-white/5 border-transparent'
+                                }`}
+                        >
+                            <View className="px-4 py-3 flex-row items-center">
+                                <View className="flex-1 mr-3">
+                                    <HighlightedLabel
+                                        text={row.item.title}
+                                        query={query}
+                                        className={`text-sm font-semibold ${isActive
+                                            ? 'text-blue-900 dark:text-blue-200'
+                                            : 'text-slate-900 dark:text-white'
+                                            }`}
+                                        highlightClassName={isActive ? 'font-black text-blue-800 dark:text-blue-300' : 'font-bold text-blue-600 dark:text-blue-400'}
+                                    />
+
+                                    {row.item.subtitle ? (
+                                        <HighlightedLabel
+                                            text={row.item.subtitle}
+                                            query={query}
+                                            className={`text-xs mt-1 ${isActive
+                                                ? 'text-blue-700 dark:text-blue-300'
+                                                : 'text-slate-500 dark:text-slate-400'
+                                                }`}
+                                            highlightClassName={isActive ? 'font-semibold' : 'font-semibold text-slate-700 dark:text-slate-300'}
+                                        />
+                                    ) : null}
+                                </View>
+
+                                <ChevronRight
+                                    size={16}
+                                    color={isActive ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#64748b' : '#94a3b8')}
+                                    strokeWidth={2.5}
+                                />
+                            </View>
+                        </Pressable>
+                    );
+                })}
+            <Animated.View style={keyboardSpacerStyle} />
+        </ScrollView>
+    );
+
+    const renderFilterChips = (
+        <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
+            contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}
+            style={{ flexGrow: 0, paddingVertical: 12 }}
+        >
+            {SCOPE_OPTIONS.map((option) => {
+                const isSelected = scope === option.value;
+                return (
+                    <Pressable
+                        key={option.value}
+                        onPress={() => {
+                            fireSelectionHaptic();
+                            setScope(option.value);
+                        }}
+                        className={`px-3 py-1.5 rounded-full border ${isSelected
+                            ? 'bg-blue-600 border-blue-600'
+                            : 'bg-black/5 dark:bg-white/10 border-slate-200/20 dark:border-slate-700/20'
+                            }`}
+                    >
+                        <Text
+                            className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-300'
+                                }`}
+                        >
+                            {option.label}
+                        </Text>
+                    </Pressable>
+                );
+            })}
+        </ScrollView>
+    );
+
+    return (
+        <View className="flex-1 w-full" style={{ paddingBottom: 16 }}>
+            {renderFilterChips}
+            {renderResultRows}
+        </View>
+    );
+}

@@ -1,4 +1,5 @@
 import { useScrollContextSafe } from '@/components/navigation/ScrollControlContext';
+import { SpotlightResults } from '@/components/spotlight/SpotlightResults';
 import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { BottomSheetState, useBottomSheetStore } from '@/store/useBottomSheetStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
@@ -7,16 +8,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Search, X } from 'lucide-react-native';
 import React, { useEffect } from 'react';
-import { BackHandler, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     Extrapolation,
+    FadeIn,
+    FadeOut,
     interpolate,
     runOnJS,
-    useAnimatedKeyboard,
     useAnimatedStyle,
     useSharedValue,
-    withSpring,
+    withSpring
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -50,7 +52,7 @@ export default function ExpandableBottomDrawer() {
         return () => backHandler.remove();
     }, [sheetState, setSheetState]);
 
-    const searchConfig = useGlobalSpotlightHeaderSearch({ placeholder: 'Search Devices & People...' });
+    const searchConfig = useGlobalSpotlightHeaderSearch({ placeholder: 'Spotlight Search' });
 
     const searchInputRef = React.useRef<TextInput>(null);
     const globalSearchRowRef = React.useRef<View>(null);
@@ -245,18 +247,25 @@ export default function ExpandableBottomDrawer() {
         pointerEvents: translateY.value > -40 ? 'none' : 'auto'
     }));
 
-    const keyboard = useAnimatedKeyboard();
-    const keyboardTranslateStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ translateY: -keyboard.height.value }],
-        };
-    });
+
 
     return (
         <View
             style={[styles.masterContainer, { top: SCREEN_HEIGHT - RESTING_TOP_OFFSET_FROM_BOTTOM, height: HEIGHT_FULL }]}
             pointerEvents="box-none"
         >
+            {/* Background Tap Dismissal overlay when Expanded */}
+            {sheetState === 1 && (
+                <Pressable
+                    onPress={() => {
+                        Keyboard.dismiss();
+                        if (spotlightIsOpen) triggerGlobalSearchDismiss();
+                        setSheetState(0);
+                    }}
+                    style={{ position: 'absolute', top: -SCREEN_HEIGHT, bottom: 0, left: 0, right: 0 }}
+                />
+            )}
+
             <GestureDetector gesture={panGesture}>
                 <Animated.View style={[styles.translateContainer, animatedContainerStyle]} pointerEvents="box-none">
 
@@ -338,79 +347,100 @@ export default function ExpandableBottomDrawer() {
                         <Animated.View style={[StyleSheet.absoluteFill, styles.drawerContents, drawerContentStyle]}>
                             <TouchableOpacity
                                 style={{ width: '100%', alignItems: 'center', paddingVertical: 10 }}
-                                onPress={() => setSheetState(0)} // Tap to quickly dismiss
+                                onPress={() => {
+                                    Keyboard.dismiss();
+                                    if (spotlightIsOpen) triggerGlobalSearchDismiss();
+                                    setSheetState(0);
+                                }}
+                                activeOpacity={0.7}
                             >
                                 <View style={[styles.grabber, { backgroundColor: isDark ? '#636366' : '#C7C7CC', marginTop: 0 }]} />
                             </TouchableOpacity>
 
-                            <Animated.View style={[{ width: '100%', alignItems: 'center', paddingHorizontal: 24 }, keyboardTranslateStyle]}>
-                                <View
-                                    ref={globalSearchRowRef}
-                                    onLayout={handleGlobalSearchLayout}
-                                    className={`flex-row items-center mt-6 w-full`}
-                                    style={[
-                                        styles.searchBar,
-                                        {
-                                            backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                                        }
-                                    ]}
-                                    accessibilityRole="search"
-                                >
-                                    {spotlightIsOpen ? (
-                                        <Pressable
-                                            onPress={() => triggerGlobalSearchDismiss()}
-                                            hitSlop={10}
-                                            accessibilityRole="button"
-                                            accessibilityLabel="Close search"
-                                        >
-                                            <X
-                                                size={20}
-                                                color={isDark ? '#94a3b8' : '#64748b'}
-                                                strokeWidth={2.5}
-                                                style={{ marginRight: 16 }}
-                                            />
-                                        </Pressable>
-                                    ) : (
-                                        <Pressable onPress={focusGlobalSearchInput} onPressIn={handleGlobalSearchLayout} hitSlop={10}>
-                                            <Search
-                                                size={20}
-                                                color={isDark ? '#fff' : '#000'}
-                                                strokeWidth={2.5}
-                                                style={{ marginRight: 16 }}
-                                                className="opacity-70"
-                                            />
-                                        </Pressable>
-                                    )}
+                            <Animated.View style={[{ flex: 1, width: '100%', alignItems: 'center' }]}>
+                                <View style={{ width: '100%', paddingHorizontal: 24 }}>
+                                    <View
+                                        ref={globalSearchRowRef}
+                                        onLayout={handleGlobalSearchLayout}
+                                        className={`flex-row items-center mt-6 w-full`}
+                                        style={[
+                                            styles.searchBar,
+                                            {
+                                                backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                                            }
+                                        ]}
+                                        accessibilityRole="search"
+                                    >
+                                        {spotlightIsOpen ? (
+                                            <Pressable
+                                                onPress={() => {
+                                                    Keyboard.dismiss();
+                                                    triggerGlobalSearchDismiss();
+                                                    setSheetState(0);
+                                                }}
+                                                hitSlop={10}
+                                                accessibilityRole="button"
+                                                accessibilityLabel="Close search"
+                                            >
+                                                <X
+                                                    size={20}
+                                                    color={isDark ? '#94a3b8' : '#64748b'}
+                                                    strokeWidth={2.5}
+                                                    style={{ marginRight: 16 }}
+                                                />
+                                            </Pressable>
+                                        ) : (
+                                            <Pressable onPress={focusGlobalSearchInput} onPressIn={handleGlobalSearchLayout} hitSlop={10}>
+                                                <Search
+                                                    size={20}
+                                                    color={isDark ? '#fff' : '#000'}
+                                                    strokeWidth={2.5}
+                                                    style={{ marginRight: 16 }}
+                                                    className="opacity-70"
+                                                />
+                                            </Pressable>
+                                        )}
 
-                                    <TextInput
-                                        ref={searchInputRef}
-                                        value={searchConfig.value || ''}
-                                        onChangeText={searchConfig.onChangeText}
-                                        onFocus={focusGlobalSearchInput}
-                                        placeholder={searchConfig.placeholder}
-                                        placeholderTextColor={isDark ? '#8E8E93' : '#C7C7CC'}
-                                        style={{
-                                            flex: 1,
-                                            color: isDark ? 'white' : 'black',
-                                            fontSize: 16,
-                                            outline: 'none'
-                                        } as any}
-                                        autoCorrect={false}
-                                        autoCapitalize="none"
-                                        returnKeyType="search"
-                                        showSoftInputOnFocus={true}
-                                        onSubmitEditing={() => {
-                                            if (spotlightIsOpen) triggerGlobalSearchSubmit();
-                                        }}
-                                    />
-                                    {!spotlightIsOpen && Platform.OS === 'web' && (
-                                        <View className="px-2 py-1 ml-2 rounded-md border border-slate-300 dark:border-slate-700">
-                                            <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                                ⌘K
-                                            </Text>
-                                        </View>
-                                    )}
+                                        <TextInput
+                                            ref={searchInputRef}
+                                            value={searchConfig.value || ''}
+                                            onChangeText={searchConfig.onChangeText}
+                                            onFocus={focusGlobalSearchInput}
+                                            placeholder={searchConfig.placeholder}
+                                            placeholderTextColor={isDark ? '#8E8E93' : '#C7C7CC'}
+                                            style={{
+                                                flex: 1,
+                                                color: isDark ? 'white' : 'black',
+                                                fontSize: 16,
+                                                outline: 'none'
+                                            } as any}
+                                            autoCorrect={false}
+                                            autoCapitalize="none"
+                                            returnKeyType="search"
+                                            showSoftInputOnFocus={true}
+                                            onSubmitEditing={() => {
+                                                if (spotlightIsOpen) triggerGlobalSearchSubmit();
+                                            }}
+                                        />
+                                        {!spotlightIsOpen && Platform.OS === 'web' && (
+                                            <View className="px-2 py-1 ml-2 rounded-md border border-slate-300 dark:border-slate-700">
+                                                <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                                    ⌘K
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
                                 </View>
+
+                                {spotlightIsOpen && (
+                                    <Animated.View
+                                        entering={FadeIn.duration(200)}
+                                        exiting={FadeOut.duration(200)}
+                                        style={{ flex: 1, width: '100%', marginTop: 16 }}
+                                    >
+                                        <SpotlightResults />
+                                    </Animated.View>
+                                )}
                             </Animated.View>
                         </Animated.View>
 

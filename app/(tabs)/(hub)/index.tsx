@@ -19,8 +19,10 @@ import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
 import { LeaveRequest } from '@/types/schema';
+import { getShadow } from '@/utils/getShadow';
 import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
     Zap
@@ -29,8 +31,6 @@ import React, { useCallback, useState } from 'react';
 import { Alert, Platform, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getShadow } from '@/utils/getShadow';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useShallow } from 'zustand/react/shallow';
 
 const AnimatedFlashList = (Platform.OS === 'web'
@@ -540,74 +540,80 @@ export default function HubDashboard() {
                 topBar={
                     <BlurView intensity={isDark ? 80 : 60} tint={isDark ? "dark" : "light"}>
                         <View className="px-4 pt-4">
-                    <View className="bg-slate-50 dark:bg-slate-950">
-                        <View className="px-4 pt-4" style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })}>
-                            <StatusCard
-                                nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
-                            />
-                        </View>
-                        <View onLayout={(e) => setMinHeaderHeight(Math.round(e.nativeEvent.layout.height))}>
-                            <ScreenHeader
-                                title=""
-                                subtitle=""
-                                withSafeArea={false}
-                            />
-                            {/* NEW: Filter Chips below the hidden header */}
-                            <Animated.View
-                                className="w-full mt-4 mb-2"
-                                entering={FadeInUp.duration(400).delay(100)}
-                            >
-                                <Animated.ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={{ paddingHorizontal: 16, gap: 12, alignItems: 'center' }}
+                            <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })}>
+                                <StatusCard
+                                    nextCycle={data?.cycle?.cycleId ?? '24-02'}
+                                    daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
+                                />
+                            </View>
+                            <View onLayout={(e) => setMinHeaderHeight(Math.round(e.nativeEvent.layout.height))}>
+                                <ScreenHeader
+                                    title=""
+                                    subtitle=""
+                                    withSafeArea={false}
+                                />
+                                {/* NEW: Filter Chips below the hidden header */}
+                                <Animated.View
+                                    className="w-full mt-4 mb-2"
+                                    entering={FadeInUp.duration(400).delay(100)}
                                 >
-                                    {/* Leave Quick Action */}
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/leave' as any)}
-                                        style={{
-                                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                                        }}
-                                        className="h-10 w-10 rounded-full flex-row items-center justify-center border border-black/5 dark:border-white/10"
+                                    <Animated.ScrollView
+                                        horizontal
+                                        showsHorizontalScrollIndicator={false}
+                                        contentContainerStyle={{ paddingHorizontal: 16, gap: 12, alignItems: 'center' }}
                                     >
-                                        <Zap size={18} color={isDark ? '#e2e8f0' : '#475569'} />
-                                    </TouchableOpacity>
+                                        {/* Leave Quick Action */}
+                                        <TouchableOpacity
+                                            onPress={() => router.push('/leave' as any)}
+                                            style={{
+                                                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                                            }}
+                                            className="h-10 w-10 rounded-full flex-row items-center justify-center border border-black/5 dark:border-white/10"
+                                        >
+                                            <Zap size={18} color={isDark ? '#e2e8f0' : '#475569'} />
+                                        </TouchableOpacity>
 
-                                    {/* Active Hub Chip */}
-                                    <TouchableOpacity
-                                        onPress={() => setActiveFilter('HUB')}
-                                        style={{
-                                            backgroundColor: activeFilter === 'HUB' ? '#0A84FF' : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
-                                        }}
-                                        className={`h-10 px-5 rounded-full flex-row items-center justify-center ${activeFilter === 'HUB' ? '' : 'border border-black/5 dark:border-white/10'}`}
-                                    >
-                                        <Text style={{ color: activeFilter === 'HUB' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'HUB' ? 'font-semibold' : 'font-medium'} text-[15px]`}>Hub</Text>
-                                    </TouchableOpacity>
+                                        {/* Active Hub Chip */}
+                                        <TouchableOpacity
+                                            onPress={() => setActiveFilter('HUB')}
+                                            style={{
+                                                backgroundColor: activeFilter === 'HUB' ? (isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
+                                                borderColor: activeFilter === 'HUB' ? (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)') : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'),
+                                                borderWidth: 1
+                                            }}
+                                            className={`h-10 px-5 rounded-full flex-row items-center justify-center`}
+                                        >
+                                            <Text style={{ color: activeFilter === 'HUB' ? (isDark ? '#FFFFFF' : '#0F172A') : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'HUB' ? 'font-semibold' : 'font-medium'} text-[15px]`}>Hub</Text>
+                                        </TouchableOpacity>
 
-                                    {/* Career Chip */}
-                                    <TouchableOpacity
-                                        onPress={() => setActiveFilter('CAREER')}
-                                        style={{
-                                            backgroundColor: activeFilter === 'CAREER' ? '#0A84FF' : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
-                                        }}
-                                        className={`h-10 px-5 rounded-full flex-row items-center justify-center ${activeFilter === 'CAREER' ? '' : 'border border-black/5 dark:border-white/10'}`}
-                                    >
-                                        <Text style={{ color: activeFilter === 'CAREER' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'CAREER' ? 'font-semibold' : 'font-medium'} text-[15px]`}>My Career</Text>
-                                    </TouchableOpacity>
+                                        {/* Career Chip */}
+                                        <TouchableOpacity
+                                            onPress={() => setActiveFilter('CAREER')}
+                                            style={{
+                                                backgroundColor: activeFilter === 'CAREER' ? (isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
+                                                borderColor: activeFilter === 'CAREER' ? (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)') : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'),
+                                                borderWidth: 1
+                                            }}
+                                            className={`h-10 px-5 rounded-full flex-row items-center justify-center`}
+                                        >
+                                            <Text style={{ color: activeFilter === 'CAREER' ? (isDark ? '#FFFFFF' : '#0F172A') : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'CAREER' ? 'font-semibold' : 'font-medium'} text-[15px]`}>My Career</Text>
+                                        </TouchableOpacity>
 
-                                    {/* Admin Chip */}
-                                    <TouchableOpacity
-                                        onPress={() => setActiveFilter('ADMIN')}
-                                        style={{
-                                            backgroundColor: activeFilter === 'ADMIN' ? '#0A84FF' : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
-                                        }}
-                                        className={`h-10 px-5 rounded-full flex-row items-center justify-center ${activeFilter === 'ADMIN' ? '' : 'border border-black/5 dark:border-white/10'}`}
-                                    >
-                                        <Text style={{ color: activeFilter === 'ADMIN' ? '#ffffff' : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'ADMIN' ? 'font-semibold' : 'font-medium'} text-[15px]`}>My Admin</Text>
-                                    </TouchableOpacity>
-                                </Animated.ScrollView>
-                            </Animated.View>
+                                        {/* Admin Chip */}
+                                        <TouchableOpacity
+                                            onPress={() => setActiveFilter('ADMIN')}
+                                            style={{
+                                                backgroundColor: activeFilter === 'ADMIN' ? (isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') : (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'),
+                                                borderColor: activeFilter === 'ADMIN' ? (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)') : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'),
+                                                borderWidth: 1
+                                            }}
+                                            className={`h-10 px-5 rounded-full flex-row items-center justify-center`}
+                                        >
+                                            <Text style={{ color: activeFilter === 'ADMIN' ? (isDark ? '#FFFFFF' : '#0F172A') : (isDark ? '#94A3B8' : '#64748B') }} className={`${activeFilter === 'ADMIN' ? 'font-semibold' : 'font-medium'} text-[15px]`}>My Admin</Text>
+                                        </TouchableOpacity>
+                                    </Animated.ScrollView>
+                                </Animated.View>
+                            </View>
                         </View>
                     </BlurView>
                 }

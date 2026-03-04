@@ -140,16 +140,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-green-400 dark:border-green-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(58,174,108,0.08)', 'rgba(58,174,108,0.02)']
-                                : ['rgba(58,174,108,0.14)', 'rgba(58,174,108,0.04)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | Day N pill ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
@@ -202,12 +195,12 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* CTA — bottom right */}
                                 <View
-                                    className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg border border-green-500 dark:border-green-600 ml-3"
+                                    className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-xl border border-green-500 dark:border-green-600 ml-3"
                                 >
                                     <CTAText>Check{`\n`}In</CTAText>
                                 </View>
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </TouchableOpacity>
             );
@@ -252,16 +245,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-[#1A4E8A] dark:border-[#5B8FCF] rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(91,143,207,0.08)', 'rgba(91,143,207,0.02)']
-                                : ['rgba(26,78,138,0.10)', 'rgba(26,78,138,0.03)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: icon + title aligned with days counter ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
@@ -329,16 +315,14 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
 
                                 {/* CTA — bottom right */}
-                                <View
-                                    className="bg-teal-600 dark:bg-teal-700 px-3 py-2 rounded-lg border border-teal-500 dark:border-teal-600 ml-3"
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(pcs)/pcs')}
-                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-lg border border-[#163F70] dark:border-[#5B8FCF] ml-3"
+                                    onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
+                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-[#163F70] dark:border-[#5B8FCF] ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
-                                </View>
+                                </TouchableOpacity>
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </TouchableOpacity>
             );
@@ -381,16 +365,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-[#1A4E8A] dark:border-[#5B8FCF] rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(91,143,207,0.08)', 'rgba(91,143,207,0.02)']
-                                : ['rgba(26,78,138,0.10)', 'rgba(26,78,138,0.03)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: icon + title aligned with days counter ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
@@ -460,16 +437,14 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
 
                                 {/* CTA — bottom right */}
-                                <View
-                                    className="bg-sky-600 dark:bg-sky-700 px-3 py-2 rounded-lg border border-sky-500 dark:border-sky-600 ml-3"
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(pcs)/pcs')}
-                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-lg border border-[#163F70] dark:border-[#5B8FCF] ml-3"
+                                    onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
+                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-[#163F70] dark:border-[#5B8FCF] ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
-                                </View>
+                                </TouchableOpacity>
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </TouchableOpacity>
             );
@@ -506,16 +481,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-amber-400 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(251,191,36,0.08)', 'rgba(251,191,36,0.02)']
-                                : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: icon + title aligned with days counter ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
@@ -587,12 +555,12 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* CTA — bottom right */}
                                 <View
-                                    className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-lg border border-amber-500 dark:border-amber-600 ml-3"
+                                    className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-xl border border-amber-500 dark:border-amber-600 ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
                                 </View>
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </TouchableOpacity>
             );
@@ -624,16 +592,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-zinc-400 dark:border-zinc-500 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(161,161,170,0.08)', 'rgba(161,161,170,0.02)']
-                                : ['rgba(161,161,170,0.14)', 'rgba(161,161,170,0.04)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | Est. date pill ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
@@ -671,12 +632,12 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 )}
 
                                 <View
-                                    className="bg-zinc-100 dark:bg-zinc-800/40 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-600/50 ml-3"
+                                    className="bg-zinc-100 dark:bg-zinc-800/40 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-600/50 ml-3"
                                 >
                                     <CTAText color="text-zinc-700 dark:text-zinc-300">Track{`\n`}Progress</CTAText>
                                 </View>
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </TouchableOpacity>
             );
@@ -697,16 +658,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-green-600 dark:border-green-500 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(58,174,108,0.08)', 'rgba(58,174,108,0.02)']
-                                : ['rgba(58,174,108,0.12)', 'rgba(58,174,108,0.03)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: star icon + headline + details ── */}
                             <View className="flex-row items-center gap-4">
                                 <View className="w-12 h-12 rounded-full overflow-hidden items-center justify-center">
@@ -746,27 +700,27 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* CTA — bottom right */}
                                 <View
-                                    className="bg-emerald-600 dark:bg-emerald-700 px-3 py-2 rounded-lg border border-emerald-500 dark:border-emerald-600 ml-3"
+                                    className="bg-emerald-600 dark:bg-emerald-700 px-3 py-2 rounded-xl border border-emerald-500 dark:border-emerald-600 ml-3"
                                 >
                                     <CTAText>View{`\n`}Match</CTAText>
                                 </View>
                                 {obliservBlocked ? (
                                     <TouchableOpacity
                                         onPress={() => router.push('/pcs-wizard/obliserv-check' as any)}
-                                        className="bg-red-600 dark:bg-red-700 px-3 py-2 rounded-lg border border-red-500 dark:border-red-600 ml-3"
+                                        className="bg-red-600 dark:bg-red-700 px-3 py-2 rounded-xl border border-red-500 dark:border-red-600 ml-3"
                                     >
                                         <CTAText>Extend{`\n`}to Accept</CTAText>
                                     </TouchableOpacity>
                                 ) : (
                                     <TouchableOpacity
                                         onPress={() => router.push('/(tabs)/(assignment)' as any)}
-                                        className="bg-green-100 dark:bg-green-900/40 px-3 py-2 rounded-lg border border-green-200 dark:border-green-700/50 ml-3"
+                                        className="bg-green-100 dark:bg-green-900/40 px-3 py-2 rounded-xl border border-green-200 dark:border-green-700/50 ml-3"
                                     >
                                         <CTAText color="text-green-800 dark:text-green-200">View{`\n`}Details</CTAText>
                                     </TouchableOpacity>
                                 )}
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </TouchableOpacity>
             );
@@ -801,16 +755,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-amber-400 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(251,191,36,0.08)', 'rgba(251,191,36,0.02)']
-                                : ['rgba(251,191,36,0.14)', 'rgba(251,191,36,0.04)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | days counter ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
@@ -859,12 +806,12 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 {/* CTA — bottom right */}
                                 <TouchableOpacity
                                     onPress={() => router.push('/(tabs)/(assignment)' as any)}
-                                    className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-lg border border-amber-500 dark:border-amber-600 ml-3"
+                                    className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-xl border border-amber-500 dark:border-amber-600 ml-3"
                                 >
                                     <CTAText>My{`\n`}Slate</CTAText>
                                 </TouchableOpacity>
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </View>
             );
@@ -888,16 +835,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-amber-500 dark:border-amber-400 rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(201,162,39,0.08)', 'rgba(201,162,39,0.02)']
-                                : ['rgba(201,162,39,0.12)', 'rgba(201,162,39,0.03)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | days counter ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
@@ -945,27 +885,21 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     )}
                                 </View>
 
-                                {hasPrepped ? (
+                                {/* hasPrepped ? (
                                     <View
-                                        className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 ml-3"
+                                        className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-700/50 ml-3"
                                     >
                                         <CTAText color="text-indigo-800 dark:text-indigo-200">Review{`\n`}Picks</CTAText>
                                     </View>
                                 ) : (
                                     <View
-                                        className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 ml-3"
+                                        className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-xl border border-indigo-200 dark:border-indigo-700/50 ml-3"
                                     >
                                         <CTAText color="text-indigo-800 dark:text-indigo-200">Get{`\n`}Ready</CTAText>
                                     </View>
-                                )}
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(profile)/preferences')}
-                                    className="bg-amber-100 dark:bg-amber-900/60 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50 ml-3"
-                                >
-                                    <CTAText color="text-amber-800 dark:text-amber-200">Get{`\n`}Ready</CTAText>
-                                </TouchableOpacity>
+                                ) */}
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </TouchableOpacity>
             );
@@ -987,16 +921,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border-l-4 border-[#1A4E8A] dark:border-[#5B8FCF] rounded-xl overflow-hidden shadow-sm bg-slate-50 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
                     >
-                        <LinearGradient
-                            colors={isDark
-                                ? ['rgba(91,143,207,0.08)', 'rgba(91,143,207,0.02)']
-                                : ['rgba(26,78,138,0.10)', 'rgba(26,78,138,0.03)']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={{ paddingLeft: 16, paddingRight: 12, paddingVertical: 16 }}
-                        >
+                        <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | months counter ── */}
                             <View className="flex-row items-center justify-between">
                                 <View className="flex-row items-center gap-4 flex-1">
@@ -1006,16 +933,12 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     <View className="flex-1">
                                         <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle Opens</Headline>
                                         <Detail>Your PRD is in ~{monthsToPrd} months</Detail>
-                                        <Headline color="text-slate-900 dark:text-slate-100">MNA Cycle Opens</Headline>
-                                        <Detail>PRD {prdLabel}</Detail>
                                     </View>
                                 </View>
 
                                 <View className="flex-row items-baseline gap-1">
                                     <Text className="text-blue-950 dark:text-white text-2xl font-black font-mono tracking-tighter">
                                         ~{monthsToMna}
-                                    <Text className="text-slate-900 dark:text-white text-2xl font-semibold font-mono tracking-tighter">
-                                        ~{monthsOut}
                                     </Text>
                                     <Text className="text-[#1A4E8A] dark:text-[#5B8FCF] text-[10px] font-bold uppercase tracking-wide">
                                         Months
@@ -1029,14 +952,14 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     Explore billets now — no action required yet.
                                 </Text>
 
-                                <TouchableOpacity
+                                {/* <TouchableOpacity
                                     onPress={() => router.push('/(career)/discovery' as any)}
-                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-lg border border-[#163F70] dark:border-[#5B8FCF] ml-3"
+                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-[#163F70] dark:border-[#5B8FCF] ml-3"
                                 >
                                     <CTAText>Start{`\n`}Exploring</CTAText>
-                                </TouchableOpacity>
+                                </TouchableOpacity> */}
                             </View>
-                        </LinearGradient>
+                        </View>
                     </GlassView>
                 </TouchableOpacity>
             );
@@ -1060,7 +983,7 @@ function CardShell({
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className={`border-l-4 ${borderColor} pl-4 pr-3 py-4 rounded-xl overflow-hidden flex-col shadow-sm bg-slate-50 dark:bg-slate-900/50`}
+                className={`border border-black/5 dark:border-white/10 pl-4 pr-3 py-4 rounded-[24px] overflow-hidden flex-col shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50`}
             >
                 {children}
             </GlassView>

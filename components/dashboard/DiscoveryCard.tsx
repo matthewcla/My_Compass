@@ -81,7 +81,7 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
             />
 
             {/* Header */}
-            <View className="relative z-10 px-5 pt-5 pb-1">
+            <View className="relative z-10 px-5 pt-4 pb-1">
                 <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     Billet Explorer
                 </Text>

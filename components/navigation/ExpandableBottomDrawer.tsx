@@ -120,7 +120,7 @@ export default function ExpandableBottomDrawer() {
     const scrollCollapseY = scrollContext?.translateY;
 
     // --- Mathematical Constants for the Pill Morph Engine ---
-    const HEIGHT_COLLAPSED = 72;
+    const HEIGHT_COLLAPSED = 82;
     // Base floating margin dynamically scaled if standard insets (like Home Indicator) are present
     const COLLAPSED_BOTTOM_MARGIN = insets.bottom > 0 ? insets.bottom : 16;
     const RESTING_TOP_OFFSET_FROM_BOTTOM = HEIGHT_COLLAPSED + COLLAPSED_BOTTOM_MARGIN;

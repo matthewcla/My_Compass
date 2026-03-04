@@ -318,7 +318,7 @@ export default function HubDashboard() {
                             />
                             {/* NEW: Filter Chips below the hidden header */}
                             <Animated.View
-                                className="w-full mt-6 mb-4"
+                                className="w-full mt-4 mb-2"
                                 entering={FadeInUp.duration(400).delay(100)}
                             >
                                 <Animated.ScrollView
@@ -357,8 +357,9 @@ export default function HubDashboard() {
                                         <Text style={{ color: isDark ? '#94A3B8' : '#64748B' }} className="font-medium text-[15px]">My Career</Text>
                                     </TouchableOpacity>
 
-                                    {/* Admin Chip (Inactive) */}
+                                    {/* Admin Chip */}
                                     <TouchableOpacity
+                                        onPress={() => router.push('/(admin)' as any)}
                                         style={{
                                             backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
                                         }}
@@ -390,7 +391,8 @@ export default function HubDashboard() {
                         ItemSeparatorComponent={({ leadingItem }: { leadingItem: string }) => (
                             <View style={{ height: typeof leadingItem === 'string' && leadingItem.startsWith('tier') ? 18 : 24 }} />
                         )}
-                        ListHeaderComponent={<View style={{ height: 8 }} />}
+                        // Pull the list content physically underneath the glass header
+                        ListHeaderComponent={<View style={{ height: 0, marginTop: -20 }} />}
                         ListFooterComponent={<View style={{ height: 250 }} />}
 
                         estimatedItemSize={150}

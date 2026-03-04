@@ -4,6 +4,7 @@ import {
     computeRequiredCollapseTravel
 } from '@/components/navigation/collapseMath';
 import { useScrollContext, useScrollControl } from '@/components/navigation/ScrollControlContext';
+import { useBottomSheetStore } from '@/store/useBottomSheetStore';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
     LayoutChangeEvent,
@@ -270,17 +271,23 @@ export function CollapsibleScaffold({
 
     // Keep a JS-side min content height for the static style (only updates on header
     // height / viewport changes, not on every scroll frame).
-    // Uses a constant estimate for tab bar metrics to avoid reading shared values during render.
+    // Uses the dynamic tab bar height from our global store to ensure accurate layout shifts.
+    const { tabBarHeight, sheetState } = useBottomSheetStore();
+
+    // We only need scroll-collapse buffer distance if the drawer is in its resting (tabs) state.
+    // If it's expanded, the user is interacting with the drawer, not scrolling the background list.
+    const effectiveTabBarHeight = sheetState === 0 ? tabBarHeight : 0;
+
     const minContentHeight = useMemo(() => {
         return computeMinContentHeightForCollapse({
             viewportHeight,
             requiredCollapseTravel: computeRequiredCollapseTravel({
                 scrollableHeaderHeight,
-                tabBarMaxHeight: DEFAULT_TAB_BAR_MAX_HEIGHT,
+                tabBarMaxHeight: effectiveTabBarHeight,
                 tabBarCollapsedInset: 0,
             }),
         });
-    }, [scrollableHeaderHeight, viewportHeight]);
+    }, [scrollableHeaderHeight, viewportHeight, effectiveTabBarHeight]);
 
     const paddedContentContainerStyle = useMemo(() => {
         // Use only the safe area inset for bottom padding. Content scrolls behind

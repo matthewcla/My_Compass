@@ -40,3 +40,10 @@ To adapt this pattern for My Compass:
     *   Tapping "Me" causes the sheet to expand to the "Half Expanded" state, identical to Apple's drawer entry UX. This will reveal quick-access chips and the unified Spotlight search bar.
     *   **Drag Entry/Exit:** Dragging it fully up uses Apple's native spring-physics drawer pull-up gesture to reveal the comprehensive profile and app features. Swiping it down effortlessly dismisses the sheet identically to the Apple drawer exit.
 4.  **Aesthetic:** Implement a dark, deep-blur container with smooth corner radii to ensure it feels like a native, premium, enterprise-grade component.
+
+### 5. Adherence to CollapsibleScaffold (Scroll-to-Collapse)
+The new Expandable Bottom Bar must cleanly integrate with the existing `CollapsibleScaffold.tsx` architecture to preserve reading real estate when scrolling:
+*   **Consume Scroll Signals:** The bottom bar component must actively consume the global/context collapse state (via `useScrollControlContext` or the equivalent store providing `forceSnapTabBar`).
+*   **Responsive Collapsing:** When in the "Collapsed" state (acting as the Tab Bar) and a scroll-down gesture triggers the Scaffold to hide the header, the bottom bar must simultaneously translate downwards off-screen (or shrink to a minimal pill).
+*   **State Locking:** If the user manually drags the bottom bar into the "Half Expanded" or "Fully Expanded" states, it must temporarily lock or ignore `CollapsibleScaffold` collapse signals from the background view.
+*   **Height Constraints:** `CollapsibleScaffold` currently hardcodes `DEFAULT_TAB_BAR_MAX_HEIGHT = 72` to calculate the mathematical scroll bounds (`computeMinContentHeightForCollapse`). The new bottom bar's unexpanded state MUST either strictly adhere to this 72px height, OR `CollapsibleScaffold` must be refactored to accept a dynamic `tabBarHeight` shared value to prevent dead-scroll space.

@@ -43,7 +43,7 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
     return (
         <ScalePressable
             className={`bg-white dark:bg-slate-900 rounded-xl mb-4 overflow-hidden flex-row ${borderClass}`}
-            style={getShadow({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 })}
+            style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.08 : 0.1, shadowRadius: 8, elevation: 2 })}
         >
             {/* Left Box: Date */}
             <View className="w-20 items-center justify-center bg-slate-50 dark:bg-slate-800/50 py-4 border-r border-slate-100 dark:border-slate-800">
@@ -212,7 +212,7 @@ export default function CalendarScreen() {
                         accessibilityRole="button"
                         accessibilityLabel="Open Scanner"
                         className="w-14 h-14 bg-[#0A1628] dark:bg-white rounded-full items-center justify-center shadow-lg transform active:scale-95"
-                        style={getShadow({ shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 })}
+                        style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#0f172a', shadowOpacity: isDark ? 0.2 : 0.3, shadowRadius: 10, elevation: 6 })}
                     >
                         <QrCode size={24} color={isDark ? '#000' : '#fff'} />
                     </TouchableOpacity>

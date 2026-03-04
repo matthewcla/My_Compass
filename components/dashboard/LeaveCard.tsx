@@ -88,7 +88,7 @@ export function LeaveCard({
             <GlassView
                 intensity={60}
                 tint={isDark ? 'dark' : 'light'}
-                className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
+                className="rounded-xl overflow-hidden border border-[#CBD5E4] dark:border-slate-700"
             >
                 <View className="p-5">
                     {/* Header Row: Balance + Action Buttons */}
@@ -108,14 +108,14 @@ export function LeaveCard({
                             <TouchableOpacity
                                 activeOpacity={0.7}
                                 onPress={onQuickRequest}
-                                style={getShadow({ shadowColor: isDark ? '#fbbf24' : '#d97706', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
+                                style={getShadow({ shadowColor: isDark ? '#C8921C' : '#d97706', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
                             >
                                 <GlassView
                                     intensity={40}
                                     tint={isDark ? 'dark' : 'light'}
                                     className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-amber-500/10"
                                 >
-                                    <Zap size={20} color={isDark ? '#fbbf24' : '#d97706'} strokeWidth={2.5} />
+                                    <Zap size={20} color={isDark ? '#C8921C' : '#d97706'} strokeWidth={2.5} />
                                 </GlassView>
                             </TouchableOpacity>
 
@@ -166,8 +166,8 @@ export function LeaveCard({
                                                     border: 'border-amber-200 dark:border-amber-800',
                                                     text: 'text-amber-900 dark:text-amber-100',
                                                     label: 'text-amber-800 dark:text-amber-200',
-                                                    icon: isDark ? "#fbbf24" : "#d97706",
-                                                    projText: isDark ? '#fbbf24' : '#b45309'
+                                                    icon: isDark ? "#C8921C" : "#d97706",
+                                                    projText: isDark ? '#C8921C' : '#b45309'
                                                 };
                                             // Approved -> Slate-900/Navy (was Emerald) - "Official"
                                             case 'approved':
@@ -186,8 +186,8 @@ export function LeaveCard({
                                                     border: 'border-red-200 dark:border-red-800',
                                                     text: 'text-red-900 dark:text-red-100',
                                                     label: 'text-red-800 dark:text-red-200',
-                                                    icon: isDark ? "#fca5a5" : "#b91c1c",
-                                                    projText: isDark ? '#fca5a5' : '#7f1d1d'
+                                                    icon: isDark ? "#C84444" : "#A02020",
+                                                    projText: isDark ? '#C07070' : '#7f1d1d'
                                                 };
                                             default:
                                                 return {

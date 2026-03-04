@@ -16,7 +16,7 @@ interface DiscoveryStatusCardProps {
 
 /**
  * DiscoveryStatusCard — Surfaces swipe progress stats on the Home Hub.
- * Mode-aware: light blue tint in light mode, dark navy in dark mode.
+ * Mode-aware: cool blue-gray tint in light mode, dark navy in dark mode.
  * Zero-state: inviting CTA to start exploring.
  * Active-state: tappable badge grid navigating to filtered discovery.
  */
@@ -60,20 +60,20 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
                 borderWidth: 1,
                 borderColor: isDark
                     ? 'rgba(51, 65, 85, 0.6)'
-                    : 'rgba(191, 219, 254, 0.8)', // blue-200/80
+                    : 'rgba(180, 200, 225, 0.5)',
                 ...getShadow({
-                    shadowColor: isDark ? '#3B82F6' : '#93C5FD',
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: isDark ? 0.25 : 0.2,
-                    shadowRadius: 16,
-                    elevation: 6,
+                    shadowColor: isDark ? '#5B8FCF' : '#B8C9DF',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: isDark ? 0.2 : 0.15,
+                    shadowRadius: 12,
+                    elevation: 4,
                 }),
             }}
         >
             <LinearGradient
                 colors={isDark
-                    ? ['#1e293b', '#0f172a']       // slate-800 → slate-900
-                    : ['#EFF6FF', '#DBEAFE']        // blue-50 → blue-100
+                    ? ['#1e293b', '#0f172a']
+                    : ['#F0F4FB', '#E5EBF5']
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -96,30 +96,30 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
             {hasBillets && (
                 <View className="relative z-10 flex-row px-5 pt-3 pb-3 gap-3">
                     <StatBadge
-                        icon={<Star size={16} color={isDark ? '#60a5fa' : '#2563EB'} />}
+                        icon={<Star size={16} color={isDark ? '#5B8FCF' : '#1A4E8A'} />}
                         count={stats.slated}
                         label="WOW!"
                         isDark={isDark}
-                        bg={isDark ? 'rgba(59,130,246,0.25)' : 'rgba(59,130,246,0.1)'}
-                        textColor={isDark ? '#93C5FD' : '#1D4ED8'}
+                        bg={isDark ? 'rgba(91,143,207,0.2)' : 'rgba(26,78,138,0.08)'}
+                        textColor={isDark ? '#7BAED6' : '#1A4E8A'}
                         onPress={() => onBadgeTap?.('wow', stats.slated)}
                     />
                     <StatBadge
-                        icon={<Heart size={16} color={isDark ? '#4ADE80' : '#16A34A'} />}
+                        icon={<Heart size={16} color={isDark ? '#3AAE6C' : '#16A34A'} />}
                         count={stats.saved}
                         label="Liked"
                         isDark={isDark}
-                        bg={isDark ? 'rgba(34,197,94,0.25)' : 'rgba(34,197,94,0.1)'}
-                        textColor={isDark ? '#86EFAC' : '#15803D'}
+                        bg={isDark ? 'rgba(58,174,108,0.2)' : 'rgba(22,163,74,0.08)'}
+                        textColor={isDark ? '#3AAE6C' : '#1A7A40'}
                         onPress={() => onBadgeTap?.('liked', stats.saved)}
                     />
                     <StatBadge
-                        icon={<X size={16} color={isDark ? '#F87171' : '#DC2626'} />}
+                        icon={<X size={16} color={isDark ? '#C84444' : '#A02020'} />}
                         count={stats.passed}
                         label="Passed"
                         isDark={isDark}
-                        bg={isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.08)'}
-                        textColor={isDark ? '#FCA5A5' : '#B91C1C'}
+                        bg={isDark ? 'rgba(200,68,68,0.15)' : 'rgba(160,32,32,0.07)'}
+                        textColor={isDark ? '#C07070' : '#902020'}
                         onPress={() => onBadgeTap?.('passed', stats.passed)}
                     />
                     <StatBadge
@@ -147,18 +147,21 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
                                 className="w-full py-3.5 rounded-xl flex-row items-center justify-center gap-2"
                                 style={{
                                     backgroundColor: isDark
-                                        ? 'rgba(59, 130, 246, 0.15)'
-                                        : 'rgba(37, 99, 235, 0.1)',
+                                        ? 'rgba(91, 143, 207, 0.15)'
+                                        : 'rgba(26, 78, 138, 0.07)',
                                     borderWidth: 1,
                                     borderColor: isDark
-                                        ? 'rgba(59, 130, 246, 0.3)'
-                                        : 'rgba(37, 99, 235, 0.25)',
+                                        ? 'rgba(91, 143, 207, 0.3)'
+                                        : 'rgba(26, 78, 138, 0.2)',
                                 }}
                             >
-                                <Text className={`font-bold text-base ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
+                                <Text
+                                    style={{ color: isDark ? '#5B8FCF' : '#1A4E8A' }}
+                                    className="font-bold text-base"
+                                >
                                     Start Exploring
                                 </Text>
-                                <ArrowRight size={16} color={isDark ? '#60a5fa' : '#1D4ED8'} />
+                                <ArrowRight size={16} color={isDark ? '#5B8FCF' : '#1A4E8A'} />
                             </View>
                         </Animated.View>
                     </Pressable>
@@ -212,7 +215,7 @@ function StatBadge({
             ]}
         >
             {icon}
-            <Text style={{ color: textColor }} className="text-xl font-black mt-1">{count}</Text>
+            <Text style={{ color: textColor }} className="text-xl font-bold mt-1">{count}</Text>
             <Text className={`text-[10px] font-semibold uppercase tracking-wider mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 {label}
             </Text>

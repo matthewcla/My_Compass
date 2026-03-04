@@ -125,6 +125,6 @@
   }
 
   .border-subtle {
-    @apply border-slate-100 dark:border-slate-800;
+    @apply border-slate-200 dark:border-slate-800;
   }
 }

@@ -34,7 +34,7 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
 
     return (
         <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
-            <View style={getShadow({ shadowColor: isDark ? '#000' : '#64748b', shadowOpacity: 0.08, shadowRadius: 6, elevation: 2 })}>
+            <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: 0.08, shadowRadius: 6, elevation: 2 })}>
                 <GlassView
                     intensity={60}
                     tint={isDark ? 'dark' : 'light'}

@@ -14,12 +14,12 @@ export const Colors = {
     dark: ['#0C1A2B', '#060E18'] as const,   // Navy abyss — blue-tinted, not generic slate
   },
   blue: {
-    500: '#3b82f6',
-    600: '#2563eb',
+    500: '#5B8FCF', // systemBlueDark — muted professional (dark mode use)
+    600: '#1A4E8A', // systemBlueLight — federal blue (light mode use)
   },
   green: {
-    500: '#22c55e',
-    600: '#16a34a',
+    500: '#3AAE6C', // muted forest green (dark mode use)
+    600: '#16a34a', // dark forest green (light mode use)
   },
   gray: {
     400: '#9ca3af',
@@ -45,7 +45,7 @@ export const Colors = {
     inputBackground: '#F8FAFC',
     accentText: systemBlueLight,
     surface: '#FFFFFF',
-    surfaceBorder: '#E2E8F0',
+    surfaceBorder: '#CBD5E4',  // clearer blue-tinted border on #EEF1F7 bg
     iconBubble: '#E8EDF6',
     iconBubbleLocked: '#F1F5F9',
 

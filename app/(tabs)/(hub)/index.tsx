@@ -404,10 +404,7 @@ export default function HubDashboard() {
                 }
 
                 const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
-                if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
-                    feed.push('tierTracking');
-                    feed.push('liquidationTracker');
-                } else if (subPhase === 'ACTIVE_TRAVEL' || pcsPhase === 'CHECK_IN') {
+                if (subPhase === 'ACTIVE_TRAVEL' || (pcsPhase === 'CHECK_IN' && !hasActiveLiquidation)) {
                     feed.push('travelClaimUrgency');
                 }
             }
@@ -445,8 +442,14 @@ export default function HubDashboard() {
                 feed.push('digitalSeaBag');
             }
 
-            // Priority 4: General Admin / Leave
+            // Priority 4: General Admin / Leave / Tracking
             feed.push('tierTracking');
+
+            const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
+            if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
+                feed.push('liquidationTracker');
+            }
+
             if (pcsPhase && pcsPhase !== 'CHECK_IN') {
                 feed.push('pcsTaskTracker');
             }
@@ -484,13 +487,17 @@ export default function HubDashboard() {
             // In the ADMIN tab, we exclusively show administrative paperwork.
             feed.push('adminFeed');
 
-            if (subPhase === 'ACTIVE_TRAVEL' || pcsPhase === 'CHECK_IN') {
+            // Priority Admin elements
+            if (subPhase === 'ACTIVE_TRAVEL' || (pcsPhase === 'CHECK_IN' && (!liquidationStatus || liquidationStatus === 'NOT_STARTED'))) {
                 feed.push('travelClaimUrgency');
             }
+
+            feed.push('tierTracking'); // Header before passive trackers
             const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
             if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
                 feed.push('liquidationTracker');
             }
+
             // leave is currently integrated into the top global nav buttons, so it may be redundant here
             // but we'll leave it for now until a user asks to remove it.
             feed.push('leave');

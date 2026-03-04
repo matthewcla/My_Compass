@@ -198,13 +198,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                             Next: {wabNextAction.label}
                                         </Text>
                                     )}
-
-                                    {/* Reporting Uniform */}
-                                    {reportingUniform && (
-                                        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">
-                                            👔 Reporting Uniform: {reportingUniform}
-                                        </Text>
-                                    )}
                                 </View>
 
                                 {/* CTA — bottom right */}

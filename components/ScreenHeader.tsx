@@ -1,9 +1,8 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { SearchConfig } from '@/store/useHeaderStore';
-import { Search } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ScreenHeaderProps {
@@ -32,31 +31,9 @@ export function ScreenHeader({
     const colors = Colors[colorScheme ?? 'light'];
 
     const isInline = variant === 'inline';
-    // Local state to prevent race conditions/flickering with async store updates
-    const [localSearchValue, setLocalSearchValue] = React.useState(searchConfig?.value || '');
-
-    // Sync local state when prop changes externally (e.g. clear button, or initial load)
-    // We only sync if the values are significantly different to avoid loop
-    React.useEffect(() => {
-        if (searchConfig?.value !== undefined && searchConfig.value !== localSearchValue) {
-            setLocalSearchValue(searchConfig.value);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchConfig?.value]);
-
-    const handleSearchChange = (text: string) => {
-        // 1. Immediate local update (Sync) - Fixes flickering
-        setLocalSearchValue(text);
-
-        // 2. Propagate to store (Async)
-        searchConfig?.onChangeText?.(text);
-    };
-
-    const searchInputRef = React.useRef<TextInput>(null);
-
     const hasHeaderContent = Boolean(title || subtitle || rightAction);
     return (
-        <View className="z-50 bg-slate-50 dark:bg-slate-950">
+        <View className="z-50">
             {hasHeaderContent && (
                 <View
                     style={{
@@ -123,33 +100,6 @@ export function ScreenHeader({
                 </View>
             )}
 
-            {searchConfig && searchConfig.visible && (
-                <View className={`px-5 pb-4 ${!hasHeaderContent ? 'pt-4' : ''}`}>
-                    <View
-                        className="flex-row items-center bg-white dark:bg-slate-900 rounded-3xl px-4 border border-slate-200 dark:border-slate-800 shadow-sm"
-                    >
-                        <Pressable onPress={() => searchInputRef.current?.focus()} hitSlop={10}>
-                            <Search
-                                size={22}
-                                color={colors.text}
-                                strokeWidth={2.5}
-                                style={{ marginRight: 20 }}
-                                className="opacity-70"
-                            />
-                        </Pressable>
-                        <TextInput
-                            ref={searchInputRef}
-                            value={localSearchValue}
-                            onChangeText={handleSearchChange}
-                            placeholder={searchConfig.placeholder || 'Search...'}
-                            placeholderTextColor={colorScheme === 'dark' ? '#64748b' : '#94a3b8'}
-                            className="flex-1 text-slate-900 dark:text-white text-[17px] font-medium leading-5 py-3.5"
-                            style={{ outline: 'none' } as any}
-                            showSoftInputOnFocus={true}
-                        />
-                    </View>
-                </View>
-            )}
         </View>
     );
 }

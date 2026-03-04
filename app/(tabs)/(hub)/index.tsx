@@ -4,8 +4,6 @@ import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
-import { MenuTile } from '@/components/menu/MenuTile';
-import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ScreenGradient } from '@/components/ScreenGradient';
@@ -22,15 +20,13 @@ import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
 import { LeaveRequest } from '@/types/schema';
 import { FlashList } from '@shopify/flash-list';
+import { BlurView } from 'expo-blur';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
-    Briefcase,
-    FileText,
-    Map as MapIcon,
-    User
+    Zap
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
-import { Alert, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
@@ -116,61 +112,6 @@ export default function HubDashboard() {
         const delay = index * 60;
 
         switch (item) {
-            case 'menu':
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()} className="mb-2">
-                        {/* Row 1 */}
-                        <View className="flex-row justify-between mb-4">
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Assignment"
-                                    icon={Briefcase}
-                                    subtitle={
-                                        assignmentPhase === 'SELECTION'
-                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? 'Action Required' : "You're Selected!")
-                                            : assignmentPhase === 'NEGOTIATION' ? 'Cycle Open'
-                                                : assignmentPhase === 'ON_RAMP' ? 'Opening Soon'
-                                                    : undefined
-                                    }
-                                    accent={
-                                        assignmentPhase === 'SELECTION'
-                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? '#DC2626' : '#D97706')
-                                            : assignmentPhase === 'NEGOTIATION' ? '#EA580C'
-                                                : assignmentPhase === 'ON_RAMP' ? '#D97706'
-                                                    : undefined
-                                    }
-                                    onPress={() => handleTilePress('/(assignment)')}
-                                />
-                            </View>
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My PCS"
-                                    icon={MapIcon}
-                                    subtitle={isPCSPhase ? "Action Required" : undefined}
-                                    onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
-                                    accent={isPCSPhase ? '#D97706' : undefined}
-                                />
-                            </View>
-                        </View>
-                        {/* Row 2 */}
-                        <View className="flex-row justify-between">
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Leave & Admin"
-                                    icon={FileText}
-                                    onPress={() => handleTilePress('/(admin)')}
-                                />
-                            </View>
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Profile"
-                                    icon={User}
-                                    onPress={() => handleTilePress('/(profile)')}
-                                />
-                            </View>
-                        </View>
-                    </Animated.View>
-                );
             case 'discoveryStatus':
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
@@ -287,14 +228,6 @@ export default function HubDashboard() {
     }, [isDemoMode, selectedPhase, assignmentPhase, obliserv, pcsPhase, subPhase, data, leaveRequests, leaveBalance]);
 
     // Navigation Handlers
-    const handleTilePress = (route: string) => {
-        router.push(route as any);
-    };
-
-    const handleLeavePress = () => {
-        router.push('/leave' as any);
-    };
-
     const handleQuickLeavePress = () => {
         if (!user) return;
         const draft = generateQuickDraft('weekend', user.id);
@@ -318,9 +251,6 @@ export default function HubDashboard() {
             <ScreenGradient>
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <HubSkeleton />
-                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-                    <GlobalTabBar activeRoute="home" />
-                </View>
             </ScreenGradient>
         );
     }
@@ -332,9 +262,6 @@ export default function HubDashboard() {
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <View className="flex-1 items-center justify-center px-8">
                     <Text className="text-slate-400 text-center">{error}</Text>
-                </View>
-                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-                    <GlobalTabBar activeRoute="home" />
                 </View>
             </ScreenGradient>
         );
@@ -376,7 +303,7 @@ export default function HubDashboard() {
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 minTopBarHeight={minHeaderHeight}
                 topBar={
-                    <View className="bg-slate-50 dark:bg-slate-950">
+                    <BlurView intensity={isDark ? 80 : 60} tint={isDark ? "dark" : "light"}>
                         <View className="px-4 pt-4">
                             <StatusCard
                                 nextCycle={data?.cycle?.cycleId ?? '24-02'}
@@ -389,8 +316,60 @@ export default function HubDashboard() {
                                 subtitle=""
                                 withSafeArea={false}
                             />
+                            {/* NEW: Filter Chips below the hidden header */}
+                            <Animated.View
+                                className="w-full mt-6 mb-4"
+                                entering={FadeInUp.duration(400).delay(100)}
+                            >
+                                <Animated.ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={{ paddingHorizontal: 16, gap: 12, alignItems: 'center' }}
+                                >
+                                    {/* Leave Quick Action */}
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/leave' as any)}
+                                        style={{
+                                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                                        }}
+                                        className="h-10 w-10 rounded-full flex-row items-center justify-center border border-black/5 dark:border-white/10"
+                                    >
+                                        <Zap size={18} color={isDark ? '#e2e8f0' : '#475569'} />
+                                    </TouchableOpacity>
+
+                                    {/* Active Hub Chip */}
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#0A84FF',
+                                        }}
+                                        className="h-10 px-5 rounded-full flex-row items-center justify-center"
+                                    >
+                                        <Text style={{ color: '#ffffff' }} className="font-semibold text-[15px]">Hub</Text>
+                                    </TouchableOpacity>
+
+                                    {/* Career Chip (Inactive) */}
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                                        }}
+                                        className="h-10 px-5 rounded-full flex-row items-center justify-center border border-black/5 dark:border-white/10"
+                                    >
+                                        <Text style={{ color: isDark ? '#94A3B8' : '#64748B' }} className="font-medium text-[15px]">My Career</Text>
+                                    </TouchableOpacity>
+
+                                    {/* Admin Chip (Inactive) */}
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                                        }}
+                                        className="h-10 px-5 rounded-full flex-row items-center justify-center border border-black/5 dark:border-white/10"
+                                    >
+                                        <Text style={{ color: isDark ? '#94A3B8' : '#64748B' }} className="font-medium text-[15px]">My Admin</Text>
+                                    </TouchableOpacity>
+                                </Animated.ScrollView>
+                            </Animated.View>
                         </View>
-                    </View>
+                    </BlurView>
                 }
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             >

@@ -7,6 +7,7 @@ import { useHeaderStore } from '@/store/useHeaderStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { useRouter } from 'expo-router';
 import { Search, X } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { BackHandler, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
@@ -58,6 +59,7 @@ export default function ExpandableBottomDrawer() {
     const searchInputRef = React.useRef<TextInput>(null);
     const globalSearchRowRef = React.useRef<View>(null);
     const spotlightIsOpen = useSpotlightStore((state) => state.isOpen);
+    const router = useRouter();
     const setGlobalSearchFrame = useHeaderStore((state) => state.setGlobalSearchFrame);
     const triggerGlobalSearchDismiss = useHeaderStore((state) => state.triggerGlobalSearchDismiss);
     const triggerGlobalSearchSubmit = useHeaderStore((state) => state.triggerGlobalSearchSubmit);
@@ -325,21 +327,21 @@ export default function ExpandableBottomDrawer() {
                             </View>
 
                             <View style={styles.pillIconRow}>
-                                <TouchableOpacity style={styles.tabItem} onPress={() => setSheetState(0)}>
-                                    <Ionicons name="people" size={26} color={isDark ? '#fff' : '#000'} />
-                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>People</Text>
+                                <TouchableOpacity style={styles.tabItem} onPress={() => { setSheetState(0); router.push('/(hub)' as any); }}>
+                                    <Ionicons name="home" size={26} color={isDark ? '#fff' : '#000'} />
+                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>Home</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.tabItem} onPress={() => setSheetState(1)}>
-                                    <Ionicons name="laptop" size={26} color={'#0A84FF'} />
-                                    <Text style={[styles.tabLabel, { color: '#0A84FF' }]}>Devices</Text>
+                                <TouchableOpacity style={styles.tabItem} onPress={() => { setSheetState(0); router.push('/calendar' as any); }}>
+                                    <Ionicons name="calendar-clear" size={26} color={isDark ? '#fff' : '#000'} />
+                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>Calendar</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.tabItem} onPress={() => setSheetState(1)}>
-                                    <Ionicons name="grid" size={26} color={isDark ? '#EBEBF5' : '#8E8E93'} />
-                                    <Text style={[styles.tabLabel, { color: isDark ? '#EBEBF5' : '#8E8E93' }]}>Items</Text>
+                                <TouchableOpacity style={styles.tabItem} onPress={() => { setSheetState(0); router.push('/inbox' as any); }}>
+                                    <Ionicons name="mail" size={26} color={isDark ? '#fff' : '#000'} />
+                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>Inbox</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.tabItem} onPress={() => setSheetState(1)}>
-                                    <Ionicons name="person-circle" size={28} color={isDark ? '#EBEBF5' : '#8E8E93'} />
-                                    <Text style={[styles.tabLabel, { color: isDark ? '#EBEBF5' : '#8E8E93' }]}>Me</Text>
+                                <TouchableOpacity style={styles.tabItem} onPress={() => { setSheetState(0); router.push('/(profile)' as any); }}>
+                                    <Ionicons name="person-circle" size={28} color={isDark ? '#fff' : '#000'} />
+                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>Me</Text>
                                 </TouchableOpacity>
                             </View>
                         </Animated.View>

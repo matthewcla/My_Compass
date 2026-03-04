@@ -12,14 +12,13 @@ export default function GlobalHeader() {
     const rightAction = useHeaderStore((state) => state.rightAction);
     const isVisible = useHeaderStore((state) => state.isVisible);
     const variant = useHeaderStore((state) => state.variant);
-    const searchConfig = useHeaderStore((state) => state.searchConfig);
     const pathname = usePathname();
 
     // Hide on Sign In
     if (segments[0] === 'sign-in') return null;
 
     // Check if there is any content to show
-    const hasContent = title || subtitle || rightAction || (searchConfig && searchConfig.visible);
+    const hasContent = title || subtitle || rightAction || leftAction;
 
     // Explicit visibility check and content check
     if (!isVisible || !hasContent) return null;
@@ -32,7 +31,6 @@ export default function GlobalHeader() {
             rightAction={rightAction}
             withSafeArea={true}
             variant={variant}
-            searchConfig={searchConfig}
         />
     );
 }

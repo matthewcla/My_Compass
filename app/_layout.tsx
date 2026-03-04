@@ -151,7 +151,6 @@ function InnerLayout() {
           <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
           <Stack.Screen name="consent" options={{ gestureEnabled: false, animation: 'fade' }} />
           <Stack.Screen name="leave" />
-          <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
         </Stack>
         <ThemeTransitionOverlay />
         <SessionTimeoutOverlay

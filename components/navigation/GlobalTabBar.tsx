@@ -1,6 +1,7 @@
 import { useScrollContext } from '@/components/navigation/ScrollControlContext';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { useBottomSheetStore } from '@/store/useBottomSheetStore';
 import { useUIStore } from '@/store/useUIStore';
 import { getShadow } from '@/utils/getShadow';
 import { Ionicons } from '@expo/vector-icons';
@@ -164,6 +165,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
     const { translateY, resetBar, setTabBarMetrics } = useScrollContext();
+    const setSheetState = useBottomSheetStore((state) => state.setSheetState);
 
     const [barWidth, setBarWidth] = React.useState(0);
     const pillTranslateX = useSharedValue(0);
@@ -189,9 +191,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
         currentSpoke === 'sign-in' ||
         currentSpoke === 'leave' ||
         lastSegment === 'discovery' ||
-        lastSegment === 'cycle' ||
-        lastSegment === 'MenuHubModal' ||
-        (segments as string[]).includes('MenuHubModal');
+        lastSegment === 'cycle';
 
     const targetSpoke = SPOKE_CONFIG[currentSpoke]
         ? currentSpoke
@@ -276,7 +276,7 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
             nextTabs.push(buildDynamicTab(config.secondary.label, config.secondary.route, config.secondary.icon));
         }
 
-        nextTabs.push(buildDynamicTab('Menu', '/menu', LayoutGrid, pathname.includes('menu')));
+        nextTabs.push(buildDynamicTab('Menu', '#', LayoutGrid, false));
         return nextTabs;
     }, [buildDynamicTab, buildFixedTab, config, pathname]);
 
@@ -320,9 +320,14 @@ export function AnimatedGlobalTabBar({ activeRoute, useBlur = Platform.OS === 'i
         (item: TabDescriptor) => {
             void Haptics.selectionAsync().catch(() => undefined);
             resetBar();
-            router.push(item.href as any);
+
+            if (item.label === 'Menu') {
+                setSheetState(1);
+            } else {
+                router.push(item.href as any);
+            }
         },
-        [resetBar, router]
+        [resetBar, router, setSheetState]
     );
 
     const handleTabBarLayout = React.useCallback((event: LayoutChangeEvent) => {

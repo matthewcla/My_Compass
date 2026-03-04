@@ -247,6 +247,8 @@ const HighlightedLabel = ({
     );
 };
 
+import { useBottomSheetStore } from '@/store/useBottomSheetStore';
+
 interface SpotlightResultsProps {
     onClose?: () => void;
 }
@@ -271,6 +273,7 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
     const setScope = useSpotlightStore((state) => state.setScope);
     const setActiveIndex = useSpotlightStore((state) => state.setActiveIndex);
     const registerRecent = useSpotlightStore((state) => state.registerRecent);
+    const setSheetState = useBottomSheetStore((state) => state.setSheetState);
     const blurGlobalSearchInput = useHeaderStore((state) => state.blurGlobalSearchInput);
     const registerGlobalSearchSubmit = useHeaderStore((state) => state.registerGlobalSearchSubmit);
     const registerGlobalSearchDismiss = useHeaderStore((state) => state.registerGlobalSearchDismiss);
@@ -317,10 +320,10 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
                 id: 'nav:menu',
                 kind: 'navigation',
                 section: 'Navigation',
-                title: 'Menu Hub',
-                subtitle: 'App modules and shortcuts',
-                keywords: ['menu', 'modules', 'tools'],
-                run: () => router.push('/menu' as any),
+                title: 'Command Center',
+                subtitle: 'Settings and shortcuts',
+                keywords: ['menu', 'settings', 'tools', 'privacy', 'theme'],
+                run: () => setSheetState(1),
             },
             {
                 id: 'nav:assignment',

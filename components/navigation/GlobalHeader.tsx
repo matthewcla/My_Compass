@@ -14,13 +14,9 @@ export default function GlobalHeader() {
     const variant = useHeaderStore((state) => state.variant);
     const searchConfig = useHeaderStore((state) => state.searchConfig);
     const pathname = usePathname();
-    const isMenuModalRoute = segmentList.includes('MenuHubModal') || pathname.includes('MenuHubModal');
 
     // Hide on Sign In
     if (segments[0] === 'sign-in') return null;
-
-    // Hide on Menu modal route (full-screen modal uses its own local header fallback)
-    if (isMenuModalRoute) return null;
 
     // Check if there is any content to show
     const hasContent = title || subtitle || rightAction || (searchConfig && searchConfig.visible);

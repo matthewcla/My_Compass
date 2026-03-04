@@ -1,3 +1,4 @@
+import { DrawerMenuContent } from '@/components/navigation/DrawerMenuContent';
 import { useScrollContextSafe } from '@/components/navigation/ScrollControlContext';
 import { SpotlightResults } from '@/components/spotlight/SpotlightResults';
 import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
@@ -432,13 +433,21 @@ export default function ExpandableBottomDrawer() {
                                     </View>
                                 </View>
 
-                                {spotlightIsOpen && (
+                                {spotlightIsOpen ? (
                                     <Animated.View
                                         entering={FadeIn.duration(200)}
                                         exiting={FadeOut.duration(200)}
                                         style={{ flex: 1, width: '100%', marginTop: 16 }}
                                     >
                                         <SpotlightResults />
+                                    </Animated.View>
+                                ) : (
+                                    <Animated.View
+                                        entering={FadeIn.duration(200)}
+                                        exiting={FadeOut.duration(200)}
+                                        style={{ flex: 1, width: '100%', marginTop: 16 }}
+                                    >
+                                        <DrawerMenuContent />
                                     </Animated.View>
                                 )}
                             </Animated.View>

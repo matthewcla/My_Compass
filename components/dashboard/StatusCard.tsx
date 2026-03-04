@@ -136,7 +136,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             );
 
             return (
-                <View className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => router.push('/pcs/check-in' as any)} className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -208,16 +208,15 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
 
                                 {/* CTA — bottom right */}
-                                <TouchableOpacity
-                                    onPress={() => router.push('/pcs/check-in' as any)}
+                                <View
                                     className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg border border-green-500 dark:border-green-600 ml-3"
                                 >
                                     <CTAText>Check{`\n`}In</CTAText>
-                                </TouchableOpacity>
+                                </View>
                             </View>
                         </LinearGradient>
                     </GlassView>
-                </View>
+                </TouchableOpacity>
             );
         }
 
@@ -256,7 +255,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 : { num: 'text-teal-950 dark:text-white', label: 'text-teal-700 dark:text-teal-300' };
 
             return (
-                <View className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)} className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -337,16 +336,15 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
 
                                 {/* CTA — bottom right */}
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
+                                <View
                                     className="bg-teal-600 dark:bg-teal-700 px-3 py-2 rounded-lg border border-teal-500 dark:border-teal-600 ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
-                                </TouchableOpacity>
+                                </View>
                             </View>
                         </LinearGradient>
                     </GlassView>
-                </View>
+                </TouchableOpacity>
             );
         }
 
@@ -383,7 +381,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 : { num: 'text-sky-950 dark:text-white', label: 'text-sky-700 dark:text-sky-300' };
 
             return (
-                <View className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)} className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -466,16 +464,15 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
 
                                 {/* CTA — bottom right */}
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
+                                <View
                                     className="bg-sky-600 dark:bg-sky-700 px-3 py-2 rounded-lg border border-sky-500 dark:border-sky-600 ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
-                                </TouchableOpacity>
+                                </View>
                             </View>
                         </LinearGradient>
                     </GlassView>
-                </View>
+                </TouchableOpacity>
             );
         }
 
@@ -506,7 +503,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const isSeaDuty = activeOrder?.isSeaDuty ?? false;
 
             return (
-                <View className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)} className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -590,16 +587,15 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
 
                                 {/* CTA — bottom right */}
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
+                                <View
                                     className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-lg border border-amber-500 dark:border-amber-600 ml-3"
                                 >
                                     <CTAText>My{`\n`}Roadmap</CTAText>
-                                </TouchableOpacity>
+                                </View>
                             </View>
                         </LinearGradient>
                     </GlassView>
-                </View>
+                </TouchableOpacity>
             );
         }
 
@@ -625,7 +621,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             })();
 
             return (
-                <View className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -675,16 +671,15 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </Text>
                                 )}
 
-                                <TouchableOpacity
-                                    onPress={() => router.push('/(tabs)/(assignment)' as any)}
+                                <View
                                     className="bg-zinc-100 dark:bg-zinc-800/40 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-600/50 ml-3"
                                 >
                                     <CTAText color="text-zinc-700 dark:text-zinc-300">Track{`\n`}Progress</CTAText>
-                                </TouchableOpacity>
+                                </View>
                             </View>
                         </LinearGradient>
                     </GlassView>
-                </View>
+                </TouchableOpacity>
             );
         }
 
@@ -699,7 +694,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const obliservBlocked = obliserv.required && obliserv.status !== 'COMPLETE';
 
             return (
-                <View className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -750,25 +745,16 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     )}
                                 </View>
 
-                                {obliservBlocked ? (
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/pcs-wizard/obliserv-check' as any)}
-                                        className="bg-red-600 dark:bg-red-700 px-3 py-2 rounded-lg border border-red-500 dark:border-red-600 ml-3"
-                                    >
-                                        <CTAText>Extend{`\n`}to Accept</CTAText>
-                                    </TouchableOpacity>
-                                ) : (
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/(tabs)/(assignment)' as any)}
-                                        className="bg-emerald-100 dark:bg-emerald-900/40 px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-700/50 ml-3"
-                                    >
-                                        <CTAText color="text-emerald-800 dark:text-emerald-200">View{`\n`}Details</CTAText>
-                                    </TouchableOpacity>
-                                )}
+                                {/* CTA — bottom right */}
+                                <View
+                                    className="bg-emerald-600 dark:bg-emerald-700 px-3 py-2 rounded-lg border border-emerald-500 dark:border-emerald-600 ml-3"
+                                >
+                                    <CTAText>View{`\n`}Match</CTAText>
+                                </View>
                             </View>
                         </LinearGradient>
                     </GlassView>
-                </View>
+                </TouchableOpacity>
             );
         }
 
@@ -855,6 +841,14 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                         </Text>
                                     )}
                                 </View>
+
+                                {/* CTA — bottom right */}
+                                <TouchableOpacity
+                                    onPress={() => router.push('/(tabs)/(assignment)' as any)}
+                                    className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-lg border border-amber-500 dark:border-amber-600 ml-3"
+                                >
+                                    <CTAText>My{`\n`}Slate</CTAText>
+                                </TouchableOpacity>
                             </View>
                         </LinearGradient>
                     </GlassView>
@@ -876,7 +870,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const hasPrepped = reviewed > 0;
 
             return (
-                <View className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => hasPrepped ? router.push('/(career)/discovery' as any) : router.push('/(tabs)/(profile)/preferences' as any)} className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -938,24 +932,22 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
 
                                 {hasPrepped ? (
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/(career)/discovery' as any)}
+                                    <View
                                         className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 ml-3"
                                     >
                                         <CTAText color="text-indigo-800 dark:text-indigo-200">Review{`\n`}Picks</CTAText>
-                                    </TouchableOpacity>
+                                    </View>
                                 ) : (
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/(tabs)/(profile)/preferences' as any)}
+                                    <View
                                         className="bg-indigo-100 dark:bg-indigo-900/60 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 ml-3"
                                     >
                                         <CTAText color="text-indigo-800 dark:text-indigo-200">Get{`\n`}Ready</CTAText>
-                                    </TouchableOpacity>
+                                    </View>
                                 )}
                             </View>
                         </LinearGradient>
                     </GlassView>
-                </View>
+                </TouchableOpacity>
             );
         }
 
@@ -971,7 +963,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const monthsToMna = Math.max(0, monthsToPrd - 12);
 
             return (
-                <View className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => router.push('/(career)/discovery' as any)} className="flex flex-col gap-2">
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
@@ -1008,7 +1000,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                             </View>
                         </LinearGradient>
                     </GlassView>
-                </View>
+                </TouchableOpacity>
             );
         }
     }

@@ -77,6 +77,9 @@ export default function HubDashboard() {
     const subPhase = useSubPhase();
     // QW4: Reactive liquidation state (must be above early returns per Rules of Hooks)
     const liquidationStatus = usePCSStore((s) => s.financials.liquidation?.currentStatus);
+    const shipments = usePCSStore(state => state.financials.hhg?.shipments ?? []);
+    const hasShipments = shipments.length > 0;
+    const dependentCount = user?.dependents ?? 0;
 
     // Hydrate defaults on mount
     React.useEffect(() => {
@@ -144,17 +147,15 @@ export default function HubDashboard() {
             case 'tierRightNow':
             case 'tierThisWeek':
             case 'tierTracking': {
-                const tierLabel = item === 'tierRightNow' ? '⚓  Right Now'
-                    : item === 'tierThisWeek' ? '📋  This Week'
-                        : '📡  Tracking';
+                const tierLabel = item === 'tierRightNow' ? 'Right Now'
+                    : item === 'tierThisWeek' ? 'This Week'
+                        : 'Tracking';
                 return (
-                    <View className="flex-row items-center mt-1 mb-0.5">
-                        <View className="bg-slate-800/60 dark:bg-slate-700/40 rounded-full px-3 py-1.5 border border-slate-600/30 dark:border-slate-500/20">
-                            <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-300 dark:text-slate-300">
-                                {tierLabel}
-                            </Text>
-                        </View>
-                        <View className="flex-1 h-px bg-slate-700/30 dark:bg-slate-600/20 ml-3" />
+                    <View className="flex-row items-center mt-3 mb-1 px-1">
+                        <Text className="text-[13px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
+                            {tierLabel}
+                        </Text>
+                        <View className="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4" />
                     </View>
                 );
             }
@@ -393,35 +394,44 @@ export default function HubDashboard() {
 
             // Priority 1: PCS Active Window Navigation
             if (pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
-                feed.push('pcsHeroBanner');
                 feed.push('tierThisWeek');
                 feed.push('baseWelcomeKit');
-                feed.push('gainingCommandCard');
                 feed.push('digitalOrdersWallet');
-                feed.push('pcsFinancialSnapshot');
-                feed.push('hhgWeightGauge');
-                feed.push('leaveImpact');
-                if (subPhase === 'ACTIVE_TRAVEL' || pcsPhase === 'CHECK_IN') {
-                    feed.push('travelClaimUrgency');
+
+                // Contextual HHG widget
+                if (dependentCount > 0 || hasShipments) {
+                    feed.push('hhgWeightGauge');
                 }
+
+                feed.push('leaveImpact');
+
                 const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
                 if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
                     feed.push('tierTracking');
                     feed.push('liquidationTracker');
+                } else if (subPhase === 'ACTIVE_TRAVEL' || pcsPhase === 'CHECK_IN') {
+                    feed.push('travelClaimUrgency');
                 }
             }
 
-            // Priority 2: Mission Brief (Active Orders Processing)
-            if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
-                feed.push('pcsHeroBanner');
+            // Priority 2: Mission Brief (Active Orders)
+            if (['ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
                 feed.push('missionBrief');
-                feed.push('gainingCommandCard');
+            }
+            if (assignmentPhase === 'ORDERS_RELEASED' && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
                 feed.push('digitalOrdersWallet');
-                feed.push('hhgWeightGauge');
+
+                // Contextual HHG widget
+                if (dependentCount > 0 || hasShipments) {
+                    feed.push('hhgWeightGauge');
+                }
             }
 
-            // Priority 3: Career Discovery
-            if (assignmentPhase === 'ON_RAMP') {
+            // Priority 3: Career Discovery & Selection Details
+            if (assignmentPhase === 'SELECTION') {
+                feed.push('selectionDetail');
+                feed.push('selectionChecklist');
+            } else if (assignmentPhase === 'ON_RAMP') {
                 feed.push('careerReadiness');
                 feed.push('discoveryStatus');
             } else if (assignmentPhase === 'NEGOTIATION') {
@@ -454,7 +464,7 @@ export default function HubDashboard() {
                 feed.push('discoveryStatus');
                 feed.push('detailerContact');
             }
-            if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '')) {
+            if (assignmentPhase === 'SELECTION') {
                 feed.push('slateSummary');
                 feed.push('selectionDetail');
                 feed.push('selectionChecklist');
@@ -485,7 +495,7 @@ export default function HubDashboard() {
         }
 
         return feed;
-    }, [activeFilter, assignmentPhase, pcsPhase, subPhase, liquidationStatus]);
+    }, [activeFilter, assignmentPhase, pcsPhase, subPhase, liquidationStatus, hasShipments, dependentCount]);
 
     // Loading state
     if (loading && !data) {

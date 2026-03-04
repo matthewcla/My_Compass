@@ -7,7 +7,7 @@ import { useHeaderStore } from '@/store/useHeaderStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { Search, X } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { BackHandler, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
@@ -60,6 +60,7 @@ export default function ExpandableBottomDrawer() {
     const globalSearchRowRef = React.useRef<View>(null);
     const spotlightIsOpen = useSpotlightStore((state) => state.isOpen);
     const router = useRouter();
+    const pathname = usePathname();
     const setGlobalSearchFrame = useHeaderStore((state) => state.setGlobalSearchFrame);
     const triggerGlobalSearchDismiss = useHeaderStore((state) => state.triggerGlobalSearchDismiss);
     const triggerGlobalSearchSubmit = useHeaderStore((state) => state.triggerGlobalSearchSubmit);
@@ -327,22 +328,29 @@ export default function ExpandableBottomDrawer() {
                             </View>
 
                             <View style={styles.pillIconRow}>
-                                <TouchableOpacity style={styles.tabItem} onPress={() => { setSheetState(0); router.push('/(hub)' as any); }}>
-                                    <Ionicons name="home" size={26} color={isDark ? '#fff' : '#000'} />
-                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>Home</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.tabItem} onPress={() => { setSheetState(0); router.push('/calendar' as any); }}>
-                                    <Ionicons name="calendar-clear" size={26} color={isDark ? '#fff' : '#000'} />
-                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>Calendar</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.tabItem} onPress={() => { setSheetState(0); router.push('/inbox' as any); }}>
-                                    <Ionicons name="mail" size={26} color={isDark ? '#fff' : '#000'} />
-                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>Inbox</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.tabItem} onPress={() => { setSheetState(0); router.push('/(profile)' as any); }}>
-                                    <Ionicons name="person-circle" size={28} color={isDark ? '#fff' : '#000'} />
-                                    <Text style={[styles.tabLabel, { color: isDark ? '#fff' : '#000' }]}>Me</Text>
-                                </TouchableOpacity>
+                                {[
+                                    { route: '/(hub)', iconUnselected: 'home-outline', iconSelected: 'home', label: 'Home' },
+                                    { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Calendar' },
+                                    { route: '/inbox', iconUnselected: 'mail-outline', iconSelected: 'mail', label: 'Inbox' },
+                                    { route: '/(profile)', iconUnselected: 'person-circle-outline', iconSelected: 'person-circle', label: 'Me' },
+                                ].map((tab) => {
+                                    const isActive = pathname === tab.route || (tab.route === '/(hub)' && (pathname === '/' || pathname === '/(hub)'));
+                                    const activeColor = isDark ? '#60A5FA' : '#0A84FF'; // System Blue variants
+                                    const inactiveColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748B';
+                                    const iconColor = isActive ? activeColor : inactiveColor;
+                                    const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
+
+                                    return (
+                                        <TouchableOpacity
+                                            key={tab.route}
+                                            style={styles.tabItem}
+                                            onPress={() => { setSheetState(0); router.push(tab.route as any); }}
+                                        >
+                                            <Ionicons name={iconName as any} size={26} color={iconColor} />
+                                            <Text style={[styles.tabLabel, { color: iconColor, fontWeight: isActive ? '700' : '600' }]}>{tab.label}</Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
                         </Animated.View>
 
@@ -504,6 +512,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         flex: 1,
+        height: 54,
+        borderRadius: 16,
     },
     tabLabel: {
         fontSize: 10,

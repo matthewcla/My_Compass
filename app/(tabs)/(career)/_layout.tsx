@@ -9,6 +9,12 @@ export default function CareerLayout() {
             }}
         >
             <Stack.Screen
+                name="index"
+                options={{
+                    headerShown: false,
+                }}
+            />
+            <Stack.Screen
                 name="discovery"
                 options={{
                     headerShown: false,

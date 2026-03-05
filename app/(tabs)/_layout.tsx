@@ -19,10 +19,8 @@ export default function TabLayout() {
         <Tabs.Screen name="inbox" options={{ title: 'Inbox' }} />
 
         <Tabs.Screen name="(career)" options={{ href: null }} />
-        <Tabs.Screen name="(pcs)" options={{ href: null }} />
         <Tabs.Screen name="(admin)" options={{ href: null }} />
         <Tabs.Screen name="(profile)" options={{ href: null }} />
-        <Tabs.Screen name="(assignment)" options={{ href: null }} />
       </Tabs>
 
       {/* New Global Bottom Drawer Prototype */}

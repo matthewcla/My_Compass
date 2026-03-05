@@ -1,9 +1,9 @@
+import { CommandCenterTiles } from '@/components/navigation/CommandCenterTiles';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
-import { useUserStore } from '@/store/useUserStore';
 import Constants from 'expo-constants';
-import { LogOut, Settings, Shield } from 'lucide-react-native';
+import { LogOut, Settings } from 'lucide-react-native';
 import React from 'react';
 import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -16,9 +16,6 @@ export function DrawerMenuContent() {
     const enableDevSettings = Constants.expoConfig?.extra?.enableDevSettings ?? __DEV__;
     const showDevFloatingIcons = useDemoStore((s) => s.showDevFloatingIcons);
     const toggleDevFloatingIcons = useDemoStore((s) => s.toggleDevFloatingIcons);
-
-    const privacyMode = useUserStore((s) => s.user?.privacyMode ?? false);
-    const updateUser = useUserStore((s) => s.updateUser);
 
     return (
         <ScrollView
@@ -35,6 +32,8 @@ export function DrawerMenuContent() {
             </View>
 
             <Animated.View entering={FadeIn.duration(300).delay(100)}>
+                <CommandCenterTiles />
+
                 {/* Visual Settings Group */}
                 <View className="mb-6 rounded-3xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
                     <View className="px-5 py-4">
@@ -43,27 +42,9 @@ export function DrawerMenuContent() {
                 </View>
 
                 {/* Account & Security Group */}
-                <View className="mb-6 rounded-3xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
-                    <View className="flex-row items-center justify-between px-5 py-4">
-                        <View className="flex-row items-center gap-3 flex-1 mr-4">
-                            <View className="p-2 rounded-xl bg-blue-100/50 dark:bg-blue-900/30">
-                                <Shield size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
-                            </View>
-                            <View className="flex-1">
-                                <Text className="font-semibold text-base text-slate-900 dark:text-white">Privacy Mode</Text>
-                                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Hide rank and name</Text>
-                            </View>
-                        </View>
-                        <Switch
-                            value={privacyMode}
-                            onValueChange={(val) => updateUser({ privacyMode: val })}
-                            trackColor={{ false: isDark ? '#3f3f46' : '#d1d5db', true: '#2563EB' }}
-                            thumbColor="#FFFFFF"
-                        />
-                    </View>
-
-                    {enableDevSettings && (
-                        <View className="flex-row items-center justify-between px-5 py-4 border-t border-black/5 dark:border-white/10">
+                {enableDevSettings && (
+                    <View className="mb-6 rounded-3xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
+                        <View className="flex-row items-center justify-between px-5 py-4">
                             <View className="flex-row items-center gap-3 flex-1 mr-4">
                                 <View className="p-2 rounded-xl bg-emerald-100/50 dark:bg-emerald-900/30">
                                     <Text style={{ fontSize: 18 }}>🧪</Text>
@@ -80,8 +61,8 @@ export function DrawerMenuContent() {
                                 thumbColor="#FFFFFF"
                             />
                         </View>
-                    )}
-                </View>
+                    </View>
+                )}
 
                 {/* Danger Zone */}
                 <TouchableOpacity

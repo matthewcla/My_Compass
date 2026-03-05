@@ -17,26 +17,33 @@ export function DigitalSeaBagWidget() {
                     Digital Sea Bag
                 </Text>
                 <Text className="text-xs text-slate-500 dark:text-slate-400 text-center leading-5 max-w-[280px]">
-                    Your active orders and past move history are stored securely here.
+                    Your permanent administrative records, official documents, and travel receipts are stored securely here.
                 </Text>
             </View>
 
             <View className="gap-3">
-                <View className="bg-black/5 dark:bg-white/10 rounded-xl p-4 border border-black/5 dark:border-white/10">
-                    <View className="flex-row items-center gap-3 mb-2">
-                        <View className="w-8 h-8 rounded-full bg-green-500/10 items-center justify-center">
-                            <Ship size={16} color={isDark ? '#4ade80' : '#16a34a'} />
+                {/* Official Documents Archive */}
+                <TouchableOpacity
+                    onPress={() => Alert.alert('Official Documents', 'Electronic document archive coming soon.')}
+                    className="bg-black/5 dark:bg-white/10 rounded-xl p-4 border border-black/5 dark:border-white/10 flex-row items-center"
+                    activeOpacity={0.7}
+                >
+                    <View className="flex-1">
+                        <View className="flex-row items-center gap-3 mb-2">
+                            <View className="w-8 h-8 rounded-full bg-blue-500/10 items-center justify-center">
+                                <Ship size={16} color={isDark ? '#60A5FA' : '#2563EB'} />
+                            </View>
+                            <Text className="text-sm font-bold text-slate-900 dark:text-white">Official Documents</Text>
                         </View>
-                        <Text className="text-sm font-bold text-slate-900 dark:text-white">Ready to Move</Text>
+                        <Text className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Access your archived orders, Page 13s, and other permanent administrative forms.
+                        </Text>
                     </View>
-                    <Text className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        When your next set of orders are issued, we'll build your tailored moving checklist right here.
-                    </Text>
-                </View>
+                </TouchableOpacity>
 
                 {/* Entry point to the actual Archive Grid Screen */}
                 <TouchableOpacity
-                    onPress={() => Alert.alert('Past Moves', 'Archive grid coming soon to the profile menu.')}
+                    onPress={() => Alert.alert('Past Moves', 'Archive grid coming soon.')}
                     className="bg-black/5 dark:bg-white/10 rounded-xl p-4 border border-black/5 dark:border-white/10 flex-row items-center"
                     activeOpacity={0.7}
                 >
@@ -45,10 +52,10 @@ export function DigitalSeaBagWidget() {
                             <View className="w-8 h-8 rounded-full bg-amber-500/10 items-center justify-center">
                                 <Archive size={16} color={isDark ? '#fbbf24' : '#d97706'} />
                             </View>
-                            <Text className="text-sm font-bold text-slate-900 dark:text-white">Past Moves</Text>
+                            <Text className="text-sm font-bold text-slate-900 dark:text-white">Past Moves & Travel</Text>
                         </View>
                         <Text className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                            Access your completed moves, travel claims, and uploaded receipts.
+                            Review your completed logistical moves, finalized travel claims, and uploaded receipts.
                         </Text>
                     </View>
                 </TouchableOpacity>

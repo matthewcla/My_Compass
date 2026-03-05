@@ -105,16 +105,16 @@ export function TravelClaimHUDWidget() {
       }}
     >
       {/* Header */}
-      <View className="bg-slate-900/70 p-5 pb-4">
+      <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4">
         <View className="flex-row items-center">
           <View className="w-12 h-12 rounded-xl bg-white/10 dark:bg-slate-800/60 border border-slate-200/20 items-center justify-center mr-3">
             <DollarSign size={22} color={isDark ? '#fcd34d' : '#d97706'} strokeWidth={2.2} />
           </View>
           <View className="flex-1">
-            <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-300">
+            <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
               Travel Claim
             </Text>
-            <Text className="mt-0.5 text-base font-bold text-white">
+            <Text className="mt-0.5 text-base font-bold text-slate-800 dark:text-white">
               File Within 5 Days
             </Text>
           </View>

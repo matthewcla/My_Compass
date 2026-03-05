@@ -79,8 +79,8 @@ export function HHGWeightGaugeWidget() {
       className="rounded-2xl overflow-hidden mb-4"
       style={{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
     >
-      <View className="bg-slate-900/70 p-5 pb-4 flex-row items-center justify-between">
-        <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-300">
+      <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4 flex-row items-center justify-between">
+        <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
           HHG Weight Limit
         </Text>
       </View>

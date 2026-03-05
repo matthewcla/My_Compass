@@ -203,8 +203,8 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
         className="rounded-2xl overflow-hidden mx-4 mb-8"
         style={{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
       >
-        <View className="bg-slate-900/70 p-5 pb-4">
-          <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-300">
+        <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4">
+          <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
             Official Orders
           </Text>
         </View>
@@ -213,8 +213,8 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
 
           <Text
             className={`mt-2 text-[13px] leading-5 ${isOffline
-                ? 'text-red-500 dark:text-red-400'
-                : 'text-slate-600 dark:text-slate-400'
+              ? 'text-red-500 dark:text-red-400'
+              : 'text-slate-600 dark:text-slate-400'
               }`}
           >
             {isOffline
@@ -246,8 +246,8 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
       className="rounded-2xl overflow-hidden mx-4 mb-8"
       style={{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
     >
-      <View className="bg-slate-900/70 p-5 pb-4 flex-row items-center justify-between">
-        <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-300">
+      <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4 flex-row items-center justify-between">
+        <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
           Official Orders
         </Text>
         <View className="flex-row items-center bg-green-500/20 px-2 py-1 rounded border border-green-500/30">
@@ -297,8 +297,8 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
             onPress={handleViewPDF}
             disabled={isCorrupted}
             className={`flex-1 h-12 rounded-xl border items-center justify-center flex-row ${isCorrupted
-                ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
-                : 'border-blue-500/20 bg-blue-500/10'
+              ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
+              : 'border-blue-500/20 bg-blue-500/10'
               }`}
             accessibilityRole="button"
             accessibilityLabel="View PDF"
@@ -313,8 +313,8 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
             onPress={handleShare}
             disabled={isCorrupted}
             className={`flex-1 h-12 rounded-xl border items-center justify-center flex-row ${isCorrupted
-                ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
-                : 'border-blue-500/20 bg-blue-500/10'
+              ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
+              : 'border-blue-500/20 bg-blue-500/10'
               }`}
             accessibilityRole="button"
             accessibilityLabel="Share orders"
@@ -329,8 +329,8 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
             onPress={handleRedownload}
             disabled={isRefreshing}
             className={`flex-1 h-12 rounded-xl border items-center justify-center flex-row ${isRefreshing
-                ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
-                : 'border-blue-500/20 bg-blue-500/10'
+              ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
+              : 'border-blue-500/20 bg-blue-500/10'
               }`}
             accessibilityRole="button"
             accessibilityLabel="Re-download orders"

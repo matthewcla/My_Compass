@@ -140,7 +140,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | Day N pill ── */}
@@ -195,9 +195,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* CTA — bottom right */}
                                 <View
-                                    className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-xl border border-green-500 dark:border-green-600 ml-3"
+                                    className="bg-green-100 dark:bg-green-700 px-3 py-2 rounded-xl border border-green-900/10 dark:border-green-600 ml-3"
                                 >
-                                    <CTAText>Check{`\n`}In</CTAText>
+                                    <CTAText color="text-green-900 dark:text-white">Check{`\n`}In</CTAText>
                                 </View>
                             </View>
                         </View>
@@ -245,7 +245,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: icon + title aligned with days counter ── */}
@@ -317,9 +317,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 {/* CTA — bottom right */}
                                 <TouchableOpacity
                                     onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
-                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-[#163F70] dark:border-[#5B8FCF] ml-3"
+                                    className="bg-blue-50 dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-blue-900/10 dark:border-[#5B8FCF] ml-3"
                                 >
-                                    <CTAText>My{`\n`}Roadmap</CTAText>
+                                    <CTAText color="text-[#1A4E8A] dark:text-white">My{`\n`}Roadmap</CTAText>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -365,7 +365,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: icon + title aligned with days counter ── */}
@@ -439,9 +439,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 {/* CTA — bottom right */}
                                 <TouchableOpacity
                                     onPress={() => router.push('/(tabs)/(pcs)/pcs' as any)}
-                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-[#163F70] dark:border-[#5B8FCF] ml-3"
+                                    className="bg-blue-50 dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-blue-900/10 dark:border-[#5B8FCF] ml-3"
                                 >
-                                    <CTAText>My{`\n`}Roadmap</CTAText>
+                                    <CTAText color="text-[#1A4E8A] dark:text-white">My{`\n`}Roadmap</CTAText>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -481,7 +481,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: icon + title aligned with days counter ── */}
@@ -555,9 +555,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* CTA — bottom right */}
                                 <View
-                                    className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-xl border border-amber-500 dark:border-amber-600 ml-3"
+                                    className="bg-amber-100 dark:bg-amber-700 px-3 py-2 rounded-xl border border-amber-900/10 dark:border-amber-600 ml-3"
                                 >
-                                    <CTAText>My{`\n`}Roadmap</CTAText>
+                                    <CTAText color="text-amber-900 dark:text-white">My{`\n`}Roadmap</CTAText>
                                 </View>
                             </View>
                         </View>
@@ -592,7 +592,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | Est. date pill ── */}
@@ -632,9 +632,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 )}
 
                                 <View
-                                    className="bg-zinc-100 dark:bg-zinc-800/40 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-600/50 ml-3"
+                                    className="bg-zinc-100 dark:bg-zinc-800/40 px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-600/50 ml-3"
                                 >
-                                    <CTAText color="text-zinc-700 dark:text-zinc-300">Track{`\n`}Progress</CTAText>
+                                    <CTAText color="text-zinc-800 dark:text-zinc-300">Track{`\n`}Progress</CTAText>
                                 </View>
                             </View>
                         </View>
@@ -658,7 +658,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: star icon + headline + details ── */}
@@ -672,7 +672,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
                                 <View className="flex-1">
                                     <Text className="text-green-900 dark:text-white text-lg font-bold leading-tight mb-0.5">
-                                        You've Been Selected
+                                        Selection Confirmed
                                     </Text>
                                     <Detail>{selGainingCommand}</Detail>
                                     {selBilletTitle && (
@@ -683,7 +683,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 </View>
                             </View>
 
-                            {/* ── Footer Row: report date + status + CTA ── */}
+                            {/* ── Footer Row: read-only status ── */}
                             <View className="mt-3 flex-row items-end justify-between">
                                 <View className="flex-1 gap-0.5">
                                     {selReportNLT && (
@@ -691,34 +691,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                             Report by {selReportNLT}
                                         </Text>
                                     )}
-                                    {obliservBlocked && (
-                                        <Text className="text-red-600 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider">
-                                            ⚠ OBLISERV Extension Required
-                                        </Text>
-                                    )}
                                 </View>
-
-                                {/* CTA — bottom right */}
-                                <View
-                                    className="bg-emerald-600 dark:bg-emerald-700 px-3 py-2 rounded-xl border border-emerald-500 dark:border-emerald-600 ml-3"
-                                >
-                                    <CTAText>View{`\n`}Match</CTAText>
-                                </View>
-                                {obliservBlocked ? (
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/pcs-wizard/obliserv-check' as any)}
-                                        className="bg-red-600 dark:bg-red-700 px-3 py-2 rounded-xl border border-red-500 dark:border-red-600 ml-3"
-                                    >
-                                        <CTAText>Extend{`\n`}to Accept</CTAText>
-                                    </TouchableOpacity>
-                                ) : (
-                                    <TouchableOpacity
-                                        onPress={() => router.push('/(tabs)/(assignment)' as any)}
-                                        className="bg-green-100 dark:bg-green-900/40 px-3 py-2 rounded-xl border border-green-200 dark:border-green-700/50 ml-3"
-                                    >
-                                        <CTAText color="text-green-800 dark:text-green-200">View{`\n`}Details</CTAText>
-                                    </TouchableOpacity>
-                                )}
                             </View>
                         </View>
                     </GlassView>
@@ -755,7 +728,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | days counter ── */}
@@ -806,9 +779,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 {/* CTA — bottom right */}
                                 <TouchableOpacity
                                     onPress={() => router.push('/(tabs)/(assignment)' as any)}
-                                    className="bg-amber-600 dark:bg-amber-700 px-3 py-2 rounded-xl border border-amber-500 dark:border-amber-600 ml-3"
+                                    className="bg-amber-100 dark:bg-amber-700 px-3 py-2 rounded-xl border border-amber-900/10 dark:border-amber-600 ml-3"
                                 >
-                                    <CTAText>My{`\n`}Slate</CTAText>
+                                    <CTAText color="text-amber-900 dark:text-white">My{`\n`}Slate</CTAText>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -835,7 +808,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | days counter ── */}
@@ -921,7 +894,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <GlassView
                         intensity={80}
                         tint={isDark ? 'dark' : 'light'}
-                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50"
+                        className="border border-black/5 dark:border-white/10 rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50"
                     >
                         <View className="px-4 py-4">
                             {/* ── Header Row: icon + title | months counter ── */}
@@ -954,9 +927,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                                 {/* <TouchableOpacity
                                     onPress={() => router.push('/(career)/discovery' as any)}
-                                    className="bg-[#1A4E8A] dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-[#163F70] dark:border-[#5B8FCF] ml-3"
+                                    className="bg-blue-50 dark:bg-[#1A4E8A] px-3 py-2 rounded-xl border border-blue-900/10 dark:border-[#5B8FCF] ml-3"
                                 >
-                                    <CTAText>Start{`\n`}Exploring</CTAText>
+                                    <CTAText color="text-[#1A4E8A] dark:text-white">Start{`\n`}Exploring</CTAText>
                                 </TouchableOpacity> */}
                             </View>
                         </View>
@@ -983,7 +956,7 @@ function CardShell({
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className={`border border-black/5 dark:border-white/10 pl-4 pr-3 py-4 rounded-[24px] overflow-hidden flex-col shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/60 dark:bg-slate-900/50`}
+                className={`border border-black/5 dark:border-white/10 pl-4 pr-3 py-4 rounded-[24px] overflow-hidden flex-col shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/50`}
             >
                 {children}
             </GlassView>

@@ -2,10 +2,10 @@ import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
-import { useDemoStore } from '@/store/useDemoStore';
-import { ChevronRight } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { BarChart2, ChevronRight } from 'lucide-react-native';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 interface SlateSummaryWidgetProps {
     onPress?: () => void;
@@ -14,68 +14,49 @@ interface SlateSummaryWidgetProps {
 const SLOT_INDICES = Array.from({ length: MAX_SLATE_SIZE }, (_, i) => i);
 
 export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps) {
-    const { applications, slateDeadline, userApplicationIds, submitSlate } = useAssignmentStore();
+    const router = useRouter();
+    const { applications, userApplicationIds, billets } = useAssignmentStore();
+    const isDark = useColorScheme() === 'dark';
 
-    const isDemoMode = useDemoStore((s) => s.isDemoMode);
-    const negotiationDetails = useDemoStore((s) => s.negotiationDetails);
-
-    // Logic: Calculate Filled Slots based on userApplicationIds
+    // Calculate Filled Slots
     const filledCount = userApplicationIds.length;
 
-    // Logic: Calculate Counts based on status
-    let draftCount = 0;
-    let submittedCount = 0;
-    Object.values(applications).forEach(app => {
-        if (app.status === 'draft') {
-            draftCount++;
-        } else if (['submitted', 'confirmed'].includes(app.status)) {
-            submittedCount++;
+    // Calculate Metadata: Sea vs. Shore Balance
+    let seaCount = 0;
+    let shoreCount = 0;
+
+    userApplicationIds.forEach((appId) => {
+        const app = applications[appId];
+        if (!app) return;
+
+        const billet = billets[app.billetId];
+        if (billet) {
+            // Match exactly or loosely based on standard Navy duty types
+            if (billet.dutyType?.toLowerCase().includes('sea')) {
+                seaCount++;
+            } else if (billet.dutyType?.toLowerCase().includes('shore')) {
+                shoreCount++;
+            }
         }
     });
 
-    // Logic: Calculate Time Remaining
-    // In demo mode, use negotiation windowCloseDate to match StatusCard
-    const now = new Date();
-    const deadlineStr = (isDemoMode && negotiationDetails?.windowCloseDate)
-        ? negotiationDetails.windowCloseDate
-        : slateDeadline;
-    const deadline = new Date(deadlineStr);
-    const diffMs = deadline.getTime() - now.getTime();
-    const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    const hoursRemaining = Math.ceil(diffMs / (1000 * 60 * 60));
-
-    let timeLabel = '';
-    let isUrgent = false;
-
-    if (diffMs <= 0) {
-        timeLabel = 'Closed';
-        isUrgent = false;
-    } else if (hoursRemaining < 48) {
-        timeLabel = `${hoursRemaining}h Left`;
-        isUrgent = true;
-    } else {
-        timeLabel = `${daysRemaining}d Left`;
-        isUrgent = false;
-    }
-
-    const canSubmit = draftCount > 0 && submittedCount === 0;
-    const allSubmitted = filledCount > 0 && draftCount === 0 && submittedCount > 0;
-
-    const isDark = useColorScheme() === 'dark';
+    const handlePress = () => {
+        if (onPress) onPress();
+        else router.push('/(tabs)/(assignment)' as any);
+    };
 
     return (
-        <ScalePressable onPress={onPress}>
+        <ScalePressable onPress={handlePress}>
             <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl p-5 shadow-sm border border-black/5 dark:border-white/10 mb-4">
-                {/* Header: Title + Cycle Status Pill */}
+                {/* Header: Title + Analytic Icon */}
                 <View className="flex-row justify-between items-center mb-4">
-                    <Text className="text-lg font-bold text-slate-900 dark:text-white">MY SLATE</Text>
-                    {timeLabel !== 'Closed' && (
-                        <View className={`px-2 py-1 rounded-full ${isUrgent ? 'bg-red-100 dark:bg-red-900/30' : 'bg-slate-100 dark:bg-slate-800'}`}>
-                            <Text className={`text-xs font-semibold ${isUrgent ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-400'}`}>
-                                {timeLabel}
-                            </Text>
-                        </View>
-                    )}
+                    <Text className="text-lg font-bold text-slate-900 dark:text-white">SLATE COMPOSITION</Text>
+                    <View className="px-2 py-1 flex-row items-center gap-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30">
+                        <BarChart2 size={12} color={isDark ? '#818cf8' : '#4f46e5'} />
+                        <Text className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                            Analyzer
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Visuals: The Slots */}
@@ -94,33 +75,29 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
                     })}
                 </View>
 
-                {/* Footer: Text Summary + Chevron */}
+                {/* Footer: Metadata Summary + Chevron */}
                 <View className="flex-row justify-between items-center">
-                    <Text className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                        {draftCount} Drafts • {submittedCount} Submitted
-                    </Text>
+                    <View className="flex-row items-center gap-3">
+                        <View className="flex-row items-center gap-2">
+                            <View className="w-2 h-2 rounded-full bg-cyan-500" />
+                            <Text className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                                {seaCount} Sea
+                            </Text>
+                        </View>
+                        <View className="flex-row items-center gap-2">
+                            <View className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <Text className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                                {shoreCount} Shore
+                            </Text>
+                        </View>
+                        {filledCount === 0 && (
+                            <Text className="text-sm font-medium text-slate-400 dark:text-slate-500 italic">
+                                Add billets to analyze loadout
+                            </Text>
+                        )}
+                    </View>
                     <ChevronRight size={20} color="#94a3b8" />
                 </View>
-
-                {/* Submit CTA or Confirmation */}
-                {canSubmit && (
-                    <TouchableOpacity
-                        onPress={submitSlate}
-                        className="bg-orange-600 dark:bg-orange-700 mt-4 py-3 rounded-xl"
-                        style={{ minHeight: 44 }}
-                    >
-                        <Text className="text-white text-center font-bold text-sm tracking-wide">
-                            Submit Slate
-                        </Text>
-                    </TouchableOpacity>
-                )}
-                {allSubmitted && (
-                    <View className="bg-green-50 dark:bg-green-900/20 mt-4 py-2.5 rounded-xl border border-green-200 dark:border-green-800">
-                        <Text className="text-green-700 dark:text-green-400 text-center text-sm font-semibold">
-                            ✅ Slate Submitted
-                        </Text>
-                    </View>
-                )}
             </GlassView>
         </ScalePressable>
     );

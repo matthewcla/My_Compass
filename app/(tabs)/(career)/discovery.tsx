@@ -136,9 +136,18 @@ export default function DiscoveryScreen() {
             // 'defer' intentionally not counted — deferred billets re-appear
         });
 
+        // ENFORCEMENT: During Negotiation Phase, the user expects 'Slated' (⭐) to 
+        // exactly match their actual Slate Composition. Swipe history ('super') can
+        // lag behind or precede actual store DB application commits safely.
+        if (mode === 'real' && isSlatePhase) {
+            slated = Object.values(applications).filter(a =>
+                ['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)
+            ).length;
+        }
+
         const remaining = total - (slated + saved + passed);
         return { slated, saved, passed, remaining };
-    }, [billets, realDecisions, sandboxDecisions, mode]);
+    }, [billets, realDecisions, sandboxDecisions, mode, isSlatePhase, applications]);
 
     // 1b. CATEGORY FILTER (from Hub badge tap)
     const categoryFilteredBillets = useMemo((): Billet[] => {
@@ -223,16 +232,15 @@ export default function DiscoveryScreen() {
             if (direction === 'up') {
                 if (isSlatePhase) {
                     // Negotiation: actual slate building
-                    const activeAppCount = Object.values(applicationsRef.current).filter(a =>
+                    // Because we already awaited `swipe()` above, the zustand store has already dynamically inserted the new Application.
+                    // We pull the absolute latest state from the store directly to avoid Ref tick lagging.
+                    const currentApplications = useAssignmentStore.getState().applications;
+                    const activeAppCount = Object.values(currentApplications).filter(a =>
                         ['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)
                     ).length;
 
-                    // The slate count does not include the card we JUST swiped (it hasn't fully propagated to the store state here yet)
-                    // So we show the NEW total which is activeAppCount + 1
-                    const newTotal = activeAppCount + 1;
-
-                    if (newTotal <= 7) {
-                        showFeedback(`Drafted! Added to Slate (${newTotal}/7)`, 'success');
+                    if (activeAppCount <= 7) {
+                        showFeedback(`Drafted! Added to Slate (${activeAppCount}/7)`, 'success');
                     } else {
                         showFeedback('Slate Full. Added to Manifest instead.', 'warning');
                     }

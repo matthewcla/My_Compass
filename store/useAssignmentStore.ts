@@ -1,13 +1,13 @@
 import { MOCK_BILLETS } from '@/constants/MockBillets';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
-import { SecureLogger } from '@/utils/logger';
 import {
     Application,
     Billet,
     MyAssignmentState,
     SwipeDecision
 } from '@/types/schema';
+import { SecureLogger } from '@/utils/logger';
 import { create } from 'zustand';
 
 // =============================================================================
@@ -328,6 +328,17 @@ export const useAssignmentStore = create<AssignmentStore>((set, get) => ({
                     mergedDecisions[p.billetId] = p.decision;
                 }
             });
+
+            // ENFORCEMENT: All active applications must inherently be 'super' decisions
+            // This prevents the Scoreboard and the Toast from disagreeing if demo data
+            // was seeded into applications without a corresponding decision record.
+            if (apps) {
+                apps.forEach(a => {
+                    if (['draft', 'optimistically_locked', 'submitted', 'confirmed'].includes(a.status)) {
+                        mergedDecisions[a.billetId] = 'super';
+                    }
+                });
+            }
 
             set({
                 realDecisions: mergedDecisions,

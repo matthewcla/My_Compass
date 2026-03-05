@@ -436,8 +436,8 @@ export default function HubDashboard() {
                 feed.push('careerReadiness');
                 feed.push('discoveryStatus');
             } else if (assignmentPhase === 'NEGOTIATION') {
-                feed.push('slateSummary');
-            } else if (!pcsPhase) {
+                feed.push('discoveryStatus'); // Retain Billet Discovery engine
+                feed.push('slateSummary');    // Followed immediately by the Composition Analyzer
                 // Priority 5: Peacetime Promotion ("The Garrison State")
                 feed.push('tierThisWeek');
                 feed.push('tierTracking');

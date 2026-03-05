@@ -1,6 +1,6 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
-import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
+import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
 import { useUserDependents } from '@/store/useUserStore';
@@ -428,12 +428,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── Phase: MNA Negotiation ─────────────────────────────────────────
         case 'negotiation': {
-            const slateCount = userApplicationIds.length;
-            const submittedCount = userApplicationIds.filter((id) => applications[id]?.status === 'submitted').length;
-            const allSubmitted = slateCount > 0 && submittedCount === slateCount;
-
             return (
-                <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
+                <TouchableOpacity onPress={() => router.push('/(career)/cycle' as any)} className="flex flex-col gap-2">
                     <CardShell>
                         <LinearGradient
                             colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
@@ -463,7 +459,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                             <View className="mt-4 flex-row items-end justify-between">
                                 <View className="flex-1 gap-1.5">
                                     <Text className="text-[12px] font-bold text-slate-700 dark:text-slate-300 tracking-wide">
-                                        {allSubmitted ? `✅ Slate Submitted` : `⚠️ ${slateCount} of ${MAX_SLATE_SIZE} drafted`}
+                                        Action Required: Adjust Loadout
                                     </Text>
                                 </View>
                                 <CTAButton label="My Slate" icon color="bg-amber-600 dark:bg-amber-500" textColor="text-white" />

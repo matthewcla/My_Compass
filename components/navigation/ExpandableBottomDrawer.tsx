@@ -126,10 +126,16 @@ export default function ExpandableBottomDrawer() {
     const COLLAPSED_BOTTOM_MARGIN = insets.bottom > 0 ? insets.bottom : 16;
     const RESTING_TOP_OFFSET_FROM_BOTTOM = HEIGHT_COLLAPSED + COLLAPSED_BOTTOM_MARGIN;
 
+    const isHidden = pathname.includes('/discovery') || pathname.includes('/manifest');
+
     // Report global space used so the scaffold clears the resting pill correctly
     useEffect(() => {
-        setTabBarHeight(RESTING_TOP_OFFSET_FROM_BOTTOM);
-    }, [RESTING_TOP_OFFSET_FROM_BOTTOM]);
+        if (isHidden) {
+            setTabBarHeight(0);
+        } else {
+            setTabBarHeight(RESTING_TOP_OFFSET_FROM_BOTTOM);
+        }
+    }, [RESTING_TOP_OFFSET_FROM_BOTTOM, isHidden, setTabBarHeight]);
 
     // Extended Drawer Heights
     const HEIGHT_FULL = SCREEN_HEIGHT - (insets.top + 10);
@@ -252,6 +258,7 @@ export default function ExpandableBottomDrawer() {
     }));
 
 
+    if (isHidden) return null;
 
     return (
         <View

@@ -7,7 +7,7 @@ import { useHeaderStore } from '@/store/useHeaderStore';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { usePathname, useRouter } from 'expo-router';
+import { usePathname, useRouter, useSegments } from 'expo-router';
 import { Search, X } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { BackHandler, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
@@ -61,6 +61,7 @@ export default function ExpandableBottomDrawer() {
     const spotlightIsOpen = useSpotlightStore((state) => state.isOpen);
     const router = useRouter();
     const pathname = usePathname();
+    const segments = useSegments();
     const setGlobalSearchFrame = useHeaderStore((state) => state.setGlobalSearchFrame);
     const triggerGlobalSearchDismiss = useHeaderStore((state) => state.triggerGlobalSearchDismiss);
     const triggerGlobalSearchSubmit = useHeaderStore((state) => state.triggerGlobalSearchSubmit);
@@ -341,9 +342,13 @@ export default function ExpandableBottomDrawer() {
                                     { route: '/(hub)', iconUnselected: 'home-outline', iconSelected: 'home', label: 'Home' },
                                     { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Calendar' },
                                     { route: '/inbox', iconUnselected: 'mail-outline', iconSelected: 'mail', label: 'Inbox' },
-                                    { route: '/(profile)', iconUnselected: 'person-circle-outline', iconSelected: 'person-circle', label: 'Me' },
+                                    { route: '/(tabs)/(profile)', iconUnselected: 'person-circle-outline', iconSelected: 'person-circle', label: 'Me' },
                                 ].map((tab) => {
-                                    const isActive = pathname === tab.route || (tab.route === '/(hub)' && (pathname === '/' || pathname === '/(hub)'));
+                                    const segs = segments as string[];
+                                    const isActive =
+                                        pathname === tab.route ||
+                                        (tab.route === '/(hub)' && (pathname === '/' || pathname === '/(hub)' || segs.includes('(hub)')) && !segs.includes('(profile)') && !segs.includes('(calendar)') && !segs.includes('inbox') && !segs.includes('(admin)') && !segs.includes('(career)')) ||
+                                        (tab.route === '/(tabs)/(profile)' && segs.includes('(profile)'));
                                     const activeColor = isDark ? '#60A5FA' : '#0A84FF'; // System Blue variants
                                     const inactiveColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748B';
                                     const iconColor = isActive ? activeColor : inactiveColor;

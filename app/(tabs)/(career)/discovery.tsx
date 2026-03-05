@@ -281,7 +281,7 @@ export default function DiscoveryScreen() {
                             if (newMode === 'sandbox') setSandboxTriggered(true);
                         }}
                         onOpenFilters={() => setIsFiltersOpen(true)}
-                        onOpenShortlist={() => router.push('/(assignment)/cycle' as any)}
+                        onOpenShortlist={() => router.push('/(career)/cycle' as any)}
                         savedCount={savedCount}
                     />
 

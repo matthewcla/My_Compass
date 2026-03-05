@@ -40,8 +40,9 @@ import Animated, {
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
-const SWIPE_Y_THRESHOLD = SCREEN_HEIGHT * 0.2;
-const VELOCITY_THRESHOLD = 800; // Increased to demand a more deliberate flick
+const SWIPE_Y_THRESHOLD = SCREEN_HEIGHT * 0.12; // Lowered to make upward swipes easier
+const VELOCITY_X_THRESHOLD = 800;
+const VELOCITY_Y_THRESHOLD = 500; // Lower velocity required to throw upwards
 const HEADER_HEIGHT = 192;
 const TRIGGER_BAR_HEIGHT = 50;
 const DISMISS_CONFIG = { duration: 150, easing: Easing.out(Easing.quad) };
@@ -170,7 +171,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
 
     const gestureAxis = useSharedValue<0 | 1 | 2>(0); // 0: null, 1: x-axis, 2: y-axis
     const hapticFired = useSharedValue(false);
-    const LOCK_THRESHOLD = 15;
+    const LOCK_THRESHOLD = 25; // Increased to allow the thumb's arc to establish before locking
 
     // --- PAN GESTURE: For swiping the card ---
     const pan = Gesture.Pan()
@@ -229,7 +230,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
 
             // Only trigger actions if we are locked to that axis
             // Upward swipe (Super Like)
-            if (gestureAxis.value === 2 && (velocityY < -VELOCITY_THRESHOLD || translateY.value < -SWIPE_Y_THRESHOLD)) {
+            if (gestureAxis.value === 2 && (velocityY < -VELOCITY_Y_THRESHOLD || translateY.value < -SWIPE_Y_THRESHOLD)) {
                 translateY.value = withSpring(-1000, { ...EXIT_SPRING_CONFIG, velocity: velocityY }, () => {
                     runOnJS(handleSwipeComplete)('up');
                 });
@@ -237,7 +238,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
             }
 
             // Downward swipe (Defer / Not Ready)
-            if (gestureAxis.value === 2 && (velocityY > VELOCITY_THRESHOLD || translateY.value > SWIPE_Y_THRESHOLD)) {
+            if (gestureAxis.value === 2 && (velocityY > VELOCITY_Y_THRESHOLD || translateY.value > SWIPE_Y_THRESHOLD)) {
                 translateY.value = withSpring(1000, { ...EXIT_SPRING_CONFIG, velocity: velocityY }, () => {
                     // Removed the manual translateY reset to prevent 1-frame ghosting before unmount
                     runOnJS(handleSwipeComplete)('down');
@@ -246,14 +247,14 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
             }
 
             if (gestureAxis.value === 1) {
-                if (velocityX > VELOCITY_THRESHOLD || translateX.value > SWIPE_THRESHOLD) {
+                if (velocityX > VELOCITY_X_THRESHOLD || translateX.value > SWIPE_THRESHOLD) {
                     translateX.value = withSpring(SCREEN_WIDTH * 1.5, { ...EXIT_SPRING_CONFIG, velocity: velocityX }, () => {
                         runOnJS(handleSwipeComplete)('right');
                     });
                     return;
                 }
 
-                if (velocityX < -VELOCITY_THRESHOLD || translateX.value < -SWIPE_THRESHOLD) {
+                if (velocityX < -VELOCITY_X_THRESHOLD || translateX.value < -SWIPE_THRESHOLD) {
                     translateX.value = withSpring(-SCREEN_WIDTH * 1.5, { ...EXIT_SPRING_CONFIG, velocity: velocityX }, () => {
                         runOnJS(handleSwipeComplete)('left');
                     });

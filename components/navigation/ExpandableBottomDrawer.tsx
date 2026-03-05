@@ -126,7 +126,7 @@ export default function ExpandableBottomDrawer() {
     const COLLAPSED_BOTTOM_MARGIN = insets.bottom > 0 ? insets.bottom : 16;
     const RESTING_TOP_OFFSET_FROM_BOTTOM = HEIGHT_COLLAPSED + COLLAPSED_BOTTOM_MARGIN;
 
-    const isHidden = pathname.includes('/discovery') || pathname.includes('/manifest');
+    const isHidden = pathname?.includes('/discovery') || pathname?.includes('/manifest');
 
     // Report global space used so the scaffold clears the resting pill correctly
     useEffect(() => {
@@ -258,12 +258,14 @@ export default function ExpandableBottomDrawer() {
     }));
 
 
-    if (isHidden) return null;
-
     return (
         <View
-            style={[styles.masterContainer, { top: SCREEN_HEIGHT - RESTING_TOP_OFFSET_FROM_BOTTOM, height: HEIGHT_FULL }]}
-            pointerEvents="box-none"
+            style={[
+                styles.masterContainer,
+                { top: SCREEN_HEIGHT - RESTING_TOP_OFFSET_FROM_BOTTOM, height: HEIGHT_FULL },
+                isHidden ? { display: 'none' } : {}
+            ]}
+            pointerEvents={isHidden ? "none" : "box-none"}
         >
             {/* Background Tap Dismissal overlay when Expanded */}
             {sheetState === 1 && (

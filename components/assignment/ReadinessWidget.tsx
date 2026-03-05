@@ -1,3 +1,4 @@
+import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { useUserStore } from '@/store/useUserStore';
@@ -85,7 +86,7 @@ export default function ReadinessWidget() {
     const allDone = doneCount === items.length;
 
     return (
-        <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+        <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl p-5 shadow-sm border border-black/5 dark:border-white/10">
             {/* Header */}
             <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-row items-center gap-3">
@@ -102,12 +103,12 @@ export default function ReadinessWidget() {
                     </View>
                 </View>
                 <View className={`px-2.5 py-1 rounded-full ${allDone
-                        ? 'bg-green-100 dark:bg-green-900/30'
-                        : 'bg-amber-100 dark:bg-amber-900/30'
+                    ? 'bg-green-100 dark:bg-green-900/30'
+                    : 'bg-amber-100 dark:bg-amber-900/30'
                     }`}>
                     <Text className={`text-xs font-bold ${allDone
-                            ? 'text-green-700 dark:text-green-400'
-                            : 'text-amber-700 dark:text-amber-400'
+                        ? 'text-green-700 dark:text-green-400'
+                        : 'text-amber-700 dark:text-amber-400'
                         }`}>
                         {doneCount} of {items.length}
                     </Text>
@@ -126,7 +127,7 @@ export default function ReadinessWidget() {
                         }}
                         disabled={item.done}
                         activeOpacity={0.6}
-                        className={`flex-row items-center py-2.5 px-3 rounded-xl ${!item.done ? 'bg-slate-50 dark:bg-slate-800/50' : ''
+                        className={`flex-row items-center py-2.5 px-3 rounded-xl ${!item.done ? 'bg-black/5 dark:bg-white/10' : ''
                             }`}
                     >
                         {/* Check icon */}
@@ -144,8 +145,8 @@ export default function ReadinessWidget() {
                         {/* Label + detail */}
                         <View className="flex-1">
                             <Text className={`text-sm font-semibold ${item.done
-                                    ? 'text-slate-500 dark:text-slate-400'
-                                    : 'text-slate-800 dark:text-slate-200'
+                                ? 'text-slate-500 dark:text-slate-400'
+                                : 'text-slate-800 dark:text-slate-200'
                                 }`}>
                                 {item.label}
                             </Text>
@@ -153,8 +154,8 @@ export default function ReadinessWidget() {
 
                         {/* Right side: detail text or chevron */}
                         <Text className={`text-xs font-medium mr-1 ${item.done
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-slate-400 dark:text-slate-500'
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-slate-400 dark:text-slate-500'
                             }`}>
                             {item.detail}
                         </Text>
@@ -167,12 +168,12 @@ export default function ReadinessWidget() {
 
             {/* All-done celebration */}
             {allDone && (
-                <View className="bg-green-50 dark:bg-green-900/10 p-3 rounded-xl border border-green-100 dark:border-green-800/30 mt-3">
+                <View className="bg-green-500/10 p-3 rounded-xl border border-green-500/20 mt-3">
                     <Text className="text-xs text-green-700 dark:text-green-400 leading-relaxed text-center font-semibold">
                         ✅  You're all set! When the cycle opens, you'll be ready to build your slate.
                     </Text>
                 </View>
             )}
-        </View>
+        </GlassView>
     );
 }

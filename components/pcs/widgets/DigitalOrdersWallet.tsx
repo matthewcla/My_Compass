@@ -1,10 +1,11 @@
 import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
 import { usePCSStore } from '@/store/usePCSStore';
-import * as Haptics from 'expo-haptics';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
 import { format } from 'date-fns';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Haptics from 'expo-haptics';
+import * as Sharing from 'expo-sharing';
 import { FileDown, RefreshCw, Share2 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Text, View } from 'react-native';
@@ -38,6 +39,9 @@ const ageLabel = (days: number): string => {
 
 export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletProps) {
   void variant;
+
+  const colorScheme = useColorScheme() ?? 'light';
+  const isDark = colorScheme === 'dark';
 
   const cachedOrders = usePCSStore((state) => state.cachedOrders);
   const activeOrder = usePCSStore((state) => state.activeOrder);
@@ -194,35 +198,37 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
   if (!cachedOrders || !activeOrder) {
     return (
       <GlassView
-        intensity={90}
-        tint="dark"
-        className="rounded-2xl border border-slate-700 dark:border-slate-800 overflow-hidden"
+        intensity={80}
+        tint={isDark ? 'dark' : 'light'}
+        className="rounded-2xl overflow-hidden mx-4 mb-8"
+        style={{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
       >
-        <View className="bg-slate-900 dark:bg-black p-4">
-          <Text className="text-xs uppercase tracking-widest font-semibold text-gray-300">
+        <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4">
+          <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
             Official Orders
           </Text>
-          <Text className="mt-3 text-lg font-bold text-white">No Orders Cached</Text>
+        </View>
+        <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-4 pb-5 border-t border-slate-200/50 dark:border-slate-700/50">
+          <Text className="text-xl font-bold text-slate-900 dark:text-white">No Orders Cached</Text>
 
           <Text
-            className={`mt-2 text-sm ${
-              isOffline
-                ? 'text-red-300'
-                : 'text-gray-300'
-            }`}
+            className={`mt-2 text-[13px] leading-5 ${isOffline
+              ? 'text-red-500 dark:text-red-400'
+              : 'text-slate-600 dark:text-slate-400'
+              }`}
           >
             {isOffline
               ? 'No orders available offline.'
-              : 'Download your orders to keep them available without network.'}
+              : 'Download your orders to keep them available without network connection.'}
           </Text>
 
           <ScalePressable
             onPress={handleCacheOrders}
-            className="mt-4 h-12 rounded-xl border border-blue-600/60 bg-blue-600/20 items-center justify-center"
+            className="mt-5 h-12 rounded-xl border border-blue-500/20 bg-blue-500/10 items-center justify-center"
             accessibilityRole="button"
             accessibilityLabel="Download orders"
           >
-            <Text className="text-sm font-semibold text-blue-300">Download Orders</Text>
+            <Text className="text-sm font-bold text-blue-700 dark:text-blue-300">Download Orders</Text>
           </ScalePressable>
         </View>
       </GlassView>
@@ -235,43 +241,52 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
 
   return (
     <GlassView
-      intensity={90}
-      tint="dark"
-      className="rounded-2xl border border-slate-700 dark:border-slate-800 overflow-hidden"
+      intensity={80}
+      tint={isDark ? 'dark' : 'light'}
+      className="rounded-2xl overflow-hidden mx-4 mb-8"
+      style={{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
     >
-      <View className="bg-slate-900 dark:bg-black p-4">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xs uppercase tracking-widest font-semibold text-white">
-            Official Orders
-          </Text>
-          <View className="flex-row items-center">
-            <View className="w-2 h-2 rounded-full bg-green-500 mr-2" />
-            <Text className="text-xs font-medium text-green-400">Cached</Text>
+      <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4 flex-row items-center justify-between">
+        <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
+          Official Orders
+        </Text>
+        <View className="flex-row items-center bg-green-500/20 px-2 py-1 rounded border border-green-500/30">
+          <View className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5" />
+          <Text className="text-[10px] font-bold uppercase tracking-wider text-green-300">Cached</Text>
+        </View>
+      </View>
+
+      <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-4 pb-5 border-t border-slate-200/50 dark:border-slate-700/50">
+        <View>
+          <Text className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">#{activeOrder.orderNumber}</Text>
+          <Text className="text-[13px] font-medium text-slate-500 dark:text-slate-400 mt-1">Effective Date: {effectiveDate}</Text>
+
+          <View className="mt-4 bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60">
+            <Text className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 mb-1">Gaining Command</Text>
+            <Text className="text-[14px] font-bold text-slate-800 dark:text-slate-200">
+              {gainingCommand}
+            </Text>
+
+            <View className="h-[1px] bg-slate-200 dark:bg-slate-700 my-2" />
+
+            <Text className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 mb-1">Detaching From</Text>
+            <Text className="text-[13px] font-semibold text-slate-600 dark:text-slate-400">
+              {detachingFrom}
+            </Text>
           </View>
         </View>
 
-        <View className="mt-4">
-          <Text className="text-xl font-bold text-white">#{activeOrder.orderNumber}</Text>
-          <Text className="mt-1 text-sm text-gray-300">Effective Date: {effectiveDate}</Text>
-          <Text className="mt-3 text-base font-semibold text-white">
-            Gaining Command: {gainingCommand}
-          </Text>
-          <Text className="mt-1 text-sm text-gray-400">
-            Detaching From: {detachingFrom}
-          </Text>
-        </View>
-
         {isStale ? (
-          <View className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/15 px-3 py-2">
-            <Text className="text-xs font-medium text-amber-300">
+          <View className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+            <Text className="text-xs font-semibold text-amber-700 dark:text-amber-400">
               Orders may be outdated (cached over 30 days ago).
             </Text>
           </View>
         ) : null}
 
         {isCorrupted ? (
-          <View className="mt-3 rounded-lg border border-red-500/40 bg-red-500/15 px-3 py-2">
-            <Text className="text-xs font-medium text-red-300">
+          <View className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2">
+            <Text className="text-xs font-semibold text-red-700 dark:text-red-400">
               Cached PDF appears corrupted. Re-download required.
             </Text>
           </View>
@@ -281,33 +296,31 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
           <ScalePressable
             onPress={handleViewPDF}
             disabled={isCorrupted}
-            className={`flex-1 h-12 rounded-xl border items-center justify-center ${
-              isCorrupted
-                ? 'border-slate-700 bg-slate-800/70'
-                : 'border-blue-600/50 bg-blue-600/20'
-            }`}
+            className={`flex-1 h-12 rounded-xl border items-center justify-center flex-row ${isCorrupted
+              ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
+              : 'border-blue-500/20 bg-blue-500/10'
+              }`}
             accessibilityRole="button"
             accessibilityLabel="View PDF"
           >
-            <FileDown size={16} color={isCorrupted ? '#64748b' : '#93c5fd'} />
-            <Text className={`mt-1 text-xs font-semibold ${isCorrupted ? 'text-slate-500' : 'text-blue-200'}`}>
-              View PDF
+            <FileDown size={14} color={isCorrupted ? (isDark ? '#64748b' : '#94a3b8') : (isDark ? '#60a5fa' : '#2563eb')} strokeWidth={2.5} />
+            <Text className={`ml-1.5 text-xs font-bold ${isCorrupted ? 'text-slate-400 dark:text-slate-500' : 'text-blue-700 dark:text-blue-400'}`}>
+              View
             </Text>
           </ScalePressable>
 
           <ScalePressable
             onPress={handleShare}
             disabled={isCorrupted}
-            className={`flex-1 h-12 rounded-xl border items-center justify-center ${
-              isCorrupted
-                ? 'border-slate-700 bg-slate-800/70'
-                : 'border-blue-600/50 bg-blue-600/20'
-            }`}
+            className={`flex-1 h-12 rounded-xl border items-center justify-center flex-row ${isCorrupted
+              ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
+              : 'border-blue-500/20 bg-blue-500/10'
+              }`}
             accessibilityRole="button"
             accessibilityLabel="Share orders"
           >
-            <Share2 size={16} color={isCorrupted ? '#64748b' : '#93c5fd'} />
-            <Text className={`mt-1 text-xs font-semibold ${isCorrupted ? 'text-slate-500' : 'text-blue-200'}`}>
+            <Share2 size={14} color={isCorrupted ? (isDark ? '#64748b' : '#94a3b8') : (isDark ? '#60a5fa' : '#2563eb')} strokeWidth={2.5} />
+            <Text className={`ml-1.5 text-xs font-bold ${isCorrupted ? 'text-slate-400 dark:text-slate-500' : 'text-blue-700 dark:text-blue-400'}`}>
               Share
             </Text>
           </ScalePressable>
@@ -315,22 +328,23 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
           <ScalePressable
             onPress={handleRedownload}
             disabled={isRefreshing}
-            className={`flex-1 h-12 rounded-xl border items-center justify-center ${
-              isRefreshing
-                ? 'border-slate-700 bg-slate-800/70'
-                : 'border-blue-600/50 bg-blue-600/20'
-            }`}
+            className={`flex-1 h-12 rounded-xl border items-center justify-center flex-row ${isRefreshing
+              ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
+              : 'border-blue-500/20 bg-blue-500/10'
+              }`}
             accessibilityRole="button"
             accessibilityLabel="Re-download orders"
           >
-            <RefreshCw size={16} color={isRefreshing ? '#64748b' : '#93c5fd'} />
-            <Text className={`mt-1 text-xs font-semibold ${isRefreshing ? 'text-slate-500' : 'text-blue-200'}`}>
-              Re-download
+            <RefreshCw size={14} color={isRefreshing ? (isDark ? '#64748b' : '#94a3b8') : (isDark ? '#60a5fa' : '#2563eb')} strokeWidth={2.5} />
+            <Text className={`ml-1.5 text-xs font-bold ${isRefreshing ? 'text-slate-400 dark:text-slate-500' : 'text-blue-700 dark:text-blue-400'}`}>
+              Refresh
             </Text>
           </ScalePressable>
         </View>
 
-        <Text className="mt-4 text-xs text-gray-500">Last cached: {ageLabel(cachedAgeDays)}</Text>
+        <View className="items-center mt-5">
+          <Text className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">Last cached {ageLabel(cachedAgeDays)}</Text>
+        </View>
       </View>
     </GlassView>
   );

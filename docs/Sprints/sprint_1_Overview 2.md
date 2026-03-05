@@ -24,7 +24,6 @@ As the Senior Product Owner, I have analyzed the requested features and organize
   - Repurpose the former "Menu" tab to be the "Me" tab (My Profile entry point).
   - Integrate a functional Spotlight Search within the expandable bar.
 - **Replace Spotlight Search Bar**: Swap the static, universal search bar on the landing page for functional chips (Hub, Admin, Leave, Assignment, PCS) to guide user context switching explicitly.
-- **Bento Layout Implementation**: Formalize the design patterns for rendering "Home Hub" widgets into a clean, scannable Bento layout. Make widgets permanent + temporal access points where the landing pages become the widget.
 
 ## Phase 2: Core Workflows & The "Everyday App" (Sprint 3-4)
 *Goal: Build out the most frequent user interactions to make the app relevant outside of the MNA/PCS cycles, establishing daily or weekly utility.*

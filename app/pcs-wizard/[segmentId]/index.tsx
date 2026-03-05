@@ -139,7 +139,7 @@ export default function PCSWizardScreen() {
     setShowSuccess(true);
     setTimeout(() => {
       router.dismissAll();
-      router.push('/(tabs)/(pcs)/pcs');
+      router.push('/(tabs)/(pcs)' as any);
     }, 2500);
   };
 
@@ -283,8 +283,8 @@ export default function PCSWizardScreen() {
                   <View className="items-center flex-1">
                     <Text className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Balance</Text>
                     <Text className={`text-sm font-bold ${leaveBalance - currentDraft.entitlements.leaveDays < 0
-                        ? 'text-red-500'
-                        : 'text-slate-900 dark:text-white'
+                      ? 'text-red-500'
+                      : 'text-slate-900 dark:text-white'
                       }`}>
                       {leaveBalance - currentDraft.entitlements.leaveDays}d
                     </Text>

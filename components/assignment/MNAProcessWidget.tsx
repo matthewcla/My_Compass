@@ -1,3 +1,4 @@
+import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import {
     ChevronDown,
@@ -48,7 +49,7 @@ export default function MNAProcessWidget() {
     };
 
     return (
-        <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+        <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl p-5 shadow-sm border border-black/5 dark:border-white/10">
             {/* Header — always visible */}
             <TouchableOpacity
                 onPress={toggle}
@@ -149,7 +150,7 @@ export default function MNAProcessWidget() {
                     ))}
 
                     {/* Reassurance footer */}
-                    <View className="bg-amber-50 dark:bg-amber-900/10 p-3 rounded-xl border border-amber-100 dark:border-amber-800/30 mt-4">
+                    <View className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 mt-4">
                         <Text className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                             💡 You have 3 cycles over 6 months to be matched. If you're not selected in
                             one cycle, your slate automatically carries forward to the next.
@@ -157,6 +158,6 @@ export default function MNAProcessWidget() {
                     </View>
                 </View>
             )}
-        </View>
+        </GlassView>
     );
 }

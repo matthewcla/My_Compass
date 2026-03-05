@@ -1,7 +1,5 @@
 import { useColorScheme } from '@/components/useColorScheme';
-import { useSpotlightAnimations } from '@/hooks/useSpotlightAnimations';
 import { useSession } from '@/lib/ctx';
-import { useBottomSheetStore } from '@/store/useBottomSheetStore';
 import { useCareerStore } from '@/store/useCareerStore';
 import { useHeaderStore } from '@/store/useHeaderStore';
 import { useInboxStore } from '@/store/useInboxStore';
@@ -25,22 +23,17 @@ import {
 } from 'lucide-react-native';
 import React from 'react';
 import {
-    BackHandler,
     Keyboard,
     Platform,
     Pressable,
     ScrollView,
     Text,
     View,
-    useWindowDimensions
 } from 'react-native';
-import { GestureDetector } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 
 const SECTION_ORDER: SpotlightSection[] = ['Actions', 'Navigation', 'Settings', 'Calendar', 'Inbox'];
 const MAX_RESULTS = 30;
-const COMPACT_BREAKPOINT = 900;
 
 const SCOPE_OPTIONS: Array<{ value: SpotlightScope; label: string }> = [
     { value: 'all', label: 'All' },
@@ -254,13 +247,20 @@ const HighlightedLabel = ({
     );
 };
 
-export function SpotlightOverlay() {
-    const TARGET_SCOPE_HEIGHT = 56;
+import { useBottomSheetStore } from '@/store/useBottomSheetStore';
+
+interface SpotlightResultsProps {
+    onClose?: () => void;
+}
+
+export function SpotlightResults({ onClose }: SpotlightResultsProps) {
+    const keyboard = useAnimatedKeyboard();
+    const keyboardSpacerStyle = useAnimatedStyle(() => ({
+        height: Math.max(24, keyboard.height.value + 24),
+    }));
 
     const { session } = useSession();
     const router = useRouter();
-    const insets = useSafeAreaInsets();
-    const { width, height } = useWindowDimensions();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
@@ -270,13 +270,11 @@ export function SpotlightOverlay() {
     const activeIndex = useSpotlightStore((state) => state.activeIndex);
     const recentItemIds = useSpotlightStore((state) => state.recentItemIds);
     const close = useSpotlightStore((state) => state.close);
-    const setQuery = useSpotlightStore((state) => state.setQuery);
     const setScope = useSpotlightStore((state) => state.setScope);
     const setActiveIndex = useSpotlightStore((state) => state.setActiveIndex);
     const registerRecent = useSpotlightStore((state) => state.registerRecent);
     const setSheetState = useBottomSheetStore((state) => state.setSheetState);
     const blurGlobalSearchInput = useHeaderStore((state) => state.blurGlobalSearchInput);
-    const globalSearchFrame = useHeaderStore((state) => state.globalSearchFrame);
     const registerGlobalSearchSubmit = useHeaderStore((state) => state.registerGlobalSearchSubmit);
     const registerGlobalSearchDismiss = useHeaderStore((state) => state.registerGlobalSearchDismiss);
 
@@ -288,40 +286,6 @@ export function SpotlightOverlay() {
     const updateUser = useUserStore((state) => state.updateUser);
 
     const rankedItemsRef = React.useRef<RankedSpotlightItem[]>([]);
-    const [keyboardHeight, setKeyboardHeight] = React.useState(0);
-
-    // Track keyboard height so the panel stops at the keyboard edge
-    React.useEffect(() => {
-        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-        const onShow = Keyboard.addListener(showEvent, (e) => setKeyboardHeight(e.endCoordinates.height));
-        const onHide = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
-
-        return () => { onShow.remove(); onHide.remove(); };
-    }, []);
-
-    // ── Gesture-close handler (stable ref, called when pan gesture snaps to 0) ──
-    const handleGestureClose = React.useCallback(() => {
-        blurGlobalSearchInput();
-        Keyboard.dismiss();
-        close();
-    }, [blurGlobalSearchInput, close]);
-
-    // ── Spring Animation Engine (UI-thread, interruptible) ──────────
-    const {
-        panelProgress,
-        animatedBackdropStyle,
-        animatedClipStyle,
-        animatedPanelStyle,
-        animatedContentStyle,
-        setExpandedHeight,
-        panGesture,
-        openPanel,
-        closePanel,
-    } = useSpotlightAnimations(handleGestureClose);
-
-    const isCompactViewport = width < COMPACT_BREAKPOINT;
 
     const navigationItems = React.useMemo<SpotlightItem[]>(
         () => [
@@ -530,7 +494,6 @@ export function SpotlightOverlay() {
         return result;
     }, [groupedSections]);
 
-    // ── Haptic helper for filter/selection feedback ──────────────────
     const fireSelectionHaptic = React.useCallback(() => {
         if (Platform.OS === 'web') return;
         Haptics.selectionAsync().catch(() => undefined);
@@ -539,27 +502,19 @@ export function SpotlightOverlay() {
     const dismissSpotlight = React.useCallback(() => {
         blurGlobalSearchInput();
         Keyboard.dismiss();
-
-        if (!isOpen) {
-            close();
-            return;
-        }
-
-        closePanel(() => {
-            close();
-        });
-    }, [blurGlobalSearchInput, close, closePanel, isOpen]);
+        close();
+        onClose?.();
+    }, [blurGlobalSearchInput, close, onClose]);
 
     const executeItem = React.useCallback(
         (item: RankedSpotlightItem) => {
             fireSelectionHaptic();
             registerRecent(item.id);
-            closePanel(() => {
-                close();
-                Promise.resolve(item.run()).catch(() => undefined);
-            });
+            close();
+            onClose?.();
+            Promise.resolve(item.run()).catch(() => undefined);
         },
-        [close, closePanel, fireSelectionHaptic, registerRecent]
+        [close, fireSelectionHaptic, registerRecent, onClose]
     );
 
     // Fetch data when spotlight opens
@@ -568,13 +523,6 @@ export function SpotlightOverlay() {
         fetchMessages().catch(() => undefined);
         fetchEvents().catch(() => undefined);
     }, [fetchEvents, fetchMessages, isOpen, session]);
-
-    // Open / close spring animation
-    React.useEffect(() => {
-        if (isOpen) {
-            openPanel();
-        }
-    }, [isOpen, openPanel]);
 
     // Register submit handler
     React.useEffect(() => {
@@ -601,25 +549,6 @@ export function SpotlightOverlay() {
         return () => registerGlobalSearchDismiss(null);
     }, [isOpen, dismissSpotlight, registerGlobalSearchDismiss]);
 
-    // Android back button
-    React.useEffect(() => {
-        if (Platform.OS !== 'android' || !isOpen) return;
-
-        const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-            dismissSpotlight();
-            return true;
-        });
-
-        return () => sub.remove();
-    }, [dismissSpotlight, isOpen]);
-
-    // Cleanup when closed
-    React.useEffect(() => {
-        if (isOpen) return;
-        blurGlobalSearchInput();
-        Keyboard.dismiss();
-    }, [blurGlobalSearchInput, isOpen]);
-
     // Active index bounds check
     React.useEffect(() => {
         if (!isOpen) return;
@@ -634,98 +563,14 @@ export function SpotlightOverlay() {
         }
     }, [activeIndex, isOpen, rankedItems.length, setActiveIndex]);
 
-    // Web keyboard shortcuts
-    React.useEffect(() => {
-        if (Platform.OS !== 'web') return;
-
-        const onKeyDown = (event: KeyboardEvent) => {
-            const pressedSearchShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
-
-            if (pressedSearchShortcut) {
-                event.preventDefault();
-                if (!session) return;
-                if (!globalSearchFrame) return; // No search bar visible
-                const spotlight = useSpotlightStore.getState();
-                if (spotlight.isOpen) {
-                    dismissSpotlight();
-                } else {
-                    spotlight.open();
-                }
-                return;
-            }
-
-            const spotlight = useSpotlightStore.getState();
-            if (!spotlight.isOpen) return;
-
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                dismissSpotlight();
-                return;
-            }
-
-            const currentItems = rankedItemsRef.current;
-            if (currentItems.length === 0) return;
-
-            if (event.key === 'ArrowDown') {
-                event.preventDefault();
-                spotlight.setActiveIndex(Math.min(spotlight.activeIndex + 1, currentItems.length - 1));
-                return;
-            }
-
-            if (event.key === 'ArrowUp') {
-                event.preventDefault();
-                spotlight.setActiveIndex(Math.max(spotlight.activeIndex - 1, 0));
-                return;
-            }
-
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                const selected = currentItems[spotlight.activeIndex] || currentItems[0];
-                if (selected) {
-                    void executeItem(selected);
-                }
-            }
-        };
-
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [dismissSpotlight, executeItem, globalSearchFrame, session]);
-
-    // Layout calculations (must be above early return so hook count is stable)
-    const dropdownTop = globalSearchFrame ? globalSearchFrame.bottom : insets.top + 100;
-    const dropdownLeft = globalSearchFrame ? globalSearchFrame.x : Math.max((width - (isCompactViewport ? width * 0.94 : Math.min(width - 24, 600))) / 2, 12);
-    const dropdownWidth = globalSearchFrame ? globalSearchFrame.width : (isCompactViewport ? width * 0.94 : Math.min(width - 24, 600));
-    const kbOffset = keyboardHeight > 0 ? keyboardHeight : insets.bottom;
-    const bodyMaxHeight = Math.max(0, Math.min(height * 0.6, height - dropdownTop - kbOffset - 16));
-    const maxPanelHeight = TARGET_SCOPE_HEIGHT + bodyMaxHeight;
-
-    // Estimate actual content height so the panel shrinks to fit short lists
-    const SECTION_HEADER_HEIGHT = 40;
-    const ITEM_ROW_HEIGHT = 58;
-    const EMPTY_STATE_HEIGHT = 120;
-    const PADDING_BOTTOM = 16;
-    const estimatedContentHeight = TARGET_SCOPE_HEIGHT + (
-        rows.length === 0
-            ? EMPTY_STATE_HEIGHT
-            : rows.reduce((sum, row) => sum + (row.type === 'section' ? SECTION_HEADER_HEIGHT : ITEM_ROW_HEIGHT), 0) + PADDING_BOTTOM
-    );
-    const expandedBodyHeight = Math.min(estimatedContentHeight, maxPanelHeight);
-
-    // useLayoutEffect (not useEffect) so the shared value is set synchronously
-    // before the first animation frame — prevents height: progress * 0 on open
-    React.useLayoutEffect(() => {
-        setExpandedHeight(expandedBodyHeight);
-    }, [expandedBodyHeight, setExpandedHeight]);
-
     if (!session || !isOpen) return null;
 
     const runQuickRoute = (route: string) => {
         blurGlobalSearchInput();
         Keyboard.dismiss();
-        closePanel(() => {
-            close();
-            router.push(route as any);
-        });
+        close();
+        onClose?.();
+        router.push(route as any);
     };
 
     const renderEmptyState = (
@@ -779,15 +624,14 @@ export function SpotlightOverlay() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingBottom: 24 }}
+            style={{ flex: 1, width: '100%' }}
         >
             {rows.length === 0
                 ? renderEmptyState
                 : rows.map((row) => {
                     if (row.type === 'section') {
                         return (
-                            <View key={row.id} className="px-4 pt-4 pb-2 flex-row items-center gap-2">
+                            <View key={row.id} className="px-5 pt-4 pb-2 flex-row items-center gap-2">
                                 <SectionGlyph
                                     section={row.section}
                                     activeColor={isDark ? '#94a3b8' : '#64748b'}
@@ -808,21 +652,21 @@ export function SpotlightOverlay() {
                             }}
                             onPressIn={() => setActiveIndex(row.itemIndex)}
                             onHoverIn={() => setActiveIndex(row.itemIndex)}
-                            className={`mx-3 mb-1 rounded-2xl border ${isActive
-                                ? 'bg-blue-50 dark:bg-blue-900/25 border-blue-200 dark:border-blue-700'
-                                : 'bg-transparent border-transparent'
+                            className={`mx-4 mb-2 rounded-2xl border ${isActive
+                                ? 'bg-blue-50/10 dark:bg-blue-900/40 border-blue-200/30 dark:border-blue-700/50'
+                                : 'bg-black/5 dark:bg-white/5 border-transparent'
                                 }`}
                         >
-                            <View className="px-3 py-3 flex-row items-center">
+                            <View className="px-4 py-3 flex-row items-center">
                                 <View className="flex-1 mr-3">
                                     <HighlightedLabel
                                         text={row.item.title}
                                         query={query}
                                         className={`text-sm font-semibold ${isActive
-                                            ? 'text-blue-900 dark:text-blue-100'
+                                            ? 'text-blue-900 dark:text-blue-200'
                                             : 'text-slate-900 dark:text-white'
                                             }`}
-                                        highlightClassName={isActive ? 'font-black' : 'font-bold text-blue-600'}
+                                        highlightClassName={isActive ? 'font-black text-blue-800 dark:text-blue-300' : 'font-bold text-blue-600 dark:text-blue-400'}
                                     />
 
                                     {row.item.subtitle ? (
@@ -830,23 +674,24 @@ export function SpotlightOverlay() {
                                             text={row.item.subtitle}
                                             query={query}
                                             className={`text-xs mt-1 ${isActive
-                                                ? 'text-blue-700 dark:text-blue-200'
+                                                ? 'text-blue-700 dark:text-blue-300'
                                                 : 'text-slate-500 dark:text-slate-400'
                                                 }`}
-                                            highlightClassName={isActive ? 'font-semibold' : 'font-semibold text-slate-700 dark:text-slate-200'}
+                                            highlightClassName={isActive ? 'font-semibold' : 'font-semibold text-slate-700 dark:text-slate-300'}
                                         />
                                     ) : null}
                                 </View>
 
                                 <ChevronRight
                                     size={16}
-                                    color={isActive ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#475569' : '#94a3b8')}
+                                    color={isActive ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#64748b' : '#94a3b8')}
                                     strokeWidth={2.5}
                                 />
                             </View>
                         </Pressable>
                     );
                 })}
+            <Animated.View style={keyboardSpacerStyle} />
         </ScrollView>
     );
 
@@ -855,8 +700,8 @@ export function SpotlightOverlay() {
             horizontal
             showsHorizontalScrollIndicator={false}
             keyboardShouldPersistTaps="always"
-            contentContainerStyle={{ gap: 8 }}
-            style={{ flexGrow: 0 }}
+            contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}
+            style={{ flexGrow: 0, paddingVertical: 12 }}
         >
             {SCOPE_OPTIONS.map((option) => {
                 const isSelected = scope === option.value;
@@ -869,11 +714,11 @@ export function SpotlightOverlay() {
                         }}
                         className={`px-3 py-1.5 rounded-full border ${isSelected
                             ? 'bg-blue-600 border-blue-600'
-                            : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700'
+                            : 'bg-black/5 dark:bg-white/10 border-slate-200/20 dark:border-slate-700/20'
                             }`}
                     >
                         <Text
-                            className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-slate-600 dark:text-slate-300'
+                            className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-300'
                                 }`}
                         >
                             {option.label}
@@ -884,107 +729,10 @@ export function SpotlightOverlay() {
         </ScrollView>
     );
 
-    const renderScopeRow = (
-        <View className="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex-row items-center gap-3">
-            {renderFilterChips}
-        </View>
-    );
-
     return (
-        <View
-            pointerEvents="box-none"
-            style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0,
-                zIndex: 10000,
-            }}
-        >
-            {/* Backdrop — dims below search bar */}
-            <Animated.View
-                style={[
-                    {
-                        position: 'absolute',
-                        top: dropdownTop,
-                        right: 0,
-                        bottom: 0,
-                        left: 0,
-                        backgroundColor: isDark ? 'rgba(2, 6, 23, 0.58)' : 'rgba(15, 23, 42, 0.35)',
-                    },
-                    animatedBackdropStyle,
-                ]}
-            >
-                <Pressable
-                    onPress={() => {
-                        dismissSpotlight();
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Dismiss search"
-                    style={{ flex: 1 }}
-                />
-            </Animated.View>
-
-            {/* Seam cover: prevents morph flicker while panel height animates from 0 */}
-            <View
-                style={{
-                    position: 'absolute',
-                    top: dropdownTop,
-                    left: dropdownLeft,
-                    width: dropdownWidth,
-                    height: 4,
-                    backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                    borderLeftWidth: 1,
-                    borderRightWidth: 1,
-                    borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                }}
-            />
-
-            {/* Results dropdown — positioned below search bar */}
-            {/* Clip container: animated height + overflow hidden.
-                    The inner panel uses translateY (GPU-composited) to slide into view. */}
-            <Animated.View
-                style={[
-                    {
-                        position: 'absolute',
-                        top: dropdownTop,
-                        left: dropdownLeft,
-                        width: dropdownWidth,
-                        overflow: 'hidden',
-                        borderBottomLeftRadius: 24,
-                        borderBottomRightRadius: 24,
-                    },
-                    animatedClipStyle,
-                ]}
-            >
-                <GestureDetector gesture={panGesture}>
-                    <Animated.View
-                        style={[
-                            {
-                                width: dropdownWidth,
-                                height: expandedBodyHeight,
-                                borderBottomLeftRadius: 24,
-                                borderBottomRightRadius: 24,
-                                borderWidth: 1,
-                                borderTopWidth: 0,
-                                borderColor: isDark ? '#1e293b' : '#e2e8f0',
-                                backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                                boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-                                elevation: 10,
-                            },
-                            animatedPanelStyle,
-                        ]}
-                    >
-                        <Animated.View style={[{ flex: 1 }, animatedContentStyle]}>
-                            {renderScopeRow}
-                            <View style={{ flex: 1 }}>
-                                {renderResultRows}
-                            </View>
-                        </Animated.View>
-                    </Animated.View>
-                </GestureDetector>
-            </Animated.View>
+        <View className="flex-1 w-full" style={{ paddingBottom: 16 }}>
+            {renderFilterChips}
+            {renderResultRows}
         </View>
     );
 }

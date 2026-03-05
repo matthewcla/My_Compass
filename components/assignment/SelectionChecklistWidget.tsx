@@ -1,3 +1,4 @@
+import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useUserStore } from '@/store/useUserStore';
@@ -209,7 +210,7 @@ export default function SelectionChecklistWidget() {
 
     return (
         <>
-            <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
+            <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl p-5 shadow-sm border border-black/5 dark:border-white/10 mb-6">
                 {/* Header */}
                 <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center gap-3">
@@ -246,7 +247,7 @@ export default function SelectionChecklistWidget() {
                             onPress={() => handleItemPress(item.key)}
                             disabled={item.done && item.key !== 'sponsorContacted'} // allow sponsor toggle-off, but verified data is locked until edit
                             activeOpacity={0.6}
-                            className={`flex-row items-center py-2.5 px-3 rounded-xl ${!item.done ? 'bg-slate-50 dark:bg-slate-800/50' : ''
+                            className={`flex-row items-center py-2.5 px-3 rounded-xl ${!item.done ? 'bg-black/5 dark:bg-white/10' : ''
                                 }`}
                         >
                             {/* Check icon */}
@@ -284,13 +285,13 @@ export default function SelectionChecklistWidget() {
 
                 {/* All-done celebration */}
                 {allDone && (
-                    <View className="bg-green-50 dark:bg-green-900/10 p-3 rounded-xl border border-green-100 dark:border-green-800/30 mt-3">
+                    <View className="bg-green-500/10 p-3 rounded-xl border border-green-500/20 mt-3">
                         <Text className="text-xs text-green-700 dark:text-green-400 leading-relaxed text-center font-semibold">
                             ✅  You're all set! Everything is verified for your upcoming orders.
                         </Text>
                     </View>
                 )}
-            </View>
+            </GlassView>
 
             <VerificationModal
                 visible={modalVisible}

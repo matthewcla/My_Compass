@@ -96,21 +96,25 @@ export function TravelClaimHUDWidget() {
 
   return (
     <GlassView
-      intensity={75}
+      intensity={80}
       tint={isDark ? 'dark' : 'light'}
-      className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10"
+      className="rounded-2xl overflow-hidden mx-4 mb-8"
+      style={{
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+      }}
     >
       {/* Header */}
-      <View className="bg-amber-50/30 dark:bg-amber-900/20 px-4 py-3.5">
+      <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4">
         <View className="flex-row items-center">
-          <View className="w-12 h-12 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 items-center justify-center mr-3">
+          <View className="w-12 h-12 rounded-xl bg-white/10 dark:bg-slate-800/60 border border-slate-200/20 items-center justify-center mr-3">
             <DollarSign size={22} color={isDark ? '#fcd34d' : '#d97706'} strokeWidth={2.2} />
           </View>
           <View className="flex-1">
-            <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-500 dark:text-slate-300">
+            <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
               Travel Claim
             </Text>
-            <Text className="mt-0.5 text-base font-bold text-slate-900 dark:text-white">
+            <Text className="mt-0.5 text-base font-bold text-slate-800 dark:text-white">
               File Within 5 Days
             </Text>
           </View>
@@ -118,9 +122,9 @@ export function TravelClaimHUDWidget() {
       </View>
 
       {/* Content */}
-      <View className="p-5">
+      <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-4 pb-4 border-t border-slate-200/50 dark:border-slate-700/50">
         {/* Urgency Banner */}
-        <View className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 mb-4 border border-amber-200 dark:border-amber-800/40">
+        <View className="bg-amber-500/10 rounded-lg p-3 mb-4 border border-amber-500/20">
           <View className="flex-row items-start">
             <AlertCircle size={16} color={isDark ? '#fcd34d' : '#d97706'} strokeWidth={2.2} />
             <Text className="ml-2 flex-1 text-xs leading-5 text-amber-700 dark:text-amber-300">
@@ -136,7 +140,7 @@ export function TravelClaimHUDWidget() {
             activeOpacity={0.7}
             onPress={handleCapture}
             disabled={isCapturing}
-            className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700"
+            className="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 border border-slate-200 dark:border-slate-700/60"
           >
             <View className="flex-row items-center justify-between mb-1">
               <View className="flex-row items-center">
@@ -147,7 +151,7 @@ export function TravelClaimHUDWidget() {
               </View>
               <Camera size={14} color={isDark ? '#fbbf24' : '#d97706'} strokeWidth={2.2} />
             </View>
-            <View className="flex-row items-baseline">
+            <View className="flex-row items-baseline mt-1">
               <Text className="text-2xl font-bold text-slate-900 dark:text-white">
                 {capturedReceiptCount}
               </Text>
@@ -159,14 +163,14 @@ export function TravelClaimHUDWidget() {
             </View>
           </TouchableOpacity>
 
-          <View className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+          <View className="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-lg p-3 border border-slate-200 dark:border-slate-700/60">
             <View className="flex-row items-center mb-1">
               <DollarSign size={14} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
               <Text className="ml-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Estimated
               </Text>
             </View>
-            <Text className="text-2xl font-bold text-slate-900 dark:text-white">
+            <Text className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
               ${estimatedPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </Text>
           </View>
@@ -179,7 +183,7 @@ export function TravelClaimHUDWidget() {
           accessibilityRole="button"
           accessibilityLabel={hasDraft ? 'Continue Settlement' : 'Settle Travel Claim'}
         >
-          <Text className="text-base font-bold text-white">
+          <Text className="text-base font-bold text-white pl-1">
             {hasDraft ? 'Continue Settlement' : 'Settle Travel Claim'}
           </Text>
           <ChevronRight size={20} color="#ffffff" strokeWidth={2.5} />

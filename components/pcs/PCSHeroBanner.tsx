@@ -84,15 +84,19 @@ export function PCSHeroBanner() {
     return (
         <Animated.View entering={FadeIn.duration(400).delay(100)}>
             <GlassView
-                intensity={80}
+                intensity={isDark ? 80 : 60}
                 tint={isDark ? 'dark' : 'light'}
-                className="mx-4 mb-8 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
+                className="mx-4 mb-8 rounded-2xl overflow-hidden"
+                style={{
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                }}
             >
                 {/* ── Top section: Destination + Countdown ── */}
-                <View className="bg-[#0A1628] p-5 pb-4">
+                <View className="bg-slate-900/70 p-5 pb-4">
                     <View className="flex-row items-center mb-2">
                         <MapPin size={16} color="#C9A227" />
-                        <Text className="text-xs font-semibold uppercase tracking-widest text-slate-400 ml-2">
+                        <Text className="text-xs font-semibold uppercase tracking-widest text-slate-300 ml-2">
                             {homePort || 'Command Location'}
                         </Text>
                     </View>
@@ -101,17 +105,18 @@ export function PCSHeroBanner() {
                         {activeOrder.gainingCommand.name}
                     </Text>
 
-
-
-                    <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center justify-between mt-2">
                         <Text className="text-sm text-slate-400 font-medium">
                             Report NLT {reportFormatted}
                         </Text>
                         <View
-                            className="px-3 py-1 rounded-full"
-                            style={{ backgroundColor: `${urgencyColor}20` }}
+                            className="px-3 py-1 rounded-full border"
+                            style={{
+                                backgroundColor: `${urgencyColor}15`,
+                                borderColor: `${urgencyColor}30`
+                            }}
                         >
-                            <Text style={{ color: urgencyColor }} className="text-sm font-bold">
+                            <Text style={{ color: urgencyColor }} className="text-xs font-bold uppercase tracking-wider">
                                 {daysRemaining} days
                             </Text>
                         </View>
@@ -119,59 +124,59 @@ export function PCSHeroBanner() {
                 </View>
 
                 {/* ── Sponsor Section ── */}
-                <View className="px-5 pt-3 pb-2 border-b border-slate-200/30 dark:border-slate-700/30">
+                <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-3 pb-3 border-t border-slate-200/50 dark:border-slate-700/50">
                     <View className="flex-row items-center">
-                        <View className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center mr-2.5">
-                            <User size={14} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
+                        <View className="w-9 h-9 rounded-full bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 items-center justify-center mr-3">
+                            <User size={15} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                         </View>
 
-                        {sponsor ? (
-                            <View className="flex-1">
-                                <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
-                                    {sponsorDisplayName}
-                                </Text>
-                                <Text className="text-xs text-slate-500 dark:text-slate-400">
-                                    Command Sponsor
-                                </Text>
-                            </View>
-                        ) : (
-                            <View className="flex-1">
+                        <View className="flex-1 justify-center">
+                            {sponsor ? (
+                                <>
+                                    <Text className="text-sm font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                                        {sponsorDisplayName}
+                                    </Text>
+                                    <Text className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+                                        Command Sponsor
+                                    </Text>
+                                </>
+                            ) : (
                                 <Text className="text-sm font-medium text-slate-500 dark:text-slate-400">
                                     No sponsor assigned yet
                                 </Text>
-                            </View>
-                        )}
+                            )}
+                        </View>
 
                         {hasContactActions && (
-                            <View className="flex-row gap-1.5">
+                            <View className="flex-row gap-2">
                                 {callUrl ? (
                                     <ScalePressable
                                         onPress={() => handleContactAction(callUrl)}
-                                        className="w-9 h-9 rounded-full bg-green-50 dark:bg-green-900/20 items-center justify-center"
+                                        className="w-9 h-9 rounded-full bg-green-500/10 items-center justify-center border border-green-500/20"
                                         accessibilityRole="button"
                                         accessibilityLabel="Call Sponsor"
                                     >
-                                        <Phone size={15} color={isDark ? '#86efac' : '#15803d'} strokeWidth={2.2} />
+                                        <Phone size={14} color={isDark ? '#86efac' : '#15803d'} strokeWidth={2.2} />
                                     </ScalePressable>
                                 ) : null}
                                 {textUrl ? (
                                     <ScalePressable
                                         onPress={() => handleContactAction(textUrl)}
-                                        className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/20 items-center justify-center"
+                                        className="w-9 h-9 rounded-full bg-blue-500/10 items-center justify-center border border-blue-500/20"
                                         accessibilityRole="button"
                                         accessibilityLabel="Text Sponsor"
                                     >
-                                        <MessageSquare size={15} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
+                                        <MessageSquare size={14} color={isDark ? '#93c5fd' : '#1d4ed8'} strokeWidth={2.2} />
                                     </ScalePressable>
                                 ) : null}
                                 {emailUrl ? (
                                     <ScalePressable
                                         onPress={() => handleContactAction(emailUrl)}
-                                        className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center"
+                                        className="w-9 h-9 rounded-full bg-slate-500/10 items-center justify-center border border-slate-500/20"
                                         accessibilityRole="button"
                                         accessibilityLabel="Email Sponsor"
                                     >
-                                        <Mail size={15} color={isDark ? '#cbd5e1' : '#475569'} strokeWidth={2.2} />
+                                        <Mail size={14} color={isDark ? '#cbd5e1' : '#475569'} strokeWidth={2.2} />
                                     </ScalePressable>
                                 ) : null}
                             </View>

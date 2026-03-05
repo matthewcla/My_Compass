@@ -3,9 +3,6 @@ import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCar
 import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
-import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
-import { MenuTile } from '@/components/menu/MenuTile';
-import GlobalTabBar from '@/components/navigation/GlobalTabBar';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ScreenGradient } from '@/components/ScreenGradient';
@@ -15,32 +12,27 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { DemoPhase } from '@/constants/DemoData';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { useSession } from '@/lib/ctx';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
-import { LeaveRequest } from '@/types/schema';
-import { FlashList } from '@shopify/flash-list';
-import { useFocusEffect, useRouter } from 'expo-router';
-import {
-    Briefcase,
-    FileText,
-    Map as MapIcon,
-    User
-} from 'lucide-react-native';
-import React, { useCallback, useState } from 'react';
-import { Alert, Platform, Pressable, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeInUp, FadeOut } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getShadow } from '@/utils/getShadow';
+import { FlashList } from '@shopify/flash-list';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback } from 'react';
+import { Alert, Platform, Text, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
 
 const AnimatedFlashList = (Platform.OS === 'web'
     ? FlashList
     : Animated.createAnimatedComponent(FlashList)) as React.ComponentType<any>;
+
+type FilterTab = 'Hub' | 'My Career' | 'My Admin';
 
 export default function HubDashboard() {
     const router = useRouter();
@@ -50,8 +42,8 @@ export default function HubDashboard() {
     const fetchUserDefaults = useLeaveStore(state => state.fetchUserDefaults);
     const insets = useSafeAreaInsets();
     const { data, loading, error } = useDashboardData();
+    const [activeFilter, setActiveFilter] = React.useState<FilterTab>('Hub');
 
-    const [quickDraft, setQuickDraft] = useState<LeaveRequest | null>(null);
     const listRef = React.useRef<any>(null);
 
     const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
@@ -81,6 +73,9 @@ export default function HubDashboard() {
     const subPhase = useSubPhase();
     // QW4: Reactive liquidation state (must be above early returns per Rules of Hooks)
     const liquidationStatus = usePCSStore((s) => s.financials.liquidation?.currentStatus);
+    const shipments = usePCSStore(state => state.financials.hhg?.shipments ?? []);
+    const hasShipments = shipments.length > 0;
+    const dependentCount = user?.dependents ?? 0;
 
     // Hydrate defaults on mount
     React.useEffect(() => {
@@ -110,7 +105,6 @@ export default function HubDashboard() {
         }, [])
     );
 
-    const globalSearchConfig = useGlobalSpotlightHeaderSearch();
 
     // QW1: Wrapped in useCallback to prevent FlashList re-creating the callback on every render
     // QW2: Each widget section gets a FadeInUp stagger for polished entrance
@@ -120,58 +114,17 @@ export default function HubDashboard() {
         const delay = index * 60;
 
         switch (item) {
-            case 'menu':
+            case 'missionStatus':
+                // Surpress the MNA StatusCard if the sailor is locked into active PCS execution
+                if (pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') return null;
+
                 return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()} className="mb-2">
-                        {/* Row 1 */}
-                        <View className="flex-row justify-between mb-4">
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Assignment"
-                                    icon={Briefcase}
-                                    subtitle={
-                                        assignmentPhase === 'SELECTION'
-                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? 'Action Required' : "You're Selected!")
-                                            : assignmentPhase === 'NEGOTIATION' ? 'Cycle Open'
-                                                : assignmentPhase === 'ON_RAMP' ? 'Opening Soon'
-                                                    : undefined
-                                    }
-                                    accent={
-                                        assignmentPhase === 'SELECTION'
-                                            ? (obliserv.required && obliserv.status !== 'COMPLETE' ? '#DC2626' : '#D97706')
-                                            : assignmentPhase === 'NEGOTIATION' ? '#EA580C'
-                                                : assignmentPhase === 'ON_RAMP' ? '#D97706'
-                                                    : undefined
-                                    }
-                                    onPress={() => handleTilePress('/(assignment)')}
-                                />
-                            </View>
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My PCS"
-                                    icon={MapIcon}
-                                    subtitle={isPCSPhase ? "Action Required" : undefined}
-                                    onPress={() => handleTilePress(isPCSPhase ? '/(tabs)/(pcs)/pcs' : '/(pcs)')}
-                                    accent={isPCSPhase ? '#D97706' : undefined}
-                                />
-                            </View>
-                        </View>
-                        {/* Row 2 */}
-                        <View className="flex-row justify-between">
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Leave & Admin"
-                                    icon={FileText}
-                                    onPress={() => handleTilePress('/(admin)')}
-                                />
-                            </View>
-                            <View style={{ width: '47%', aspectRatio: 1 }}>
-                                <MenuTile
-                                    label="My Profile"
-                                    icon={User}
-                                    onPress={() => handleTilePress('/(profile)')}
-                                />
-                            </View>
+                    <Animated.View entering={FadeInUp.duration(350).springify()}>
+                        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1 pb-6 pt-2">
+                            <StatusCard
+                                nextCycle={data?.cycle?.cycleId ?? '24-02'}
+                                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
+                            />
                         </View>
                     </Animated.View>
                 );
@@ -204,26 +157,152 @@ export default function HubDashboard() {
             case 'tierRightNow':
             case 'tierThisWeek':
             case 'tierTracking': {
-                const tierLabel = item === 'tierRightNow' ? '⚓  Right Now'
-                    : item === 'tierThisWeek' ? '📋  This Week'
-                        : '📡  Tracking';
+                const tierLabel = item === 'tierRightNow' ? 'Right Now'
+                    : item === 'tierThisWeek' ? 'This Week'
+                        : 'Tracking';
                 return (
-                    <View className="flex-row items-center mt-1 mb-0.5">
-                        <View className="bg-slate-800/60 dark:bg-slate-700/40 rounded-full px-3 py-1.5 border border-slate-600/30 dark:border-slate-500/20">
-                            <Text className="text-[10px] font-black tracking-[2px] uppercase text-slate-300 dark:text-slate-300">
-                                {tierLabel}
-                            </Text>
-                        </View>
-                        <View className="flex-1 h-px bg-slate-700/30 dark:bg-slate-600/20 ml-3" />
+                    <View className="flex-row items-center mt-3 mb-1 px-1">
+                        <Text className="text-[13px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
+                            {tierLabel}
+                        </Text>
+                        <View className="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4" />
                     </View>
                 );
             }
 
+            case 'digitalOrdersWallet': {
+                const { DigitalOrdersWallet } = require('@/components/pcs/widgets/DigitalOrdersWallet');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <DigitalOrdersWallet />
+                    </Animated.View>
+                );
+            }
+            case 'pcsFinancialSnapshot': {
+                const { PCSFinancialSnapshot } = require('@/components/pcs/widgets/PCSFinancialSnapshot');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <PCSFinancialSnapshot />
+                    </Animated.View>
+                );
+            }
+            case 'gainingCommandCard': {
+                const { GainingCommandCard } = require('@/components/pcs/widgets/GainingCommandCard');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <GainingCommandCard />
+                    </Animated.View>
+                );
+            }
+            case 'hhgWeightGauge': {
+                const { HHGWeightGaugeWidget } = require('@/components/pcs/widgets/HHGWeightGaugeWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <HHGWeightGaugeWidget />
+                    </Animated.View>
+                );
+            }
+            case 'leaveImpact': {
+                const { LeaveImpactWidget } = require('@/components/pcs/widgets/LeaveImpactWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <LeaveImpactWidget />
+                    </Animated.View>
+                );
+            }
+            case 'slateSummary': {
+                const SlateSummaryWidget = require('@/components/assignment/SlateSummaryWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <SlateSummaryWidget />
+                    </Animated.View>
+                );
+            }
+            case 'digitalSeaBag': {
+                const { DigitalSeaBagWidget } = require('@/components/pcs/widgets/DigitalSeaBagWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <DigitalSeaBagWidget />
+                    </Animated.View>
+                );
+            }
+            case 'adminFeed': {
+                const AdminFeedWidget = require('@/components/admin/AdminFeedWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <AdminFeedWidget />
+                    </Animated.View>
+                );
+            }
+            case 'mnaProcess': {
+                const MNAProcessWidget = require('@/components/assignment/MNAProcessWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <MNAProcessWidget />
+                    </Animated.View>
+                );
+            }
+            case 'careerReadiness': {
+                const ReadinessWidget = require('@/components/assignment/ReadinessWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <ReadinessWidget />
+                    </Animated.View>
+                );
+            }
+            case 'detailerContact': {
+                const DetailerContactWidget = require('@/components/assignment/DetailerContactWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <DetailerContactWidget />
+                    </Animated.View>
+                );
+            }
+            case 'selectionDetail': {
+                const SelectionDetailWidget = require('@/components/assignment/SelectionDetailWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <SelectionDetailWidget />
+                    </Animated.View>
+                );
+            }
+            case 'selectionChecklist': {
+                const SelectionChecklistWidget = require('@/components/assignment/SelectionChecklistWidget').default;
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <SelectionChecklistWidget />
+                    </Animated.View>
+                );
+            }
+            case 'pcsHeroBanner': {
+                const { PCSHeroBanner } = require('@/components/pcs/PCSHeroBanner');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <PCSHeroBanner />
+                    </Animated.View>
+                );
+            }
             case 'baseWelcomeKit': {
                 const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <BaseWelcomeKit />
+                    </Animated.View>
+                );
+            }
+            case 'arrivalBriefing': {
+                const { ArrivalBriefingWidget } = require('@/components/pcs/widgets/ArrivalBriefingWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <ArrivalBriefingWidget />
+                    </Animated.View>
+                );
+            }
+            case 'travelClaimHUD': {
+                const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <TravelClaimHUDWidget />
                     </Animated.View>
                 );
             }
@@ -240,6 +319,14 @@ export default function HubDashboard() {
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <LiquidationTrackerWidget />
+                    </Animated.View>
+                );
+            }
+            case 'pcsTaskTracker': {
+                const { PCSTaskTracker } = require('@/components/pcs/widgets/PCSTaskTracker');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <PCSTaskTracker />
                     </Animated.View>
                 );
             }
@@ -272,7 +359,7 @@ export default function HubDashboard() {
                                     router.push(`/leave/${req.id}` as any);
                                 }
                             }}
-                            onQuickRequest={handleQuickLeavePress}
+                            onQuickRequest={() => router.push('/leave/request' as any)}
                             onFullRequest={() => router.push('/leave/request' as any)}
                             onExpand={(expanded) => {
                                 if (expanded) {
@@ -290,31 +377,79 @@ export default function HubDashboard() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isDemoMode, selectedPhase, assignmentPhase, obliserv, pcsPhase, subPhase, data, leaveRequests, leaveBalance]);
 
-    // Navigation Handlers
-    const handleTilePress = (route: string) => {
-        router.push(route as any);
-    };
+    const sections = React.useMemo(() => {
+        const feed: string[] = [];
 
-    const handleLeavePress = () => {
-        router.push('/leave' as any);
-    };
+        // Priority 0: Core Status (Always Top unless actively traveling)
+        if (pcsPhase !== 'CHECK_IN' && subPhase !== 'ACTIVE_TRAVEL') {
+            feed.push('missionStatus');
+        }
 
-    const handleQuickLeavePress = () => {
-        if (!user) return;
-        const draft = generateQuickDraft('weekend', user.id);
-        setQuickDraft(draft);
-    };
+        // Priority 1: Critical Action Items (OBLISERV only applies during Selection before orders are released)
+        if (assignmentPhase === 'SELECTION') {
+            feed.push('obliserv');
+        }
 
-    const handleQuickLeaveSubmit = () => {
-        setQuickDraft(null);
-        Alert.alert("Success", "Leave request submitted successfully!");
-    };
+        // Priority 2: PCS Active Window Navigation
+        if (pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
+            feed.push('baseWelcomeKit');
+            feed.push('digitalOrdersWallet');
 
-    const handleQuickLeaveEdit = () => {
-        setQuickDraft(null);
-        // Ideally pass draft params to wizard, but for now just navigate to leave root
-        router.push('/leave' as any);
-    };
+            // Contextual HHG widget
+            if (dependentCount > 0 || hasShipments) {
+                feed.push('hhgWeightGauge');
+            }
+
+            const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
+            if (subPhase === 'ACTIVE_TRAVEL' || (pcsPhase === 'CHECK_IN' && !hasActiveLiquidation)) {
+                feed.push('travelClaimUrgency');
+            }
+
+            // Active PCS Tasks
+            if (pcsPhase !== 'CHECK_IN') {
+                feed.push('pcsTaskTracker');
+            }
+            if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
+                feed.push('liquidationTracker');
+            }
+        }
+
+        // Priority 3: Mission Brief (Active Orders)
+        else if (['ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
+            feed.push('missionBrief');
+            if (assignmentPhase === 'ORDERS_RELEASED') {
+                feed.push('digitalOrdersWallet');
+                if (dependentCount > 0 || hasShipments) {
+                    feed.push('hhgWeightGauge');
+                }
+                feed.push('leaveImpact');
+                feed.push('pcsTaskTracker');
+            }
+        }
+
+        // Priority 4: Career Discovery & Selection Details
+        else {
+            if (assignmentPhase === 'SELECTION') {
+                feed.push('selectionDetail');
+                feed.push('selectionChecklist');
+            } else if (assignmentPhase === 'ON_RAMP') {
+                feed.push('careerReadiness');
+                feed.push('discoveryStatus');
+            } else if (assignmentPhase === 'NEGOTIATION') {
+                feed.push('slateSummary');
+            } else if (!pcsPhase) {
+                // Priority 5: Peacetime Promotion ("The Garrison State")
+                feed.push('tierThisWeek');
+                feed.push('tierTracking');
+            }
+        }
+
+        // Anchor: Universal Utilities (Never omit these, sit at the bottom of the feed)
+        feed.push('digitalSeaBag');
+        feed.push('leave');
+
+        return feed;
+    }, [assignmentPhase, pcsPhase, subPhase, liquidationStatus, hasShipments, dependentCount]);
 
     // Loading state
     if (loading && !data) {
@@ -322,9 +457,6 @@ export default function HubDashboard() {
             <ScreenGradient>
                 {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <HubSkeleton />
-                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-                    <GlobalTabBar activeRoute="home" />
-                </View>
             </ScreenGradient>
         );
     }
@@ -337,41 +469,9 @@ export default function HubDashboard() {
                 <View className="flex-1 items-center justify-center px-8">
                     <Text className="text-slate-400 text-center">{error}</Text>
                 </View>
-                <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-                    <GlobalTabBar activeRoute="home" />
-                </View>
             </ScreenGradient>
         );
     }
-
-    const sections = ['menu'];
-    // Show DiscoveryStatusCard on Hub during Discovery through Negotiation phases
-    if (!assignmentPhase || assignmentPhase === 'DISCOVERY' || assignmentPhase === 'ON_RAMP' || assignmentPhase === 'NEGOTIATION') {
-        sections.push('discoveryStatus');
-    }
-    // Show standalone receipt capture on Home Hub during Phase 3 (ACTIVE_TRAVEL) only.
-    // Phase 2 (PLANNING) shares TRANSIT_LEAVE but doesn't need receipt capture yet.
-    // In Phase 4, receipt capture is integrated into TravelClaimHUDWidget.
-    if (pcsPhase === 'TRANSIT_LEAVE' && subPhase === 'ACTIVE_TRAVEL') sections.push('receiptCapture');
-    // Surface Mission Brief on Home Hub from Selection onward only
-    if (['SELECTION', 'ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
-        sections.push('missionBrief');
-    }
-    // Surface Phase 4 urgency widgets on the Home Hub — streamlined
-    if (pcsPhase === 'CHECK_IN') {
-        sections.push('tierThisWeek');
-        sections.push('baseWelcomeKit');
-        sections.push('travelClaimUrgency');
-        // Reactive liquidation check (QW4: no longer uses getState())
-        const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
-        if (hasActiveLiquidation) {
-            sections.push('tierTracking');
-            sections.push('liquidationTracker');
-        }
-    }
-    // Tracking header always visible above leave
-    sections.push('tierTracking');
-    sections.push('leave');
 
 
     return (
@@ -380,22 +480,15 @@ export default function HubDashboard() {
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 minTopBarHeight={minHeaderHeight}
                 topBar={
-                    <View className="bg-slate-50 dark:bg-slate-950">
-                        <View className="px-4 pt-4" style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })}>
-                            <StatusCard
-                                nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
-                            />
-                        </View>
-                        <View onLayout={(e) => setMinHeaderHeight(Math.round(e.nativeEvent.layout.height))}>
+                    <BlurView intensity={isDark ? 80 : 60} tint={isDark ? "dark" : "light"}>
+                        <View className="pt-2 pb-2" onLayout={(e) => setMinHeaderHeight(Math.round(e.nativeEvent.layout.height))}>
                             <ScreenHeader
                                 title=""
                                 subtitle=""
                                 withSafeArea={false}
-                                searchConfig={globalSearchConfig}
                             />
                         </View>
-                    </View>
+                    </BlurView>
                 }
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             >
@@ -413,10 +506,10 @@ export default function HubDashboard() {
                         ref={listRef}
                         data={sections}
                         renderItem={renderItem}
-                        ItemSeparatorComponent={({ leadingItem }: { leadingItem: string }) => (
-                            <View style={{ height: typeof leadingItem === 'string' && leadingItem.startsWith('tier') ? 18 : 24 }} />
+                        ItemSeparatorComponent={() => (
+                            <View style={{ height: 24 }} />
                         )}
-                        ListHeaderComponent={<View style={{ height: 8 }} />}
+                        ListHeaderComponent={<View style={{ height: 24 }} />}
                         ListFooterComponent={<View style={{ height: 250 }} />}
 
                         estimatedItemSize={150}
@@ -449,28 +542,6 @@ export default function HubDashboard() {
 
             {/* Floating demo panel — outside CollapsibleScaffold */}
             <PCSDevPanel />
-
-            {/* QW3: Animated Quick Leave Overlay (was static View) */}
-            {quickDraft && (
-                <Animated.View
-                    entering={FadeIn.duration(200)}
-                    exiting={FadeOut.duration(150)}
-                    className="absolute inset-0 z-50 flex-1 justify-center items-center bg-black/60"
-                >
-                    <Pressable
-                        className="absolute inset-0"
-                        onPress={() => setQuickDraft(null)}
-                    />
-                    <Animated.View entering={FadeInUp.duration(250).springify()} className="w-full px-5 max-w-[420px]">
-                        <QuickLeaveTicket
-                            draft={quickDraft}
-                            onSubmit={handleQuickLeaveSubmit}
-                            onEdit={handleQuickLeaveEdit}
-                            onClose={() => setQuickDraft(null)}
-                        />
-                    </Animated.View>
-                </Animated.View>
-            )}
         </ScreenGradient>
     );
 }

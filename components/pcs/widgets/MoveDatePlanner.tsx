@@ -1,3 +1,5 @@
+import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
 import { services } from '@/services/api/serviceRegistry';
 import { usePCSStore } from '@/store/usePCSStore';
 import { isApiSuccess } from '@/types/api';
@@ -20,6 +22,9 @@ interface MoveDatePlannerProps {
 }
 
 export function MoveDatePlanner({ originZip = '23604', destinationZip = '92134' }: MoveDatePlannerProps) {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
     const estimatedWeight = usePCSStore((s) => s.financials.hhg.estimatedWeight);
     const shipments = usePCSStore((s) => s.financials.hhg.shipments) ?? EMPTY_SHIPMENTS;
     const firstShipment = shipments[0];
@@ -71,34 +76,36 @@ export function MoveDatePlanner({ originZip = '23604', destinationZip = '92134' 
 
     if (loading) {
         return (
-            <Animated.View entering={FadeIn} className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-8 items-center gap-3">
-                <Animated.View
-                    entering={FadeIn}
-                    className="animate-spin"
-                >
-                    <Loader2 size={24} color="#3b82f6" />
-                </Animated.View>
-                <Text className="text-zinc-500 text-sm">Loading pickup windows from DPS...</Text>
+            <Animated.View entering={FadeIn}>
+                <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl p-8 items-center gap-3 border border-slate-200 dark:border-white/10 mx-4 overflow-hidden mb-4">
+                    <Animated.View
+                        entering={FadeIn}
+                        className="animate-spin"
+                    >
+                        <Loader2 size={24} color="#3b82f6" />
+                    </Animated.View>
+                    <Text className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading pickup windows...</Text>
+                </GlassView>
             </Animated.View>
         );
     }
 
     if (windows.length === 0) {
         return (
-            <View className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-6 items-center gap-3">
-                <Calendar size={32} color="#71717a" />
-                <Text className="text-zinc-500 text-center text-sm">No pickup windows available</Text>
-            </View>
+            <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl p-6 items-center gap-3 border border-slate-200 dark:border-white/10 mx-4 overflow-hidden mb-4">
+                <Calendar size={32} color={isDark ? '#64748b' : '#94a3b8'} strokeWidth={1.5} />
+                <Text className="text-slate-500 dark:text-slate-400 text-center text-sm font-semibold">No pickup windows available</Text>
+            </GlassView>
         );
     }
 
     return (
         <Animated.View entering={FadeIn} layout={LinearTransition.springify().damping(15)} className="gap-3">
             {transitDays && (
-                <View className="flex-row items-center gap-2 mb-1">
-                    <Truck size={16} color="#71717a" />
-                    <Text className="text-zinc-400 text-xs">
-                        Estimated transit: <Text className="text-zinc-200 font-semibold">{transitDays} days</Text>
+                <View className="flex-row items-center gap-2 mb-1 px-4">
+                    <Truck size={16} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
+                    <Text className="text-slate-600 dark:text-slate-400 text-xs font-medium">
+                        Estimated transit: <Text className="text-slate-800 dark:text-slate-200 font-bold">{transitDays} days</Text>
                     </Text>
                 </View>
             )}
@@ -106,36 +113,37 @@ export function MoveDatePlanner({ originZip = '23604', destinationZip = '92134' 
             {windows.map((window, idx) => {
                 const isSelected = selectedWindowId === window.id;
                 const capacityColor =
-                    window.capacityLabel === 'AVAILABLE' ? 'text-emerald-400' :
-                        window.capacityLabel === 'LIMITED' ? 'text-amber-400' :
-                            'text-red-400';
+                    window.capacityLabel === 'AVAILABLE' ? 'text-green-600 dark:text-green-400' :
+                        window.capacityLabel === 'LIMITED' ? 'text-amber-600 dark:text-amber-400' :
+                            'text-red-500 dark:text-red-400';
 
                 return (
                     <Animated.View
                         key={window.id}
                         entering={FadeInDown.delay(idx * 80)}
+                        style={{ paddingHorizontal: 16 }}
                     >
                         <Pressable
                             onPress={() => handleSelectWindow(window.id)}
-                            className={`border rounded-2xl p-4 flex-row items-center gap-3 ${isSelected ? 'bg-blue-950/30 border-blue-500/50' : 'bg-zinc-800/50 border-zinc-700/40'
+                            className={`border rounded-2xl p-4 flex-row items-center gap-3 ${isSelected ? 'bg-blue-500/10 border-blue-500/30' : 'bg-white/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60'
                                 }`}
                         >
                             {/* Selection indicator */}
                             <View
-                                className={`w-6 h-6 rounded-full border-2 items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-zinc-600'
+                                className={`w-5 h-5 rounded-full border-2 items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-slate-300 dark:border-slate-600'
                                     }`}
                             >
-                                {isSelected && <Check size={14} color="#fff" strokeWidth={3} />}
+                                {isSelected && <Check size={12} color="#fff" strokeWidth={3} />}
                             </View>
 
                             {/* Date range */}
                             <View className="flex-1">
-                                <Text className={`font-semibold text-sm ${isSelected ? 'text-blue-200' : 'text-zinc-300'}`}>
+                                <Text className={`font-bold text-sm ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-slate-800 dark:text-slate-200'}`}>
                                     {formatDate(window.startDate)} – {formatDate(window.endDate)}
                                 </Text>
-                                <View className="flex-row items-center gap-2 mt-0.5">
-                                    <Clock size={12} color="#71717a" />
-                                    <Text className={`text-xs ${capacityColor}`}>
+                                <View className="flex-row items-center gap-1.5 mt-0.5">
+                                    <Clock size={12} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
+                                    <Text className={`text-[11px] font-bold tracking-wider uppercase ${capacityColor}`}>
                                         {window.capacityLabel === 'AVAILABLE' ? 'Available' :
                                             window.capacityLabel === 'LIMITED' ? 'Limited slots' :
                                                 'Waitlist only'}

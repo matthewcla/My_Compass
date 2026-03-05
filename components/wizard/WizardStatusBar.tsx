@@ -116,13 +116,6 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
                                             ? 'bg-[#E4EAF4] dark:bg-[rgba(26,78,138,0.2)]'
                                             : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
                                     }`}
-                                style={!isError ? {
-                                    borderColor: (isActive && isLast) || isCompleted
-                                        ? (isDark ? '#3AAE6C' : '#16a34a')
-                                        : isActive
-                                            ? (isDark ? '#5B8FCF' : '#1A4E8A')
-                                            : undefined,
-                                } : undefined}
                             >
                                 <Icon
                                     size={18}

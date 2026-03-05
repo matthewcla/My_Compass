@@ -61,7 +61,7 @@ export function DiscoveryHeader({
             router.back();
         } else {
             // Fallback
-            router.navigate('/(tabs)/(assignment)');
+            router.navigate('/(assignment)' as any);
         }
     };
 

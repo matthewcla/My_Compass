@@ -39,7 +39,7 @@ export default function SelectionDetailWidget() {
                 <Text className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     Your Billet
                 </Text>
-                <View className="bg-white/60 dark:bg-slate-800/40 rounded-xl px-4 py-3 mb-4 border border-slate-100 dark:border-slate-700/40">
+                <View className="bg-black/5 dark:bg-white/10 rounded-xl px-4 py-3 mb-4 border border-black/5 dark:border-white/10">
                     <View className="flex-row items-center gap-2.5 mb-1">
                         <Briefcase size={14} color={isDark ? '#fbbf24' : '#d97706'} />
                         <Text className="text-slate-900 dark:text-slate-100 text-sm font-bold flex-1" numberOfLines={1}>
@@ -57,7 +57,7 @@ export default function SelectionDetailWidget() {
                 <Text className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                     Your Detailer
                 </Text>
-                <View className="bg-white/60 dark:bg-slate-800/40 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700/40">
+                <View className="bg-black/5 dark:bg-white/10 rounded-xl px-4 py-3 border border-black/5 dark:border-white/10">
                     <View className="flex-row items-center gap-2.5 mb-2">
                         <User size={14} color={isDark ? '#94a3b8' : '#64748b'} />
                         <Text className="text-slate-900 dark:text-slate-100 text-sm font-bold flex-1">
@@ -70,17 +70,17 @@ export default function SelectionDetailWidget() {
                     <View className="flex-row gap-2 ml-[22px]">
                         <TouchableOpacity
                             onPress={() => Linking.openURL(`tel:${selectionDetails.detailer.phone}`)}
-                            className="flex-row items-center gap-1.5 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800/40"
+                            className="flex-row items-center gap-1.5 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20"
                         >
                             <Phone size={12} color={isDark ? '#60a5fa' : '#2563eb'} />
-                            <Text className="text-blue-700 dark:text-blue-300 text-[10px] font-bold">Call</Text>
+                            <Text className="text-blue-700 dark:text-blue-400 text-[10px] font-bold">Call</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => Linking.openURL(`mailto:${selectionDetails.detailer.email}`)}
-                            className="flex-row items-center gap-1.5 bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800/40"
+                            className="flex-row items-center gap-1.5 bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20"
                         >
                             <Mail size={12} color={isDark ? '#60a5fa' : '#2563eb'} />
-                            <Text className="text-blue-700 dark:text-blue-300 text-[10px] font-bold">Email</Text>
+                            <Text className="text-blue-700 dark:text-blue-400 text-[10px] font-bold">Email</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

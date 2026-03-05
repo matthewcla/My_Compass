@@ -107,7 +107,6 @@ export function PCSMissionBrief() {
     const homePort = activeOrder!.gainingCommand.homePort;
     const commandName = activeOrder!.gainingCommand.name;
 
-
     // Financial snapshot (Phase 2 only)
     const showFinancials = currentPhase === 2;
 
@@ -134,28 +133,32 @@ export function PCSMissionBrief() {
     return (
         <Animated.View entering={FadeInDown.delay(50).springify()}>
             <GlassView
-                intensity={75}
+                intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10"
+                className="rounded-2xl overflow-hidden mx-4 mb-8"
+                style={{
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                }}
             >
                 {/* ── Header: Command + Countdown ── */}
-                <View className="bg-blue-50/30 dark:bg-blue-900/20 px-5 py-4">
+                <View className="bg-slate-900/70 p-5 pb-4">
                     <View className="flex-row items-center justify-between">
                         <View className="flex-row items-center flex-1 mr-3">
-                            <View className="w-12 h-12 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 items-center justify-center mr-3">
+                            <View className="w-12 h-12 rounded-xl bg-white/10 dark:bg-slate-800/60 border border-slate-200/20 items-center justify-center mr-3">
                                 <Anchor size={22} color={isDark ? '#93c5fd' : '#2563eb'} strokeWidth={2.2} />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-500 dark:text-slate-300">
+                                <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-300">
                                     PCS Mission Brief
                                 </Text>
-                                <Text className="mt-0.5 text-base font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                                <Text className="mt-0.5 text-base font-bold text-white" numberOfLines={1}>
                                     {commandName}
                                 </Text>
                                 {homePort && (
                                     <View className="flex-row items-center mt-0.5">
-                                        <MapPin size={10} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2} />
-                                        <Text className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                                        <MapPin size={10} color="#C9A227" strokeWidth={2} />
+                                        <Text className="ml-1 text-xs text-slate-300">
                                             {homePort}
                                         </Text>
                                     </View>
@@ -164,8 +167,11 @@ export function PCSMissionBrief() {
                         </View>
                         {/* Countdown badge */}
                         <View
-                            className="rounded-lg px-2.5 py-1.5"
-                            style={{ backgroundColor: `${urgencyColor}18` }}
+                            className="rounded-lg px-2.5 py-1.5 border"
+                            style={{
+                                backgroundColor: `${urgencyColor}15`,
+                                borderColor: `${urgencyColor}30`
+                            }}
                         >
                             <Text style={{ color: urgencyColor }} className="text-lg font-black text-center">
                                 {daysRemaining}
@@ -178,12 +184,12 @@ export function PCSMissionBrief() {
                 </View>
 
                 {/* ── Content ── */}
-                <View className="p-5" style={{ gap: 14 }}>
+                <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-4 pb-4 border-t border-slate-200/50 dark:border-slate-700/50" style={{ gap: 14 }}>
 
                     {/* Phase Progress */}
-                    <View className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700">
+                    <View className="bg-white/60 dark:bg-slate-800/60 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700/60">
                         <View className="flex-row items-center justify-between mb-2">
-                            <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            <Text className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 {phaseLabel}
                             </Text>
                             <Text className="text-xs font-bold text-blue-600 dark:text-blue-400">
@@ -191,9 +197,9 @@ export function PCSMissionBrief() {
                             </Text>
                         </View>
                         {/* Progress bar */}
-                        <View className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                        <View className="h-2 rounded-full bg-slate-200/50 dark:bg-slate-700/50 overflow-hidden">
                             <View
-                                className="h-full rounded-full bg-blue-600 dark:bg-blue-500"
+                                className="h-full rounded-full bg-blue-500"
                                 style={{ width: `${Math.round(progress * 100)}%` }}
                             />
                         </View>
@@ -204,7 +210,7 @@ export function PCSMissionBrief() {
                     {/* Financial Snapshot (Phase 2 only) */}
                     {showFinancials && (
                         <View className="flex-row" style={{ gap: 8 }}>
-                            <View className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700 items-center">
+                            <View className="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700/60 items-center">
                                 <DollarSign size={14} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                                 <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
                                     DLA
@@ -213,7 +219,7 @@ export function PCSMissionBrief() {
                                     ${financials.dla.estimatedAmount.toLocaleString()}
                                 </Text>
                             </View>
-                            <View className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700 items-center">
+                            <View className="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700/60 items-center">
                                 <DollarSign size={14} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                                 <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
                                     Advance
@@ -222,7 +228,7 @@ export function PCSMissionBrief() {
                                     {financials.advancePay.requested ? `$${financials.advancePay.amount.toLocaleString()}` : 'None'}
                                 </Text>
                             </View>
-                            <View className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700 items-center">
+                            <View className="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-lg p-3.5 border border-slate-200 dark:border-slate-700/60 items-center">
                                 <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                     HHG
                                 </Text>
@@ -240,7 +246,7 @@ export function PCSMissionBrief() {
                     {nextAction && (
                         <ScalePressable
                             onPress={handleNextAction}
-                            className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3.5 border border-blue-200 dark:border-blue-800/40 flex-row items-center justify-between"
+                            className="bg-blue-500/10 rounded-lg p-3.5 border border-blue-500/20 flex-row items-center justify-between"
                             style={{ minHeight: 44 }}
                             accessibilityRole="button"
                             accessibilityLabel={`Start ${nextAction.label}`}

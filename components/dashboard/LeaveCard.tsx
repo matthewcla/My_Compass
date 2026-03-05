@@ -129,7 +129,7 @@ export function LeaveCard({
                                     intensity={40}
                                     tint={isDark ? 'dark' : 'light'}
                                     // Navy background for button
-                                    className="w-11 h-11 rounded-full items-center justify-center border border-white/10 bg-slate-900/10 dark:bg-slate-700/30"
+                                    className="w-11 h-11 rounded-full items-center justify-center border border-white/10 bg-slate-900/5 dark:bg-slate-700/30"
                                 >
                                     <Plus size={22} color={isDark ? '#ffffff' : '#0f172a'} strokeWidth={2.5} />
                                 </GlassView>

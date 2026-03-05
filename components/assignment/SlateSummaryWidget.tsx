@@ -1,4 +1,6 @@
 import { ScalePressable } from '@/components/ScalePressable';
+import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
 import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { useDemoStore } from '@/store/useDemoStore';
 import { ChevronRight } from 'lucide-react-native';
@@ -59,9 +61,11 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
     const canSubmit = draftCount > 0 && submittedCount === 0;
     const allSubmitted = filledCount > 0 && draftCount === 0 && submittedCount > 0;
 
+    const isDark = useColorScheme() === 'dark';
+
     return (
         <ScalePressable onPress={onPress}>
-            <View className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+            <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl p-5 shadow-sm border border-black/5 dark:border-white/10 mb-4">
                 {/* Header: Title + Cycle Status Pill */}
                 <View className="flex-row justify-between items-center mb-4">
                     <Text className="text-lg font-bold text-slate-900 dark:text-white">MY SLATE</Text>
@@ -117,7 +121,7 @@ export default function SlateSummaryWidget({ onPress }: SlateSummaryWidgetProps)
                         </Text>
                     </View>
                 )}
-            </View>
+            </GlassView>
         </ScalePressable>
     );
 }

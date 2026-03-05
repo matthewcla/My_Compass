@@ -391,8 +391,10 @@ export default function HubDashboard() {
         const feed: string[] = ['menu'];
 
         if (activeFilter === 'HUB') {
-            // Priority 0: Critical Action Items
-            feed.push('obliserv');
+            // Priority 0: Critical Action Items (OBLISERV only applies during Selection before orders are released)
+            if (assignmentPhase === 'SELECTION') {
+                feed.push('obliserv');
+            }
 
             // Priority 1: PCS Active Window Navigation
             if (pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
@@ -463,7 +465,9 @@ export default function HubDashboard() {
         }
         else if (activeFilter === 'CAREER') {
             // Priority 0: Critical Action Items
-            feed.push('obliserv');
+            if (assignmentPhase === 'SELECTION') {
+                feed.push('obliserv');
+            }
 
             // In the CAREER tab, we exclusively show Career-focused widgets.
             if (!assignmentPhase || assignmentPhase === 'DISCOVERY' || assignmentPhase === 'ON_RAMP') {

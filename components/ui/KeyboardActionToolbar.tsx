@@ -84,21 +84,21 @@ export function KeyboardActionToolbar() {
                     }}
                     className="overflow-hidden rounded-full"
                     style={{
-                        shadowColor: isDark ? '#000' : '#475569',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: isDark ? 0.3 : 0.15,
-                        shadowRadius: 12,
-                        elevation: 5,
+                        shadowColor: isDark ? '#000' : '#334155',
+                        shadowOffset: { width: 0, height: 8 },
+                        shadowOpacity: isDark ? 0.4 : 0.15,
+                        shadowRadius: 16,
+                        elevation: 8,
                         borderWidth: 1,
-                        borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)',
                     }}
                 >
                     <BlurView
-                        intensity={isDark ? 50 : 80}
+                        intensity={isDark ? 60 : 90}
                         tint={isDark ? "dark" : "light"}
                         className="w-[54px] h-[54px] items-center justify-center flex-row"
                         style={{
-                            backgroundColor: isDark ? 'rgba(20, 20, 22, 0.75)' : 'rgba(255, 255, 255, 0.6)',
+                            backgroundColor: isDark ? 'rgba(20, 20, 22, 0.85)' : 'rgba(255, 255, 255, 0.8)',
                             borderRadius: 27,
                         }}
                     >

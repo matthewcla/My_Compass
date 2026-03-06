@@ -10,13 +10,16 @@ import {
     SpotlightItem,
     SpotlightSection
 } from '@/types/spotlight';
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
     CalendarDays,
     ChevronRight,
     Compass,
     Inbox as InboxIcon,
+    Search,
     Settings,
     Sparkles
 } from 'lucide-react-native';
@@ -26,6 +29,7 @@ import {
     Platform,
     Pressable,
     ScrollView,
+    StyleSheet,
     Text,
     View,
 } from 'react-native';
@@ -429,7 +433,9 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
         [allItems, query, recentItemIds]
     );
 
-    rankedItemsRef.current = rankedItems;
+    React.useEffect(() => {
+        rankedItemsRef.current = rankedItems;
+    }, [rankedItems]);
 
     const groupedSections = React.useMemo(() => {
         const grouped = new Map<SpotlightSection, RankedSpotlightItem[]>(
@@ -447,10 +453,12 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
     }, [rankedItems]);
 
     // Compute a flat ID map to determine global active index across grouped sections
-    const rows = React.useMemo(() => {
+    const flattenedItems = React.useMemo(() => {
         const result: Array<{ type: 'item'; item: RankedSpotlightItem; id: string; itemIndex: number }> = [];
         let index = 0;
         groupedSections.forEach(({ items }) => {
+            // Because we render items in reverse below ` [...group.items].reverse().map()`,
+            // we must also map the global index here carefully so they match up top-to-bottom.
             items.forEach((item) => {
                 result.push({ type: 'item', item, id: item.id, itemIndex: index });
                 index += 1;
@@ -458,6 +466,10 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
         });
         return result;
     }, [groupedSections]);
+
+    const getGlobalIndexForId = React.useCallback((id: string) => {
+        return flattenedItems.find((r) => r.id === id)?.itemIndex || 0;
+    }, [flattenedItems]);
 
     const fireSelectionHaptic = React.useCallback(() => {
         if (Platform.OS === 'web') return;
@@ -514,12 +526,13 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
     React.useEffect(() => {
         if (!isOpen) return;
 
-        if (rankedItems.length === 0) {
+        // Prevent updating state if the index is already correct to avoid render loops
+        if (rankedItems.length === 0 && activeIndex !== 0) {
             setActiveIndex(0);
             return;
         }
 
-        if (activeIndex > rankedItems.length - 1) {
+        if (rankedItems.length > 0 && activeIndex > rankedItems.length - 1) {
             setActiveIndex(rankedItems.length - 1);
         }
     }, [activeIndex, isOpen, rankedItems.length, setActiveIndex]);
@@ -535,120 +548,197 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
     };
 
     const renderEmptyState = (
-        <View className="px-6 py-12 items-center">
-            <Text className="text-slate-900 dark:text-white font-semibold mb-2">
-                {query ? `No results for "${query}"` : 'Start typing to search'}
+        <View className="px-6 py-12 items-center flex-1 justify-center">
+            <View className="items-center mb-8">
+                <Search size={42} color={isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'} strokeWidth={1.5} />
+            </View>
+            <Text className="text-[20px] font-bold tracking-tight text-slate-800 dark:text-white mb-2 text-center">
+                {query ? `No results for "${query}"` : 'Spotlight Command Center'}
             </Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-center mb-4">
-                Search app navigation, settings, calendar events, and inbox messages.
+            <Text className="text-[15px] text-slate-500 dark:text-slate-400 text-center mb-8 max-w-[280px] leading-relaxed">
+                {query
+                    ? 'Try adjusting your search terms or browsing the navigation menut.'
+                    : 'Search app navigation, settings, calendar events, and official correspondence.'}
             </Text>
 
-            {query ? (
-                <View className="flex-row flex-wrap justify-center gap-2">
+            {!query && (
+                <View className="w-full flex-row flex-wrap justify-center gap-3">
                     <Pressable
-                        onPress={() => {
-                            void runQuickRoute('/calendar');
+                        onPress={() => void runQuickRoute('/calendar')}
+                        className="rounded-full overflow-hidden"
+                        style={{
+                            borderWidth: 1,
+                            borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
                         }}
-                        className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
-                        <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                            Go to Calendar
-                        </Text>
+                        <BlurView
+                            intensity={isDark ? 40 : 80}
+                            tint={isDark ? 'dark' : 'light'}
+                            experimentalBlurMethod="dimezisBlurView"
+                            style={[
+                                { backgroundColor: isDark ? 'rgba(20, 20, 22, 0.5)' : 'rgba(255, 255, 255, 0.6)' }
+                            ]}
+                            className="flex-row items-center px-4 py-2.5 gap-2"
+                        >
+                            <CalendarDays size={14} color={isDark ? '#e2e8f0' : '#475569'} strokeWidth={2.5} />
+                            <Text className="text-[13px] font-bold text-slate-700 dark:text-slate-200">
+                                Calendar
+                            </Text>
+                        </BlurView>
                     </Pressable>
+
                     <Pressable
-                        onPress={() => {
-                            void runQuickRoute('/inbox');
+                        onPress={() => void runQuickRoute('/inbox')}
+                        className="rounded-full overflow-hidden"
+                        style={{
+                            borderWidth: 1,
+                            borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
                         }}
-                        className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
-                        <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                            Open Inbox
-                        </Text>
+                        <BlurView
+                            intensity={isDark ? 40 : 80}
+                            tint={isDark ? 'dark' : 'light'}
+                            experimentalBlurMethod="dimezisBlurView"
+                            style={[
+                                { backgroundColor: isDark ? 'rgba(20, 20, 22, 0.5)' : 'rgba(255, 255, 255, 0.6)' }
+                            ]}
+                            className="flex-row items-center px-4 py-2.5 gap-2"
+                        >
+                            <InboxIcon size={14} color={isDark ? '#e2e8f0' : '#475569'} strokeWidth={2.5} />
+                            <Text className="text-[13px] font-bold text-slate-700 dark:text-slate-200">
+                                Inbox
+                            </Text>
+                        </BlurView>
                     </Pressable>
+
                     <Pressable
-                        onPress={() => {
-                            void runQuickRoute('/(profile)/preferences');
+                        onPress={() => void runQuickRoute('/(profile)/preferences')}
+                        className="rounded-full overflow-hidden"
+                        style={{
+                            borderWidth: 1,
+                            borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
                         }}
-                        className="px-3 py-2 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
                     >
-                        <Text className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                            Search Settings
-                        </Text>
+                        <BlurView
+                            intensity={isDark ? 40 : 80}
+                            tint={isDark ? 'dark' : 'light'}
+                            experimentalBlurMethod="dimezisBlurView"
+                            style={[
+                                { backgroundColor: isDark ? 'rgba(20, 20, 22, 0.5)' : 'rgba(255, 255, 255, 0.6)' }
+                            ]}
+                            className="flex-row items-center px-4 py-2.5 gap-2"
+                        >
+                            <Settings size={14} color={isDark ? '#e2e8f0' : '#475569'} strokeWidth={2.5} />
+                            <Text className="text-[13px] font-bold text-slate-700 dark:text-slate-200">
+                                Settings
+                            </Text>
+                        </BlurView>
                     </Pressable>
                 </View>
-            ) : null}
+            )}
         </View>
     );
 
     const renderResultRows = (
-        <ScrollView
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
-            showsVerticalScrollIndicator={false}
-            style={{ flex: 1, width: '100%' }}
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingTop: 60, paddingBottom: 16 }}
-        >
-            {groupedSections.length === 0 ? renderEmptyState : [...groupedSections].reverse().map((group) => {
-                return (
-                    <View key={group.section} className="mb-6 px-4">
-                        <View className="px-2 pb-2 flex-row items-center gap-2">
-                            <SectionGlyph
-                                section={group.section}
-                                activeColor={isDark ? '#cbd5e1' : '#64748b'}
-                            />
-                            <Text className="text-[13px] font-bold text-slate-600 dark:text-slate-300 tracking-wide">
-                                {group.section}
-                            </Text>
-                        </View>
-                        <View className="rounded-[16px] overflow-hidden bg-white/70 dark:bg-slate-900/60 border-[0.5px] border-black/5 dark:border-white/10">
-                            {[...group.items].reverse().map((item, index) => {
-                                const flatItemIndex = rows.find((r) => r.id === item.id)?.itemIndex || 0;
-                                const isActive = flatItemIndex === activeIndex;
-                                const isLast = index === group.items.length - 1;
+        <View style={{ flex: 1, width: '100%' }}>
+            <ScrollView
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="interactive"
+                showsVerticalScrollIndicator={false}
+                style={{ flex: 1, width: '100%' }}
+                contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingTop: 80, paddingBottom: 16 }}
+            >
+                {groupedSections.length === 0 ? renderEmptyState : [...groupedSections].reverse().map((group) => {
+                    return (
+                        <View key={group.section} className="mb-6 px-4">
+                            <View className="px-3 pb-2 flex-row items-center gap-2">
+                                <SectionGlyph
+                                    section={group.section}
+                                    activeColor={isDark ? '#cbd5e1' : '#64748b'}
+                                />
+                                <Text className="text-[13px] font-bold text-slate-600 dark:text-slate-300 tracking-wide uppercase">
+                                    {group.section}
+                                </Text>
+                            </View>
+                            <View
+                                className="rounded-[20px] overflow-hidden"
+                                style={{
+                                    borderWidth: 1,
+                                    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                                    shadowColor: isDark ? '#000' : '#475569',
+                                    shadowOffset: { width: 0, height: 8 },
+                                    shadowOpacity: isDark ? 0.25 : 0.1,
+                                    shadowRadius: 16,
+                                    elevation: 4,
+                                }}
+                            >
+                                <BlurView
+                                    intensity={isDark ? 50 : 80}
+                                    tint={isDark ? 'dark' : 'light'}
+                                    experimentalBlurMethod="dimezisBlurView"
+                                    style={[
+                                        StyleSheet.absoluteFill,
+                                        { backgroundColor: isDark ? 'rgba(20, 20, 22, 0.75)' : 'rgba(255, 255, 255, 0.6)' }
+                                    ]}
+                                />
+                                <View>
+                                    {[...group.items].reverse().map((item, index) => {
+                                        const flatItemIndex = getGlobalIndexForId(item.id);
+                                        const isActive = flatItemIndex === activeIndex;
+                                        const isLast = index === group.items.length - 1;
 
-                                return (
-                                    <Pressable
-                                        key={item.id}
-                                        onPress={() => void executeItem(item)}
-                                        onPressIn={() => setActiveIndex(flatItemIndex)}
-                                        onHoverIn={() => setActiveIndex(flatItemIndex)}
-                                        className={`flex-row items-center px-4 py-[14px] ${!isLast ? 'border-b-[0.5px] border-black/5 dark:border-white/10' : ''} ${isActive ? 'bg-blue-50/50 dark:bg-blue-900/30' : ''}`}
-                                    >
-                                        <View className="flex-1 mr-3">
-                                            <HighlightedLabel
-                                                text={item.title}
-                                                query={query}
-                                                className={`text-[15px] font-semibold ${isActive
-                                                    ? 'text-blue-700 dark:text-blue-300'
-                                                    : 'text-slate-900 dark:text-white'
-                                                    }`}
-                                                highlightClassName={isActive ? 'font-bold text-blue-900 dark:text-blue-100' : 'font-bold text-blue-600 dark:text-blue-400'}
-                                            />
-                                            {item.subtitle ? (
-                                                <HighlightedLabel
-                                                    text={item.subtitle}
-                                                    query={query}
-                                                    className={`text-[13px] mt-0.5 ${isActive
-                                                        ? 'text-blue-600/80 dark:text-blue-300/80'
-                                                        : 'text-slate-500 dark:text-slate-400'
-                                                        }`}
-                                                    highlightClassName={isActive ? 'font-semibold' : 'font-semibold text-slate-700 dark:text-slate-300'}
+                                        return (
+                                            <Pressable
+                                                key={item.id}
+                                                onPress={() => void executeItem(item)}
+                                                className={`flex-row items-center px-4 py-4 ${!isLast ? 'border-b border-black/5 dark:border-white/10' : ''}`}
+                                            >
+
+                                                <View className="flex-1 mr-3 relative z-10">
+                                                    <HighlightedLabel
+                                                        text={item.title}
+                                                        query={query}
+                                                        className="text-[16px] tracking-tight font-semibold text-slate-900 dark:text-white"
+                                                        highlightClassName="font-bold text-blue-600 dark:text-blue-400"
+                                                    />
+                                                    {item.subtitle && (
+                                                        <HighlightedLabel
+                                                            text={item.subtitle}
+                                                            query={query}
+                                                            className="text-[13px] mt-1 text-slate-500 dark:text-slate-400"
+                                                            highlightClassName="font-semibold text-slate-700 dark:text-slate-300"
+                                                        />
+                                                    )}
+                                                </View>
+
+                                                <ChevronRight
+                                                    size={18}
+                                                    color={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)'}
+                                                    strokeWidth={2.5}
+                                                    className="relative z-10"
                                                 />
-                                            ) : null}
-                                        </View>
-                                        <ChevronRight
-                                            size={16}
-                                            color={isActive ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#475569' : '#94a3b8')}
-                                            strokeWidth={2.5}
-                                        />
-                                    </Pressable>
-                                );
-                            })}
+                                            </Pressable>
+                                        );
+                                    })}
+                                </View>
+                            </View>
                         </View>
-                    </View>
-                );
-            })}
-        </ScrollView>
+                    );
+                })}
+            </ScrollView>
+
+            {/* Gradient Overlay Mask Replacement */}
+            <LinearGradient
+                colors={[
+                    isDark ? 'rgba(15, 23, 42, 1)' : 'rgba(255, 255, 255, 1)',
+                    isDark ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                    'transparent'
+                ]}
+                locations={[0, 0.5, 1]}
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 60 }}
+                pointerEvents="none"
+            />
+        </View>
     );
 
     return (

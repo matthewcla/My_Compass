@@ -1,6 +1,7 @@
 import { SpotlightResults } from '@/components/spotlight/SpotlightResults';
 import { useSpotlightStore } from '@/store/useSpotlightStore';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Search } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
 import { Keyboard, Platform, StyleSheet, TextInput, useColorScheme, View } from 'react-native';
@@ -88,8 +89,21 @@ export function SpotlightOverlay() {
                 </View>
 
                 {/* Bottom Anchored Controls */}
-                <Animated.View style={[{ paddingHorizontal: 16, width: '100%', paddingBottom: insets.bottom + 16 }, keyboardStyle]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Animated.View style={[{ width: '100%', paddingBottom: insets.bottom + 16 }, keyboardStyle]}>
+
+                    {/* Contrast Gradient Backdrop */}
+                    <LinearGradient
+                        colors={[
+                            isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                            isDark ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                            'transparent'
+                        ]}
+                        locations={[0, 0.6, 1]}
+                        style={[StyleSheet.absoluteFill, { top: -10 }]}
+                        pointerEvents="none"
+                    />
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
                         {/* Search Input Control */}
                         {/* Restricted width to allow the global KeyboardActionToolbar to float perfectly in-line to the right. */}
                         {/* Toolbar width: 54px + Gap: 12px + Right Edge: 16px = 82px reserved. */}
@@ -100,7 +114,12 @@ export function SpotlightOverlay() {
                                     {
                                         width: '100%',
                                         overflow: 'hidden',
-                                        borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)'
+                                        borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.15)',
+                                        shadowColor: isDark ? '#000' : '#334155',
+                                        shadowOffset: { width: 0, height: 8 },
+                                        shadowOpacity: isDark ? 0.4 : 0.15,
+                                        shadowRadius: 16,
+                                        elevation: 8,
                                     }
                                 ]}
                             >
@@ -109,7 +128,7 @@ export function SpotlightOverlay() {
                                     intensity={isDark ? 50 : 80}
                                     style={[
                                         StyleSheet.absoluteFill,
-                                        { backgroundColor: isDark ? 'rgba(20, 20, 22, 0.75)' : 'rgba(255, 255, 255, 0.6)' }
+                                        { backgroundColor: isDark ? 'rgba(20, 20, 22, 0.85)' : 'rgba(255, 255, 255, 0.8)' }
                                     ]}
                                 />
 

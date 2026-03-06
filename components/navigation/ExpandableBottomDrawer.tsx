@@ -285,7 +285,6 @@ export default function ExpandableBottomDrawer() {
                             <View style={styles.pillIconRow}>
                                 {[
                                     { route: '/(hub)', iconUnselected: 'home-outline', iconSelected: 'home', label: 'Home' },
-                                    { route: '/(career)', iconUnselected: 'compass-outline', iconSelected: 'compass', label: 'Career' },
                                     { route: '/(admin)', iconUnselected: 'briefcase-outline', iconSelected: 'briefcase', label: 'Admin' },
                                     { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Calendar' },
                                     { route: '/inbox', iconUnselected: 'mail-outline', iconSelected: 'mail', label: 'Inbox' },
@@ -294,9 +293,8 @@ export default function ExpandableBottomDrawer() {
                                     const segs = segments as string[];
                                     const isActive =
                                         pathname === tab.route ||
-                                        (tab.route === '/(career)' && segs.includes('(career)')) ||
                                         (tab.route === '/(admin)' && segs.includes('(admin)')) ||
-                                        (tab.route === '/(hub)' && (pathname === '/' || pathname === '/(hub)' || segs.includes('(hub)')) && !segs.includes('(profile)') && !segs.includes('(calendar)') && !segs.includes('inbox') && !segs.includes('(admin)') && !segs.includes('(career)')) ||
+                                        (tab.route === '/(hub)' && (pathname === '/' || pathname === '/(hub)' || segs.includes('(hub)')) && !segs.includes('(profile)') && !segs.includes('(calendar)') && !segs.includes('inbox') && !segs.includes('(admin)')) ||
                                         (tab.route === '/(tabs)/(profile)' && segs.includes('(profile)'));
                                     const activeColor = isDark ? '#60A5FA' : '#0A84FF'; // System Blue variants
                                     const inactiveColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748B';

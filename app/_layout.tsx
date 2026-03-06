@@ -16,7 +16,9 @@ configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false });
 SecureLogger.patchGlobalConsole();
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
+import { FloatingSpotlightPill } from '@/components/navigation/FloatingSpotlightPill';
 import { SessionTimeoutOverlay } from '@/components/SessionTimeoutOverlay';
+import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
 import { ThemeTransitionOverlay } from '@/components/ThemeTransitionOverlay';
 import { KeyboardActionToolbar } from '@/components/ui/KeyboardActionToolbar';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -158,6 +160,8 @@ function InnerLayout() {
           remainingSeconds={remainingSeconds}
           onExtend={resetTimer}
         />
+        {session && <FloatingSpotlightPill />}
+        {session && <SpotlightOverlay />}
         <KeyboardActionToolbar />
       </View>
     </>

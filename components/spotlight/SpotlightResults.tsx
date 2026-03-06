@@ -8,7 +8,6 @@ import { useUserStore } from '@/store/useUserStore';
 import {
     RankedSpotlightItem,
     SpotlightItem,
-    SpotlightScope,
     SpotlightSection
 } from '@/types/spotlight';
 import * as Haptics from 'expo-haptics';
@@ -30,19 +29,9 @@ import {
     Text,
     View,
 } from 'react-native';
-import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 
 const SECTION_ORDER: SpotlightSection[] = ['Actions', 'Navigation', 'Settings', 'Calendar', 'Inbox'];
 const MAX_RESULTS = 30;
-
-const SCOPE_OPTIONS: Array<{ value: SpotlightScope; label: string }> = [
-    { value: 'all', label: 'All' },
-    { value: 'navigation', label: 'Navigation' },
-    { value: 'actions', label: 'Actions' },
-    { value: 'settings', label: 'Settings' },
-    { value: 'calendar', label: 'Calendar' },
-    { value: 'inbox', label: 'Inbox' },
-];
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
@@ -85,16 +74,6 @@ const getFreshnessBoost = (updatedAt?: number): number => {
     if (!updatedAt) return 0;
     const ageInDays = (Date.now() - updatedAt) / (1000 * 60 * 60 * 24);
     return Math.max(0, 18 - ageInDays);
-};
-
-const matchesScope = (item: SpotlightItem, scope: SpotlightScope): boolean => {
-    if (scope === 'all') return true;
-    if (scope === 'navigation') return item.section === 'Navigation';
-    if (scope === 'actions') return item.section === 'Actions';
-    if (scope === 'settings') return item.section === 'Settings';
-    if (scope === 'calendar') return item.section === 'Calendar';
-    if (scope === 'inbox') return item.section === 'Inbox';
-    return true;
 };
 
 const rankItem = (item: SpotlightItem, queryTokens: string[], recentIndex: number): number | null => {
@@ -148,14 +127,12 @@ const rankItem = (item: SpotlightItem, queryTokens: string[], recentIndex: numbe
 const rankSpotlightItems = (
     items: SpotlightItem[],
     query: string,
-    scope: SpotlightScope,
     recentItemIds: string[]
 ): RankedSpotlightItem[] => {
     const queryTokens = normalize(query).split(/\s+/).filter(Boolean);
     const scored: RankedSpotlightItem[] = [];
 
     for (const item of items) {
-        if (!matchesScope(item, scope)) continue;
         const recentIndex = recentItemIds.indexOf(item.id);
         const score = rankItem(item, queryTokens, recentIndex);
         if (score === null) continue;
@@ -254,11 +231,6 @@ interface SpotlightResultsProps {
 }
 
 export function SpotlightResults({ onClose }: SpotlightResultsProps) {
-    const keyboard = useAnimatedKeyboard();
-    const keyboardSpacerStyle = useAnimatedStyle(() => ({
-        height: Math.max(24, keyboard.height.value + 24),
-    }));
-
     const { session } = useSession();
     const router = useRouter();
     const colorScheme = useColorScheme();
@@ -266,11 +238,9 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
 
     const isOpen = useSpotlightStore((state) => state.isOpen);
     const query = useSpotlightStore((state) => state.query);
-    const scope = useSpotlightStore((state) => state.scope);
     const activeIndex = useSpotlightStore((state) => state.activeIndex);
     const recentItemIds = useSpotlightStore((state) => state.recentItemIds);
     const close = useSpotlightStore((state) => state.close);
-    const setScope = useSpotlightStore((state) => state.setScope);
     const setActiveIndex = useSpotlightStore((state) => state.setActiveIndex);
     const registerRecent = useSpotlightStore((state) => state.registerRecent);
     const setSheetState = useBottomSheetStore((state) => state.setSheetState);
@@ -455,8 +425,8 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
     );
 
     const rankedItems = React.useMemo(
-        () => rankSpotlightItems(allItems, query, scope, recentItemIds),
-        [allItems, query, scope, recentItemIds]
+        () => rankSpotlightItems(allItems, query, recentItemIds),
+        [allItems, query, recentItemIds]
     );
 
     rankedItemsRef.current = rankedItems;
@@ -476,21 +446,16 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
         })).filter((entry) => entry.items.length > 0);
     }, [rankedItems]);
 
+    // Compute a flat ID map to determine global active index across grouped sections
     const rows = React.useMemo(() => {
-        const result: Array<
-            | { type: 'section'; section: SpotlightSection; id: string }
-            | { type: 'item'; item: RankedSpotlightItem; id: string; itemIndex: number }
-        > = [];
-
-        let itemIndex = 0;
-        groupedSections.forEach(({ section, items }) => {
-            result.push({ type: 'section', section, id: `section:${section}` });
+        const result: Array<{ type: 'item'; item: RankedSpotlightItem; id: string; itemIndex: number }> = [];
+        let index = 0;
+        groupedSections.forEach(({ items }) => {
             items.forEach((item) => {
-                result.push({ type: 'item', item, id: `item:${item.id}`, itemIndex });
-                itemIndex += 1;
+                result.push({ type: 'item', item, id: item.id, itemIndex: index });
+                index += 1;
             });
         });
-
         return result;
     }, [groupedSections]);
 
@@ -517,14 +482,12 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
         [close, fireSelectionHaptic, registerRecent, onClose]
     );
 
-    // Fetch data when spotlight opens
     React.useEffect(() => {
         if (!isOpen || !session) return;
         fetchMessages().catch(() => undefined);
         fetchEvents().catch(() => undefined);
     }, [fetchEvents, fetchMessages, isOpen, session]);
 
-    // Register submit handler
     React.useEffect(() => {
         if (!isOpen) {
             registerGlobalSearchSubmit(null);
@@ -537,7 +500,6 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
         return () => registerGlobalSearchSubmit(null);
     }, [isOpen, activeIndex, executeItem, registerGlobalSearchSubmit]);
 
-    // Register dismiss handler
     React.useEffect(() => {
         if (!isOpen) {
             registerGlobalSearchDismiss(null);
@@ -549,7 +511,6 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
         return () => registerGlobalSearchDismiss(null);
     }, [isOpen, dismissSpotlight, registerGlobalSearchDismiss]);
 
-    // Active index bounds check
     React.useEffect(() => {
         if (!isOpen) return;
 
@@ -625,113 +586,73 @@ export function SpotlightResults({ onClose }: SpotlightResultsProps) {
             keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
             style={{ flex: 1, width: '100%' }}
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', paddingTop: 60, paddingBottom: 16 }}
         >
-            {rows.length === 0
-                ? renderEmptyState
-                : rows.map((row) => {
-                    if (row.type === 'section') {
-                        return (
-                            <View key={row.id} className="px-5 pt-4 pb-2 flex-row items-center gap-2">
-                                <SectionGlyph
-                                    section={row.section}
-                                    activeColor={isDark ? '#94a3b8' : '#64748b'}
-                                />
-                                <Text className="text-[11px] font-black uppercase tracking-[1.5px] text-slate-500 dark:text-slate-400">
-                                    {row.section}
-                                </Text>
-                            </View>
-                        );
-                    }
-
-                    const isActive = row.itemIndex === activeIndex;
-                    return (
-                        <Pressable
-                            key={row.id}
-                            onPress={() => {
-                                void executeItem(row.item);
-                            }}
-                            onPressIn={() => setActiveIndex(row.itemIndex)}
-                            onHoverIn={() => setActiveIndex(row.itemIndex)}
-                            className={`mx-4 mb-2 rounded-2xl border ${isActive
-                                ? 'bg-blue-50/10 dark:bg-blue-900/40 border-blue-200/30 dark:border-blue-700/50'
-                                : 'bg-black/5 dark:bg-white/5 border-transparent'
-                                }`}
-                        >
-                            <View className="px-4 py-3 flex-row items-center">
-                                <View className="flex-1 mr-3">
-                                    <HighlightedLabel
-                                        text={row.item.title}
-                                        query={query}
-                                        className={`text-sm font-semibold ${isActive
-                                            ? 'text-blue-900 dark:text-blue-200'
-                                            : 'text-slate-900 dark:text-white'
-                                            }`}
-                                        highlightClassName={isActive ? 'font-black text-blue-800 dark:text-blue-300' : 'font-bold text-blue-600 dark:text-blue-400'}
-                                    />
-
-                                    {row.item.subtitle ? (
-                                        <HighlightedLabel
-                                            text={row.item.subtitle}
-                                            query={query}
-                                            className={`text-xs mt-1 ${isActive
-                                                ? 'text-blue-700 dark:text-blue-300'
-                                                : 'text-slate-500 dark:text-slate-400'
-                                                }`}
-                                            highlightClassName={isActive ? 'font-semibold' : 'font-semibold text-slate-700 dark:text-slate-300'}
-                                        />
-                                    ) : null}
-                                </View>
-
-                                <ChevronRight
-                                    size={16}
-                                    color={isActive ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#64748b' : '#94a3b8')}
-                                    strokeWidth={2.5}
-                                />
-                            </View>
-                        </Pressable>
-                    );
-                })}
-            <Animated.View style={keyboardSpacerStyle} />
-        </ScrollView>
-    );
-
-    const renderFilterChips = (
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyboardShouldPersistTaps="always"
-            contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}
-            style={{ flexGrow: 0, paddingVertical: 12 }}
-        >
-            {SCOPE_OPTIONS.map((option) => {
-                const isSelected = scope === option.value;
+            {groupedSections.length === 0 ? renderEmptyState : [...groupedSections].reverse().map((group) => {
                 return (
-                    <Pressable
-                        key={option.value}
-                        onPress={() => {
-                            fireSelectionHaptic();
-                            setScope(option.value);
-                        }}
-                        className={`px-3 py-1.5 rounded-full border ${isSelected
-                            ? 'bg-blue-600 border-blue-600'
-                            : 'bg-black/5 dark:bg-white/10 border-slate-200/20 dark:border-slate-700/20'
-                            }`}
-                    >
-                        <Text
-                            className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-300'
-                                }`}
-                        >
-                            {option.label}
-                        </Text>
-                    </Pressable>
+                    <View key={group.section} className="mb-6 px-4">
+                        <View className="px-2 pb-2 flex-row items-center gap-2">
+                            <SectionGlyph
+                                section={group.section}
+                                activeColor={isDark ? '#cbd5e1' : '#64748b'}
+                            />
+                            <Text className="text-[13px] font-bold text-slate-600 dark:text-slate-300 tracking-wide">
+                                {group.section}
+                            </Text>
+                        </View>
+                        <View className="rounded-[16px] overflow-hidden bg-white/70 dark:bg-slate-900/60 border-[0.5px] border-black/5 dark:border-white/10">
+                            {[...group.items].reverse().map((item, index) => {
+                                const flatItemIndex = rows.find((r) => r.id === item.id)?.itemIndex || 0;
+                                const isActive = flatItemIndex === activeIndex;
+                                const isLast = index === group.items.length - 1;
+
+                                return (
+                                    <Pressable
+                                        key={item.id}
+                                        onPress={() => void executeItem(item)}
+                                        onPressIn={() => setActiveIndex(flatItemIndex)}
+                                        onHoverIn={() => setActiveIndex(flatItemIndex)}
+                                        className={`flex-row items-center px-4 py-[14px] ${!isLast ? 'border-b-[0.5px] border-black/5 dark:border-white/10' : ''} ${isActive ? 'bg-blue-50/50 dark:bg-blue-900/30' : ''}`}
+                                    >
+                                        <View className="flex-1 mr-3">
+                                            <HighlightedLabel
+                                                text={item.title}
+                                                query={query}
+                                                className={`text-[15px] font-semibold ${isActive
+                                                    ? 'text-blue-700 dark:text-blue-300'
+                                                    : 'text-slate-900 dark:text-white'
+                                                    }`}
+                                                highlightClassName={isActive ? 'font-bold text-blue-900 dark:text-blue-100' : 'font-bold text-blue-600 dark:text-blue-400'}
+                                            />
+                                            {item.subtitle ? (
+                                                <HighlightedLabel
+                                                    text={item.subtitle}
+                                                    query={query}
+                                                    className={`text-[13px] mt-0.5 ${isActive
+                                                        ? 'text-blue-600/80 dark:text-blue-300/80'
+                                                        : 'text-slate-500 dark:text-slate-400'
+                                                        }`}
+                                                    highlightClassName={isActive ? 'font-semibold' : 'font-semibold text-slate-700 dark:text-slate-300'}
+                                                />
+                                            ) : null}
+                                        </View>
+                                        <ChevronRight
+                                            size={16}
+                                            color={isActive ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#475569' : '#94a3b8')}
+                                            strokeWidth={2.5}
+                                        />
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+                    </View>
                 );
             })}
         </ScrollView>
     );
 
     return (
-        <View className="flex-1 w-full" style={{ paddingBottom: 16 }}>
-            {renderFilterChips}
+        <View className="flex-1 w-full relative">
             {renderResultRows}
         </View>
     );

@@ -1,4 +1,3 @@
-export type SpotlightScope = 'all' | 'navigation' | 'actions' | 'settings' | 'calendar' | 'inbox';
 export type SpotlightOpenSource = 'primary' | 'shortcut';
 
 export type SpotlightKind =

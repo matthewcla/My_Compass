@@ -65,7 +65,7 @@ export function KeyboardActionToolbar() {
             style={[
                 {
                     position: 'absolute',
-                    bottom: 16, // Float 16px above keyboard
+                    bottom: 16,
                     right: 16,
                     zIndex: 99999,
                 },
@@ -84,27 +84,28 @@ export function KeyboardActionToolbar() {
                     }}
                     className="overflow-hidden rounded-full"
                     style={{
-                        shadowColor: isDark ? '#3b82f6' : '#000', // Subtle blue glow on dark
+                        shadowColor: isDark ? '#000' : '#475569',
                         shadowOffset: { width: 0, height: 4 },
                         shadowOpacity: isDark ? 0.3 : 0.15,
                         shadowRadius: 12,
                         elevation: 5,
-                        borderWidth: 1.5,
-                        borderColor: isDark ? '#FFFFFF' : '#D1D5DB', // Solid White in dark, Solid Gray-300 in light
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
                     }}
                 >
                     <BlurView
-                        intensity={isDark ? 80 : 50}
+                        intensity={isDark ? 50 : 80}
                         tint={isDark ? "dark" : "light"}
-                        className="w-12 h-12 items-center justify-center flex-row"
+                        className="w-[54px] h-[54px] items-center justify-center flex-row"
                         style={{
-                            backgroundColor: isDark ? 'rgba(30, 30, 30, 0.4)' : 'rgba(255, 255, 255, 0.6)',
+                            backgroundColor: isDark ? 'rgba(20, 20, 22, 0.75)' : 'rgba(255, 255, 255, 0.6)',
+                            borderRadius: 27,
                         }}
                     >
                         <Ionicons
                             name="close"
                             size={24}
-                            color={isDark ? '#e0f2fe' : '#2563eb'}
+                            color={isDark ? '#e2e8f0' : '#334155'}
                             style={{ opacity: 0.9 }}
                         />
                     </BlurView>

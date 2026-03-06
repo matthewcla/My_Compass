@@ -1,16 +1,11 @@
 import { DrawerMenuContent } from '@/components/navigation/DrawerMenuContent';
 import { useScrollContextSafe } from '@/components/navigation/ScrollControlContext';
-import { SpotlightResults } from '@/components/spotlight/SpotlightResults';
-import { useGlobalSpotlightHeaderSearch } from '@/hooks/useGlobalSpotlightHeaderSearch';
 import { BottomSheetState, useBottomSheetStore } from '@/store/useBottomSheetStore';
-import { useHeaderStore } from '@/store/useHeaderStore';
-import { useSpotlightStore } from '@/store/useSpotlightStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter, useSegments } from 'expo-router';
-import { Search, X } from 'lucide-react-native';
 import React, { useEffect } from 'react';
-import { BackHandler, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Keyboard, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     Extrapolation,
@@ -54,68 +49,9 @@ export default function ExpandableBottomDrawer() {
         return () => backHandler.remove();
     }, [sheetState, setSheetState]);
 
-    const searchConfig = useGlobalSpotlightHeaderSearch({ placeholder: 'Spotlight Search' });
-
-    const searchInputRef = React.useRef<TextInput>(null);
-    const globalSearchRowRef = React.useRef<View>(null);
-    const spotlightIsOpen = useSpotlightStore((state) => state.isOpen);
     const router = useRouter();
     const pathname = usePathname();
     const segments = useSegments();
-    const setGlobalSearchFrame = useHeaderStore((state) => state.setGlobalSearchFrame);
-    const triggerGlobalSearchDismiss = useHeaderStore((state) => state.triggerGlobalSearchDismiss);
-    const triggerGlobalSearchSubmit = useHeaderStore((state) => state.triggerGlobalSearchSubmit);
-    const registerGlobalSearchBlur = useHeaderStore((state) => state.registerGlobalSearchBlur);
-
-    // Sync Spotlight open state with drawer expansion
-    useEffect(() => {
-        if (spotlightIsOpen && sheetState !== 1) {
-            setSheetState(1); // Force drawer fully open when Spotlight activates
-        }
-    }, [spotlightIsOpen, sheetState, setSheetState]);
-
-    const handleGlobalSearchLayout = React.useCallback(() => {
-        if (!globalSearchRowRef.current) return;
-        globalSearchRowRef.current.measureInWindow((x, y, width, height) => {
-            const nextBottom = y + height;
-            if (
-                !Number.isFinite(x) ||
-                !Number.isFinite(y) ||
-                !Number.isFinite(width) ||
-                !Number.isFinite(height) ||
-                !Number.isFinite(nextBottom)
-            ) {
-                return;
-            }
-            setGlobalSearchFrame({
-                x,
-                y,
-                width,
-                height,
-                bottom: nextBottom,
-                borderRadius: 27, // matches styles.searchBar height/2
-                measuredAt: Date.now(),
-            });
-        });
-    }, [setGlobalSearchFrame]);
-
-    const focusGlobalSearchInput = React.useCallback(() => {
-        handleGlobalSearchLayout();
-        searchInputRef.current?.focus();
-        searchConfig.onPress?.();
-    }, [handleGlobalSearchLayout, searchConfig]);
-
-    React.useEffect(() => {
-        const blurInput = () => searchInputRef.current?.blur();
-        registerGlobalSearchBlur(blurInput);
-        return () => registerGlobalSearchBlur(null);
-    }, [registerGlobalSearchBlur]);
-
-    React.useEffect(() => {
-        if (spotlightIsOpen) {
-            searchInputRef.current?.focus();
-        }
-    }, [spotlightIsOpen]);
 
     // Tap into the global scroll control for CollapsibleScaffold background lists
     const scrollContext = useScrollContextSafe();
@@ -137,8 +73,8 @@ export default function ExpandableBottomDrawer() {
         }
     }, [RESTING_TOP_OFFSET_FROM_BOTTOM, isHidden, setTabBarHeight]);
 
-    // Extended Drawer Heights
-    const HEIGHT_FULL = SCREEN_HEIGHT - (insets.top + 10);
+    // Extended Drawer Heights (50% Viewport Constraint)
+    const HEIGHT_FULL = SCREEN_HEIGHT * 0.5;
 
     const activeState = useSharedValue<BottomSheetState>(sheetState);
     const translateY = useSharedValue(0);
@@ -283,7 +219,6 @@ export default function ExpandableBottomDrawer() {
                 <Pressable
                     onPress={() => {
                         Keyboard.dismiss();
-                        if (spotlightIsOpen) triggerGlobalSearchDismiss();
                         setSheetState(0);
                     }}
                     style={{ position: 'absolute', top: -SCREEN_HEIGHT, bottom: 0, left: 0, right: 0 }}
@@ -388,7 +323,6 @@ export default function ExpandableBottomDrawer() {
                                 style={{ width: '100%', alignItems: 'center', paddingVertical: 10 }}
                                 onPress={() => {
                                     Keyboard.dismiss();
-                                    if (spotlightIsOpen) triggerGlobalSearchDismiss();
                                     setSheetState(0);
                                 }}
                                 activeOpacity={0.7}
@@ -397,97 +331,13 @@ export default function ExpandableBottomDrawer() {
                             </TouchableOpacity>
 
                             <Animated.View style={[{ flex: 1, width: '100%', alignItems: 'center' }]}>
-                                <View style={{ width: '100%', paddingHorizontal: 24 }}>
-                                    <View
-                                        ref={globalSearchRowRef}
-                                        onLayout={handleGlobalSearchLayout}
-                                        className={`flex-row items-center mt-6 w-full`}
-                                        style={[
-                                            styles.searchBar,
-                                            {
-                                                backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                                            }
-                                        ]}
-                                        accessibilityRole="search"
-                                    >
-                                        {spotlightIsOpen ? (
-                                            <Pressable
-                                                onPress={() => {
-                                                    Keyboard.dismiss();
-                                                    triggerGlobalSearchDismiss();
-                                                    setSheetState(0);
-                                                }}
-                                                hitSlop={10}
-                                                accessibilityRole="button"
-                                                accessibilityLabel="Close search"
-                                            >
-                                                <X
-                                                    size={20}
-                                                    color={isDark ? '#94a3b8' : '#64748b'}
-                                                    strokeWidth={2.5}
-                                                    style={{ marginRight: 16 }}
-                                                />
-                                            </Pressable>
-                                        ) : (
-                                            <Pressable onPress={focusGlobalSearchInput} onPressIn={handleGlobalSearchLayout} hitSlop={10}>
-                                                <Search
-                                                    size={20}
-                                                    color={isDark ? '#fff' : '#000'}
-                                                    strokeWidth={2.5}
-                                                    style={{ marginRight: 16 }}
-                                                    className="opacity-70"
-                                                />
-                                            </Pressable>
-                                        )}
-
-                                        <TextInput
-                                            ref={searchInputRef}
-                                            value={searchConfig.value || ''}
-                                            onChangeText={searchConfig.onChangeText}
-                                            onFocus={focusGlobalSearchInput}
-                                            placeholder={searchConfig.placeholder}
-                                            placeholderTextColor={isDark ? '#8E8E93' : '#C7C7CC'}
-                                            style={{
-                                                flex: 1,
-                                                color: isDark ? 'white' : 'black',
-                                                fontSize: 16,
-                                                outline: 'none'
-                                            } as any}
-                                            autoCorrect={false}
-                                            autoCapitalize="none"
-                                            returnKeyType="search"
-                                            showSoftInputOnFocus={true}
-                                            onSubmitEditing={() => {
-                                                if (spotlightIsOpen) triggerGlobalSearchSubmit();
-                                            }}
-                                        />
-                                        {!spotlightIsOpen && Platform.OS === 'web' && (
-                                            <View className="px-2 py-1 ml-2 rounded-md border border-slate-300 dark:border-slate-700">
-                                                <Text className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                                    ⌘K
-                                                </Text>
-                                            </View>
-                                        )}
-                                    </View>
-                                </View>
-
-                                {spotlightIsOpen ? (
-                                    <Animated.View
-                                        entering={FadeIn.duration(200)}
-                                        exiting={FadeOut.duration(200)}
-                                        style={{ flex: 1, width: '100%', marginTop: 16 }}
-                                    >
-                                        <SpotlightResults />
-                                    </Animated.View>
-                                ) : (
-                                    <Animated.View
-                                        entering={FadeIn.duration(200)}
-                                        exiting={FadeOut.duration(200)}
-                                        style={{ flex: 1, width: '100%', marginTop: 16 }}
-                                    >
-                                        <DrawerMenuContent />
-                                    </Animated.View>
-                                )}
+                                <Animated.View
+                                    entering={FadeIn.duration(200)}
+                                    exiting={FadeOut.duration(200)}
+                                    style={{ flex: 1, width: '100%', marginTop: 16 }}
+                                >
+                                    <DrawerMenuContent />
+                                </Animated.View>
                             </Animated.View>
                         </Animated.View>
 

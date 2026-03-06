@@ -4,7 +4,7 @@ import { useDemoStore } from '@/store/useDemoStore';
 import Constants from 'expo-constants';
 import { LogOut, Settings } from 'lucide-react-native';
 import React from 'react';
-import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 export function DrawerMenuContent() {
@@ -31,49 +31,55 @@ export function DrawerMenuContent() {
             </View>
 
             <Animated.View entering={FadeIn.duration(300).delay(100)}>
-                {/* Visual Settings Group */}
-                <View className="mb-6 rounded-3xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
+                {/* Unified Settings Block */}
+                <View className="rounded-3xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
+
+                    {/* Visual Settings Row */}
                     <View className="px-5 py-4">
                         <ThemeToggle />
                     </View>
-                </View>
 
-                {/* Account & Security Group */}
-                {enableDevSettings && (
-                    <View className="mb-6 rounded-3xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
-                        <View className="flex-row items-center justify-between px-5 py-4">
-                            <View className="flex-row items-center gap-3 flex-1 mr-4">
-                                <View className="p-2 rounded-xl bg-emerald-100/50 dark:bg-emerald-900/30">
-                                    <Text style={{ fontSize: 18 }}>🧪</Text>
+                    {/* Divider */}
+                    <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', marginLeft: 20 }} />
+
+                    {/* Account & Security Group */}
+                    {enableDevSettings && (
+                        <>
+                            <View className="flex-row items-center justify-between px-5 py-4">
+                                <View className="flex-row items-center gap-3 flex-1 mr-4">
+                                    <View className="p-2 rounded-xl bg-emerald-100/50 dark:bg-emerald-900/30">
+                                        <Text style={{ fontSize: 18 }}>🧪</Text>
+                                    </View>
+                                    <View className="flex-1">
+                                        <Text className="font-semibold text-base text-slate-900 dark:text-white">Dev Tools</Text>
+                                        <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Show diagnostic icons</Text>
+                                    </View>
                                 </View>
-                                <View className="flex-1">
-                                    <Text className="font-semibold text-base text-slate-900 dark:text-white">Dev Tools</Text>
-                                    <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Show diagnostic icons</Text>
-                                </View>
+                                <Switch
+                                    value={showDevFloatingIcons}
+                                    onValueChange={toggleDevFloatingIcons}
+                                    trackColor={{ false: isDark ? '#3f3f46' : '#d1d5db', true: '#10B981' }}
+                                    thumbColor="#FFFFFF"
+                                />
                             </View>
-                            <Switch
-                                value={showDevFloatingIcons}
-                                onValueChange={toggleDevFloatingIcons}
-                                trackColor={{ false: isDark ? '#3f3f46' : '#d1d5db', true: '#10B981' }}
-                                thumbColor="#FFFFFF"
-                            />
-                        </View>
-                    </View>
-                )}
+                            {/* Divider */}
+                            <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', marginLeft: 20 }} />
+                        </>
+                    )}
 
-                {/* Danger Zone */}
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.05)',
-                        borderColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.15)'
-                    }}
-                    className="flex-row items-center justify-center py-4 rounded-3xl border"
-                    onPress={() => signOut()}
-                    activeOpacity={0.7}
-                >
-                    <LogOut size={20} color="#EF4444" strokeWidth={2.5} />
-                    <Text className="text-red-600 font-bold text-base ml-3">Log Out Securely</Text>
-                </TouchableOpacity>
+                    {/* Danger Zone */}
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: isDark ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.02)',
+                        }}
+                        className="flex-row items-center justify-center py-5"
+                        onPress={() => signOut()}
+                        activeOpacity={0.7}
+                    >
+                        <LogOut size={20} color="#EF4444" strokeWidth={2.5} />
+                        <Text className="text-red-600 font-bold text-base ml-3">Log Out Securely</Text>
+                    </TouchableOpacity>
+                </View>
             </Animated.View>
         </ScrollView>
     );

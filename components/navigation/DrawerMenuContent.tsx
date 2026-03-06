@@ -1,4 +1,3 @@
-import { CommandCenterTiles } from '@/components/navigation/CommandCenterTiles';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useSession } from '@/lib/ctx';
 import { useDemoStore } from '@/store/useDemoStore';
@@ -32,8 +31,6 @@ export function DrawerMenuContent() {
             </View>
 
             <Animated.View entering={FadeIn.duration(300).delay(100)}>
-                <CommandCenterTiles />
-
                 {/* Visual Settings Group */}
                 <View className="mb-6 rounded-3xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
                     <View className="px-5 py-4">

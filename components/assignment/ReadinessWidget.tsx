@@ -2,6 +2,7 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { useUserStore } from '@/store/useUserStore';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
     ChevronRight,
@@ -74,79 +75,93 @@ export default function ReadinessWidget() {
     const allDone = doneCount === items.length;
 
     return (
-        <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl p-5 shadow-sm border border-black/5 dark:border-white/10 mb-6 mt-2">
-            {/* Header */}
-            <View className="flex-row items-center justify-between mb-4">
-                <View className="flex-row items-center gap-3">
-                    <View className={`w-10 h-10 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/20`}>
-                        <Target size={20} color={isDark ? '#fb923c' : '#ea580c'} strokeWidth={2.2} />
-                    </View>
-                    <View>
-                        <Text className="text-base font-bold text-slate-900 dark:text-white">
-                            Ready for Cycle?
-                        </Text>
-                        <Text className="text-[11px] font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-widest mt-0.5">
-                            Checklist
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Progress Bar Mini */}
-                <View className="items-end justify-center w-20">
-                    <Text className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
-                        {doneCount}/{items.length} Done
-                    </Text>
-                    <View className="w-full h-1.5 bg-slate-200 dark:bg-slate-700/50 rounded-full overflow-hidden">
-                        <View
-                            className="h-full bg-orange-500 dark:bg-orange-400 rounded-full"
-                            style={{ width: `${(doneCount / items.length) * 100}%` }}
-                        />
-                    </View>
-                </View>
-            </View>
-
-            {/* Horizontal Matrix */}
-            <View className="flex-row gap-2">
-                {items.map((item, index) => (
-                    <TouchableOpacity
-                        key={item.label}
-                        onPress={() => {
-                            if (!item.done && item.route) {
-                                router.push(item.route as any);
-                            }
-                        }}
-                        disabled={item.done}
-                        activeOpacity={0.6}
-                        className={`flex-1 items-center justify-center py-3 rounded-lg border flex-col gap-1.5 ${item.done
-                                ? 'bg-green-50/50 dark:bg-green-900/10 border-green-200/50 dark:border-green-800/30'
-                                : 'bg-slate-50 dark:bg-white/5 border-slate-200/60 dark:border-slate-700/50'
-                            }`}
-                    >
-                        <View className={`w-8 h-8 rounded-full items-center justify-center ${item.done
-                                ? 'bg-green-100/50 dark:bg-green-800/30'
-                                : 'bg-slate-100 dark:bg-slate-800'
-                            }`}>
-                            {item.icon}
+        <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-[24px] overflow-hidden shadow-sm border border-black/5 dark:border-white/10 mb-6 mx-4">
+            <LinearGradient
+                colors={isDark ? ['rgba(249,115,22,0.15)', 'transparent'] : ['rgba(249,115,22,0.08)', 'transparent']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+            <View className="p-5">
+                {/* Header */}
+                <View className="flex-row items-center justify-between mb-5">
+                    <View className="flex-row items-center gap-4 flex-1">
+                        <View className={`w-[52px] h-[52px] items-center justify-center rounded-full bg-orange-500/10 dark:bg-orange-900/40 border-[1.5px] border-orange-500/20 dark:border-orange-800/60 shadow-sm`}>
+                            <Target size={26} color={isDark ? '#FB923C' : '#EA580C'} />
                         </View>
-                        <Text className={`text-[10px] font-bold text-center uppercase ${item.done
-                                ? 'text-green-700 dark:text-green-400'
-                                : 'text-slate-500 dark:text-slate-400'
-                            }`}>
-                            {item.label}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
+                        <View className="flex-1">
+                            <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>
+                                Ready for Cycle?
+                            </Text>
+                            <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>
+                                Checklist
+                            </Text>
+                        </View>
+                    </View>
 
-            {/* All-done celebration */}
-            {allDone && (
-                <View className="bg-green-500/10 p-3 rounded-xl border border-green-500/20 mt-4 flex-row items-center">
-                    <Text className="text-xs text-green-700 dark:text-green-400 leading-relaxed font-bold flex-1">
-                        You're fully prepared to build your slate.
-                    </Text>
-                    <ChevronRight size={16} color={isDark ? '#4ade80' : '#16a34a'} />
+                    {/* Progress Bar Mini */}
+                    <View className="items-end justify-center w-20">
+                        <View className="bg-orange-500/10 px-3 py-1.5 rounded-[12px] border pb-2 border-orange-500/20 shadow-sm mb-2">
+                            <Text className="text-[14px] font-black tracking-wide text-orange-600 dark:text-orange-400">
+                                {doneCount}/{items.length}
+                            </Text>
+                        </View>
+                        <View className="w-full h-1.5 bg-slate-200 dark:bg-slate-700/50 rounded-full overflow-hidden">
+                            <View
+                                className="h-full bg-orange-500 dark:bg-orange-400 rounded-full"
+                                style={{ width: `${(doneCount / items.length) * 100}%` }}
+                            />
+                        </View>
+                    </View>
                 </View>
-            )}
+
+                <View className="border-t border-slate-200/50 dark:border-slate-700/50 pt-5">
+                    {/* Horizontal Matrix */}
+                    <View className="flex-row gap-2">
+                        {items.map((item, index) => (
+                            <TouchableOpacity
+                                key={item.label}
+                                onPress={() => {
+                                    if (!item.done && item.route) {
+                                        router.push(item.route as any);
+                                    }
+                                }}
+                                disabled={item.done}
+                                activeOpacity={0.6}
+                                className={`flex-1 flex-col items-center justify-center py-4 rounded-xl border gap-2 shadow-sm ${item.done
+                                    ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30'
+                                    : 'bg-white/60 dark:bg-slate-800/60 border-slate-200/60 dark:border-slate-700/60'
+                                    }`}
+                            >
+                                <View className={`w-10 h-10 rounded-full items-center justify-center shadow-sm ${item.done
+                                    ? 'bg-green-500/20 dark:bg-green-500/30 border border-green-500/30'
+                                    : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60'
+                                    }`}>
+                                    {item.icon}
+                                </View>
+                                <Text className={`text-[10px] uppercase font-bold text-center tracking-wider ${item.done
+                                    ? 'text-green-700 dark:text-green-400'
+                                    : 'text-slate-500 dark:text-slate-400'
+                                    }`}>
+                                    {item.label}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* All-done celebration */}
+                    {allDone && (
+                        <View className="bg-green-500/10 p-4 rounded-[16px] border border-green-500/20 mt-5 flex-row items-center justify-between shadow-sm">
+                            <Text className="text-[14px] text-green-700 dark:text-green-400 font-bold flex-1" numberOfLines={1}>
+                                You're fully prepared to build your slate.
+                            </Text>
+                            <View className="w-8 h-8 rounded-full bg-green-500/20 items-center justify-center ml-2 border border-green-500/30">
+                                <ChevronRight size={18} color={isDark ? '#4ade80' : '#16A34A'} strokeWidth={2.5} />
+                            </View>
+                        </View>
+                    )}
+                </View>
+            </View>
         </GlassView>
     );
 }

@@ -36,32 +36,32 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
         <TouchableOpacity activeOpacity={0.7} onPress={onPress}>
             <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: 0.08, shadowRadius: 6, elevation: 2 })}>
                 <GlassView
-                    intensity={60}
+                    intensity={80}
                     tint={isDark ? 'dark' : 'light'}
-                    className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
+                    className="rounded-[20px] overflow-hidden shadow-sm border border-black/5 dark:border-white/10"
                     style={{ borderLeftWidth: 3, borderLeftColor: SLA_COLOR[request.slaStatus] }}
                 >
-                    <View className="flex-row items-center px-3.5 py-3 gap-3">
+                    <View className="flex-row items-center px-4 py-4 gap-4">
                         {/* Days counter */}
-                        <View className="items-center" style={{ minWidth: 36 }}>
-                            <Text className={`text-lg font-black ${request.slaStatus === 'red' ? 'text-red-500' :
-                                    request.slaStatus === 'amber' ? 'text-amber-500' :
-                                        'text-slate-600 dark:text-slate-300'
+                        <View className="items-center" style={{ minWidth: 40 }}>
+                            <Text className={`text-[20px] font-black tracking-tight ${request.slaStatus === 'red' ? 'text-red-500' :
+                                request.slaStatus === 'amber' ? 'text-amber-500' :
+                                    'text-slate-600 dark:text-slate-300'
                                 }`}>
                                 {request.daysSinceLastAction}
                             </Text>
-                            <Text className="text-[8px] font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider">
+                            <Text className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider">
                                 days
                             </Text>
                         </View>
 
                         {/* Content */}
                         <View className="flex-1">
-                            <Text className="text-[14px] font-bold text-slate-900 dark:text-white" numberOfLines={1}>
+                            <Text className="text-[15px] font-[800] text-slate-900 dark:text-white tracking-[-0.2px] mb-1" numberOfLines={1}>
                                 {request.label}
                             </Text>
-                            <View className="flex-row items-center gap-2 mt-1">
-                                <View className="bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">
+                            <View className="flex-row items-center gap-2">
+                                <View className="bg-slate-200/80 dark:bg-slate-700/80 px-2 py-0.5 rounded-md border border-slate-300/50 dark:border-slate-600/50">
                                     <Text className="text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                                         {level}
                                     </Text>
@@ -71,11 +71,13 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
 
                         {/* Issue icon or Chevron */}
                         {hasIssue ? (
-                            <TouchableOpacity onPress={onAction} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                                <AlertCircle size={20} color="#ef4444" strokeWidth={2.5} />
+                            <TouchableOpacity onPress={onAction} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="w-8 h-8 rounded-full bg-red-500/10 items-center justify-center border border-red-500/20">
+                                <AlertCircle size={18} color="#EF4444" strokeWidth={2.5} />
                             </TouchableOpacity>
                         ) : (
-                            <ChevronRight size={16} color={isDark ? '#475569' : '#94a3b8'} />
+                            <View className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800/80 items-center justify-center border border-slate-200 dark:border-slate-700/80">
+                                <ChevronRight size={18} color={isDark ? '#94A3B8' : '#64748B'} strokeWidth={2.5} />
+                            </View>
                         )}
                     </View>
                 </GlassView>

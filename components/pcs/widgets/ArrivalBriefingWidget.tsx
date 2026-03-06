@@ -1,6 +1,7 @@
 import { GlassView } from '@/components/ui/GlassView';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useActiveOrder, usePCSStore } from '@/store/usePCSStore';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { LucideIcon } from 'lucide-react-native';
 import {
     CalendarClock,
@@ -113,14 +114,16 @@ export function ArrivalBriefingWidget() {
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className="rounded-2xl overflow-hidden mx-4 mb-8"
-                style={{
-                    borderWidth: 1,
-                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
-                }}
+                className="rounded-[24px] overflow-hidden mx-4 mb-6 shadow-sm border border-black/5 dark:border-white/10"
             >
+                <LinearGradient
+                    colors={isDark ? ['rgba(59,130,246,0.15)', 'transparent'] : ['rgba(59,130,246,0.08)', 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                />
                 <TouchableOpacity activeOpacity={0.7}>
-                    <View className="bg-white/40 dark:bg-slate-900/60 p-5 relative overflow-hidden">
+                    <View className="p-5 relative overflow-hidden">
                         {/* Glow Behind the Icon */}
                         <Animated.View
                             className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-blue-500/20 blur-3xl dark:bg-blue-400/20"
@@ -128,19 +131,20 @@ export function ArrivalBriefingWidget() {
                         />
 
                         {/* Header */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                            <View className="flex-row items-center" style={{ gap: 8 }}>
-                                <View className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 items-center justify-center border border-blue-500/20">
-                                    <CalendarClock size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+                        <View className="flex-row items-center justify-between mb-4">
+                            <View className="flex-row items-center gap-4 flex-1">
+                                <View className="w-[52px] h-[52px] rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-800/60 shadow-sm">
+                                    <CalendarClock size={26} color={isDark ? '#60A5FA' : '#2563EB'} />
                                 </View>
-                                <Text className="text-[15px] font-extrabold text-slate-900 dark:text-white">
-                                    Action Required
-                                </Text>
+                                <View className="flex-1">
+                                    <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>Action Required</Text>
+                                    <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>Arrival Briefing</Text>
+                                </View>
                             </View>
 
                             {daysSinceArrival !== null && (
-                                <View className="bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-500/20">
-                                    <Text className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                                <View className="bg-blue-500/10 px-3 py-1.5 rounded-[12px] border border-blue-500/20 ml-2">
+                                    <Text className="text-[11px] font-black tracking-wide text-blue-700 dark:text-blue-300 uppercase">
                                         Day {daysSinceArrival}
                                     </Text>
                                 </View>
@@ -148,20 +152,22 @@ export function ArrivalBriefingWidget() {
                         </View>
 
                         {/* Action Body (Smart Stack - Alert to Action) */}
-                        <View className="bg-white/80 dark:bg-black/40 rounded-xl p-4 border border-blue-500/30 flex-row items-center justify-between shadow-sm">
-                            <View className="flex-1 flex-row items-center gap-3 pr-2">
-                                <NextIcon size={20} color={isDark ? '#93c5fd' : '#2563eb'} />
-                                <View className="flex-1">
-                                    <Text className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 mb-0.5">
-                                        {nextStep.timeframe}
-                                    </Text>
-                                    <Text className="text-[14px] font-bold text-slate-900 dark:text-white leading-tight">
-                                        {nextStep.label}
-                                    </Text>
+                        <View className="border-t border-slate-200/50 dark:border-slate-700/50 pt-5">
+                            <View className="bg-white/80 dark:bg-slate-800/80 rounded-xl p-4 border border-blue-500/30 flex-row items-center justify-between shadow-sm">
+                                <View className="flex-1 flex-row items-center gap-3 pr-2">
+                                    <NextIcon size={20} color={isDark ? '#93c5fd' : '#2563eb'} />
+                                    <View className="flex-1">
+                                        <Text className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 mb-0.5 tracking-wider">
+                                            {nextStep.timeframe}
+                                        </Text>
+                                        <Text className="text-[14px] font-bold text-slate-900 dark:text-white leading-tight">
+                                            {nextStep.label}
+                                        </Text>
+                                    </View>
                                 </View>
-                            </View>
-                            <View className="w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 items-center justify-center">
-                                <ChevronRight size={18} color="#ffffff" strokeWidth={3} />
+                                <View className="w-8 h-8 rounded-full bg-blue-500/10 dark:bg-blue-500/20 items-center justify-center border border-blue-500/20">
+                                    <ChevronRight size={18} color={isDark ? '#60A5FA' : '#2563EB'} strokeWidth={2.5} />
+                                </View>
                             </View>
                         </View>
                     </View>

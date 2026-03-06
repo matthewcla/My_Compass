@@ -507,9 +507,9 @@ export default function HubDashboard() {
                         data={sections}
                         renderItem={renderItem}
                         ItemSeparatorComponent={() => (
-                            <View style={{ height: 24 }} />
+                            <View style={{ height: 16 }} />
                         )}
-                        ListHeaderComponent={<View style={{ height: 24 }} />}
+                        ListHeaderComponent={<View style={{ height: 16 }} />}
                         ListFooterComponent={<View style={{ height: 250 }} />}
 
                         estimatedItemSize={150}

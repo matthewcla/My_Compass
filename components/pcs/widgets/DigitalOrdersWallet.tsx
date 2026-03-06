@@ -5,6 +5,7 @@ import { usePCSStore } from '@/store/usePCSStore';
 import { format } from 'date-fns';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Sharing from 'expo-sharing';
 import { FileDown, RefreshCw, Share2 } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -200,19 +201,29 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
       <GlassView
         intensity={80}
         tint={isDark ? 'dark' : 'light'}
-        className="rounded-2xl overflow-hidden mx-4 mb-8"
-        style={{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
+        className="rounded-[24px] overflow-hidden mx-4 mb-6 shadow-sm border border-black/5 dark:border-white/10"
       >
-        <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4">
-          <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
-            Official Orders
-          </Text>
-        </View>
-        <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-4 pb-5 border-t border-slate-200/50 dark:border-slate-700/50">
-          <Text className="text-xl font-bold text-slate-900 dark:text-white">No Orders Cached</Text>
+        <LinearGradient
+          colors={isDark ? ['rgba(59,130,246,0.15)', 'transparent'] : ['rgba(59,130,246,0.08)', 'transparent']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+        <View className="p-5">
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center gap-4 flex-1">
+              <View className="w-[52px] h-[52px] rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-800/60 shadow-sm">
+                <FileDown size={26} color={isDark ? '#60A5FA' : '#2563EB'} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5">Official Orders</Text>
+                <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>No orders cached offline</Text>
+              </View>
+            </View>
+          </View>
 
           <Text
-            className={`mt-2 text-[13px] leading-5 ${isOffline
+            className={`text-[13px] leading-5 ${isOffline
               ? 'text-red-500 dark:text-red-400'
               : 'text-slate-600 dark:text-slate-400'
               }`}
@@ -243,43 +254,46 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
     <GlassView
       intensity={80}
       tint={isDark ? 'dark' : 'light'}
-      className="rounded-2xl overflow-hidden mx-4 mb-8"
-      style={{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
+      className="rounded-[24px] overflow-hidden mx-4 mb-6 shadow-sm border border-black/5 dark:border-white/10"
     >
-      <View className="bg-slate-900/5 dark:bg-slate-900/70 p-5 pb-4 flex-row items-center justify-between">
-        <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-600 dark:text-slate-300">
-          Official Orders
-        </Text>
-        <View className="flex-row items-center bg-green-500/20 px-2 py-1 rounded border border-green-500/30">
-          <View className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5" />
-          <Text className="text-[10px] font-bold uppercase tracking-wider text-green-300">Cached</Text>
-        </View>
-      </View>
-
-      <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-4 pb-5 border-t border-slate-200/50 dark:border-slate-700/50">
-        <View>
-          <Text className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">#{activeOrder.orderNumber}</Text>
-          <Text className="text-[13px] font-medium text-slate-500 dark:text-slate-400 mt-1">Effective Date: {effectiveDate}</Text>
-
-          <View className="mt-4 bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60">
-            <Text className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 mb-1">Gaining Command</Text>
-            <Text className="text-[14px] font-bold text-slate-800 dark:text-slate-200">
-              {gainingCommand}
-            </Text>
-
-            <View className="h-[1px] bg-slate-200 dark:bg-slate-700 my-2" />
-
-            <Text className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 mb-1">Detaching From</Text>
-            <Text className="text-[13px] font-semibold text-slate-600 dark:text-slate-400">
-              {detachingFrom}
-            </Text>
+      <LinearGradient
+        colors={isDark ? ['rgba(59,130,246,0.15)', 'transparent'] : ['rgba(59,130,246,0.08)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+      <View className="p-5">
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center gap-4 flex-1">
+            <View className="w-[52px] h-[52px] rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-800/60 shadow-sm">
+              <FileDown size={26} color={isDark ? '#60A5FA' : '#2563EB'} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5">#{activeOrder.orderNumber}</Text>
+              <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>Effective Date: {effectiveDate}</Text>
+            </View>
           </View>
         </View>
 
+        <View className="bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60">
+          <Text className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 mb-1">Gaining Command</Text>
+          <Text className="text-[14px] font-bold text-slate-800 dark:text-slate-200">
+            {gainingCommand}
+          </Text>
+
+          <View className="h-[1px] bg-slate-200 dark:bg-slate-700 my-2" />
+
+          <Text className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 mb-1">Detaching From</Text>
+          <Text className="text-[13px] font-semibold text-slate-600 dark:text-slate-400">
+            {detachingFrom}
+          </Text>
+        </View>
+
         {isStale ? (
-          <View className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+          <View className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 flex-row flex-1 items-center gap-2">
+            <RefreshCw size={14} color={isDark ? '#fbbf24' : '#d97706'} />
             <Text className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-              Orders may be outdated (cached over 30 days ago).
+              Orders may be outdated (cached {ageLabel(cachedAgeDays)} ago).
             </Text>
           </View>
         ) : null}
@@ -296,7 +310,7 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
           <ScalePressable
             onPress={handleViewPDF}
             disabled={isCorrupted}
-            className={`flex-1 h-12 rounded-xl border items-center justify-center flex-row ${isCorrupted
+            className={`flex-[1.5] h-12 rounded-xl border items-center justify-center flex-row ${isCorrupted
               ? 'border-slate-200/50 bg-slate-100/50 dark:border-slate-700/50 dark:bg-slate-800/50'
               : 'border-blue-500/20 bg-blue-500/10'
               }`}
@@ -342,8 +356,11 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
           </ScalePressable>
         </View>
 
-        <View className="items-center mt-5">
-          <Text className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">Last cached {ageLabel(cachedAgeDays)}</Text>
+        <View className="items-center mt-5 flex-row justify-center gap-1.5">
+          <View className="w-1.5 h-1.5 rounded-full bg-green-400" />
+          <Text className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
+            Available Offline (Last cached {ageLabel(cachedAgeDays)})
+          </Text>
         </View>
       </View>
     </GlassView>

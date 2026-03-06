@@ -210,9 +210,20 @@ export default function ExpandableBottomDrawer() {
         // Only apply the background scroll offset when the drawer is in the resting "pill" state.
         // We fade the scroll effect out using the morphProgress interpolation.
 
-        // Multiply the global scroll collapse translation by 1.5 to guarantee 
-        // the Floating Pill plus its bottom margins/shadows push 100% off screen.
-        const scrollOffset = scrollCollapseY ? (scrollCollapseY.value * 1.5) : 0;
+        let scrollOffset = 0;
+        if (scrollContext?.translateY && scrollContext?.tabBarMaxHeight) {
+            // How much space we need to push the pill completely off the bottom edge (plus 20px for shadow clearance)
+            const targetDrop = RESTING_TOP_OFFSET_FROM_BOTTOM + 20;
+            const maxScroll = Math.max(scrollContext.tabBarMaxHeight.value, 1);
+
+            // Mathematically map the global scroll 0->max to 0->targetDrop
+            scrollOffset = interpolate(
+                scrollContext.translateY.value,
+                [0, maxScroll],
+                [0, targetDrop],
+                Extrapolation.CLAMP
+            );
+        }
 
         const progressLock = interpolate(translateY.value, [0, -65], [1, 0], Extrapolation.CLAMP);
 

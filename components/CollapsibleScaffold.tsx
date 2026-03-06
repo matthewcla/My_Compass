@@ -112,7 +112,7 @@ export function CollapsibleScaffold({
 
     const [animatedHeaderHeight, setAnimatedHeaderHeight] = useState(initialAnimatedHeaderHeight);
     const [viewportHeight, setViewportHeight] = useState<number | null>(null);
-    useScrollContext(); // Ensure context is available; metrics read via constants
+    const { translateY: tabBarTranslateY, tabBarMaxHeight } = useScrollContext();
 
     // Mobile Web Strategy: Disable DiffClamp animation and use position: sticky
     const isMobileWebEnv = useMemo(() => Platform.OS === 'web', []);
@@ -145,12 +145,20 @@ export function CollapsibleScaffold({
             isSnapping.value = true;
 
             const velocity = event.velocity?.y ?? 0;
-            let isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+
+            let isHidden = false;
+            if (scrollableHeaderHeight > 0) {
+                isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+            } else if (tabBarMaxHeight.value > 0) {
+                isHidden = tabBarTranslateY.value > tabBarMaxHeight.value / 2;
+            }
 
             // Flicks override distance thresholds
-            if (velocity > 0.5) {
+            // velocity < 0 means finger drag up horizontally (scrolling down the list) => hide header
+            // velocity > 0 means finger drag down horizontally (scrolling up the list) => show header
+            if (velocity < -0.5) {
                 isHidden = true;
-            } else if (velocity < -0.5) {
+            } else if (velocity > 0.5) {
                 isHidden = false;
             }
 
@@ -169,7 +177,21 @@ export function CollapsibleScaffold({
             isSnapping.value = true;
 
             const velocity = event.velocity?.y ?? 0;
-            const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+
+            let isHidden = false;
+            if (scrollableHeaderHeight > 0) {
+                isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+            } else if (tabBarMaxHeight.value > 0) {
+                isHidden = tabBarTranslateY.value > tabBarMaxHeight.value / 2;
+            }
+
+            // Flicks override distance thresholds, match onEndDrag logic
+            if (velocity < -0.5) {
+                isHidden = true;
+            } else if (velocity > 0.5) {
+                isHidden = false;
+            }
+
             const targetDistance = isHidden ? scrollableHeaderHeight : 0;
 
             headerCollapseDistance.value = withSpring(targetDistance, { ...SPRING_CONFIG, velocity }, (finished) => {

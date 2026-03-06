@@ -119,7 +119,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     switch (variant) {
         // ── Phase 4: Welcome Aboard ────────────────────────────────
         case 'welcome-aboard': {
-            const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
             const phase4Items = checklist.filter(i => i.uctPhase === 4);
             const completedPhase4 = phase4Items.filter(i => i.status === 'COMPLETE').length;
             const totalPhase4 = phase4Items.length;
@@ -143,31 +142,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </IconBubble>
                                     <View className="flex-1">
                                         <Headline color="text-green-900 dark:text-green-100">Welcome Aboard</Headline>
-                                        <Detail>{gainingCommand}</Detail>
                                     </View>
                                 </View>
-                                <Pill bg="bg-green-100 dark:bg-green-900/40" border="border-green-200 dark:border-green-700/50">
-                                    <PillText color="text-green-800 dark:text-green-200">Day {daysOnStation}</PillText>
-                                </Pill>
-                            </View>
-
-                            <View className="mt-4 flex-row items-end justify-between">
-                                <View className="flex-1 gap-1.5">
-                                    {totalPhase4 > 0 && (
-                                        <View className="flex-row items-center gap-2">
-                                            <ProgressDots items={phase4Items} activeColor="bg-green-500" inactiveColor="bg-slate-300 dark:bg-slate-600" />
-                                            <Text className="text-[12px] font-semibold text-slate-600 dark:text-slate-300 tracking-wide">
-                                                {completedPhase4}/{totalPhase4} check-in tasks
-                                            </Text>
-                                        </View>
-                                    )}
-                                    {nextAction && (
-                                        <Text className="text-green-700 dark:text-green-300 text-[12px] font-bold tracking-wide" numberOfLines={1}>
-                                            Next: {nextAction.label}
-                                        </Text>
-                                    )}
-                                </View>
-                                <CTAButton label={nextAction ? "Take Action" : "Check In"} icon color="bg-green-600 dark:bg-green-500" textColor="text-white" />
                             </View>
                         </View>
                     </CardShell>
@@ -177,7 +153,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── Phase 2: Plan Move (Orders & Logistics) ─────────────────────
         case 'plan-move': {
-            const gainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
             const planItems = checklist.filter(i => i.uctPhase === 1 || i.uctPhase === 2);
             const completedPlanItems = planItems.filter(i => i.status === 'COMPLETE').length;
             const totalPlanItems = planItems.length;
@@ -209,32 +184,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </IconBubble>
                                     <View className="flex-1">
                                         <Headline color="text-slate-900 dark:text-slate-100">Plan Your Move</Headline>
-                                        <Detail>{gainingCommand}</Detail>
                                     </View>
                                 </View>
-                                {daysToReport !== null && (
-                                    <View className="flex-row items-baseline gap-1">
-                                        <Text className={`${urgencyColor.num} text-3xl font-black font-mono tracking-tighter`}>{daysToReport}</Text>
-                                        <Text className={`${urgencyColor.label} text-[11px] font-bold uppercase tracking-wider`}>Days</Text>
-                                    </View>
-                                )}
-                            </View>
-
-                            <View className="mt-4 flex-row items-end justify-between">
-                                <View className="flex-1 gap-1.5">
-                                    <View className="flex-row items-center gap-2">
-                                        <ProgressDots items={planItems} activeColor="bg-[#1A4E8A] dark:bg-[#5B8FCF]" inactiveColor="bg-slate-300 dark:bg-slate-600" />
-                                        <Text className="text-[12px] font-semibold text-slate-600 dark:text-slate-300 tracking-wide">
-                                            {completedPlanItems}/{totalPlanItems} items
-                                        </Text>
-                                    </View>
-                                    {nextAction && (
-                                        <Text className="text-[#1A4E8A] dark:text-[#5B8FCF] text-[12px] font-bold tracking-wide" numberOfLines={1}>
-                                            Next: {nextAction.label}
-                                        </Text>
-                                    )}
-                                </View>
-                                <CTAButton label="Continue" icon color="bg-[#1A4E8A] dark:bg-[#2563EB]" textColor="text-white" />
                             </View>
                         </View>
                     </CardShell>
@@ -244,7 +195,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── Phase 3: En Route ──────────────────
         case 'en-route': {
-            const enGainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
             const phase3Items = checklist.filter(i => i.uctPhase === 3);
             const completedPhase3 = phase3Items.filter(i => i.status === 'COMPLETE').length;
             const totalPhase3 = phase3Items.length;
@@ -268,32 +218,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </IconBubble>
                                     <View className="flex-1">
                                         <Headline color="text-slate-900 dark:text-slate-100">En Route</Headline>
-                                        <Detail>{enGainingCommand}</Detail>
                                     </View>
                                 </View>
-                                {daysToReport !== null && (
-                                    <View className="flex-row items-baseline gap-1">
-                                        <Text className="text-slate-900 dark:text-white text-3xl font-black font-mono tracking-tighter">{daysToReport}</Text>
-                                        <Text className="text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wider">Days</Text>
-                                    </View>
-                                )}
-                            </View>
-
-                            <View className="mt-4 flex-row items-end justify-between">
-                                <View className="flex-1 gap-1.5">
-                                    <View className="flex-row items-center gap-2">
-                                        <ProgressDots items={phase3Items} activeColor="bg-blue-500" inactiveColor="bg-slate-300 dark:bg-slate-600" />
-                                        <Text className="text-[12px] font-semibold text-slate-600 dark:text-slate-300 tracking-wide">
-                                            {completedPhase3}/{totalPhase3} travel tasks
-                                        </Text>
-                                    </View>
-                                    {enNextAction && (
-                                        <Text className="text-blue-700 dark:text-blue-400 text-[12px] font-bold tracking-wide" numberOfLines={1}>
-                                            Next: {enNextAction.label}
-                                        </Text>
-                                    )}
-                                </View>
-                                <CTAButton label="Continue" icon color="bg-blue-600 dark:bg-blue-500" textColor="text-white" />
                             </View>
                         </View>
                     </CardShell>
@@ -303,7 +229,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── Phase 1: Orders Received ──────────────────────────
         case 'orders-received': {
-            const ordGainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
             const phase1Items = checklist.filter(i => i.uctPhase === 1);
             const completedPhase1 = phase1Items.filter(i => i.status === 'COMPLETE').length;
             const totalPhase1 = phase1Items.length;
@@ -327,32 +252,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </IconBubble>
                                     <View className="flex-1">
                                         <Headline color="text-amber-900 dark:text-amber-100">Orders Received</Headline>
-                                        <Detail>{ordGainingCommand}</Detail>
                                     </View>
                                 </View>
-                                {daysToReport !== null && (
-                                    <View className="flex-row items-baseline gap-1">
-                                        <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">{daysToReport}</Text>
-                                        <Text className="text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-wider">Days</Text>
-                                    </View>
-                                )}
-                            </View>
-
-                            <View className="mt-4 flex-row items-end justify-between">
-                                <View className="flex-1 gap-1.5">
-                                    <View className="flex-row items-center gap-2">
-                                        <ProgressDots items={phase1Items} activeColor="bg-amber-500" inactiveColor="bg-slate-300 dark:bg-slate-600" />
-                                        <Text className="text-[12px] font-semibold text-slate-600 dark:text-slate-300 tracking-wide">
-                                            {completedPhase1}/{totalPhase1} admin tasks
-                                        </Text>
-                                    </View>
-                                    {ordNextAction && (
-                                        <Text className="text-amber-700 dark:text-amber-400 text-[12px] font-bold tracking-wide" numberOfLines={1}>
-                                            Next: {ordNextAction.label}
-                                        </Text>
-                                    )}
-                                </View>
-                                <CTAButton label="Review" icon color="bg-amber-600 dark:bg-amber-500" textColor="text-white" />
                             </View>
                         </View>
                     </CardShell>
@@ -362,7 +263,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── Phase: Orders Processing ───────────────────────────────────────
         case 'processing': {
-            const procGainingCommand = activeOrder?.gainingCommand.name || 'Gaining Command';
             const procEstDate = useDemoStore.getState().selectionDetails?.estimatedOrdersDate;
 
             return (
@@ -382,19 +282,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </IconBubble>
                                     <View className="flex-1">
                                         <Headline>Orders Processing</Headline>
-                                        <Detail>{procGainingCommand}</Detail>
                                     </View>
                                 </View>
-                                <Pill bg="bg-stone-100 dark:bg-stone-800/60" border="border-stone-200 dark:border-stone-600/50">
-                                    <PillText color="text-stone-700 dark:text-stone-300">
-                                        {procEstDate ? `Est. ${new Date(procEstDate).toLocaleDateString()}` : 'Pending'}
-                                    </PillText>
-                                </Pill>
-                            </View>
-                            <View className="mt-4 flex-row items-end justify-between">
-                                <Text className="text-slate-500 dark:text-slate-400 text-[12px] font-semibold flex-1 tracking-wide">
-                                    ⏱ Awaiting PERS Processing
-                                </Text>
                             </View>
                         </View>
                     </CardShell>
@@ -404,7 +293,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
         // ── Phase: Selected ────────────────────
         case 'selected': {
-            const selGainingCommand = activeOrder?.gainingCommand.name || 'Awaiting assignment details';
 
             return (
                 <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
@@ -416,9 +304,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     <Star size={26} color="#FFFFFF" fill="#FFFFFF" />
                                 </View>
                                 <View className="flex-1">
-                                    <Headline color="text-green-900 dark:text-white">Selection Confirmed</Headline>
-                                    <Detail>{selGainingCommand}</Detail>
-                                </View>
+                                        <Headline color="text-green-900 dark:text-white">Selection Confirmed</Headline>
+                                    </View>
                             </View>
                         </View>
                     </CardShell>
@@ -448,21 +335,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                         <Detail>Submit your ranked slate</Detail>
                                     </View>
                                 </View>
-                                {daysUntilClose !== null && (
-                                    <View className="flex-row items-baseline gap-1">
-                                        <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">{daysUntilClose}</Text>
-                                        <Text className="text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-wider">Days</Text>
-                                    </View>
-                                )}
-                            </View>
-
-                            <View className="mt-4 flex-row items-end justify-between">
-                                <View className="flex-1 gap-1.5">
-                                    <Text className="text-[12px] font-bold text-slate-700 dark:text-slate-300 tracking-wide">
-                                        Action Required: Adjust Loadout
-                                    </Text>
-                                </View>
-                                <CTAButton label="My Slate" icon color="bg-amber-600 dark:bg-amber-500" textColor="text-white" />
                             </View>
                         </View>
                     </CardShell>
@@ -500,12 +372,6 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">{daysUntilOpen}</Text>
                                     <Text className="text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-wider">Days</Text>
                                 </View>
-                            </View>
-                            <View className="mt-4 flex-row items-end justify-between">
-                                <Text className="text-slate-600 dark:text-slate-400 text-[12px] font-bold tracking-wide flex-1 leading-snug">
-                                    {hasPrepped ? `${reviewed} billets reviewed` : 'Review ESR & Preferences'}
-                                </Text>
-                                <CTAButton label={hasPrepped ? "Discovery" : "Start"} icon color="bg-slate-800 dark:bg-slate-700" textColor="text-white" />
                             </View>
                         </View>
                     </CardShell>
@@ -605,27 +471,5 @@ function PillText({ color, children }: { color: string; children: React.ReactNod
         <Text className={`text-[11px] font-[700] ${color} uppercase tracking-[0.5px]`}>
             {children}
         </Text>
-    );
-}
-
-function CTAButton({ label, icon, color, textColor }: { label: string; icon?: boolean; color: string; textColor: string }) {
-    return (
-        <View className={`${color} px-4 py-3 rounded-[14px] flex-row items-center gap-1.5 ml-3 min-h-[44px] shadow-sm`}>
-            <Text className={`text-[12px] font-bold ${textColor} uppercase tracking-[0.5px]`}>{label}</Text>
-            {icon && <ChevronRight size={14} color="#FFFFFF" strokeWidth={3} />}
-        </View>
-    );
-}
-
-function ProgressDots({ items, activeColor, inactiveColor }: { items: any[], activeColor: string, inactiveColor: string }) {
-    return (
-        <View className="flex-row gap-0.5">
-            {items.map((item) => (
-                <View
-                    key={item.id}
-                    className={`w-[18px] h-[4px] rounded-full ${item.status === 'COMPLETE' ? activeColor : item.status === 'IN_PROGRESS' ? 'bg-slate-400 dark:bg-slate-500' : inactiveColor}`}
-                />
-            ))}
-        </View>
     );
 }

@@ -18,7 +18,6 @@
 | `travel-claim/` | Travel claim wizard components | `ExpenseCard.tsx`, `ReceiptUploader.tsx` |
 | `discovery/` | Billet discovery UI | `DiscoveryFilters.tsx`, `DiscoveryHeader.tsx` |
 | `navigation/` | Scroll/collapse infrastructure | `ScrollControlContext.tsx` |
-| `spotlight/` | Global search overlay | `SpotlightOverlay.tsx` |
 | Root level | Shared cross-feature components | `ScreenHeader.tsx`, `CollapsibleScaffold.tsx`, `Skeleton.tsx` |
 
 ---

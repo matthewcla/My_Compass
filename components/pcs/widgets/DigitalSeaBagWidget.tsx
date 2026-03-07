@@ -30,7 +30,7 @@ export function DigitalSeaBagWidget() {
                                 <Anchor size={26} color={isDark ? '#38bdf8' : '#0284c7'} />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5">
+                                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>
                                     Digital Sea Bag
                                 </Text>
                                 <Text className="text-slate-600 dark:text-sky-200/80 text-[13px] font-[500] leading-tight" numberOfLines={1}>

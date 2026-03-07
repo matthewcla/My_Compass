@@ -47,7 +47,7 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
                             <Text className={`text-[20px] font-black tracking-tight ${request.slaStatus === 'red' ? 'text-red-500' :
                                 request.slaStatus === 'amber' ? 'text-amber-500' :
                                     'text-slate-600 dark:text-slate-300'
-                                }`}>
+                                }`} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>
                                 {request.daysSinceLastAction}
                             </Text>
                             <Text className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider">

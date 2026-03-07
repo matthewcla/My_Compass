@@ -180,7 +180,7 @@ export function GainingCommandCard({ variant = 'widget' }: GainingCommandCardPro
               )}
             </View>
             <View className="flex-1">
-              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>{gainingCommand.name || 'Command Pending'}</Text>
+              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>{gainingCommand.name || 'Command Pending'}</Text>
               <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>UIC: {gainingCommand.uic || 'N/A'}</Text>
             </View>
           </View>

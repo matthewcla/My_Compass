@@ -444,7 +444,7 @@ function IconBubble({ bg, border, children }: { bg: string; border?: string; chi
 
 function Headline({ children, color }: { children: React.ReactNode; color?: string }) {
     return (
-        <Text className={`${color || 'text-slate-900 dark:text-slate-100'} text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5`}>
+        <Text className={`${color || 'text-slate-900 dark:text-slate-100'} text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5`} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>
             {children}
         </Text>
     );

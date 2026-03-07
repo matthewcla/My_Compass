@@ -115,7 +115,7 @@ export function TravelClaimHUDWidget() {
               <DollarSign size={26} color={isDark ? '#FBBF24' : '#D97706'} />
             </View>
             <View className="flex-1">
-              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5">Travel Claim</Text>
+              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>Travel Claim</Text>
               <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>File Within 5 Days</Text>
             </View>
           </View>

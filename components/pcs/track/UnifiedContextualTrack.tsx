@@ -1,5 +1,6 @@
 import { TrackChecklistItem } from '@/components/pcs/track/TrackChecklistItem';
 import { TrackNode } from '@/components/pcs/track/TrackNode';
+import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
 import { UCT_PHASES } from '@/constants/UCTPhases';
 import { useActiveOrder, usePCSStore, useUCTPhaseStatus } from '@/store/usePCSStore';
 import { ChecklistItem, UCTNodeStatus, UCTPhase } from '@/types/pcs';
@@ -15,9 +16,8 @@ function Phase1Widgets() {
 }
 
 function Phase2Widgets() {
-    // Phase 2 widgets now live inside the Financial Review and
-    // HHG Move Planner flows — not inline in the track.
-    return null;
+    // Phase 2 widgets evaluate logistics and resources like household goods allowances.
+    return <HHGWeightGaugeWidget />;
 }
 
 function Phase3Widgets() {

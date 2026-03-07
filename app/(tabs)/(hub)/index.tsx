@@ -194,14 +194,6 @@ export default function HubDashboard() {
                     </Animated.View>
                 );
             }
-            case 'hhgWeightGauge': {
-                const { HHGWeightGaugeWidget } = require('@/components/pcs/widgets/HHGWeightGaugeWidget');
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <HHGWeightGaugeWidget />
-                    </Animated.View>
-                );
-            }
             case 'leaveImpact': {
                 const { LeaveImpactWidget } = require('@/components/pcs/widgets/LeaveImpactWidget');
                 return (
@@ -395,11 +387,6 @@ export default function HubDashboard() {
             feed.push('baseWelcomeKit');
             feed.push('digitalOrdersWallet');
 
-            // Contextual HHG widget
-            if (dependentCount > 0 || hasShipments) {
-                feed.push('hhgWeightGauge');
-            }
-
             const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
             if (subPhase === 'ACTIVE_TRAVEL' || (pcsPhase === 'CHECK_IN' && !hasActiveLiquidation)) {
                 feed.push('travelClaimUrgency');
@@ -420,9 +407,6 @@ export default function HubDashboard() {
             if (assignmentPhase === 'ORDERS_RELEASED') {
                 feed.push('pcsTaskTracker');
                 feed.push('digitalOrdersWallet');
-                if (dependentCount > 0 || hasShipments) {
-                    feed.push('hhgWeightGauge');
-                }
                 feed.push('leaveImpact');
             }
         }

@@ -64,8 +64,8 @@ export function LiquidationTrackerWidget() {
       <View className="p-5">
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center gap-4 flex-1">
-            <View className="w-[52px] h-[52px] rounded-full bg-emerald-500/10 dark:bg-emerald-900/40 items-center justify-center border-[1.5px] border-emerald-500/20 dark:border-emerald-800/60 shadow-sm">
-              <DollarSign size={26} color={isDark ? '#34D399' : '#10B981'} />
+            <View className="w-10 h-10 rounded-full bg-emerald-500/10 dark:bg-emerald-900/40 items-center justify-center border-[1.5px] border-emerald-500/20 dark:border-emerald-800/60 shadow-sm">
+              <DollarSign size={20} color={isDark ? '#34D399' : '#10B981'} />
             </View>
             <View className="flex-1">
               <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>NPPSC Liquidation</Text>

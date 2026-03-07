@@ -37,14 +37,14 @@ export default function SelectionDetailWidget() {
                 {/* Header */}
                 <View className="flex-row items-center justify-between mb-5">
                     <View className="flex-row items-center gap-4 flex-1">
-                        <View className="w-[52px] h-[52px] rounded-full bg-amber-500/10 dark:bg-amber-900/40 items-center justify-center border-[1.5px] border-amber-500/20 dark:border-amber-800/60 shadow-sm">
-                            <Briefcase size={26} color={isDark ? '#FBBF24' : '#D97706'} />
+                        <View className="w-10 h-10 rounded-full bg-amber-500/10 dark:bg-amber-900/40 items-center justify-center border-[1.5px] border-amber-500/20 dark:border-amber-800/60 shadow-sm">
+                            <Briefcase size={20} color={isDark ? '#FBBF24' : '#D97706'} />
                         </View>
                         <View className="flex-1">
-                            <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>
+                            <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={2}>
                                 {selectionDetails.billetTitle}
                             </Text>
-                            <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>
+                            <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>
                                 {gainingCommand}
                             </Text>
                         </View>

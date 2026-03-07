@@ -143,8 +143,8 @@ export function BaseWelcomeKit() {
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center gap-4 flex-1">
-              <View className="w-[52px] h-[52px] rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-800/60 shadow-sm">
-                <Building2 size={26} color={isDark ? '#60A5FA' : '#2563EB'} />
+              <View className="w-10 h-10 rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-800/60 shadow-sm">
+                <Building2 size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
               </View>
               <View className="flex-1">
                 <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>{name}</Text>

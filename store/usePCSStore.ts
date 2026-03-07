@@ -3,9 +3,9 @@ import { ChecklistItem, HHGItem, HHGShipment, HHGShipmentType, LiquidationStatus
 import type { TravelClaim } from '@/types/travelClaim';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
+import { SecureLogger } from '@/utils/logger';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
 import { bridgeReceiptsToExpenses } from '@/utils/receiptBridge';
-import { SecureLogger } from '@/utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useMemo } from 'react';
@@ -285,7 +285,7 @@ export const usePCSStore = create<PCSState>()(
             label: 'Update Residence',
             status: 'NOT_STARTED',
             category: 'PRE_TRAVEL',
-            uctPhase: 1,
+            uctPhase: 4,
             actionRoute: '/pcs-wizard/profile-confirmation',
             helpText: 'You indicated housing is not yet secured. Update your residence when finalized.',
           });

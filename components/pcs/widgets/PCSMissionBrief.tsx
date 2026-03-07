@@ -1,4 +1,3 @@
-import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
@@ -8,10 +7,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
     Anchor,
-    ChevronRight,
+    CalendarDays, // Added CalendarDays import
     DollarSign,
     MapPin,
-    Zap
+    Package
 } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Platform, Text, View } from 'react-native';
@@ -85,7 +84,7 @@ export function PCSMissionBrief() {
         return {
             daysRemaining,
             currentPhase,
-            phaseLabel: PHASE_LABELS[currentPhase] ?? `Phase ${currentPhase}`,
+            phaseLabel: PHASE_LABELS[currentPhase] ?? `Phase ${currentPhase} `,
             completed,
             total,
             progress: total > 0 ? completed / total : 0,
@@ -107,6 +106,16 @@ export function PCSMissionBrief() {
 
     const homePort = activeOrder!.gainingCommand.homePort;
     const commandName = activeOrder!.gainingCommand.name;
+
+    // Format RNLT as DD MMM YYYY (e.g., 31 AUG 2024)
+    const formattedRNLT = new Date(activeOrder!.reportNLT)
+        .toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            timeZone: 'UTC'
+        })
+        .toUpperCase();
 
     // Financial snapshot (Phase 2 only)
     const showFinancials = currentPhase === 2;
@@ -146,58 +155,48 @@ export function PCSMissionBrief() {
                 />
                 <View className="p-5">
                     {/* ── Header: Command + Countdown ── */}
-                    <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center justify-between">
                         <View className="flex-row items-center gap-4 flex-1 mr-2">
-                            <View className="w-[52px] h-[52px] rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-800/60 shadow-sm">
-                                <Anchor size={26} color={isDark ? '#60A5FA' : '#2563EB'} />
+                            <View className="w-10 h-10 rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-800/60 shadow-sm">
+                                <Anchor size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={2}>{commandName}</Text>
-                                <View className="flex-row items-center">
-                                    <MapPin size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                                    <Text className="ml-1 text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>
-                                        {homePort || "PCS Mission Brief"}
-                                    </Text>
+                                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-1" numberOfLines={2}>{commandName}</Text>
+                                <View className="flex-row items-center flex-wrap" style={{ gap: 8, rowGap: 4 }}>
+                                    <View className="flex-row items-center">
+                                        <MapPin size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                                        <Text className="ml-1 text-slate-600 dark:text-slate-400 text-[12px] font-[500] leading-tight opacity-80" numberOfLines={1}>
+                                            {homePort || "PCS Mission Brief"}
+                                        </Text>
+                                    </View>
+                                    <View className="flex-row items-center">
+                                        <CalendarDays size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                                        <Text className="ml-1 text-slate-600 dark:text-slate-400 text-[12px] font-[600] leading-tight opacity-80" numberOfLines={1}>
+                                            RNLT {formattedRNLT}
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
                         </View>
                         {/* Countdown badge */}
-                        <View
-                            className="px-3 py-1.5 rounded-[12px] border pb-2 border-blue-500/20 ml-2 shadow-sm"
-                            style={{
-                                backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)',
-                            }}
-                        >
-                            <Text style={{ color: urgencyColor }} className="text-[14px] font-black tracking-wide text-center uppercase">
-                                Day -{daysRemaining}
-                            </Text>
+                        <View className="items-end justify-center ml-2">
+                            <View
+                                className="px-3 py-1.5 rounded-[12px] border pb-2 border-blue-500/20 shadow-sm"
+                                style={{
+                                    backgroundColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)',
+                                }}
+                            >
+                                <Text style={{ color: urgencyColor }} className="text-[14px] font-black tracking-wide text-center uppercase">
+                                    Day -{daysRemaining}
+                                </Text>
+                            </View>
                         </View>
                     </View>
 
                     {/* ── Content ── */}
-                    <View className="border-t border-slate-200/50 dark:border-slate-700/50 pt-5" style={{ gap: 14 }}>
-
-                        {/* Phase Progress */}
-                        <View className="bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
-                            <View className="flex-row items-center justify-between mb-3">
-                                <Text className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                    {phaseLabel}
-                                </Text>
-                                <Text className="text-[13px] font-bold text-blue-600 dark:text-blue-400">
-                                    {completed} of {total}
-                                </Text>
-                            </View>
-                            {/* Progress bar */}
-                            <View className="h-2.5 rounded-full bg-slate-200/50 dark:bg-slate-700/50 overflow-hidden">
-                                <View
-                                    className="h-full rounded-full bg-blue-500"
-                                    style={{ width: `${Math.round(progress * 100)}%` }}
-                                />
-                            </View>
-                        </View>
-
-                        {/* Financial Snapshot (Phase 2 only) */}
-                        {showFinancials && (
+                    {showFinancials && (
+                        <View className="mt-5">
+                            {/* Financial Snapshot (Phase 2 only) */}
                             <View className="flex-row" style={{ gap: 8 }}>
                                 <View className="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200/60 dark:border-slate-700/60 items-center shadow-sm">
                                     <DollarSign size={16} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
@@ -214,11 +213,12 @@ export function PCSMissionBrief() {
                                         Advance
                                     </Text>
                                     <Text className="text-[15px] font-bold text-slate-900 dark:text-white mt-0.5" numberOfLines={1}>
-                                        {financials.advancePay.requested ? `$${financials.advancePay.amount.toLocaleString()}` : 'None'}
+                                        {financials.advancePay.requested ? `$${financials.advancePay.amount.toLocaleString()} ` : 'None'}
                                     </Text>
                                 </View>
                                 <View className="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-200/60 dark:border-slate-700/60 items-center shadow-sm">
-                                    <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-5">
+                                    <Package size={16} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
+                                    <Text className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">
                                         HHG
                                     </Text>
                                     <Text className="text-[15px] font-bold text-slate-900 dark:text-white mt-0.5" numberOfLines={1}>
@@ -229,30 +229,8 @@ export function PCSMissionBrief() {
                                     </Text>
                                 </View>
                             </View>
-                        )}
-
-                        {/* Next Action CTA */}
-                        {nextAction && (
-                            <ScalePressable
-                                onPress={handleNextAction}
-                                className="bg-blue-500/10 rounded-[16px] p-4 flex-row items-center justify-between shadow-sm border border-blue-500/20"
-                                accessibilityRole="button"
-                                accessibilityLabel={`Start ${nextAction.label}`}
-                            >
-                                <View className="flex-row items-center flex-1">
-                                    <Zap size={16} color={isDark ? '#60A5FA' : '#2563EB'} fill={isDark ? '#60A5FA30' : '#2563EB30'} />
-                                    <Text className="ml-2 text-[14px] font-bold text-blue-700 dark:text-blue-300" numberOfLines={1}>
-                                        {nextAction.label}
-                                    </Text>
-                                </View>
-                                {nextAction.actionRoute && (
-                                    <View className="w-8 h-8 rounded-full bg-blue-500/10 dark:bg-blue-500/20 items-center justify-center ml-2 border border-blue-500/20">
-                                        <ChevronRight size={18} color={isDark ? '#60A5FA' : '#2563EB'} strokeWidth={2.5} />
-                                    </View>
-                                )}
-                            </ScalePressable>
-                        )}
-                    </View>
+                        </View>
+                    )}
                 </View>
             </GlassView>
         </Animated.View>

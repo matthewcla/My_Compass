@@ -418,12 +418,12 @@ export default function HubDashboard() {
         else if (['ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
             feed.push('missionBrief');
             if (assignmentPhase === 'ORDERS_RELEASED') {
+                feed.push('pcsTaskTracker');
                 feed.push('digitalOrdersWallet');
                 if (dependentCount > 0 || hasShipments) {
                     feed.push('hhgWeightGauge');
                 }
                 feed.push('leaveImpact');
-                feed.push('pcsTaskTracker');
             }
         }
 

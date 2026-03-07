@@ -137,6 +137,7 @@ export function ThemeToggle() {
                                     }}
                                     numberOfLines={1}
                                     adjustsFontSizeToFit
+                                    minimumFontScale={0.85}
                                 >
                                     {segment.label}
                                 </Text>

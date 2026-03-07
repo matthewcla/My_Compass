@@ -323,12 +323,20 @@ const inputRefs = useRef<Record<string, TextInput | null>>({});
 
 ### 2.3 Smart Stack (Widget Pattern)
 
-
 Widgets are small, glanceable components that can render in two modes:
 - `variant="full"` — Full detail view (standalone screen)
 - `variant="widget"` — Compact, card-sized view (embedded in UCT TrackNode)
 
 **Implementation rule:** Every widget must read from its Zustand store, ensuring data consistency between widget and full views. Never pass data as props when a store selector exists.
+
+#### 2.3.1 Widget Header Typography Standard
+
+All widget headers must adhere to the premium HUD standard to prevent aggressive truncation and maintain visual hierarchy:
+
+- **Icon Sizing:** Container `w-10 h-10` (40px) with icon `size={20}`. 
+  - ❌ **Anti-pattern:** Do not use oversized 52px containers, which steal visual priority from data.
+- **Text Wrapping:** The Title (`text-[20px]`) and Subtitle (`text-[13px]`) must use `numberOfLines={2}`. 
+  - ❌ **Anti-pattern:** Never use `numberOfLines={1}` on widget headers, as this aggressively crops dynamic entity names (e.g., Command Names, Billet Titles) on smaller screens.
 
 ### 2.4 Hero Status Card (Dashboard Phase Tile)
 

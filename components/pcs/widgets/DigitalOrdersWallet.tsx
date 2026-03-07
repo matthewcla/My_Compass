@@ -216,8 +216,8 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
                 <FileDown size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
               </View>
               <View className="flex-1">
-                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>Official Orders</Text>
-                <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>No orders cached offline</Text>
+                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={2}>Official Orders</Text>
+                <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>No orders cached offline</Text>
               </View>
             </View>
           </View>
@@ -269,8 +269,8 @@ export function DigitalOrdersWallet({ variant = 'widget' }: DigitalOrdersWalletP
               <FileDown size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
             </View>
             <View className="flex-1">
-              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>#{activeOrder.orderNumber}</Text>
-              <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>Effective Date: {effectiveDate}</Text>
+              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={2}>#{activeOrder.orderNumber}</Text>
+              <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>Effective Date: {effectiveDate}</Text>
             </View>
           </View>
         </View>

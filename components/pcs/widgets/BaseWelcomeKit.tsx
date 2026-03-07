@@ -147,8 +147,8 @@ export function BaseWelcomeKit() {
                 <Building2 size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
               </View>
               <View className="flex-1">
-                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>{name}</Text>
-                <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>Base Welcome Kit</Text>
+                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={2}>{name}</Text>
+                <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>Base Welcome Kit</Text>
               </View>
             </View>
 

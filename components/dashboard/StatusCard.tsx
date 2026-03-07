@@ -7,7 +7,7 @@ import { useUserDependents } from '@/store/useUserStore';
 import { AssignmentPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Anchor, Calendar, ChevronRight, FileCheck, Package, Plane, Star, Timer, Users } from 'lucide-react-native';
+import { Anchor, Calendar, FileCheck, Package, Plane, Star, Timer, Users } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -304,8 +304,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     <Star size={26} color="#FFFFFF" fill="#FFFFFF" />
                                 </View>
                                 <View className="flex-1">
-                                        <Headline color="text-green-900 dark:text-white">Selection Confirmed</Headline>
-                                    </View>
+                                    <Headline color="text-green-900 dark:text-white">Selection Confirmed</Headline>
+                                </View>
                             </View>
                         </View>
                     </CardShell>
@@ -444,7 +444,7 @@ function IconBubble({ bg, border, children }: { bg: string; border?: string; chi
 
 function Headline({ children, color }: { children: React.ReactNode; color?: string }) {
     return (
-        <Text className={`${color || 'text-slate-900 dark:text-slate-100'} text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5`} numberOfLines={1}>
+        <Text className={`${color || 'text-slate-900 dark:text-slate-100'} text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5`} numberOfLines={2}>
             {children}
         </Text>
     );
@@ -452,7 +452,7 @@ function Headline({ children, color }: { children: React.ReactNode; color?: stri
 
 function Detail({ children }: { children: React.ReactNode }) {
     return (
-        <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>
+        <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>
             {children}
         </Text>
     );

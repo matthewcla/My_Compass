@@ -411,6 +411,9 @@ export default function HubDashboard() {
                 // Exceptional case: Operational Travel Tools trump the UCT visually
                 feed.push('missionBrief');
                 feed.push('receiptCapture');
+            } else if (activeUCTPhase === 4) {
+                // Focus: Post-Arrival reporting procedures
+                feed.push('arrivalBriefing');
             } else {
                 // Focus: Plan Your Move & Check-in. Summary Dashboard linking to workflows.
                 feed.push('pcsSummaryWidget');

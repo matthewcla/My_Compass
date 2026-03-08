@@ -195,6 +195,16 @@ export const useDemoStore = create<DemoState>()(
           const { usePCSStore } = require('./usePCSStore');
           usePCSStore.getState().checkObliserv();
         }
+
+        // Auto-complete Profile Confirmation when entering Plan Move phase
+        if (target.pcs?.uct === 2) {
+          const { usePCSStore } = require('./usePCSStore');
+          const pcsStore = usePCSStore.getState();
+          const pci = pcsStore.checklist.find((c: any) => c.label === 'Profile Confirmation');
+          if (pci?.id) {
+            pcsStore.updateChecklistItemStatus(pci.id, 'COMPLETE');
+          }
+        }
       },
 
       advanceLiquidationStatus: () => {

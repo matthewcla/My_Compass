@@ -10,6 +10,7 @@ import { ArrowRight, CheckCircle2, ChevronDown, ChevronRight, CircleDashed, Lock
 import React, { useMemo, useState } from 'react';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { TaskClusterHeader, TaskClusterType } from './TaskClusterHeader';
 
 export function PCSSummaryWidget() {
     const isDark = useColorScheme() === 'dark';
@@ -30,9 +31,10 @@ export function PCSSummaryWidget() {
 
     // UI state for the "Look Ahead" accordion
     const [isExpanded, setIsExpanded] = useState(false);
+    const [accordionContentHeight, setAccordionContentHeight] = useState(0);
 
     // Get Next Action and Upcoming Tasks
-    const { nextAction, upcomingTasks } = useMemo(() => {
+    const { nextAction, groupedUpcomingTasks, upcomingTasksCount, clusterCount } = useMemo(() => {
         const profileItem = checklist.find(c => c.label === 'Profile Confirmation');
         const isProfileLocked = profileItem && profileItem.status !== 'COMPLETE';
 
@@ -51,17 +53,44 @@ export function PCSSummaryWidget() {
             isLocked: isProfileLocked && task.uctPhase > 1
         }));
 
-        return { nextAction: activeAction, upcomingTasks: upcoming };
+        // Group upcoming tasks
+        const clusteredTasks = upcoming.reduce((acc, task) => {
+            let cluster: TaskClusterType = 'admin';
+            if (task.category === 'SCREENING') cluster = 'medical';
+            else if (task.category === 'FINANCE') cluster = 'logistics';
+            else if (task.category === 'PRE_TRAVEL') cluster = 'operations';
+            // Exclude CHECK_IN deliberately so it doesn't appear in the summary widget
+            if (task.category === 'CHECK_IN') return acc;
+
+            if (!acc[cluster]) acc[cluster] = [];
+            acc[cluster].push(task);
+            return acc;
+        }, {} as Record<TaskClusterType, typeof upcoming>);
+
+        const clusterOrder: TaskClusterType[] = ['admin', 'medical', 'logistics', 'operations'];
+        const grouped = clusterOrder
+            .map(cluster => ({
+                cluster,
+                tasks: clusteredTasks[cluster] || []
+            }))
+            .filter(g => g.tasks.length > 0);
+
+        return {
+            nextAction: activeAction,
+            groupedUpcomingTasks: grouped,
+            upcomingTasksCount: upcoming.length,
+            clusterCount: grouped.length
+        };
     }, [checklist]);
 
     // Accordion Animation styles
     const accordionStyle = useAnimatedStyle(() => {
         return {
-            height: withTiming(isExpanded ? (upcomingTasks.length || 0) * 50 + 20 : 0, { duration: 300 }),
+            height: withTiming(isExpanded ? accordionContentHeight : 0, { duration: 300 }),
             opacity: withTiming(isExpanded ? 1 : 0, { duration: 250 }),
             marginTop: withTiming(isExpanded ? 12 : 0, { duration: 300 }),
         };
-    });
+    }, [isExpanded, accordionContentHeight]);
 
     const chevronStyle = useAnimatedStyle(() => {
         return {
@@ -193,7 +222,7 @@ export function PCSSummaryWidget() {
                     )}
 
                     {/* ── Expandable Upcoming Tasks ── */}
-                    {upcomingTasks.length > 0 && (
+                    {upcomingTasksCount > 0 && (
                         <View className="mt-1">
                             <Pressable
                                 onPress={() => setIsExpanded(!isExpanded)}
@@ -209,34 +238,50 @@ export function PCSSummaryWidget() {
                             </Pressable>
 
                             <Animated.View style={[accordionStyle, { overflow: 'hidden' }]}>
-                                {upcomingTasks.map((task, idx) => (
-                                    <ScalePressable
-                                        key={task.id}
-                                        disabled={task.isLocked || !task.actionRoute}
-                                        onPress={() => {
-                                            if (!task.isLocked && task.actionRoute) {
-                                                router.push(task.actionRoute as any);
-                                            }
-                                        }}
-                                        className={`flex-row items-center py-3 px-3 ${idx < upcomingTasks.length - 1 ? 'border-b border-slate-200/50 dark:border-slate-700/50' : ''}`}
-                                    >
-                                        <View className={`w-8 h-8 rounded-full items-center justify-center border ${task.isLocked ? 'bg-slate-100 dark:bg-slate-800 border-slate-200/50 dark:border-slate-700/50' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200/50 dark:border-blue-700/50'}`}>
-                                            {task.isLocked ? (
-                                                <Lock size={14} color={isDark ? '#64748B' : '#94A3B8'} />
-                                            ) : (
-                                                <ChevronRight size={16} color={isDark ? '#60A5FA' : '#3B82F6'} />
-                                            )}
+                                <View
+                                    onLayout={(e) => setAccordionContentHeight(e.nativeEvent.layout.height)}
+                                    style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+                                >
+                                    {groupedUpcomingTasks.map(({ cluster, tasks }, index) => (
+                                        <View key={cluster} className={index < groupedUpcomingTasks.length - 1 ? 'mb-2' : ''}>
+                                            <TaskClusterHeader
+                                                type={cluster}
+                                                title={cluster === 'admin' ? 'Reviews & Approvals' : cluster === 'medical' ? 'Medical & Screenings' : cluster === 'logistics' ? 'Logistics & Finances' : 'Operations & Transit'}
+                                                isDark={isDark}
+                                            />
+                                            <View className="bg-white/40 dark:bg-slate-800/40 rounded-[16px] overflow-hidden border border-black/5 dark:border-white/5">
+                                                {tasks.map((task, idx) => (
+                                                    <ScalePressable
+                                                        key={task.id}
+                                                        disabled={task.isLocked || !task.actionRoute}
+                                                        onPress={() => {
+                                                            if (!task.isLocked && task.actionRoute) {
+                                                                router.push(task.actionRoute as any);
+                                                            }
+                                                        }}
+                                                        className={`flex-row items-center py-3 px-3 ${idx < tasks.length - 1 ? 'border-b border-slate-200/50 dark:border-slate-700/50' : ''}`}
+                                                    >
+                                                        <View className={`w-8 h-8 rounded-full items-center justify-center border ${task.isLocked ? 'bg-slate-100 dark:bg-slate-800 border-slate-200/50 dark:border-slate-700/50' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200/50 dark:border-blue-700/50'}`}>
+                                                            {task.isLocked ? (
+                                                                <Lock size={14} color={isDark ? '#64748B' : '#94A3B8'} />
+                                                            ) : (
+                                                                <ChevronRight size={16} color={isDark ? '#60A5FA' : '#3B82F6'} />
+                                                            )}
+                                                        </View>
+                                                        <View className="flex-1 ml-3">
+                                                            <Text className={`text-[14px] font-semibold ${task.isLocked ? 'text-slate-500 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`} numberOfLines={1}>
+                                                                {task.label}
+                                                            </Text>
+                                                            {!task.isLocked && task.helpText && (
+                                                                <Text className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" numberOfLines={1}>{task.helpText}</Text>
+                                                            )}
+                                                        </View>
+                                                    </ScalePressable>
+                                                ))}
+                                            </View>
                                         </View>
-                                        <View className="flex-1 ml-3">
-                                            <Text className={`text-[14px] font-semibold ${task.isLocked ? 'text-slate-500 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`} numberOfLines={1}>
-                                                {task.label}
-                                            </Text>
-                                            {!task.isLocked && task.helpText && (
-                                                <Text className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" numberOfLines={1}>{task.helpText}</Text>
-                                            )}
-                                        </View>
-                                    </ScalePressable>
-                                ))}
+                                    ))}
+                                </View>
                             </Animated.View>
                         </View>
                     )}

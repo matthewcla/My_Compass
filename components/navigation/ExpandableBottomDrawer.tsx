@@ -240,11 +240,11 @@ export default function ExpandableBottomDrawer() {
                     >
                         <BlurView
                             tint={isDark ? 'dark' : 'light'}
-                            intensity={isDark ? 50 : 80}
+                            intensity={isDark ? 80 : 80}
                             style={[
                                 StyleSheet.absoluteFill,
                                 {
-                                    backgroundColor: isDark ? 'rgba(20, 20, 22, 0.75)' : 'rgba(255, 255, 255, 0.6)'
+                                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.45)' : 'rgba(255, 255, 255, 0.5)'
                                 }
                             ]}
                         />
@@ -257,7 +257,7 @@ export default function ExpandableBottomDrawer() {
                                 {
                                     top: 1, left: 1, right: 1, bottom: 1,
                                     borderWidth: StyleSheet.hairlineWidth,
-                                    borderColor: isDark ? '#FFFFFF' : '#D1D5DB',
+                                    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)',
                                 },
                                 // Replicate radii internally so the stroke honors the corners
                                 useAnimatedStyle(() => {
@@ -279,7 +279,15 @@ export default function ExpandableBottomDrawer() {
 
                             {/* Visual Drag Indicator inside the Pill */}
                             <View style={styles.pillGrabberContainer}>
-                                <View style={[styles.grabber, { backgroundColor: isDark ? '#636366' : '#C7C7CC', width: 42, height: 4, marginTop: 4 }]} />
+                                <View style={[
+                                    styles.grabber,
+                                    {
+                                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)',
+                                        width: 36,
+                                        height: 4,
+                                        marginTop: 6
+                                    }
+                                ]} />
                             </View>
 
                             <View style={styles.pillIconRow}>
@@ -296,8 +304,8 @@ export default function ExpandableBottomDrawer() {
                                         (tab.route === '/(admin)' && segs.includes('(admin)')) ||
                                         (tab.route === '/(hub)' && (pathname === '/' || pathname === '/(hub)' || segs.includes('(hub)')) && !segs.includes('(profile)') && !segs.includes('(calendar)') && !segs.includes('inbox') && !segs.includes('(admin)')) ||
                                         (tab.route === '/(tabs)/(profile)' && segs.includes('(profile)'));
-                                    const activeColor = isDark ? '#60A5FA' : '#0A84FF'; // System Blue variants
-                                    const inactiveColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748B';
+                                    const activeColor = isDark ? '#60A5FA' : '#0ea5e9';
+                                    const inactiveColor = isDark ? '#94A3B8' : '#64748B';
                                     const iconColor = isActive ? activeColor : inactiveColor;
                                     const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
 
@@ -307,8 +315,8 @@ export default function ExpandableBottomDrawer() {
                                             style={styles.tabItem}
                                             onPress={() => { setSheetState(0); router.push(tab.route as any); }}
                                         >
-                                            <Ionicons name={iconName as any} size={26} color={iconColor} />
-                                            <Text style={[styles.tabLabel, { color: iconColor, fontWeight: isActive ? '700' : '600' }]}>{tab.label}</Text>
+                                            <Ionicons name={iconName as any} size={24} color={iconColor} />
+                                            <Text style={[styles.tabLabel, { color: iconColor, fontWeight: isActive ? '800' : '600' }]}>{tab.label}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -400,7 +408,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     grabber: {
-        width: 54,
+        width: 36,
         height: 5,
         borderRadius: 2.5,
         marginTop: 10,

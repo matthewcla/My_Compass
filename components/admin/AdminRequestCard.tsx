@@ -39,7 +39,6 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
                     intensity={80}
                     tint={isDark ? 'dark' : 'light'}
                     className="rounded-[20px] overflow-hidden shadow-sm border border-black/5 dark:border-white/10"
-                    style={{ borderLeftWidth: 3, borderLeftColor: SLA_COLOR[request.slaStatus] }}
                 >
                     <View className="flex-row items-center px-4 py-4 gap-4">
                         {/* Days counter */}

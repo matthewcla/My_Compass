@@ -176,12 +176,13 @@ export default function ExpandableBottomDrawer() {
         // Transition fully within the first 65px of drag
         const morphProgress = interpolate(translateY.value, [0, -65], [0, 1], Extrapolation.CLAMP);
 
-        const marginH = interpolate(morphProgress, [0, 1], [16, 0]);
-        const bottomRadius = interpolate(morphProgress, [0, 1], [36, 0]);
+        // Floating Island Metaphor: Maintain margins and bottom inset so it never gets clipped by device bezels
+        const marginH = 16;
+        const bottomRadius = 36;
         const topRadius = 36;
 
-        // Ensure the drawer stretches cleanly to the absolute bottom of the device screen when pulled up
-        const stretchDownHeight = HEIGHT_COLLAPSED + COLLAPSED_BOTTOM_MARGIN - translateY.value;
+        // Keep the bottom edge precisely hovering above the home indicator safe area
+        const stretchDownHeight = HEIGHT_COLLAPSED - translateY.value;
         const mappedHeight = interpolate(morphProgress, [0, 1], [HEIGHT_COLLAPSED, stretchDownHeight]);
 
         return {
@@ -256,6 +257,7 @@ export default function ExpandableBottomDrawer() {
                             glassStyle,
                             {
                                 shadowColor: isDark ? '#000000' : '#1e293b',
+                                borderColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.1)',
                             }
                         ]}
                     >
@@ -277,18 +279,16 @@ export default function ExpandableBottomDrawer() {
                                 StyleSheet.absoluteFill,
                                 {
                                     top: 1, left: 1, right: 1, bottom: 1,
-                                    borderWidth: StyleSheet.hairlineWidth,
-                                    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)',
+                                    borderWidth: 1,
+                                    borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.6)',
                                 },
                                 // Replicate radii internally so the stroke honors the corners
                                 useAnimatedStyle(() => {
-                                    const morphProgress = interpolate(translateY.value, [0, -65], [0, 1], Extrapolation.CLAMP);
-                                    const bottomRadius = interpolate(morphProgress, [0, 1], [36, 0]);
                                     return {
                                         borderTopLeftRadius: 36,
                                         borderTopRightRadius: 36,
-                                        borderBottomLeftRadius: bottomRadius,
-                                        borderBottomRightRadius: bottomRadius,
+                                        borderBottomLeftRadius: 36,
+                                        borderBottomRightRadius: 36,
                                     };
                                 })
                             ]}
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0, // Anchored to the top of translateContainer, expands downwards
         overflow: 'hidden',
-        borderWidth: StyleSheet.hairlineWidth,
+        borderWidth: 1,
 
         // Deep shadow for isolation
         elevation: 20,

@@ -26,7 +26,6 @@ export function PCSSummaryWidget() {
         const active = Object.entries(uctStatus).find(([_, status]) => status === 'ACTIVE');
         return active ? Number(active[0]) as UCTPhase : 1;
     }, [uctStatus]);
-
     const activePhaseConfig = UCT_PHASES.find(p => p.phase === activePhaseNum);
 
     // UI state for the "Look Ahead" accordion
@@ -61,6 +60,8 @@ export function PCSSummaryWidget() {
             else if (task.category === 'PRE_TRAVEL') cluster = 'operations';
             // Exclude CHECK_IN deliberately so it doesn't appear in the summary widget
             if (task.category === 'CHECK_IN') return acc;
+            // Exclude "Update Residence" from Operations & Transit per user request
+            if (task.label === 'Update Residence') return acc;
 
             if (!acc[cluster]) acc[cluster] = [];
             acc[cluster].push(task);

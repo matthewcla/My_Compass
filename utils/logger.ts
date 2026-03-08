@@ -37,17 +37,18 @@ export class SecureLogger {
     return args.map(arg => {
       if (typeof arg === 'string') {
         return SecureLogger.sanitize(arg);
+      } else if (arg instanceof Error) {
+        // Error objects serialize to "{}" using standard JSON.stringify.
+        // We must extract message and stack to sanitize them properly.
+        const sanitizedMessage = SecureLogger.sanitize(arg.message);
+        const newError = new Error(sanitizedMessage);
+        newError.name = arg.name;
+        if (arg.stack) newError.stack = SecureLogger.sanitize(arg.stack);
+        return newError;
       } else if (typeof arg === 'object' && arg !== null) {
-        try {
-            // Simple JSON serialization/deserialization to handle objects
-            // This is expensive but ensures deep cleaning for the assignment context.
-            // For production, a more optimized deep traversal would be better.
-            const str = JSON.stringify(arg);
-            const sanitized = SecureLogger.sanitize(str);
-            return JSON.parse(sanitized);
-        } catch (e) {
-            return arg;
-        }
+        // Just return the raw object so the console can format it natively
+        // since we are debugging a hidden crash.
+        return arg;
       }
       return arg;
     });

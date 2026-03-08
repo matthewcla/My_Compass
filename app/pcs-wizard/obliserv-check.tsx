@@ -145,15 +145,23 @@ export default function ObliservCheckScreen() {
                         entering={FadeInDown.delay(100).springify()}
                         style={{
                             paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8,
-                            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                            flexDirection: 'row', alignItems: 'center',
                             backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)',
+                            gap: 12,
                         }}
                     >
+                        <Pressable
+                            onPress={() => router.back()}
+                            className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                        >
+                            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+                        </Pressable>
                         <View>
                             <Text
                                 style={{
                                     fontSize: 11, fontWeight: '600', letterSpacing: 1.5,
                                     color: isDark ? '#64748B' : '#94A3B8',
+                                    marginBottom: 0,
                                 }}
                             >
                                 SELECTION
@@ -167,12 +175,6 @@ export default function ObliservCheckScreen() {
                                 OBLISERV Resolution
                             </Text>
                         </View>
-                        <Pressable
-                            onPress={() => router.back()}
-                            className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
-                        >
-                            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
-                        </Pressable>
                     </Animated.View>
 
                     {/* ── Content ─────────────────────────────── */}

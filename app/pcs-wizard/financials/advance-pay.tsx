@@ -66,7 +66,10 @@ export default function AdvancePayScreen() {
         style={{ paddingTop: insets.top }}
         className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pb-2 px-4 shadow-sm z-10"
       >
-        <View className="flex-row items-start justify-between mb-1 mt-2">
+        <View className="flex-row items-center gap-3 mb-1 mt-2">
+          <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+          </Pressable>
           <View className="flex-1">
             <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-400 dark:text-gray-500">
               PHASE 2
@@ -75,9 +78,6 @@ export default function AdvancePayScreen() {
               Advance Basic Pay
             </Text>
           </View>
-          <Pressable onPress={() => router.back()} className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
-            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
-          </Pressable>
         </View>
 
         <View className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg flex-row items-start gap-3">

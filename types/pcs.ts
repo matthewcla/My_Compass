@@ -148,7 +148,7 @@ export interface ChecklistItem {
   label: string;
   segmentId?: string;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETE';
-  category: 'PRE_TRAVEL' | 'FINANCE' | 'SCREENING';
+  category: 'PRE_TRAVEL' | 'FINANCE' | 'SCREENING' | 'CHECK_IN';
   uctPhase: UCTPhase;
   completedAt?: string;
   actionRoute?: string;

@@ -1,4 +1,5 @@
 import { GlassCalendarModal } from '@/components/ui/GlassCalendarModal';
+import { GlassView } from '@/components/ui/GlassView';
 import { SignatureButton } from '@/components/ui/SignatureButton';
 import Colors from '@/constants/Colors';
 import { useLeaveStore } from '@/store/useLeaveStore';
@@ -111,56 +112,67 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
     return (
         <View className="w-full">
             {/* Glass Cockpit Card */}
-            <View
-                className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-800"
-                style={{ shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 40, elevation: 10 }}
+            <GlassView
+                intensity={80}
+                tint={isDark ? 'dark' : 'light'}
+                className="rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.4)] bg-white/70 dark:bg-slate-900/60 border border-black/5 dark:border-white/10"
             >
-                {/* Status Indicator Strip (Left) */}
-                <View className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
+                <GlassView
+                    intensity={20}
+                    tint={isDark ? 'dark' : 'light'}
+                    className="absolute inset-0"
+                />
 
                 {/* Header */}
-                <View className="flex-row items-center justify-between p-4 border-b border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
-                    <Text className="text-blue-600 dark:text-blue-400 font-bold text-xs tracking-widest uppercase">
-                        QUICK LEAVE REQUEST
-                    </Text>
+                <View className="flex-row items-center justify-between px-5 pt-5 pb-0">
+                    <View className="flex-1">
+                        <Text className="text-blue-600 dark:text-blue-400 font-bold text-[11px] tracking-[1.5px] uppercase mb-0.5" style={{ textShadowColor: isDark ? 'rgba(0,0,0,0.5)' : 'transparent', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
+                            QUICK TICKET
+                        </Text>
+                        <Text className="text-[20px] font-[800] tracking-[-0.5px] leading-tight text-slate-900 dark:text-white" style={{ textShadowColor: isDark ? 'rgba(0,0,0,0.5)' : 'transparent', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }}>
+                            Leave Request
+                        </Text>
+                    </View>
                     <Pressable
                         onPress={onClose}
-                        className="p-1 rounded-full bg-slate-200/50 dark:bg-white/10 active:opacity-70"
-                        hitSlop={8}
+                        className="w-8 h-8 rounded-full items-center justify-center bg-black/5 dark:bg-white/10 active:opacity-70"
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     >
-                        <X size={16} color={isDark ? '#94a3b8' : '#64748b'} />
+                        <X size={16} color={isDark ? '#9ca3af' : '#64748b'} />
                     </Pressable>
                 </View>
 
                 {/* Main Content */}
-                <View className="p-5 gap-5">
+                <View className="p-5 pt-4 gap-5">
 
                     {/* Hero: Date Pills (centered) */}
-                    <View className="items-center gap-2">
+                    <View className="items-center gap-2 mt-1">
                         <View className="flex-row items-center gap-3">
                             <TouchableOpacity
                                 onPress={() => setShowStartPicker(true)}
-                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700/50 border border-slate-200/70 dark:border-slate-600/40"
+                                className="px-5 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700/50 border border-slate-200/70 dark:border-slate-600/40"
+                                style={{ minHeight: 44 }}
                             >
-                                <Text className="text-slate-900 dark:text-white text-lg font-mono font-semibold tracking-tight">
+                                <Text className="text-slate-900 dark:text-white text-base font-mono font-bold tracking-tight">
                                     {format(startDate, 'dd MMM')}
                                 </Text>
                             </TouchableOpacity>
 
-                            <Triangle size={8} color={isDark ? "#94a3b8" : "#64748b"} rotation={90} fill={isDark ? "#94a3b8" : "#64748b"} />
+                            <Triangle size={10} color={isDark ? "#94a3b8" : "#64748b"} rotation={90} fill={isDark ? "#94a3b8" : "#64748b"} />
 
                             <TouchableOpacity
                                 onPress={() => setShowEndPicker(true)}
-                                className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700/50 border border-slate-200/70 dark:border-slate-600/40"
+                                className="px-5 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700/50 border border-slate-200/70 dark:border-slate-600/40"
+                                style={{ minHeight: 44 }}
                             >
-                                <Text className="text-slate-900 dark:text-white text-lg font-mono font-semibold tracking-tight">
+                                <Text className="text-slate-900 dark:text-white text-base font-mono font-bold tracking-tight">
                                     {format(endDate, 'dd MMM')}
                                 </Text>
                             </TouchableOpacity>
                         </View>
 
                         {/* Chargeable days subtitle */}
-                        <Text className="text-slate-400 dark:text-slate-500 text-xs font-medium">
+                        <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold mt-1">
                             {daysCount} chargeable {daysCount === 1 ? 'day' : 'days'}
                         </Text>
                     </View>
@@ -177,7 +189,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                             <>
                                 {/* Available */}
                                 <View className="flex-1 items-center">
-                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-0.5">
                                         Avail
                                     </Text>
                                     <Text className="text-green-600 dark:text-green-400 text-xl font-mono font-bold">
@@ -186,11 +198,11 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                                 </View>
 
                                 {/* Divider */}
-                                <View className="h-8 w-[1px] bg-slate-200 dark:bg-slate-600" />
+                                <View className="h-6 w-[1px] bg-slate-200 dark:bg-slate-600" />
 
                                 {/* Charge */}
                                 <View className="flex-1 items-center">
-                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-0.5">
                                         Charge
                                     </Text>
                                     <Text className="text-slate-900 dark:text-white text-xl font-mono font-bold">
@@ -199,11 +211,11 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                                 </View>
 
                                 {/* Divider */}
-                                <View className="h-8 w-[1px] bg-slate-200 dark:bg-slate-600" />
+                                <View className="h-6 w-[1px] bg-slate-200 dark:bg-slate-600" />
 
                                 {/* Remaining */}
                                 <View className="flex-1 items-center">
-                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">
+                                    <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-0.5">
                                         Remain
                                     </Text>
                                     <Text className={`text-xl font-mono font-bold ${projection.isOverdraft ? 'text-red-500' : 'text-green-600 dark:text-green-400'}`}>
@@ -215,38 +227,38 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                     </View>
 
                     {/* Secondary Information */}
-                    <View className="gap-4">
+                    <View className="gap-4 mt-2">
                         {/* Location */}
-                        <View className="flex-row items-center gap-3">
-                            <View className="w-7 h-7 rounded-full items-center justify-center bg-blue-50 dark:bg-blue-900/20">
-                                <MapPin size={14} color={!draft.leaveAddress ? '#ef4444' : (isDark ? '#60a5fa' : '#3b82f6')} />
+                        <View className="flex-row items-center gap-4">
+                            <View className="w-10 h-10 rounded-full items-center justify-center border border-blue-200 dark:border-blue-900/60 bg-blue-100 dark:bg-blue-900/40">
+                                <MapPin size={18} color={!draft.leaveAddress ? '#ef4444' : (isDark ? '#60a5fa' : '#2563eb')} />
                             </View>
                             <View className="flex-1">
                                 <View className="flex-row justify-between items-center mb-0.5">
                                     <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Location</Text>
-                                    <Pressable onPress={onEdit} hitSlop={10}>
-                                        <Text className="text-blue-600 dark:text-blue-400 text-[10px] font-bold">CHANGE</Text>
+                                    <Pressable onPress={onEdit} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                                        <Text className="text-blue-600 dark:text-blue-400 text-[11px] font-bold">CHANGE</Text>
                                     </Pressable>
                                 </View>
-                                <Text className={`text-sm font-medium ${!draft.leaveAddress ? 'text-red-500 italic' : 'text-slate-900 dark:text-slate-200'}`} numberOfLines={1}>
+                                <Text className={`text-[15px] font-[500] leading-tight mt-0.5 ${!draft.leaveAddress ? 'text-red-500 italic' : 'text-slate-900 dark:text-slate-200'}`} numberOfLines={1}>
                                     {displayAddress}
                                 </Text>
                             </View>
                         </View>
 
                         {/* Emergency Contact */}
-                        <View className="flex-row items-center gap-3">
-                            <View className="w-7 h-7 rounded-full items-center justify-center bg-slate-100 dark:bg-slate-700/50">
-                                <Phone size={14} color={isDark ? "#94a3b8" : "#64748b"} />
+                        <View className="flex-row items-center gap-4">
+                            <View className="w-10 h-10 rounded-full items-center justify-center border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/60">
+                                <Phone size={18} color={isDark ? "#94a3b8" : "#64748b"} />
                             </View>
                             <View className="flex-1">
                                 <View className="flex-row justify-between items-center mb-0.5">
                                     <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Emergency</Text>
-                                    <Pressable onPress={onEdit} hitSlop={10}>
-                                        <Text className="text-blue-600 dark:text-blue-400 text-[10px] font-bold">EDIT</Text>
+                                    <Pressable onPress={onEdit} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                                        <Text className="text-blue-600 dark:text-blue-400 text-[11px] font-bold">EDIT</Text>
                                     </Pressable>
                                 </View>
-                                <Text className="text-slate-900 dark:text-slate-200 text-sm font-medium">
+                                <Text className="text-slate-900 dark:text-slate-200 text-[15px] font-[500] leading-tight mt-0.5">
                                     {draft.emergencyContact?.name || "None Set"}
                                 </Text>
                             </View>
@@ -255,13 +267,13 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                 </View>
 
                 {/* Footer Action */}
-                <View className="p-4 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-700 -z-10">
+                <View className="px-5 pb-5 pt-2 relative z-10">
                     <SignatureButton
                         onSign={handleSign}
                         isSubmitting={isSubmitting}
                     />
                 </View>
-            </View>
+            </GlassView>
 
             {/* Glass Calendar Modals */}
             <GlassCalendarModal
@@ -281,6 +293,6 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                 minDate={startDate}
                 title="Select End Date"
             />
-        </View>
+        </View >
     );
 }

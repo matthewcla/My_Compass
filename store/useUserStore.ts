@@ -2,6 +2,7 @@ import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
 import type { SyncStatus } from '@/types/schema';
 import type { User } from '@/types/user';
+import { SecureLogger } from '@/utils/logger';
 import { create } from 'zustand';
 
 // Mock profile for offline-first development
@@ -80,7 +81,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
         set({ isHydrating: true, hydrationError: null });
 
         try {
-            console.log('[UserStore] Hydrating user from token...');
+            SecureLogger.info('[UserStore] Hydrating user from token...');
 
             const result = await services.user.getCurrentUser(token);
 
@@ -102,10 +103,10 @@ export const useUserStore = create<UserStore>((set, get) => ({
                 hydrationError: null,
             });
 
-            console.log(`[UserStore] User hydrated successfully (ID: ...${finalUser.id.slice(-4)})`);
+            SecureLogger.info(`[UserStore] User hydrated successfully (ID: ...${finalUser.id.slice(-4)})`);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Failed to hydrate user';
-            console.error('[UserStore] Hydration failed:', errorMessage);
+            SecureLogger.error('[UserStore] Hydration failed:', errorMessage);
 
             set({
                 user: null,
@@ -118,7 +119,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     },
 
     clearUser: () => {
-        console.log('[UserStore] Clearing user data');
+        SecureLogger.info('[UserStore] Clearing user data');
         set({
             user: null,
             isHydrating: false,
@@ -129,7 +130,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     updateUser: (updates: Partial<User>) => {
         const currentUser = get().user;
         if (!currentUser) {
-            console.warn('[UserStore] Cannot update user: no user authenticated');
+            SecureLogger.warn('[UserStore] Cannot update user: no user authenticated');
             return;
         }
 
@@ -143,14 +144,14 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
         // Persist updates
         storage.saveUser(updatedUser).catch(err =>
-            console.error('[UserStore] Failed to persist user update:', err)
+            SecureLogger.error('[UserStore] Failed to persist user update:', err)
         );
     },
 
     updatePreferences: (prefs) => {
         const currentUser = get().user;
         if (!currentUser) {
-            console.warn('[UserStore] Cannot update preferences: no user authenticated');
+            SecureLogger.warn('[UserStore] Cannot update preferences: no user authenticated');
             return;
         }
 
@@ -167,7 +168,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
 
         // Persist updates
         storage.saveUser(updatedUser).catch(err =>
-            console.error('[UserStore] Failed to persist preferences:', err)
+            SecureLogger.error('[UserStore] Failed to persist preferences:', err)
         );
     }
 }));

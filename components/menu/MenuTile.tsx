@@ -47,7 +47,7 @@ export const MenuTile: React.FC<MenuTileProps> = ({
                 borderColor: isAccented ? accent : colors.surfaceBorder,
                 borderLeftWidth: isAccented ? 3 : 1,
             }, style]}
-            className={`rounded-3xl p-3 w-full flex-1 justify-between shadow-sm border ${locked ? 'opacity-50' : ''} ${className || ''}`}
+            className={`rounded-xl p-3 w-full flex-1 justify-between shadow-sm border ${locked ? 'opacity-50' : ''} ${className || ''}`}
         >
             <View className="flex-row justify-between items-start">
                 <View

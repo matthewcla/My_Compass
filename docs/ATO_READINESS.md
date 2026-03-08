@@ -1,273 +1,95 @@
-# My Compass — ATO Readiness Assessment
+# My Compass — ATO Readiness Assessment (Index)
 
-> **Version:** 1.0 · **Updated:** 2026-02-14 · **Status:** Pre-ATO (Development Phase)
+> **Version:** 1.2 · **Updated:** 2026-02-27 · **Status:** Pre-ATO (Development Phase)
 >
 > **Target:** DISA Mobile Application SRG + NIST SP 800-53 Rev 5 (Moderate Baseline)
 
-This document assesses the current codebase against the security controls required for an Authority to Operate (ATO) under the DoD Risk Management Framework (RMF). It maps implemented controls, identifies gaps, and provides remediation guidance.
+This assessment has been split into frontend and backend files for clearer ownership and sprint planning.
 
 ---
 
-## 1. Executive Summary
+## Subassessments
+
+| File | Scope |
+|------|-------|
+| [ATO_READINESS_FRONTEND.md](ATO_READINESS_FRONTEND.md) | Controls implementable within the React Native client codebase |
+| [ATO_READINESS_BACKEND.md](ATO_READINESS_BACKEND.md) | Controls requiring server infrastructure, identity provider, or network services |
+
+---
+
+## Combined Executive Summary
 
 | Category | Implemented | Stubbed | Not Implemented | Total |
 |----------|-------------|---------|-----------------|-------|
-| Access Control (AC) | 2 | 1 | 4 | 7 |
+| Access Control (AC) | 3 | 1 | 3 | 7 |
 | Audit & Accountability (AU) | 0 | 0 | 4 | 4 |
-| Identification & Auth (IA) | 1 | 2 | 2 | 5 |
+| Identification & Auth (IA) | 1 | 3 | 1 | 5 |
 | System & Comms Protection (SC) | 2 | 2 | 2 | 6 |
-| System & Info Integrity (SI) | 3 | 0 | 1 | 4 |
-| **Totals** | **8** | **5** | **13** | **26** |
+| System & Info Integrity (SI) | 4 | 0 | 0 | 4 |
+| **Totals** | **10** | **6** | **10** | **26** |
 
-**Assessment:** ~31% of required controls are fully implemented. ~19% are stubbed. ~50% are not yet implemented. This is appropriate for the current development phase — most missing controls require backend infrastructure.
-
----
-
-## 2. Control Family: Access Control (AC)
-
-### AC-2: Account Management
-
-| Status | Notes |
-|--------|-------|
-| ⚠️ Stubbed | User profiles exist (`useUserStore`) but managed via mock data. No account lifecycle (create/disable/remove). |
-
-**Remediation:** Integrate with Navy identity provider for account provisioning. Implement account disable on PCS completion.
-
-### AC-3: Access Enforcement
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | No authorization checks. All authenticated users have implicit full access. |
-
-**Remediation:** Implement RBAC middleware. Define roles (Sailor, Supervisor, Admin). Gate routes and store actions by role.
-
-### AC-6: Least Privilege
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | See AC-3. No privilege separation. |
-
-### AC-7: Unsuccessful Login Attempts
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | Auth is stubbed. No lockout mechanism. |
-
-**Remediation:** Implement via Okta policy configuration (account lockout after N failed attempts).
-
-### AC-8: System Use Notification
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | No DoD consent banner displayed at login. |
-
-**Remediation:** Add DoD Standard Notice and Consent Banner before authentication. Must include "You are accessing a U.S. Government information system…" text.
-
-### AC-11: Session Lock
-
-| Status | Notes |
-|--------|-------|
-| ✅ Implemented | `AuthGuard` protects all routes. App requires re-auth on fresh launch. |
-
-### AC-17: Remote Access
-
-| Status | Notes |
-|--------|-------|
-| ✅ Implemented | All network communication uses TLS. `HttpClient` enforces `https://` base URL. |
+**Assessment:** ~38% of required controls are fully implemented (+7% since v1.1). ~23% are stubbed. ~38% are not yet implemented. Sprint completed: AC-8 ✅, SI-11 ✅, IA-11 frontend ✅ (backend token alignment pending). Most remaining gaps require backend infrastructure.
 
 ---
 
-## 3. Control Family: Audit & Accountability (AU)
+## Quick Reference — All Controls
 
-### AU-2: Audit Events
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | No audit event generation. Only ephemeral console logs. |
-
-**Remediation:** Create `AuditService` that generates structured events for: login, data access, data modification, form submission, and authorization failures.
-
-### AU-3: Content of Audit Records
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | No structured audit records. |
-
-**Remediation:** Each audit record must include: timestamp, user identifier (hashed), event type, resource affected, outcome (success/failure).
-
-### AU-6: Audit Review, Analysis, and Reporting
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | No audit review capability. |
-
-**Remediation:** Backend requirement. Audit logs must be exportable and searchable by security personnel.
-
-### AU-9: Protection of Audit Information
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | No audit data exists to protect. |
-
-**Remediation:** Store audit logs in encrypted SQLite. Ensure audit data cannot be modified by the user (append-only). Sync to tamper-resistant server storage.
+| Control | Title | Status | Owner |
+|---------|-------|--------|-------|
+| **AC-2** | Account Management | ⚠️ Stubbed | [Backend](ATO_READINESS_BACKEND.md#ac-2-account-management) |
+| **AC-3** | Access Enforcement | ❌ Not Implemented | [Frontend](ATO_READINESS_FRONTEND.md#ac-3-access-enforcement-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#ac-3-access-enforcement-shared--backend-component) |
+| **AC-6** | Least Privilege | ❌ Not Implemented | [Frontend](ATO_READINESS_FRONTEND.md#ac-6-least-privilege-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#ac-6-least-privilege-shared--backend-component) |
+| **AC-7** | Unsuccessful Login Attempts | ❌ Not Implemented | [Backend](ATO_READINESS_BACKEND.md#ac-7-unsuccessful-login-attempts) |
+| **AC-8** | System Use Notification (DoD Banner) | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#ac-8-system-use-notification) |
+| **AC-11** | Session Lock | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#ac-11-session-lock) |
+| **AC-17** | Remote Access (TLS) | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#ac-17-remote-access-shared--frontend-component) |
+| **AU-2** | Audit Events | ❌ Not Implemented | [Frontend](ATO_READINESS_FRONTEND.md#au-2-audit-events-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#au-2-audit-events-shared--backend-component) |
+| **AU-3** | Content of Audit Records | ❌ Not Implemented | [Frontend](ATO_READINESS_FRONTEND.md#au-3-content-of-audit-records-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#au-3-content-of-audit-records-shared--backend-component) |
+| **AU-6** | Audit Review, Analysis, and Reporting | ❌ Not Implemented | [Backend](ATO_READINESS_BACKEND.md#au-6-audit-review-analysis-and-reporting) |
+| **AU-9** | Protection of Audit Information | ❌ Not Implemented | [Frontend](ATO_READINESS_FRONTEND.md#au-9-protection-of-audit-information-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#au-9-protection-of-audit-information-shared--backend-component) |
+| **IA-2** | Identification and Authentication | ⚠️ Stubbed | [Frontend](ATO_READINESS_FRONTEND.md#ia-2-identification-and-authentication-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#ia-2-identification-and-authentication-shared--backend-component) |
+| **IA-5** | Authenticator Management | ⚠️ Stubbed | [Frontend](ATO_READINESS_FRONTEND.md#ia-5-authenticator-management-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#ia-5-authenticator-management-shared--backend-component) |
+| **IA-6** | Authenticator Feedback | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#ia-6-authenticator-feedback) |
+| **IA-8** | Auth — Non-Organizational Users | ❌ N/A | [Backend](ATO_READINESS_BACKEND.md#ia-8-identification-and-authentication-non-organizational-users) |
+| **IA-11** | Re-Authentication | ⚠️ Partial | [Frontend](ATO_READINESS_FRONTEND.md#ia-11-re-authentication-shared--frontend-component) ✅ + [Backend](ATO_READINESS_BACKEND.md#ia-11-re-authentication-shared--backend-component) ❌ |
+| **SC-8** | Transmission Confidentiality | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#sc-8-transmission-confidentiality-and-integrity-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#sc-8-transmission-confidentiality-and-integrity-shared--backend-component) |
+| **SC-12** | Cryptographic Key Management | ⚠️ Stubbed | [Frontend](ATO_READINESS_FRONTEND.md#sc-12-cryptographic-key-establishment-and-management) |
+| **SC-13** | Cryptographic Protection | ⚠️ Stubbed | [Frontend](ATO_READINESS_FRONTEND.md#sc-13-cryptographic-protection) |
+| **SC-23** | Session Authenticity | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#sc-23-session-authenticity) |
+| **SC-28** | Confidentiality at Rest | ❌ Not Implemented | [Frontend](ATO_READINESS_FRONTEND.md#sc-28-confidentiality-of-information-at-rest) |
+| **SC-39** | Process Isolation | ❌ Not Implemented | [Frontend](ATO_READINESS_FRONTEND.md#sc-39-process-isolation-shared--frontend-component) + [Backend](ATO_READINESS_BACKEND.md#sc-39-process-isolation-shared--backend-component) |
+| **SI-2** | Flaw Remediation | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#si-2-flaw-remediation) |
+| **SI-3** | Malicious Code Protection | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#si-3-malicious-code-protection) |
+| **SI-10** | Information Input Validation | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#si-10-information-input-validation) |
+| **SI-11** | Error Handling | ✅ Implemented | [Frontend](ATO_READINESS_FRONTEND.md#si-11-error-handling) |
 
 ---
 
-## 4. Control Family: Identification & Authentication (IA)
+## DISA Mobile App SRG Quick Reference
 
-### IA-2: Identification and Authentication
-
-| Status | Notes |
-|--------|-------|
-| ⚠️ Stubbed | Okta OIDC configuration exists. Mock token flow operational. No real authentication. |
-
-**Remediation:**
-1. Complete Okta integration with `expo-auth-session`
-2. Implement PKCE flow for mobile
-3. Add CAC/PKI certificate authentication
-4. Verify user identity via DoD ID
-
-### IA-5: Authenticator Management
-
-| Status | Notes |
-|--------|-------|
-| ⚠️ Stubbed | Token stored in `expo-secure-store`. No refresh rotation or expiration handling. |
-
-**Remediation:** Implement JWT refresh token rotation. Add token expiration checks before API calls. Clear tokens on explicit sign-out.
-
-### IA-6: Authenticator Feedback
-
-| Status | Notes |
-|--------|-------|
-| ✅ Implemented | PII fields can be masked via `privacyMode`. Password-type inputs obscure entry. |
-
-### IA-8: Identification and Authentication (Non-Organizational Users)
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | N/A for current scope (single-user app), but may apply if supervisor access added. |
-
-### IA-11: Re-Authentication
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | No session timeout or re-auth prompt. |
-
-**Remediation:** Implement configurable idle timeout (recommend 15 minutes per STIG). Prompt re-authentication via biometric or PIN.
-
----
-
-## 5. Control Family: System & Communications Protection (SC)
-
-### SC-8: Transmission Confidentiality and Integrity
-
-| Status | Notes |
-|--------|-------|
-| ✅ Implemented | TLS enforced on all HTTP requests. Base URL is `https://api.dev.mycompass.navy.mil`. |
-
-### SC-12: Cryptographic Key Establishment and Management
-
-| Status | Notes |
-|--------|-------|
-| ⚠️ Stubbed | Key generation code exists but uses insecure fallbacks. Not FIPS-validated. |
-
-**Remediation:** See [TECHNICAL_DEBT.md TD-004](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/docs/TECHNICAL_DEBT.md). Replace with FIPS 140-2 validated key management.
-
-### SC-13: Cryptographic Protection
-
-| Status | Notes |
-|--------|-------|
-| ⚠️ Stubbed | AES encryption code exists but is disabled. `crypto-js` is not FIPS-validated. |
-
-**Remediation:** See [TECHNICAL_DEBT.md TD-001, TD-002](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/docs/TECHNICAL_DEBT.md).
-
-### SC-23: Session Authenticity
-
-| Status | Notes |
-|--------|-------|
-| ✅ Implemented | Bearer token authentication in HTTP headers. HTTPS prevents session hijacking. |
-
-### SC-28: Confidentiality of Information at Rest
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | Encryption disabled. See TD-001. |
-
-### SC-39: Process Isolation
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | WebView/native bridge isolation not hardened. Standard React Native isolation applies. |
-
----
-
-## 6. Control Family: System & Information Integrity (SI)
-
-### SI-2: Flaw Remediation
-
-| Status | Notes |
-|--------|-------|
-| ✅ Implemented | Dependencies managed via `package-lock.json`. Versions pinned. Can run `npm audit`. |
-
-### SI-3: Malicious Code Protection
-
-| Status | Notes |
-|--------|-------|
-| ✅ Implemented | App distributed via controlled channels (Expo managed workflow). No dynamic code execution. |
-
-### SI-10: Information Input Validation
-
-| Status | Notes |
-|--------|-------|
-| ✅ Implemented | Zod schemas validate all user inputs. Form validation via `react-hook-form` + `@hookform/resolvers/zod`. |
-
-### SI-11: Error Handling
-
-| Status | Notes |
-|--------|-------|
-| ❌ Not Implemented | Error messages may expose internal state. No global error boundary with safe messaging. |
-
-**Remediation:** Add React error boundary that shows generic message to user while logging details via `SecureLogger`.
-
----
-
-## 7. DISA Mobile App SRG Specific Requirements
-
-| SRG ID | Requirement | Status | Notes |
+| SRG ID | Requirement | Status | Owner |
 |--------|------------|--------|-------|
-| SRG-APP-000141 | Use FIPS 140-2 validated crypto | ❌ | `crypto-js` is not FIPS-validated |
-| SRG-APP-000153 | Authenticate via PKI/CAC | ⚠️ | Okta stub exists, no CAC integration |
-| SRG-APP-000175 | Encrypt data at rest | ⚠️ | Code exists but disabled |
-| SRG-APP-000190 | Session timeout (15 min) | ❌ | No idle timeout |
-| SRG-APP-000210 | Audit trail | ❌ | No audit logging |
-| SRG-APP-000225 | DoD banner on startup | ❌ | No consent banner |
-| SRG-APP-000380 | Validate certificates | ❌ | No cert pinning |
-| SRG-APP-000400 | Prevent data leakage | ✅ | PII redaction in logs, secure storage for tokens |
-| SRG-APP-000514 | FIPS crypto modules | ❌ | See SRG-APP-000141 |
+| SRG-APP-000141 | FIPS 140-2 validated crypto | ❌ | Frontend |
+| SRG-APP-000153 | PKI/CAC authentication | ⚠️ | Frontend + Backend |
+| SRG-APP-000175 | Encrypt data at rest | ⚠️ | Frontend |
+| SRG-APP-000190 | Session timeout (15 min) | ⚠️ | Frontend ✅ (10-min sign-out) + Backend ❌ (token alignment) |
+| SRG-APP-000210 | Audit trail | ❌ | Frontend + Backend |
+| SRG-APP-000225 | DoD banner on startup | ✅ | Frontend |
+| SRG-APP-000380 | Certificate pinning | ❌ | Frontend (blocked on Backend cert) |
+| SRG-APP-000400 | Prevent data leakage | ✅ | Frontend |
+| SRG-APP-000514 | FIPS crypto modules | ❌ | Frontend |
 
 ---
 
-## 8. Remediation Priority Order
-
-For ATO submission, address controls in this order:
-
-1. **SC-13 / SRG-APP-000141:** Replace `crypto-js` → FIPS-validated crypto, re-enable encryption
-2. **IA-2 / SRG-APP-000153:** Complete Okta + CAC/PKI authentication
-3. **AC-8 / SRG-APP-000225:** Add DoD consent banner
-4. **AU-2 / SRG-APP-000210:** Implement audit logging
-5. **IA-11 / SRG-APP-000190:** Add session timeout (15 min idle)
-6. **AC-3:** Implement RBAC
-7. **SC-28 / SRG-APP-000175:** Enable data-at-rest encryption with FIPS key management
-8. **SRG-APP-000380:** Add certificate pinning
-
----
-
-## 9. What's Already Strong
+## What's Already Strong
 
 - ✅ **Input validation** via Zod is comprehensive and prevents injection
-- ✅ **PII redaction** in logging is production-grade
+- ✅ **PII redaction** in `SecureLogger` is production-grade; `patchGlobalConsole()` intercepts all stray logs app-wide
 - ✅ **Offline-first architecture** — no data loss during network outages
-- ✅ **Token storage** uses platform Keychain/Keystore
+- ✅ **Token storage** uses platform Keychain/Keystore via `expo-secure-store`
 - ✅ **Network layer** has retry, timeout, and TLS enforcement
-- ✅ **Service interface pattern** enables clean mock→real swap without refactoring
+- ✅ **Service interface pattern** enables clean mock→real swap without client refactoring
 - ✅ **Sync queue** with dead-letter recovery ensures no write loss
+- ✅ **DoD consent banner** (AC-8) — every session, no bypass possible
+- ✅ **Global error boundary** (SI-11) — safe messaging, no internal state exposed
+- ✅ **Session idle timeout** (IA-11 frontend) — 10-min hard sign-out, 5-min warning

@@ -710,7 +710,13 @@ export default function ProfileConfirmationScreen() {
                         entering={FadeInDown.delay(100).springify()}
                         style={{ backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)', paddingBottom: 8 }}
                     >
-                        <View style={{ paddingHorizontal: 16, paddingTop: 8, marginBottom: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ paddingHorizontal: 16, paddingTop: 8, marginBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            <Pressable
+                                onPress={() => router.back()}
+                                className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                            >
+                                <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+                            </Pressable>
                             <View>
                                 <Text
                                     style={{
@@ -729,12 +735,6 @@ export default function ProfileConfirmationScreen() {
                                     Profile Confirmation
                                 </Text>
                             </View>
-                            <Pressable
-                                onPress={() => router.back()}
-                                className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
-                            >
-                                <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
-                            </Pressable>
                         </View>
 
                         {/* Status Bar */}

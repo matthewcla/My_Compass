@@ -3,6 +3,7 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useActiveOrder } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Building2, Mail, MessageSquare, Phone, User } from 'lucide-react-native';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, Linking, Platform, Text, View } from 'react-native';
@@ -153,116 +154,114 @@ export function GainingCommandCard({ variant = 'widget' }: GainingCommandCardPro
 
   return (
     <GlassView
-      intensity={75}
+      intensity={80}
       tint={isDark ? 'dark' : 'light'}
-      className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10"
+      className="rounded-[24px] overflow-hidden mx-4 mb-6 shadow-sm border border-black/5 dark:border-white/10"
     >
-      <View className="bg-blue-50/30 dark:bg-blue-900/20 px-4 py-3.5">
-        <View className="flex-row items-center">
-          <View className="w-12 h-12 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/70 items-center justify-center overflow-hidden mr-3">
-            {crestUri && !showCrestFallback ? (
-              <Image
-                source={{ uri: crestUri }}
-                className="w-full h-full"
-                resizeMode="cover"
-                onError={() => setShowCrestFallback(true)}
-              />
-            ) : (
-              <Building2 size={22} color={isDark ? '#93c5fd' : '#2563eb'} strokeWidth={2.2} />
-            )}
-          </View>
-
-          <View className="flex-1">
-            <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-500 dark:text-slate-300">
-              Gaining Command
-            </Text>
-            <Text className="mt-0.5 text-base font-bold text-slate-900 dark:text-white">
-              {gainingCommand.name || 'Command Pending'}
-            </Text>
-            <Text className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              UIC: {gainingCommand.uic || 'N/A'}
-            </Text>
+      <LinearGradient
+        colors={isDark ? ['rgba(59,130,246,0.15)', 'transparent'] : ['rgba(59,130,246,0.08)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+      <View className="p-5">
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center gap-4 flex-1">
+            <View className="w-[52px] h-[52px] rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-800/60 shadow-sm overflow-hidden">
+              {crestUri && !showCrestFallback ? (
+                <Image
+                  source={{ uri: crestUri }}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                  onError={() => setShowCrestFallback(true)}
+                />
+              ) : (
+                <Building2 size={26} color={isDark ? '#60A5FA' : '#2563EB'} />
+              )}
+            </View>
+            <View className="flex-1">
+              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={1}>{gainingCommand.name || 'Command Pending'}</Text>
+              <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={1}>UIC: {gainingCommand.uic || 'N/A'}</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      <View className="p-4">
-        <Text className="text-[11px] font-semibold uppercase tracking-[1.4px] text-slate-500 dark:text-slate-400">
-          Your Sponsor
-        </Text>
-
-        {!sponsor ? (
-          <Text className="mt-2 text-sm leading-5 text-slate-600 dark:text-slate-300">
-            No sponsor assigned yet. Contact your detailer for sponsor assignment.
+        <View className="border-t border-slate-200/50 dark:border-slate-700/50 pt-4">
+          <Text className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+            Your Sponsor
           </Text>
-        ) : (
-          <>
-            <View className="mt-2.5 flex-row items-center">
-              <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center overflow-hidden mr-3">
-                {sponsorPhotoUri && !showSponsorFallback ? (
-                  <Image
-                    source={{ uri: sponsorPhotoUri }}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                    onError={() => setShowSponsorFallback(true)}
-                  />
-                ) : (
-                  <User size={18} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
-                )}
+
+          {!sponsor ? (
+            <Text className="text-sm leading-5 text-slate-600 dark:text-slate-300">
+              No sponsor assigned yet. Contact your detailer for sponsor assignment.
+            </Text>
+          ) : (
+            <>
+              <View className="flex-row items-center bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60">
+                <View className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 items-center justify-center overflow-hidden mr-3">
+                  {sponsorPhotoUri && !showSponsorFallback ? (
+                    <Image
+                      source={{ uri: sponsorPhotoUri }}
+                      className="w-full h-full"
+                      resizeMode="cover"
+                      onError={() => setShowSponsorFallback(true)}
+                    />
+                  ) : (
+                    <User size={18} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
+                  )}
+                </View>
+
+                <View className="flex-1">
+                  <Text className="text-base font-bold text-slate-900 dark:text-white">
+                    {sponsorDisplayName}
+                  </Text>
+                  <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Command Sponsor
+                  </Text>
+                </View>
               </View>
 
-              <View className="flex-1">
-                <Text className="text-base font-bold text-slate-900 dark:text-white">
-                  {sponsorDisplayName}
+              {hasContactActions ? (
+                <View className="mt-3 flex-row gap-2">
+                  {callUrl && (
+                    <ContactActionButton
+                      label="Call"
+                      tone="call"
+                      icon={Phone}
+                      url={callUrl}
+                      isDark={isDark}
+                      onPress={handleContactAction}
+                    />
+                  )}
+                  {textUrl && (
+                    <ContactActionButton
+                      label="Text"
+                      tone="text"
+                      icon={MessageSquare}
+                      url={textUrl}
+                      isDark={isDark}
+                      onPress={handleContactAction}
+                    />
+                  )}
+                  {emailUrl && (
+                    <ContactActionButton
+                      label="Email"
+                      tone="email"
+                      icon={Mail}
+                      url={emailUrl}
+                      isDark={isDark}
+                      onPress={handleContactAction}
+                    />
+                  )}
+                </View>
+              ) : (
+                <Text className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                  Sponsor contact info is not available yet.
                 </Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Command Sponsor
-                </Text>
-              </View>
-            </View>
-
-            {hasContactActions ? (
-              <View className="mt-3 flex-row gap-2">
-                {callUrl ? (
-                  <ContactActionButton
-                    label="Call"
-                    tone="call"
-                    icon={Phone}
-                    url={callUrl}
-                    isDark={isDark}
-                    onPress={handleContactAction}
-                  />
-                ) : null}
-
-                {textUrl ? (
-                  <ContactActionButton
-                    label="Text"
-                    tone="text"
-                    icon={MessageSquare}
-                    url={textUrl}
-                    isDark={isDark}
-                    onPress={handleContactAction}
-                  />
-                ) : null}
-
-                {emailUrl ? (
-                  <ContactActionButton
-                    label="Email"
-                    tone="email"
-                    icon={Mail}
-                    url={emailUrl}
-                    isDark={isDark}
-                    onPress={handleContactAction}
-                  />
-                ) : null}
-              </View>
-            ) : (
-              <Text className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-                Sponsor contact info is not available yet.
-              </Text>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
+        </View>
       </View>
     </GlassView>
   );

@@ -3,6 +3,7 @@ import { ChecklistItem, HHGItem, HHGShipment, HHGShipmentType, LiquidationStatus
 import type { TravelClaim } from '@/types/travelClaim';
 import { getHHGWeightAllowance } from '@/utils/hhg';
 import { calculateSegmentEntitlement, getDLARate } from '@/utils/jtr';
+import { SecureLogger } from '@/utils/logger';
 import { CachedPDF, cachePDF, deleteCachedPDF, loadPDFMetadata, savePDFMetadata } from '@/utils/pdfCache';
 import { bridgeReceiptsToExpenses } from '@/utils/receiptBridge';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -284,7 +285,7 @@ export const usePCSStore = create<PCSState>()(
             label: 'Update Residence',
             status: 'NOT_STARTED',
             category: 'PRE_TRAVEL',
-            uctPhase: 1,
+            uctPhase: 4,
             actionRoute: '/pcs-wizard/profile-confirmation',
             helpText: 'You indicated housing is not yet secured. Update your residence when finalized.',
           });
@@ -319,7 +320,7 @@ export const usePCSStore = create<PCSState>()(
           id: generateUUID(),
           label: 'Household Goods Move Planner',
           status: 'NOT_STARTED',
-          category: 'PRE_TRAVEL',
+          category: 'FINANCE',
           uctPhase: 2,
           actionRoute: '/pcs-wizard/hhg-move-planner',
           helpText: 'Estimate your shipment weight, compare GBL vs. PPM costs, and schedule your pickup through DPS.',
@@ -356,7 +357,7 @@ export const usePCSStore = create<PCSState>()(
           id: generateUUID(),
           label: 'Complete Check-In',
           status: 'NOT_STARTED',
-          category: 'PRE_TRAVEL',
+          category: 'CHECK_IN',
           uctPhase: 4,
           actionRoute: '/pcs/check-in',
           helpText: 'Report to your new command\u2019s quarterdeck with your orders. This starts your check-in sheet.',
@@ -366,7 +367,7 @@ export const usePCSStore = create<PCSState>()(
           id: generateUUID(),
           label: 'File Travel Claim',
           status: 'NOT_STARTED',
-          category: 'FINANCE',
+          category: 'CHECK_IN',
           uctPhase: 4,
           actionRoute: '/travel-claim/request',
           helpText: 'Your travel voucher for reimbursement. File within 5 business days of arrival for fastest payout.',
@@ -375,7 +376,7 @@ export const usePCSStore = create<PCSState>()(
           id: generateUUID(),
           label: 'Establish Housing & Update Profile',
           status: 'NOT_STARTED',
-          category: 'PRE_TRAVEL',
+          category: 'CHECK_IN',
           uctPhase: 4,
           actionRoute: '/pcs-wizard/profile-confirmation',
           helpText: 'Secure housing at your new duty station and verify your address, BAH, and contact info are current.',
@@ -582,7 +583,7 @@ export const usePCSStore = create<PCSState>()(
         const user = getActiveUser();
 
         if (!user || !user.eaos) {
-          if (__DEV__) console.log('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
+          if (__DEV__) SecureLogger.info('[OBLISERV] No user or no EAOS — bailing', { hasUser: !!user, eaos: user?.eaos });
           return;
         }
 
@@ -590,7 +591,7 @@ export const usePCSStore = create<PCSState>()(
         // to the sailor's PRD as the projected report date (SELECTION phase).
         const reportDateStr = activeOrder?.reportNLT ?? user.prd;
         if (!reportDateStr) {
-          if (__DEV__) console.log('[OBLISERV] No reportDate and no PRD — bailing');
+          if (__DEV__) SecureLogger.info('[OBLISERV] No reportDate and no PRD — bailing');
           return;
         }
 
@@ -606,8 +607,7 @@ export const usePCSStore = create<PCSState>()(
         const isObliservRequired = eaosDate < requiredServiceDate;
 
         if (__DEV__) {
-          console.log('[OBLISERV] Check:', {
-            user: user.displayName,
+          SecureLogger.info('[OBLISERV] Check:', {
             reportDateStr,
             eaos: user.eaos,
             requiredServiceDate: requiredServiceDate.toISOString(),
@@ -623,11 +623,11 @@ export const usePCSStore = create<PCSState>()(
         // Bail early if nothing changed — prevents re-render loops
         const current = financials.obliserv;
         if (current.required === isObliservRequired && current.eaos === user.eaos && current.status === expectedStatus) {
-          if (__DEV__) console.log('[OBLISERV] No change — skipping update');
+          if (__DEV__) SecureLogger.info('[OBLISERV] No change — skipping update');
           return;
         }
 
-        if (__DEV__) console.log('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
+        if (__DEV__) SecureLogger.info('[OBLISERV] Updating store:', { required: isObliservRequired, status: expectedStatus });
 
         set({
           financials: {
@@ -1089,7 +1089,7 @@ export const usePCSStore = create<PCSState>()(
           set({ cachedOrders: cached });
           return { success: true, cached };
         } catch (error) {
-          console.error('[PCSStore] Failed to cache orders:', error);
+          SecureLogger.error('[PCSStore] Failed to cache orders:', error);
           return { success: false, error };
         }
       },
@@ -1133,7 +1133,7 @@ export const usePCSStore = create<PCSState>()(
             }
           }
         } catch (error) {
-          console.error('[PCSStore] Failed to initialize orders cache:', error);
+          SecureLogger.error('[PCSStore] Failed to initialize orders cache:', error);
         }
       },
     }),

@@ -99,7 +99,13 @@ export function ProfilePreferences() {
             <SafeAreaView style={{ flex: 1 }} edges={['top']}>
                 {/* ── Flow Header ──────────────────────────────────── */}
                 <View className="px-4 py-2">
-                    <View className="flex-row items-start justify-between mb-1">
+                    <View className="flex-row items-center gap-3 mb-1 mt-2">
+                        <Pressable
+                            onPress={() => router.back()}
+                            className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                        >
+                            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+                        </Pressable>
                         <View>
                             <Text
                                 style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
@@ -114,12 +120,6 @@ export function ProfilePreferences() {
                                 Preferences
                             </Text>
                         </View>
-                        <Pressable
-                            onPress={() => router.back()}
-                            className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
-                        >
-                            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
-                        </Pressable>
                     </View>
                 </View>
 

@@ -216,18 +216,18 @@ export default function HHGEstimatorScreen() {
   return (
     <View className="flex-1 bg-slate-50 dark:bg-slate-950">
       <View style={{ paddingTop: insets.top }} className="bg-slate-50 dark:bg-slate-950 px-4 pb-2 pt-2">
-        <View className="flex-row items-start justify-between">
+        <View className="flex-row items-center gap-3 mt-2 mb-1">
+          <Pressable onPress={handleBack} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+          </Pressable>
           <View className="flex-1">
-            <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-400 dark:text-gray-500">
+            <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-400 dark:text-gray-500 mb-0">
               PHASE 2
             </Text>
-            <Text style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }} className="text-slate-900 dark:text-white">
+            <Text style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }} className="text-slate-900 dark:text-white mb-1">
               HHG Estimator
             </Text>
           </View>
-          <Pressable onPress={handleBack} className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
-            <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
-          </Pressable>
         </View>
       </View>
 

@@ -323,66 +323,61 @@ const inputRefs = useRef<Record<string, TextInput | null>>({});
 
 ### 2.3 Smart Stack (Widget Pattern)
 
-
 Widgets are small, glanceable components that can render in two modes:
 - `variant="full"` — Full detail view (standalone screen)
 - `variant="widget"` — Compact, card-sized view (embedded in UCT TrackNode)
 
 **Implementation rule:** Every widget must read from its Zustand store, ensuring data consistency between widget and full views. Never pass data as props when a store selector exists.
 
+#### 2.3.1 Widget Header Typography Standard
+
+All widget headers must adhere to the premium HUD standard to prevent aggressive truncation and maintain visual hierarchy:
+
+- **Icon Sizing:** Container `w-10 h-10` (40px) with icon `size={20}`. 
+  - ❌ **Anti-pattern:** Do not use oversized 52px containers, which steal visual priority from data.
+- **Text Wrapping:** The Title (`text-[20px]`) and Subtitle (`text-[13px]`) must use `numberOfLines={2}`. 
+  - ❌ **Anti-pattern:** Never use `numberOfLines={1}` on widget headers, as this aggressively crops dynamic entity names (e.g., Command Names, Billet Titles) on smaller screens.
+
 ### 2.4 Hero Status Card (Dashboard Phase Tile)
 
-The `StatusCard` is the top-of-dashboard hero tile that communicates the Sailor's current lifecycle phase at a glance. It uses a **phase-aware variant** system — each PCS phase renders a distinct card with its own accent color, icon, CTA, and scoped task progress.
+The `StatusCard` is the top-of-dashboard hero tile that communicates the Sailor's current lifecycle phase at a glance. It uses a **phase-aware variant** system — each PCS phase renders a distinct card with its own accent color, icon, and contextual metric.
 
 **Reference:** [StatusCard.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/components/dashboard/StatusCard.tsx)
 
 #### Layout Structure
 
-Every variant follows a **two-row layout** inside a `GlassView` with a `LinearGradient` wash and a colored left border (`border-l-4`):
+Every variant follows a **single-row horizontal layout** inside a `GlassView` wrapped in a `TouchableOpacity` for phase-specific navigation. The card utilizes a custom box shadow (`shadow-[0_8px_30px_rgba(0,0,0,0.06)]`) and a full-bleed `LinearGradient` wash:
 
-| Row | Left | Right |
-|-----|------|-------|
-| **Header** | `IconBubble` + Headline + Detail (subtitle) | Hero metric (e.g., days counter) |
-| **Footer** | Progress dots + Next action + micro-statuses | CTA button (bottom-right, `items-end`) |
+| Structure | Elements |
+|-----------|----------|
+| **Left Side** | `IconBubble` + Headline + Detail (subtitle) |
+| **Right Side** | Contextual Hero Metric (e.g., days counter, months remaining) |
 
 #### Color-per-Phase Mapping
 
-Each variant uses a **single accent hue** applied consistently to: left border, gradient wash, icon bubble, headline, progress-dot active state, next-action text, and CTA button. Adjacent phases must have **distinct** accent colors to maintain the "progression" signal.
+Each variant uses a **single accent hue** applied consistently to the gradient wash, icon bubble background and border, and typography. Adjacent phases use distinct accent colors to maintain the "progression" signal.
 
-| # | Variant | Accent | Border | Icon Colors (dark / light) |
-|---|---------|--------|--------|---------------------------|
-| 1 | `cycle-prep` | Blue | `border-blue-400` | `#60a5fa` / `#2563eb` |
-| 2 | `cycle-open` | Indigo | `border-indigo-500` | `#818cf8` / `#4f46e5` |
-| 3 | `negotiation` | Amber | `border-amber-400` | `#fbbf24` / `#d97706` |
-| 4 | `selected` | Emerald | `border-emerald-400` | `#A7F3D0→#10B981` gradient |
-| 5 | `processing` | Zinc | `border-zinc-400` | `#a1a1aa` / `#52525b` |
-| 6 | `orders-received` | Amber | `border-amber-400` | `#fbbf24` / `#d97706` |
-| 7 | `plan-move` | Teal | `border-teal-400` | `#2dd4bf` / `#0d9488` |
-| 8 | `en-route` | Sky | `border-sky-400` | `#38bdf8` / `#0284c7` |
-| 9 | `welcome-aboard` | Green | `border-green-400` | `#4ade80` / `#15803d` |
+| # | Variant | Accent | Gradient Base | Icon Colors (dark / light) |
+|---|---------|--------|---------------|---------------------------|
+| 1 | `cycle-prep` | Blue | `rgba(59,130,246,0.1)` | `#60A5FA` / `#1D4ED8` |
+| 2 | `cycle-open` | Amber | `rgba(245,158,11,0.1)` | `#C8921C` / `#B07500` |
+| 3 | `negotiation` | Amber | `rgba(245,158,11,0.1)` | `#fbbf24` / `#d97706` |
+| 4 | `selected` | Emerald | *Custom Gradient* | `#FFFFFF` |
+| 5 | `processing` | Stone | `rgba(168,162,158,0.1)`| `#a8a29e` / `#57534e` |
+| 6 | `orders-received` | Amber | `rgba(245,158,11,0.1)`| `#fbbf24` / `#d97706` |
+| 7 | `plan-move` | Navy | `rgba(26,78,138,0.1)` | `#5B8FCF` / `#1A4E8A` |
+| 8 | `en-route` | Blue | `rgba(59,130,246,0.1)`| `#60A5FA` / `#2563EB` |
+| 9 | `welcome-aboard` | Green | `rgba(22,163,74,0.1)` | `#4ade80` / `#16A34A` |
 
 #### Urgency Escalation (Days Counter)
 
-When a variant displays a countdown (e.g., days to report NLT), the counter color escalates:
+When a variant displays a countdown (e.g., days to report NLT in `plan-move`), the counter color escalates:
 
 | Threshold | Color | Meaning |
 |-----------|-------|---------|
-| > 60 days | Phase accent (e.g., teal) | On track |
+| > 60 days | Phase accent (e.g., Navy Blue) | On track |
 | 30–60 days | Orange (`text-orange-600 dark:text-orange-400`) | Time to act |
 | < 30 days | Red (`text-red-600 dark:text-red-400`) | Urgent |
-
-#### Task Scoping Rule
-
-Progress dots and "Next action" must scope to the **UCT phases relevant to the current variant**, not all checklist items:
-
-- `plan-move` → UCT phases 1 + 2 (Orders & OBLISERV + Logistics & Finances)
-- `en-route` → UCT phase 3 (Transit & Leave)
-- `welcome-aboard` → UCT phase 4 (Check-in & Claim)
-
-**Anti-patterns:**
-- ❌ Showing all checklist items regardless of phase — overwhelms the Sailor
-- ❌ Using the same accent color for adjacent phases — kills the "progression" signal
-- ❌ Placing the CTA in the header row — header is for status, footer is for action
 
 ### 2.5 Status Bar Shim (Scroll Safety)
 

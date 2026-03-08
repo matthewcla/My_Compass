@@ -4,6 +4,7 @@ import {
     computeRequiredCollapseTravel
 } from '@/components/navigation/collapseMath';
 import { useScrollContext, useScrollControl } from '@/components/navigation/ScrollControlContext';
+import { useBottomSheetStore } from '@/store/useBottomSheetStore';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
     LayoutChangeEvent,
@@ -17,6 +18,7 @@ import {
     ViewStyle
 } from 'react-native';
 import Animated, {
+    cancelAnimation,
     useAnimatedScrollHandler,
     useAnimatedStyle,
     useComposedEventHandler,
@@ -111,7 +113,7 @@ export function CollapsibleScaffold({
 
     const [animatedHeaderHeight, setAnimatedHeaderHeight] = useState(initialAnimatedHeaderHeight);
     const [viewportHeight, setViewportHeight] = useState<number | null>(null);
-    useScrollContext(); // Ensure context is available; metrics read via constants
+    const { translateY: tabBarTranslateY, tabBarMaxHeight } = useScrollContext();
 
     // Mobile Web Strategy: Disable DiffClamp animation and use position: sticky
     const isMobileWebEnv = useMemo(() => Platform.OS === 'web', []);
@@ -121,9 +123,17 @@ export function CollapsibleScaffold({
     // We clamp minTopBarHeight against measured height to avoid impossible ranges.
     const clampedMinTopBarHeight = Math.min(Math.max(minTopBarHeight, 0), animatedHeaderHeight);
     const scrollableHeaderHeight = Math.max(animatedHeaderHeight - clampedMinTopBarHeight, 0);
+
+    // P0 FIX #1: Promote scrollableHeaderHeight to a SharedValue so worklets
+    // on the UI thread always read the current measured value, never a stale closure.
+    const scrollableHeaderHeightSV = useSharedValue(scrollableHeaderHeight);
+    // Keep the shared value in sync whenever the JS-side value changes
+    React.useEffect(() => {
+        scrollableHeaderHeightSV.value = scrollableHeaderHeight;
+    }, [scrollableHeaderHeight, scrollableHeaderHeightSV]);
+
     const headerCollapseDistance = useSharedValue(0);
     const prevHeaderScrollY = useSharedValue(0);
-    const isSnapping = useSharedValue(false);
     const isDraggingLayout = useSharedValue(false);
 
     const { onScroll: scrollControlHandler, forceSnapTabBar } = useScrollControl();
@@ -132,62 +142,54 @@ export function CollapsibleScaffold({
     // UI response that feels premium and massless
     const SPRING_CONFIG = { mass: 0.5, damping: 25, stiffness: 300 };
 
+    // ARCHITECTURAL PARITY: This handler now mirrors the tab bar's proven architecture.
+    // - onScroll ALWAYS processes deltas (no isSnapping guard)
+    // - onEndDrag/onMomentumEnd fire snap springs that are naturally overridden
+    //   by the next onScroll frame if momentum continues
+    // - Springs only play out uninterrupted AFTER all scroll events have stopped
     const headerScrollHandler = useAnimatedScrollHandler({
         onBeginDrag: (event) => {
-            isSnapping.value = false;
+            // Cancel any in-flight snap spring so deltas take over immediately
+            cancelAnimation(headerCollapseDistance);
             isDraggingLayout.value = true;
             prevHeaderScrollY.value = event.contentOffset.y;
         },
         onEndDrag: (event) => {
             isDraggingLayout.value = false;
             if (!diffClampEnabled) return;
-            isSnapping.value = true;
 
-            const velocity = event.velocity?.y ?? 0;
-            let isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
+            const maxCollapse = scrollableHeaderHeightSV.value;
+            if (maxCollapse <= 0) return;
 
-            // Flicks override distance thresholds
-            if (velocity > 0.5) {
-                isHidden = true;
-            } else if (velocity < -0.5) {
-                isHidden = false;
-            }
+            // Snap decision: is the header more than halfway collapsed?
+            const isHidden = headerCollapseDistance.value > maxCollapse / 2;
+            const targetDistance = isHidden ? maxCollapse : 0;
 
-            const targetDistance = isHidden ? scrollableHeaderHeight : 0;
-
-            headerCollapseDistance.value = withSpring(targetDistance, { ...SPRING_CONFIG, velocity }, (finished) => {
-                if (finished) isSnapping.value = false;
-            });
+            // Fire snap spring — will be overridden by onScroll if momentum continues
+            headerCollapseDistance.value = withSpring(targetDistance, { ...SPRING_CONFIG });
 
             if (forceSnapTabBar) {
-                forceSnapTabBar(isHidden, velocity);
+                forceSnapTabBar(isHidden);
             }
         },
         onMomentumEnd: (event) => {
-            if (!diffClampEnabled || isSnapping.value) return;
-            isSnapping.value = true;
+            if (!diffClampEnabled) return;
 
-            const velocity = event.velocity?.y ?? 0;
-            const isHidden = headerCollapseDistance.value > scrollableHeaderHeight / 2;
-            const targetDistance = isHidden ? scrollableHeaderHeight : 0;
+            const maxCollapse = scrollableHeaderHeightSV.value;
+            if (maxCollapse <= 0) return;
 
-            headerCollapseDistance.value = withSpring(targetDistance, { ...SPRING_CONFIG, velocity }, (finished) => {
-                if (finished) isSnapping.value = false;
-            });
+            // Final snap after all momentum has settled
+            const isHidden = headerCollapseDistance.value > maxCollapse / 2;
+            const targetDistance = isHidden ? maxCollapse : 0;
+
+            headerCollapseDistance.value = withSpring(targetDistance, { ...SPRING_CONFIG });
 
             if (forceSnapTabBar) {
-                forceSnapTabBar(isHidden, velocity);
+                forceSnapTabBar(isHidden);
             }
         },
         onScroll: (event) => {
-            if (!diffClampEnabled || isSnapping.value) {
-                // Keep keeping track of real scroll Y even if ignoring delta
-                const currentY = event.contentOffset.y;
-                if (Number.isFinite(currentY) && currentY > 0) {
-                    prevHeaderScrollY.value = currentY;
-                }
-                return;
-            }
+            if (!diffClampEnabled) return;
 
             const currentY = event.contentOffset.y;
             if (!Number.isFinite(currentY) || currentY <= 0) {
@@ -196,15 +198,17 @@ export function CollapsibleScaffold({
                 return;
             }
 
-            // Delta-based: direction-aware header collapse
+            // Delta-based: direction-aware header collapse (always processes, never blocked)
             const delta = currentY - prevHeaderScrollY.value;
-            prevHeaderScrollY.value = currentY;
 
-            // During momentum (not actively dragging), detect bottom bounce
-            // to prevent iOS from undoing collapse
+            // Bottom bounce protection: ignore negative deltas during iOS rubber-band
             const contentHeight = event.contentSize.height;
             const viewHeight = event.layoutMeasurement.height;
-            const isAtBottomBounce = currentY >= (contentHeight - viewHeight - 20);
+            const maxScroll = Math.max(contentHeight - viewHeight, 0);
+            const isAtBottomBounce = currentY >= (maxScroll - 50) || prevHeaderScrollY.value >= maxScroll;
+
+            // Always update tracker so anchor stays accurate
+            prevHeaderScrollY.value = currentY;
 
             if (delta < 0 && !isDraggingLayout.value && isAtBottomBounce) {
                 return;
@@ -213,10 +217,10 @@ export function CollapsibleScaffold({
             headerCollapseDistance.value = clamp(
                 headerCollapseDistance.value + delta,
                 0,
-                scrollableHeaderHeight,
+                scrollableHeaderHeightSV.value,
             );
         },
-    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeight, forceSnapTabBar, isDraggingLayout]);
+    }, [diffClampEnabled, headerCollapseDistance, prevHeaderScrollY, scrollableHeaderHeightSV, forceSnapTabBar, isDraggingLayout]);
 
     const composedOnScrollHandler = useComposedEventHandler(
         [headerScrollHandler as any, scrollControlHandler as any]
@@ -231,12 +235,12 @@ export function CollapsibleScaffold({
 
         const clampedDistance = Math.min(
             Math.max(headerCollapseDistance.value, 0),
-            scrollableHeaderHeight
+            scrollableHeaderHeightSV.value
         );
         return {
             transform: [{ translateY: -clampedDistance }],
         };
-    }, [diffClampEnabled, headerCollapseDistance, scrollableHeaderHeight]);
+    }, [diffClampEnabled, headerCollapseDistance, scrollableHeaderHeightSV]);
 
     const handleAnimatedHeaderLayout = useCallback((event: LayoutChangeEvent) => {
         const nextHeight = Math.round(event.nativeEvent.layout.height);
@@ -270,17 +274,23 @@ export function CollapsibleScaffold({
 
     // Keep a JS-side min content height for the static style (only updates on header
     // height / viewport changes, not on every scroll frame).
-    // Uses a constant estimate for tab bar metrics to avoid reading shared values during render.
+    // Uses the dynamic tab bar height from our global store to ensure accurate layout shifts.
+    const { tabBarHeight, sheetState } = useBottomSheetStore();
+
+    // We only need scroll-collapse buffer distance if the drawer is in its resting (tabs) state.
+    // If it's expanded, the user is interacting with the drawer, not scrolling the background list.
+    const effectiveTabBarHeight = sheetState === 0 ? tabBarHeight : 0;
+
     const minContentHeight = useMemo(() => {
         return computeMinContentHeightForCollapse({
             viewportHeight,
             requiredCollapseTravel: computeRequiredCollapseTravel({
                 scrollableHeaderHeight,
-                tabBarMaxHeight: DEFAULT_TAB_BAR_MAX_HEIGHT,
+                tabBarMaxHeight: effectiveTabBarHeight,
                 tabBarCollapsedInset: 0,
             }),
         });
-    }, [scrollableHeaderHeight, viewportHeight]);
+    }, [scrollableHeaderHeight, viewportHeight, effectiveTabBarHeight]);
 
     const paddedContentContainerStyle = useMemo(() => {
         // Use only the safe area inset for bottom padding. Content scrolls behind

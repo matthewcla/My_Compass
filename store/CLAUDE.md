@@ -155,8 +155,7 @@ This supports the VAULTIS "Timeliness" dimension — consumers can assess how fr
 | `useSyncQueueStore` | Offline mutation queue | Event-based subscribe pattern |
 | `useUIStore` | Global UI state (modals, drawers) | Transient state only |
 | `useDemoStore` | Demo/sandbox mode | Feature flags |
-| `useHeaderStore` | Header collapse state | Shared animation values |
-| `useSpotlightStore` | Search overlay state | Search indexing |
+| `useAuthStore`      | Authentication state   | User session, credentials, persistence |
 | `usePCSArchiveStore` | Past PCS moves | Document archive |
 
 **Canonical example:** `useLeaveStore.ts` — review this store before creating any new store.

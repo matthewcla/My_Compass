@@ -3,6 +3,7 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { usePCSStore } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { AlertTriangle, Package } from 'lucide-react-native';
 import React, { useEffect, useMemo } from 'react';
@@ -76,118 +77,132 @@ export function HHGWeightGaugeWidget() {
     <GlassView
       intensity={80}
       tint={isDark ? 'dark' : 'light'}
-      className="rounded-2xl border border-slate-200 dark:border-white/10 p-4"
+      className="rounded-[24px] overflow-hidden mx-4 mb-6 shadow-sm border border-black/5 dark:border-white/10"
     >
-      <View className="flex-row items-center mb-4">
-        <View className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center mr-3">
-          <Package size={18} color={isDark ? '#cbd5e1' : '#475569'} />
+      <LinearGradient
+        colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+      <View className="p-5">
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center gap-4 flex-1">
+            <View className="w-10 h-10 rounded-full bg-amber-500/10 dark:bg-amber-900/40 items-center justify-center border-[1.5px] border-amber-500/20 dark:border-amber-800/60 shadow-sm">
+              <Package size={20} color={isDark ? '#FBBF24' : '#D97706'} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={2}>HHG Weight</Text>
+              <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>Estimates and allowances</Text>
+            </View>
+          </View>
         </View>
-        <Text className="text-xs uppercase tracking-widest font-semibold text-slate-500 dark:text-slate-400">
-          HHG Weight Limit
-        </Text>
-      </View>
 
-      {maxWeightAllowance === 0 ? (
-        <View className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 px-4 py-6">
-          <Text className="text-base font-bold text-slate-900 dark:text-white">
-            Configure Profile
-          </Text>
-          <Text className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Add your profile details to calculate your authorized HHG weight allowance.
-          </Text>
-        </View>
-      ) : (
-        <>
-          <View className="items-center justify-center mb-4">
-            <View className="relative">
-              <Svg width={RING_SIZE} height={RING_SIZE}>
-                <Circle
-                  cx={CENTER}
-                  cy={CENTER}
-                  r={RADIUS}
-                  stroke={trackColor}
-                  strokeWidth={STROKE_WIDTH}
-                  fill="transparent"
-                />
-                <AnimatedCircle
-                  cx={CENTER}
-                  cy={CENTER}
-                  r={RADIUS}
-                  stroke={progressColor}
-                  strokeWidth={STROKE_WIDTH}
-                  fill="transparent"
-                  strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-                  strokeLinecap="round"
-                  rotation={-90}
-                  origin={`${CENTER}, ${CENTER}`}
-                  animatedProps={animatedProps}
-                />
-              </Svg>
+        <View className="border-t border-slate-200/50 dark:border-slate-700/50 pt-5">
+          {maxWeightAllowance === 0 ? (
+            <View className="rounded-xl border border-dashed border-slate-300/80 dark:border-slate-700/80 px-4 py-6">
+              <Text className="text-[15px] font-bold text-slate-900 dark:text-white">
+                Configure Profile
+              </Text>
+              <Text className="mt-1 text-sm text-slate-600 dark:text-slate-400 leading-5">
+                Add your profile details to calculate your authorized HHG weight allowance.
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View className="items-center justify-center mb-5">
+                <View className="relative">
+                  <Svg width={RING_SIZE} height={RING_SIZE}>
+                    <Circle
+                      cx={CENTER}
+                      cy={CENTER}
+                      r={RADIUS}
+                      stroke={trackColor}
+                      strokeWidth={STROKE_WIDTH}
+                      fill="transparent"
+                    />
+                    <AnimatedCircle
+                      cx={CENTER}
+                      cy={CENTER}
+                      r={RADIUS}
+                      stroke={progressColor}
+                      strokeWidth={STROKE_WIDTH}
+                      fill="transparent"
+                      strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
+                      strokeLinecap="round"
+                      rotation={-90}
+                      origin={`${CENTER}, ${CENTER}`}
+                      animatedProps={animatedProps}
+                    />
+                  </Svg>
 
-              <View className="absolute inset-0 items-center justify-center">
-                <Text
-                  className={`text-3xl font-bold ${rawPercentage > 100
-                      ? 'text-red-500 dark:text-red-400'
-                      : rawPercentage > 80
-                        ? 'text-amber-500 dark:text-amber-400'
-                        : 'text-emerald-500 dark:text-emerald-400'
-                    }`}
-                >
-                  {displayPercentage}%
-                </Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400">of limit</Text>
+                  <View className="absolute inset-0 items-center justify-center">
+                    <Text
+                      className={`text-[28px] font-black tracking-tight ${rawPercentage > 100
+                        ? 'text-red-500 dark:text-red-400'
+                        : rawPercentage > 80
+                          ? 'text-amber-500 dark:text-amber-400'
+                          : 'text-emerald-500 dark:text-emerald-400'
+                        }`}
+                    >
+                      {displayPercentage}%
+                    </Text>
+                    <Text className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">Of Limit</Text>
+                  </View>
+                </View>
               </View>
-            </View>
-          </View>
 
-          {estimatedWeight === 0 ? (
-            <Text className="text-center text-sm text-slate-600 dark:text-slate-300 mb-4">
-              Start Estimating to track your HHG weight against your limit.
-            </Text>
-          ) : null}
+              {estimatedWeight === 0 ? (
+                <Text className="text-center text-[13px] text-slate-600 dark:text-slate-400 mb-5 leading-5 font-medium px-4">
+                  Start Estimating to track your HHG weight against your limit.
+                </Text>
+              ) : null}
 
-          {isOverLimit ? (
-            <View className="mb-4 self-center flex-row items-center rounded-full border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 px-3 py-1.5">
-              <AlertTriangle size={14} color={isDark ? '#fda4af' : '#dc2626'} />
-              <Text className="ml-1.5 text-xs font-semibold text-red-700 dark:text-red-300">
-                Over Weight Limit
-              </Text>
-            </View>
-          ) : null}
+              {isOverLimit ? (
+                <View className="mb-5 self-center flex-row items-center rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1.5">
+                  <AlertTriangle size={14} color={isDark ? '#f87171' : '#dc2626'} strokeWidth={2.5} />
+                  <Text className="ml-1.5 text-xs font-bold text-red-700 dark:text-red-400">
+                    Over Weight Limit
+                  </Text>
+                </View>
+              ) : null}
 
-          <View className="mb-4 flex-row justify-between">
-            <View>
-              <Text className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Estimated
-              </Text>
-              <Text className="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                {formatLbs(estimatedWeight)}
-              </Text>
-            </View>
-            <View className="items-end">
-              <Text className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Max
-              </Text>
-              <Text className="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                {formatLbs(maxWeightAllowance)}
-              </Text>
-            </View>
-          </View>
-        </>
-      )}
+              <View className="mb-5 flex-row justify-between bg-white/60 dark:bg-slate-800/60 rounded-xl p-3.5 border border-slate-200/60 dark:border-slate-700/60">
+                <View>
+                  <Text className="text-[10px] uppercase tracking-[1.2px] font-bold text-slate-400 dark:text-slate-500">
+                    Estimated
+                  </Text>
+                  <Text className="mt-1 text-[15px] font-bold text-slate-900 dark:text-white tracking-tight">
+                    {formatLbs(estimatedWeight)}
+                  </Text>
+                </View>
+                <View className="h-full w-px bg-slate-200 dark:bg-slate-700 mx-4" />
+                <View className="items-end">
+                  <Text className="text-[10px] uppercase tracking-[1.2px] font-bold text-slate-400 dark:text-slate-500">
+                    Max Limit
+                  </Text>
+                  <Text className="mt-1 text-[15px] font-bold text-slate-900 dark:text-white tracking-tight">
+                    {formatLbs(maxWeightAllowance)}
+                  </Text>
+                </View>
+              </View>
+            </>
+          )}
 
-      <Link href="/pcs-wizard/hhg-move-planner" asChild>
-        <ScalePressable
-          onPress={handleEstimatePress}
-          className="rounded-lg border border-blue-200 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 items-center"
-          accessibilityRole="button"
-          accessibilityLabel="Estimate Weight"
-        >
-          <Text className="text-xs font-semibold text-blue-700 dark:text-blue-300">
-            Estimate Weight
-          </Text>
-        </ScalePressable>
-      </Link>
+          <Link href="/pcs-wizard/hhg-move-planner" asChild>
+            <ScalePressable
+              onPress={handleEstimatePress}
+              className="rounded-xl border border-blue-500/30 bg-blue-500/10 h-12 flex-row justify-center items-center"
+              accessibilityRole="button"
+              accessibilityLabel="Estimate Weight"
+            >
+              <Text className="text-[13px] font-bold tracking-wide text-blue-700 dark:text-blue-400">
+                ESTIMATE WEIGHT
+              </Text>
+            </ScalePressable>
+          </Link>
+        </View>
+      </View>
     </GlassView>
   );
 }

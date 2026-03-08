@@ -23,8 +23,8 @@
     /* #8E8E93 */
     --color-system-gray6: 242 242 247;
     /* #F2F2F7 */
-    --color-system-blue: 0 122 255;
-    /* #007AFF */
+    --color-system-blue: 26 78 138;
+    /* #1A4E8A */
 
     /* Semantic Colors - Light Mode */
     --color-background: 255 255 255;
@@ -40,8 +40,8 @@
     /* #FFFFFF */
     --color-input-background: 248 250 252;
     /* #F8FAFC */
-    --color-accent-text: 0 122 255;
-    /* #007AFF */
+    --color-accent-text: 26 78 138;
+    /* #1A4E8A */
 
     /* Brand Colors */
     --color-navy-blue: 10 22 40;
@@ -56,8 +56,8 @@
     /* #8E8E93 */
     --color-system-gray6: 28 28 30;
     /* #1C1C1E */
-    --color-system-blue: 10 132 255;
-    /* #0A84FF */
+    --color-system-blue: 91 143 207;
+    /* #5B8FCF */
 
     /* Semantic Colors - Dark Mode */
     --color-background: 0 0 0;
@@ -88,8 +88,8 @@
       /* #8E8E93 */
       --color-system-gray6: 28 28 30;
       /* #1C1C1E */
-      --color-system-blue: 10 132 255;
-      /* #0A84FF */
+      --color-system-blue: 91 143 207;
+      /* #5B8FCF */
 
       /* Semantic Colors - Dark Mode */
       --color-background: 0 0 0;
@@ -125,6 +125,6 @@
   }
 
   .border-subtle {
-    @apply border-slate-100 dark:border-slate-800;
+    @apply border-slate-200 dark:border-slate-800;
   }
 }

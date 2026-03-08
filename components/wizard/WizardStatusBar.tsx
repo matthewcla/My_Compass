@@ -110,13 +110,11 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
                                 isActive={isActive}
                                 className={`w-10 h-10 rounded-full items-center justify-center border-2 ${isError
                                     ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20'
-                                    : (isActive && isLast)
-                                        ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
+                                    : (isActive && isLast) || isCompleted
+                                        ? 'bg-green-50 dark:bg-green-900/20'
                                         : isActive
-                                            ? 'border-blue-600 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                            : isCompleted
-                                                ? 'border-green-600 dark:border-green-500 bg-green-50 dark:bg-green-900/20'
-                                                : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
+                                            ? 'bg-[#E4EAF4] dark:bg-[rgba(26,78,138,0.2)]'
+                                            : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
                                     }`}
                             >
                                 <Icon
@@ -127,10 +125,9 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
                             </AnimatedStepCircle>
                             <Text
                                 className={`text-[10px] font-bold mt-1 ${isError ? 'text-red-600 dark:text-red-400' :
-                                    (isActive && isLast) ? 'text-green-600 dark:text-green-500' :
-                                        isActive ? 'text-blue-600 dark:text-blue-400' :
-                                            isCompleted ? 'text-green-600 dark:text-green-500' :
-                                                'text-slate-400 dark:text-gray-500'
+                                    (isActive && isLast) || isCompleted ? 'text-green-700 dark:text-green-400' :
+                                        isActive ? 'text-[#1A4E8A] dark:text-[#5B8FCF]' :
+                                            'text-slate-400 dark:text-gray-500'
                                     }`}
                             >{step.label}</Text>
                         </Pressable>

@@ -13,22 +13,24 @@ import '../ignoreWarnings';
 
 // Suppress strict-mode warnings from Layout animations reading shared values during render
 configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false });
+SecureLogger.patchGlobalConsole();
 
 import { AuthGuard } from '@/components/navigation/AuthGuard';
-import { SpotlightOverlay } from '@/components/spotlight/SpotlightOverlay';
+import { SessionTimeoutOverlay } from '@/components/SessionTimeoutOverlay';
 import { ThemeTransitionOverlay } from '@/components/ThemeTransitionOverlay';
+import { KeyboardActionToolbar } from '@/components/ui/KeyboardActionToolbar';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
 import { usePCSStore } from '@/store/usePCSStore';
+import { SecureLogger } from '@/utils/logger';
 import { View } from 'react-native';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary
-} from 'expo-router';
+// SI-11: Custom error boundary — safe messaging, no raw error/stack trace exposed
+export { AppErrorBoundary as ErrorBoundary } from '@/components/AppErrorBoundary';
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -56,7 +58,13 @@ function InnerLayout() {
   });
   const [dbInitialized, setDbInitialized] = useState(false);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
-  const { isLoading: isSessionLoading } = useSession();
+  const { session, signOut, isLoading: isSessionLoading, consentAcknowledged } = useSession();
+
+  // IA-11: Idle timeout — only active when authenticated AND past consent banner
+  const { showWarning, remainingSeconds, resetTimer } = useIdleTimeout(
+    signOut,
+    !!session && consentAcknowledged,
+  );
 
   // Track splash state to prevent double-hide race conditions
   const isSplashHidden = useRef(false);
@@ -77,7 +85,7 @@ function InnerLayout() {
           setDbInitialized(true);
         }
       } catch (e) {
-        console.error('Failed to initialize database:', e);
+        SecureLogger.error('[Layout] Failed to initialize database:', e);
         if (!cancelled) {
           setDbInitialized(true);
         }
@@ -102,8 +110,8 @@ function InnerLayout() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!isSplashHidden.current) {
-        console.warn('Splash Screen Force Hide: Safety Timeout Triggered (5000ms)');
-        hideSplash().catch(e => console.warn('hideSplash failed in timeout:', e));
+        SecureLogger.warn('[Layout] Splash Screen Force Hide: Safety Timeout Triggered (5000ms)');
+        hideSplash().catch(e => SecureLogger.warn('[Layout] hideSplash failed in timeout:', e));
       }
     }, 5000);
 
@@ -113,7 +121,7 @@ function InnerLayout() {
   // Orchestration: Hide Splash only when EVERYTHING is ready (including auth session)
   useEffect(() => {
     if (fontsLoaded && dbInitialized && isLayoutReady && !isSessionLoading) {
-      hideSplash().catch(e => console.warn('hideSplash failed in orchestration:', e));
+      hideSplash().catch(e => SecureLogger.warn('[Layout] hideSplash failed in orchestration:', e));
       registerForPushNotificationsAsync();
     }
   }, [fontsLoaded, dbInitialized, isLayoutReady, isSessionLoading, hideSplash]);
@@ -136,19 +144,26 @@ function InnerLayout() {
         className="flex-1 bg-white dark:bg-black"
         onLayout={onLayoutRootView}
         style={{ position: 'relative' }}
+        onStartShouldSetResponderCapture={() => { resetTimer(); return false; }}
       >
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
           <Stack.Screen name="sign-in" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="consent" options={{ gestureEnabled: false, animation: 'fade' }} />
           <Stack.Screen name="leave" />
-          <Stack.Screen name="MenuHubModal" options={{ presentation: 'fullScreenModal', headerShown: false }} />
         </Stack>
-        <SpotlightOverlay />
         <ThemeTransitionOverlay />
+        <SessionTimeoutOverlay
+          visible={showWarning}
+          remainingSeconds={remainingSeconds}
+          onExtend={resetTimer}
+        />
+        <KeyboardActionToolbar />
       </View>
     </>
   );
 }
+
 
 export default function RootLayout() {
   return (

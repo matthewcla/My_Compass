@@ -109,7 +109,18 @@ export const useDemoStore = create<DemoState>()(
       setSelectedPhase: (phase) => set({ selectedPhase: phase }),
       setPcsPhaseOverride: (phase) => set({ pcsPhaseOverride: phase, activeDemoScenarioId: null }),
       setPcsSubPhaseOverride: (subPhase) => set({ pcsSubPhaseOverride: subPhase, activeDemoScenarioId: null }),
-      setUctPhaseOverride: (phase) => set({ uctPhaseOverride: phase, activeDemoScenarioId: null }),
+      setUctPhaseOverride: (phase) => {
+        set({ uctPhaseOverride: phase, activeDemoScenarioId: null });
+        if (phase && phase >= 2) {
+          const { usePCSStore } = require('./usePCSStore');
+          const pcsStore = usePCSStore.getState();
+          // Don't override if user already completed it normally, but ensure it completes if not
+          const pci = pcsStore.checklist.find((c: any) => c.label === 'Profile Confirmation');
+          if (pci?.id && pci.status !== 'COMPLETE') {
+            pcsStore.updateChecklistItemStatus(pci.id, 'COMPLETE');
+          }
+        }
+      },
       setPcsContextOverride: (context) => set({ pcsContextOverride: context, activeDemoScenarioId: null }),
 
       setAssignmentPhaseOverride: (phase) => set((state) => {
@@ -194,6 +205,16 @@ export const useDemoStore = create<DemoState>()(
         if (needsSelection) {
           const { usePCSStore } = require('./usePCSStore');
           usePCSStore.getState().checkObliserv();
+        }
+
+        // Auto-complete Profile Confirmation when entering Plan Move phase
+        if (target.pcs?.uct === 2) {
+          const { usePCSStore } = require('./usePCSStore');
+          const pcsStore = usePCSStore.getState();
+          const pci = pcsStore.checklist.find((c: any) => c.label === 'Profile Confirmation');
+          if (pci?.id) {
+            pcsStore.setChecklistItemStatus(pci.id, 'COMPLETE');
+          }
         }
       },
 

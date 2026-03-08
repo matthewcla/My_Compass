@@ -2,10 +2,10 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { LeaveBalance, LeaveRequest } from '@/types/schema';
 import { formatDays } from '@/utils/formatDays';
-import { getShadow } from '@/utils/getShadow';
 import { projectLeaveBalance } from '@/utils/leaveProjection';
 import { differenceInDays, format, parseISO } from 'date-fns';
-import { ChevronRight, Clock, Plus, Zap } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronRight, Clock, Plus, Umbrella, Zap } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -79,66 +79,59 @@ export function LeaveCard({
     };
 
     return (
-        <View style={getShadow({
-            shadowColor: isDark ? '#94a3b8' : '#64748b',
-            shadowOpacity: isDark ? 0.12 : 0.14,
-            shadowRadius: isDark ? 10 : 14,
-            elevation: 3,
-        })}>
+        <View className="mx-4 mb-6">
             <GlassView
-                intensity={60}
+                intensity={80}
                 tint={isDark ? 'dark' : 'light'}
-                className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
+                className="rounded-[24px] overflow-hidden shadow-sm border border-black/5 dark:border-white/10"
             >
+                <LinearGradient
+                    colors={isDark ? ['rgba(244,63,94,0.15)', 'transparent'] : ['rgba(244,63,94,0.08)', 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                />
                 <View className="p-5">
                     {/* Header Row: Balance + Action Buttons */}
-                    <View className="flex-row items-center justify-between mb-4">
-                        {/* Left: Balance */}
-                        <View className="flex-col">
-                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Leave Balance</Text>
-                            <View className="flex-row items-baseline gap-1.5">
-                                <Text className="text-3xl font-bold text-slate-900 dark:text-white leading-none">{balance}</Text>
-                                <Text className="text-sm text-slate-400 font-medium">Days</Text>
+                    <View className="flex-row items-center justify-between mb-5">
+                        <View className="flex-row items-center gap-4 flex-1">
+                            <View className="w-[52px] h-[52px] rounded-full bg-rose-500/10 dark:bg-rose-900/40 items-center justify-center border-[1.5px] border-rose-500/20 dark:border-rose-800/60 shadow-sm">
+                                <Umbrella size={26} color={isDark ? '#FDA4AF' : '#E11D48'} />
+                            </View>
+                            <View className="flex-1 mr-2">
+                                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={2}>
+                                    Leave Balance
+                                </Text>
+                                <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>
+                                    {balance} Available Days
+                                </Text>
                             </View>
                         </View>
 
                         {/* Right: Action Buttons */}
-                        <View className="flex-row items-center gap-3">
-                            {/* Quick Leave (Lightning) - Keep Gold/Amber */}
+                        <View className="flex-row items-center gap-2">
+                            {/* Quick Leave */}
                             <TouchableOpacity
                                 activeOpacity={0.7}
                                 onPress={onQuickRequest}
-                                style={getShadow({ shadowColor: isDark ? '#fbbf24' : '#d97706', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
+                                className="w-10 h-10 rounded-full bg-amber-500/10 items-center justify-center border border-amber-500/20 shadow-sm"
                             >
-                                <GlassView
-                                    intensity={40}
-                                    tint={isDark ? 'dark' : 'light'}
-                                    className="w-11 h-11 rounded-full items-center justify-center border border-white/20 bg-amber-500/10"
-                                >
-                                    <Zap size={20} color={isDark ? '#fbbf24' : '#d97706'} strokeWidth={2.5} />
-                                </GlassView>
+                                <Zap size={18} color={isDark ? '#FBBF24' : '#D97706'} strokeWidth={2.5} />
                             </TouchableOpacity>
 
-                            {/* Full Request (Plus) - Changed from Blue to Slate-900 (Navy) */}
+                            {/* Full Request */}
                             <TouchableOpacity
                                 activeOpacity={0.7}
                                 onPress={onFullRequest}
-                                style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#0f172a', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 })}
+                                className="w-10 h-10 rounded-full bg-slate-900/5 dark:bg-white/10 items-center justify-center border border-slate-900/10 dark:border-white/20 shadow-sm"
                             >
-                                <GlassView
-                                    intensity={40}
-                                    tint={isDark ? 'dark' : 'light'}
-                                    // Navy background for button
-                                    className="w-11 h-11 rounded-full items-center justify-center border border-white/10 bg-slate-900/10 dark:bg-slate-700/30"
-                                >
-                                    <Plus size={22} color={isDark ? '#ffffff' : '#0f172a'} strokeWidth={2.5} />
-                                </GlassView>
+                                <Plus size={18} color={isDark ? '#FFFFFF' : '#0F172A'} strokeWidth={2.5} />
                             </TouchableOpacity>
                         </View>
                     </View>
 
                     {/* Request Smart Stack */}
-                    <View className="w-full">
+                    <View className="w-full border-t border-slate-200/50 dark:border-slate-700/50 pt-5">
 
                         {!hasRequests ? (
                             // Empty State
@@ -166,8 +159,8 @@ export function LeaveCard({
                                                     border: 'border-amber-200 dark:border-amber-800',
                                                     text: 'text-amber-900 dark:text-amber-100',
                                                     label: 'text-amber-800 dark:text-amber-200',
-                                                    icon: isDark ? "#fbbf24" : "#d97706",
-                                                    projText: isDark ? '#fbbf24' : '#b45309'
+                                                    icon: isDark ? "#C8921C" : "#d97706",
+                                                    projText: isDark ? '#C8921C' : '#b45309'
                                                 };
                                             // Approved -> Slate-900/Navy (was Emerald) - "Official"
                                             case 'approved':
@@ -186,8 +179,8 @@ export function LeaveCard({
                                                     border: 'border-red-200 dark:border-red-800',
                                                     text: 'text-red-900 dark:text-red-100',
                                                     label: 'text-red-800 dark:text-red-200',
-                                                    icon: isDark ? "#fca5a5" : "#b91c1c",
-                                                    projText: isDark ? '#fca5a5' : '#7f1d1d'
+                                                    icon: isDark ? "#C84444" : "#A02020",
+                                                    projText: isDark ? '#C07070' : '#7f1d1d'
                                                 };
                                             default:
                                                 return {

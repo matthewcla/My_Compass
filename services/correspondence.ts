@@ -1,6 +1,4 @@
 import { InboxMessage } from '@/types/inbox';
-import { useDemoStore } from '@/store/useDemoStore';
-import { useUserStore } from '@/store/useUserStore';
 
 const INBOX_MESSAGE_IDS = [
     '11111111-1111-4111-8111-111111111111',
@@ -19,6 +17,8 @@ const INBOX_MESSAGE_IDS = [
  * Returns the active user for correspondence personalization.
  */
 const getActiveUser = (): { id: string; title: string; displayName: string; rating: string } => {
+    const { useDemoStore } = require('@/store/useDemoStore');
+    const { useUserStore } = require('@/store/useUserStore');
     const demo = useDemoStore.getState();
     if (demo.isDemoMode && demo.selectedUser) {
         const u = demo.selectedUser;

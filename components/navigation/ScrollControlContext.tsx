@@ -74,7 +74,7 @@ export function ScrollControlProvider({ children }: ScrollControlProviderProps) 
     const forceSnapTabBar = useCallback((isHidden: boolean, velocity: number = 0) => {
         'worklet';
         const targetHeight = isHidden ? tabBarMaxHeight.value : 0;
-        translateY.value = withSpring(targetHeight, { ...CRITICAL_SPRING, velocity });
+        translateY.value = withSpring(targetHeight, { ...CRITICAL_SPRING });
         isTabBarCollapsed.value = isHidden;
     }, [isTabBarCollapsed, tabBarMaxHeight, translateY]);
 
@@ -170,7 +170,12 @@ export function useScrollControl() {
             // to prevent iOS from undoing collapse
             const contentHeight = event.contentSize.height;
             const viewHeight = event.layoutMeasurement.height;
-            const isAtBottomBounce = currentScrollY >= (contentHeight - viewHeight - 20);
+
+            // Calculate absolute bottom to prevent rubber-band header reveal
+            const maxScroll = Math.max(contentHeight - viewHeight, 0);
+
+            // If we are significantly past the bottom OR rebounding, ignore negative deltas
+            const isAtBottomBounce = currentScrollY >= (maxScroll - 50) || prevScrollY.value >= maxScroll;
 
             if (delta < 0 && !isDragging.value && isAtBottomBounce) {
                 return;

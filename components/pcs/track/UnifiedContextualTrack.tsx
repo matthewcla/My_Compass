@@ -1,5 +1,15 @@
+import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { TrackChecklistItem } from '@/components/pcs/track/TrackChecklistItem';
 import { TrackNode } from '@/components/pcs/track/TrackNode';
+import { ArrivalBriefingWidget } from '@/components/pcs/widgets/ArrivalBriefingWidget';
+import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
+import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
+import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
+import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
+import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
+import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
+import { PCSFinancialSnapshot } from '@/components/pcs/widgets/PCSFinancialSnapshot';
+import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
 import { UCT_PHASES } from '@/constants/UCTPhases';
 import { useActiveOrder, usePCSStore, useUCTPhaseStatus } from '@/store/usePCSStore';
 import { ChecklistItem, UCTNodeStatus, UCTPhase } from '@/types/pcs';
@@ -11,25 +21,46 @@ import { View } from 'react-native';
 // not inline in the UCT track. Only Phase 4 retains inline widgets.
 
 function Phase1Widgets() {
-    return null;
+    return (
+        <View className="gap-6">
+            <ObliservBanner variant="widget" />
+            <GainingCommandCard />
+        </View>
+    );
 }
 
 function Phase2Widgets() {
-    // Phase 2 widgets now live inside the Financial Review and
-    // HHG Move Planner flows — not inline in the track.
-    return null;
+    return (
+        <View className="gap-6 pt-2">
+            <PCSFinancialSnapshot />
+            <HHGWeightGaugeWidget />
+            <LeaveImpactWidget />
+        </View>
+    );
 }
 
+import { TransitSegmentWidget } from '@/components/pcs/widgets/TransitSegmentWidget';
+import { TravelReceiptLoggerWidget } from '@/components/pcs/widgets/TravelReceiptLoggerWidget';
+
 function Phase3Widgets() {
-    // Phase 3 widgets live on the Home Hub (ReceiptScannerWidget) and
-    // inside the PCS Travel Plan wizard (leave impact + travel day counter).
-    return null;
+    return (
+        <View className="gap-6 pt-2">
+            <TransitSegmentWidget />
+            <TravelReceiptLoggerWidget />
+            <DigitalOrdersWallet />
+        </View>
+    );
 }
 
 function Phase4Widgets() {
-    // Phase 4 widgets live on the Home Hub (ArrivalBriefing, GainingCommandCard,
-    // TravelClaimHUD, LiquidationTracker) on the Home Hub.
-    return null;
+    return (
+        <View className="gap-6 pt-2">
+            <BaseWelcomeKit />
+            <TravelClaimHUDWidget />
+            <LiquidationTrackerWidget />
+            <ArrivalBriefingWidget />
+        </View>
+    );
 }
 
 const PHASE_WIDGETS: Record<UCTPhase, React.ComponentType> = {

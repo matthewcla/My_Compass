@@ -139,7 +139,7 @@ export default function PCSWizardScreen() {
     setShowSuccess(true);
     setTimeout(() => {
       router.dismissAll();
-      router.push('/(tabs)/(pcs)/pcs');
+      router.push('/(tabs)/(pcs)' as any);
     }, 2500);
   };
 
@@ -164,27 +164,27 @@ export default function PCSWizardScreen() {
             entering={FadeInDown.delay(100).springify()}
             className="bg-white/95 dark:bg-slate-900/95 sticky top-0 z-10 px-4 py-2"
           >
-            <View className="flex-row items-start justify-between mb-1">
+            <View className="flex-row items-center gap-3 mb-1 mt-2">
+              <Pressable
+                onPress={handleExit}
+                className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+              >
+                <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+              </Pressable>
               <View className="flex-1">
                 <Text
                   style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
-                  className="text-slate-400 dark:text-gray-500 ml-8 mb-0"
+                  className="text-slate-400 dark:text-gray-500 mb-0"
                 >
                   PHASE 3
                 </Text>
                 <Text
                   style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}
-                  className="text-slate-900 dark:text-white ml-8 mb-1"
+                  className="text-slate-900 dark:text-white mb-1"
                 >
                   PCS Travel Plan
                 </Text>
               </View>
-              <Pressable
-                onPress={handleExit}
-                className="p-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
-              >
-                <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
-              </Pressable>
             </View>
             <PCSWizardStatusBar
               currentStep={activeStep}
@@ -283,8 +283,8 @@ export default function PCSWizardScreen() {
                   <View className="items-center flex-1">
                     <Text className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Balance</Text>
                     <Text className={`text-sm font-bold ${leaveBalance - currentDraft.entitlements.leaveDays < 0
-                        ? 'text-red-500'
-                        : 'text-slate-900 dark:text-white'
+                      ? 'text-red-500'
+                      : 'text-slate-900 dark:text-white'
                       }`}>
                       {leaveBalance - currentDraft.entitlements.leaveDays}d
                     </Text>

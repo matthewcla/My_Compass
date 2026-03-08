@@ -1,22 +1,28 @@
-import GlobalHeader from '@/components/navigation/GlobalHeader';
-import { Stack, usePathname } from 'expo-router';
-import React from 'react';
-import { View } from 'react-native';
+import { useSession } from '@/lib/ctx';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import React, { useEffect } from 'react';
 
 export default function AdminLayout() {
-  const pathname = usePathname();
-  // Hide GlobalHeader on the admin hub screen — CollapsibleScaffold owns the header there
-  const showGlobalHeader = pathname !== '/admin';
+    const { session, isLoading } = useSession();
+    const segments = useSegments();
+    const router = useRouter();
 
-  return (
-    <View style={{ flex: 1 }}>
-      {showGlobalHeader && <GlobalHeader />}
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="admin">
-        <Stack.Screen name="admin" />
-        <Stack.Screen name="requests" />
-        <Stack.Screen name="pay-status" />
-      </Stack>
-    </View>
-  );
+    // Auth redirect logic
+    useEffect(() => {
+        if (isLoading) return;
+
+        const inAuthGroup = segments[0] === 'sign-in';
+
+        if (!session && !inAuthGroup) {
+            router.replace('/sign-in');
+        } else if (session && inAuthGroup) {
+            router.replace('/(admin)' as any);
+        }
+    }, [session, isLoading, segments]);
+
+    return (
+        <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+        </Stack>
+    );
 }
-

@@ -13,9 +13,11 @@ interface SectionCardProps {
 export const SectionCard = memo(function SectionCard({ title, icon, children, isDark }: SectionCardProps) {
     return (
         <View style={{
-            backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
-            borderColor: isDark ? '#334155' : '#E2E8F0', borderWidth: 1,
+            backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+            borderColor: isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)',
+            borderWidth: 1,
             borderRadius: 16, padding: 20, marginBottom: 12,
+            shadowColor: isDark ? '#000' : '#64748b', shadowOpacity: isDark ? 0.3 : 0.05, shadowRadius: 8, elevation: 2,
         }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
                 {icon}
@@ -82,9 +84,9 @@ export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, 
 // ─── Timeline Entry ──────────────────────────────────────
 function getStationTypeBadge(type?: string) {
     switch (type) {
-        case 'AFLOAT': return { label: 'AFLOAT', bg: '#1E40AF', text: '#DBEAFE' };
-        case 'OCONUS': return { label: 'OCONUS', bg: '#065F46', text: '#D1FAE5' };
-        case 'CONUS': return { label: 'CONUS', bg: '#92400E', text: '#FEF3C7' };
+        case 'AFLOAT': return { label: 'AFLOAT', bg: '#0F172A', text: '#F8FAFC' }; // Slate 900 / Slate 50
+        case 'OCONUS': return { label: 'OCONUS', bg: '#334155', text: '#F1F5F9' }; // Slate 700 / Slate 100
+        case 'CONUS': return { label: 'CONUS', bg: '#64748B', text: '#F8FAFC' }; // Slate 500 / Slate 50
         default: return null;
     }
 }
@@ -149,13 +151,13 @@ export const ControlPill = memo(function ControlPill({ label, isActive, onPress,
                 paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20, marginRight: 8,
                 flexDirection: 'row', alignItems: 'center', gap: 5,
                 backgroundColor: isActive
-                    ? (isDark ? '#1E3A5F' : '#FFFFFF')
-                    : (isDark ? '#0F172A80' : '#F1F5F980'),
+                    ? (isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.05)')
+                    : 'transparent',
                 borderWidth: 1.5,
                 borderColor: isActive ? '#C9A227' : (isDark ? '#334155' : '#E2E8F0'),
                 ...(isActive ? {
-                    shadowColor: '#C9A227', shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.15, shadowRadius: 3, elevation: 2,
+                    shadowColor: '#C9A227', shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: isDark ? 0.2 : 0.1, shadowRadius: 4, elevation: 2,
                 } : {}),
             }}
         >

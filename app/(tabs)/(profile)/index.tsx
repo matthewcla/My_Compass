@@ -190,16 +190,16 @@ export default function ProfileScreen() {
                     {necs.map((nec) => (
                         <View key={nec.code} style={{
                             flexDirection: 'row', alignItems: 'center', marginBottom: 8,
-                            backgroundColor: isDark ? '#0F2847' : '#F0F9FF', padding: 10, borderRadius: 10,
+                            backgroundColor: isDark ? '#1E293B' : '#F8FAFC', padding: 10, borderRadius: 10,
                         }}>
                             <View style={{
-                                backgroundColor: isDark ? '#1E3A5F' : '#DBEAFE',
+                                backgroundColor: isDark ? '#334155' : '#E2E8F0',
                                 paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginRight: 10,
                             }}>
-                                <Text style={{ color: isDark ? '#60A5FA' : '#2563EB', fontSize: 12, fontWeight: '800' }}>{nec.code}</Text>
+                                <Text style={{ color: isDark ? '#F1F5F9' : '#0F172A', fontSize: 12, fontWeight: '800' }}>{nec.code}</Text>
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={{ color: isDark ? '#E2E8F0' : '#1E293B', fontSize: 13, fontWeight: '500' }}>{nec.name}</Text>
+                                <Text style={{ color: isDark ? '#CBD5E1' : '#334155', fontSize: 13, fontWeight: '500' }}>{nec.name}</Text>
                             </View>
                             <Text style={{ color: isDark ? '#64748B' : '#94A3B8', fontSize: 11 }}>{nec.earned}</Text>
                         </View>
@@ -212,10 +212,11 @@ export default function ProfileScreen() {
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                         {qualifications.map((qual) => (
                             <View key={qual} style={{
-                                backgroundColor: isDark ? '#064E3B' : '#ECFDF5',
+                                backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                                borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0',
                                 paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
                             }}>
-                                <Text style={{ color: isDark ? '#6EE7B7' : '#065F46', fontSize: 12, fontWeight: '600' }}>{qual}</Text>
+                                <Text style={{ color: isDark ? '#F1F5F9' : '#0F172A', fontSize: 12, fontWeight: '600' }}>{qual}</Text>
                             </View>
                         ))}
                     </View>
@@ -236,11 +237,13 @@ export default function ProfileScreen() {
                                 )}
                             </View>
                             <View style={{
-                                backgroundColor: cred.status === 'Earned' ? (isDark ? '#064E3B' : '#ECFDF5') : (isDark ? '#1E3A5F' : '#EFF6FF'),
+                                backgroundColor: cred.status === 'Earned' ? (isDark ? 'rgba(255, 255, 255, 0.1)' : '#F1F5F9') : (isDark ? 'transparent' : 'transparent'),
+                                borderWidth: cred.status === 'Earned' ? 0 : 1,
+                                borderColor: cred.status === 'Earned' ? 'transparent' : (isDark ? '#334155' : '#CBD5E1'),
                                 paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
                             }}>
                                 <Text style={{
-                                    color: cred.status === 'Earned' ? (isDark ? '#6EE7B7' : '#065F46') : (isDark ? '#60A5FA' : '#2563EB'),
+                                    color: cred.status === 'Earned' ? (isDark ? '#F8FAFC' : '#0F172A') : (isDark ? '#94A3B8' : '#64748B'),
                                     fontSize: 11, fontWeight: '700',
                                 }}>{cred.status}</Text>
                             </View>
@@ -253,7 +256,7 @@ export default function ProfileScreen() {
             <Animated.View entering={FadeInUp.delay(300).duration(300)}>
                 <SectionCard
                     title="Sea/Shore Rotation"
-                    icon={<Ship size={20} color={isDark ? '#93C5FD' : '#1E40AF'} />}
+                    icon={<Ship size={20} color={isDark ? '#94A3B8' : '#64748B'} />}
                     isDark={isDark}
                 >
                     {seaShoreRotation.map((rot, idx) => (
@@ -264,11 +267,12 @@ export default function ProfileScreen() {
                         }}>
                             <View style={{
                                 width: 54,
-                                backgroundColor: rot.period === 'Sea' ? (isDark ? '#1E40AF' : '#DBEAFE') : (isDark ? '#065F46' : '#ECFDF5'),
+                                backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                                borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0',
                                 paddingVertical: 4, borderRadius: 6, alignItems: 'center', marginRight: 12,
                             }}>
                                 <Text style={{
-                                    color: rot.period === 'Sea' ? (isDark ? '#93C5FD' : '#1E40AF') : (isDark ? '#6EE7B7' : '#065F46'),
+                                    color: isDark ? '#E2E8F0' : '#475569',
                                     fontSize: 11, fontWeight: '800',
                                 }}>{rot.period.toUpperCase()}</Text>
                             </View>
@@ -286,7 +290,7 @@ export default function ProfileScreen() {
             <Animated.View entering={FadeInUp.delay(400).duration(300)}>
                 <SectionCard
                     title="Training Record"
-                    icon={<BookOpen size={20} color={isDark ? '#FCD34D' : '#B45309'} />}
+                    icon={<BookOpen size={20} color={isDark ? '#94A3B8' : '#64748B'} />}
                     isDark={isDark}
                 >
                     {trainingRecord.map((t, idx) => (
@@ -295,11 +299,12 @@ export default function ProfileScreen() {
                         }}>
                             <View style={{
                                 width: 60,
-                                backgroundColor: t.type === 'A-School' ? (isDark ? '#92400E' : '#FEF3C7') : (isDark ? '#1E3A5F' : '#EFF6FF'),
+                                backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                                borderWidth: 1, borderColor: isDark ? '#334155' : '#E2E8F0',
                                 paddingVertical: 3, borderRadius: 6, alignItems: 'center', marginRight: 10, marginTop: 2,
                             }}>
                                 <Text style={{
-                                    color: t.type === 'A-School' ? (isDark ? '#FCD34D' : '#92400E') : (isDark ? '#60A5FA' : '#2563EB'),
+                                    color: isDark ? '#CBD5E1' : '#475569',
                                     fontSize: 10, fontWeight: '800',
                                 }}>{t.type.toUpperCase()}</Text>
                             </View>
@@ -351,9 +356,11 @@ export default function ProfileScreen() {
                     onPress={() => router.push('/(profile)/preferences' as any)}
                     style={{
                         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                        backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
-                        borderColor: isDark ? '#334155' : '#E2E8F0', borderWidth: 1,
+                        backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+                        borderColor: isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)',
+                        borderWidth: 1,
                         borderRadius: 14, padding: 16, marginBottom: 12,
+                        shadowColor: isDark ? '#000' : '#64748b', shadowOpacity: isDark ? 0.3 : 0.05, shadowRadius: 8, elevation: 2,
                     }}
                 >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

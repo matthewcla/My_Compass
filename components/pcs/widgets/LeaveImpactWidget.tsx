@@ -1,11 +1,12 @@
 import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
 import { usePCSStore } from '@/store/usePCSStore';
 import { useUserStore } from '@/store/useUserStore';
 import { formatDays } from '@/utils/formatDays';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CalendarRange, TrendingDown, Wallet } from 'lucide-react-native';
 import React from 'react';
-import { Text, View, useColorScheme } from 'react-native';
+import { Text, View } from 'react-native';
 
 export function LeaveImpactWidget() {
     const currentDraft = usePCSStore((state) => state.currentDraft);

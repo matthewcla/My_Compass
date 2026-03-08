@@ -3,6 +3,7 @@ import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCar
 import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
+import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ScreenGradient } from '@/components/ScreenGradient';
@@ -22,7 +23,7 @@ import { BlurView } from 'expo-blur';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Bell } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { Alert, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
@@ -53,6 +54,10 @@ export default function HubDashboard() {
     const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
     const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
     const leaveBalance = useLeaveStore(state => state.leaveBalance);
+
+    // Quick Leave State
+    const [showQuickLeave, setShowQuickLeave] = React.useState(false);
+    const [quickLeaveDraft, setQuickLeaveDraft] = React.useState<any>(null);
 
     const leaveRequests = React.useMemo(() => {
         return userLeaveRequestIds
@@ -380,7 +385,15 @@ export default function HubDashboard() {
                                     router.push(`/leave/${req.id}` as any);
                                 }
                             }}
-                            onQuickRequest={() => router.push('/leave/request' as any)}
+                            onQuickRequest={() => {
+                                if (user?.id) {
+                                    const draft = generateQuickDraft('standard', user.id);
+                                    setQuickLeaveDraft(draft);
+                                    setShowQuickLeave(true);
+                                } else {
+                                    Alert.alert('Error', 'User not found. Cannot create quick leave.');
+                                }
+                            }}
                             onFullRequest={() => router.push('/leave/request' as any)}
                             onExpand={(expanded) => {
                                 if (expanded) {
@@ -550,6 +563,47 @@ export default function HubDashboard() {
                     />
                 )}
             </CollapsibleScaffold>
+
+            {/* Quick Leave Modal */}
+            <Modal
+                visible={showQuickLeave}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => {
+                    setShowQuickLeave(false);
+                    setQuickLeaveDraft(null);
+                }}
+            >
+                <View className="flex-1 justify-center px-4 bg-black/60 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                    <Pressable
+                        className="absolute inset-0"
+                        onPress={() => {
+                            setShowQuickLeave(false);
+                            setQuickLeaveDraft(null);
+                        }}
+                    />
+                    {quickLeaveDraft && (
+                        <View className="w-full">
+                            <QuickLeaveTicket
+                                draft={quickLeaveDraft}
+                                onSubmit={() => {
+                                    setShowQuickLeave(false);
+                                    setQuickLeaveDraft(null);
+                                    Alert.alert('Success', 'Quick leave request submitted.');
+                                }}
+                                onEdit={() => {
+                                    setShowQuickLeave(false);
+                                    router.push({ pathname: '/leave/request', params: { draftId: quickLeaveDraft.id } } as any);
+                                }}
+                                onClose={() => {
+                                    setShowQuickLeave(false);
+                                    setQuickLeaveDraft(null);
+                                }}
+                            />
+                        </View>
+                    )}
+                </View>
+            </Modal>
 
             {/* Floating demo panel — outside CollapsibleScaffold */}
             <PCSDevPanel />

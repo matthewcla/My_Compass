@@ -1,3 +1,4 @@
+import { getLeaveDefaults } from '@/constants/MockLeaveDefaults';
 import type {
     ApiResult,
     CreateLeaveRequestPayload,
@@ -5,8 +6,6 @@ import type {
 } from '@/types/api';
 import type { LeaveBalance, LeaveRequest } from '@/types/schema';
 import type { ILeaveService } from './interfaces/ILeaveService';
-import { useDemoStore } from '@/store/useDemoStore';
-import { getLeaveDefaults } from '@/constants/MockLeaveDefaults';
 
 // =============================================================================
 // HELPER FUNCTIONS
@@ -95,6 +94,7 @@ export const generateDraftRequest = (userId: string): LeaveRequest => {
  * In demo mode, reads the persona's leaveBalance from DemoUser.
  */
 const buildLeaveBalance = (userId: string): LeaveBalance => {
+    const { useDemoStore } = require('@/store/useDemoStore');
     const demo = useDemoStore.getState();
     const balance = (demo.isDemoMode && demo.selectedUser?.leaveBalance != null)
         ? demo.selectedUser.leaveBalance

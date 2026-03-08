@@ -7,8 +7,8 @@ import { useUserDependents } from '@/store/useUserStore';
 import { AssignmentPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Anchor, Calendar, FileCheck, Package, Plane, Star, Timer, Users } from 'lucide-react-native';
-import React, { useMemo } from 'react';
+import { Anchor, Calendar, FileCheck, Package, Plane, Star, Timer, Users, X } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 interface StatusCardProps {
@@ -57,6 +57,8 @@ function deriveVariant(
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
+    const [isDismissed, setIsDismissed] = useState(false);
+
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const router = useRouter();
@@ -116,312 +118,338 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         return Math.max(0, Math.ceil((close.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
     }, [negotiationDetails?.windowCloseDate]);
 
-    switch (variant) {
-        // ── Phase 4: Welcome Aboard ────────────────────────────────
-        case 'welcome-aboard': {
-            const phase4Items = checklist.filter(i => i.uctPhase === 4);
-            const completedPhase4 = phase4Items.filter(i => i.status === 'COMPLETE').length;
-            const totalPhase4 = phase4Items.length;
-            const nextAction = checklist.find(i => i.uctPhase === 4 && i.status === 'NOT_STARTED');
-            const targetRoute = nextAction?.actionRoute || '/(tabs)/(pcs)';
+    if (isDismissed) return null;
 
-            return (
-                <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <LinearGradient
-                            colors={isDark ? ['rgba(22,163,74,0.15)', 'transparent'] : ['rgba(22,163,74,0.08)', 'transparent']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-green-100 dark:bg-green-900/60" border="border-green-200 dark:border-green-800">
-                                        <Anchor size={26} color={isDark ? '#4ade80' : '#16A34A'} />
-                                    </IconBubble>
-                                    <View className="flex-1">
-                                        <Headline color="text-green-900 dark:text-green-100">Welcome Aboard</Headline>
+    const renderCard = () => {
+        switch (variant) {
+            // ── Phase 4: Welcome Aboard ────────────────────────────────
+            case 'welcome-aboard': {
+                const phase4Items = checklist.filter(i => i.uctPhase === 4);
+                const completedPhase4 = phase4Items.filter(i => i.status === 'COMPLETE').length;
+                const totalPhase4 = phase4Items.length;
+                const nextAction = checklist.find(i => i.uctPhase === 4 && i.status === 'NOT_STARTED');
+                const targetRoute = nextAction?.actionRoute || '/(tabs)/(pcs)';
+
+                return (
+                    <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <LinearGradient
+                                colors={isDark ? ['rgba(22,163,74,0.15)', 'transparent'] : ['rgba(22,163,74,0.08)', 'transparent']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <IconBubble bg="bg-green-100 dark:bg-green-900/60" border="border-green-200 dark:border-green-800">
+                                            <Anchor size={26} color={isDark ? '#4ade80' : '#16A34A'} />
+                                        </IconBubble>
+                                        <View className="flex-1">
+                                            <Headline color="text-green-900 dark:text-green-100">Welcome Aboard</Headline>
+                                        </View>
                                     </View>
                                 </View>
                             </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
-        }
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
 
-        // ── Phase 2: Plan Move (Orders & Logistics) ─────────────────────
-        case 'plan-move': {
-            const planItems = checklist.filter(i => i.uctPhase === 1 || i.uctPhase === 2);
-            const completedPlanItems = planItems.filter(i => i.status === 'COMPLETE').length;
-            const totalPlanItems = planItems.length;
-            const nextAction = checklist.find(i => (i.uctPhase === 1 || i.uctPhase === 2) && i.status === 'NOT_STARTED');
-            const targetRoute = nextAction?.actionRoute || '/(tabs)/(pcs)';
+            // ── Phase 2: Plan Move (Orders & Logistics) ─────────────────────
+            case 'plan-move': {
+                const planItems = checklist.filter(i => i.uctPhase === 1 || i.uctPhase === 2);
+                const completedPlanItems = planItems.filter(i => i.status === 'COMPLETE').length;
+                const totalPlanItems = planItems.length;
+                const nextAction = checklist.find(i => (i.uctPhase === 1 || i.uctPhase === 2) && i.status === 'NOT_STARTED');
+                const targetRoute = nextAction?.actionRoute || '/(tabs)/(pcs)';
 
-            const urgencyColor = daysToReport !== null
-                ? daysToReport < 30
-                    ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400', gradDark: ['rgba(239,68,68,0.1)', 'transparent'] as const, gradLight: ['rgba(239,68,68,0.05)', 'transparent'] as const }
-                    : daysToReport <= 60
-                        ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400', gradDark: ['rgba(249,115,22,0.1)', 'transparent'] as const, gradLight: ['rgba(249,115,22,0.05)', 'transparent'] as const }
-                        : { num: 'text-slate-900 dark:text-white', label: 'text-[#1A4E8A] dark:text-[#5B8FCF]', gradDark: ['rgba(26,78,138,0.1)', 'transparent'] as const, gradLight: ['rgba(26,78,138,0.05)', 'transparent'] as const }
-                : { num: 'text-slate-900 dark:text-white', label: 'text-[#1A4E8A] dark:text-[#5B8FCF]', gradDark: ['rgba(26,78,138,0.1)', 'transparent'] as const, gradLight: ['rgba(26,78,138,0.05)', 'transparent'] as const };
+                const urgencyColor = daysToReport !== null
+                    ? daysToReport < 30
+                        ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400', gradDark: ['rgba(239,68,68,0.1)', 'transparent'] as const, gradLight: ['rgba(239,68,68,0.05)', 'transparent'] as const }
+                        : daysToReport <= 60
+                            ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400', gradDark: ['rgba(249,115,22,0.1)', 'transparent'] as const, gradLight: ['rgba(249,115,22,0.05)', 'transparent'] as const }
+                            : { num: 'text-slate-900 dark:text-white', label: 'text-[#1A4E8A] dark:text-[#5B8FCF]', gradDark: ['rgba(26,78,138,0.1)', 'transparent'] as const, gradLight: ['rgba(26,78,138,0.05)', 'transparent'] as const }
+                    : { num: 'text-slate-900 dark:text-white', label: 'text-[#1A4E8A] dark:text-[#5B8FCF]', gradDark: ['rgba(26,78,138,0.1)', 'transparent'] as const, gradLight: ['rgba(26,78,138,0.05)', 'transparent'] as const };
 
-            return (
-                <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <LinearGradient
-                            colors={isDark ? urgencyColor.gradDark : urgencyColor.gradLight}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-[#E4EAF4] dark:bg-[#1A4E8A]/50" border="border-[#1A4E8A]/10 dark:border-[#5B8FCF]/30">
-                                        <Package size={26} color={isDark ? '#5B8FCF' : '#1A4E8A'} />
-                                    </IconBubble>
-                                    <View className="flex-1">
-                                        <Headline color="text-slate-900 dark:text-slate-100">Plan Your Move</Headline>
+                return (
+                    <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <LinearGradient
+                                colors={isDark ? urgencyColor.gradDark : urgencyColor.gradLight}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <IconBubble bg="bg-[#E4EAF4] dark:bg-[#1A4E8A]/50" border="border-[#1A4E8A]/10 dark:border-[#5B8FCF]/30">
+                                            <Package size={26} color={isDark ? '#5B8FCF' : '#1A4E8A'} />
+                                        </IconBubble>
+                                        <View className="flex-1">
+                                            <Headline color="text-slate-900 dark:text-slate-100">Plan Your Move</Headline>
+                                        </View>
                                     </View>
                                 </View>
                             </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
-        }
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
 
-        // ── Phase 3: En Route ──────────────────
-        case 'en-route': {
-            const phase3Items = checklist.filter(i => i.uctPhase === 3);
-            const completedPhase3 = phase3Items.filter(i => i.status === 'COMPLETE').length;
-            const totalPhase3 = phase3Items.length;
-            const enNextAction = checklist.find(i => i.uctPhase === 3 && i.status === 'NOT_STARTED');
-            const targetRoute = enNextAction?.actionRoute || '/(tabs)/(pcs)';
+            // ── Phase 3: En Route ──────────────────
+            case 'en-route': {
+                const phase3Items = checklist.filter(i => i.uctPhase === 3);
+                const completedPhase3 = phase3Items.filter(i => i.status === 'COMPLETE').length;
+                const totalPhase3 = phase3Items.length;
+                const enNextAction = checklist.find(i => i.uctPhase === 3 && i.status === 'NOT_STARTED');
+                const targetRoute = enNextAction?.actionRoute || '/(tabs)/(pcs)';
 
-            return (
-                <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <LinearGradient
-                            colors={isDark ? ['rgba(59,130,246,0.15)', 'transparent'] : ['rgba(59,130,246,0.08)', 'transparent']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-blue-100 dark:bg-blue-900/60" border="border-blue-200 dark:border-blue-800">
-                                        <Plane size={26} color={isDark ? '#60A5FA' : '#2563EB'} />
-                                    </IconBubble>
-                                    <View className="flex-1">
-                                        <Headline color="text-slate-900 dark:text-slate-100">En Route</Headline>
+                const urgencyColor = daysToReport !== null
+                    ? daysToReport < 3
+                        ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400', gradDark: ['rgba(239,68,68,0.1)', 'transparent'] as const, gradLight: ['rgba(239,68,68,0.05)', 'transparent'] as const }
+                        : daysToReport < 7
+                            ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400', gradDark: ['rgba(249,115,22,0.1)', 'transparent'] as const, gradLight: ['rgba(249,115,22,0.05)', 'transparent'] as const }
+                            : { num: 'text-blue-950 dark:text-white', label: 'text-blue-700 dark:text-blue-400', gradDark: ['rgba(59,130,246,0.15)', 'transparent'] as const, gradLight: ['rgba(59,130,246,0.08)', 'transparent'] as const }
+                    : { num: 'text-blue-950 dark:text-white', label: 'text-blue-700 dark:text-blue-400', gradDark: ['rgba(59,130,246,0.15)', 'transparent'] as const, gradLight: ['rgba(59,130,246,0.08)', 'transparent'] as const };
+
+
+                return (
+                    <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <LinearGradient
+                                colors={isDark ? urgencyColor.gradDark : urgencyColor.gradLight}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <IconBubble bg="bg-blue-100 dark:bg-blue-900/60" border="border-blue-200 dark:border-blue-800">
+                                            <Plane size={26} color={isDark ? '#60A5FA' : '#2563EB'} />
+                                        </IconBubble>
+                                        <View className="flex-1">
+                                            <Headline color="text-slate-900 dark:text-slate-100">En Route</Headline>
+                                        </View>
                                     </View>
                                 </View>
                             </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
-        }
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
 
-        // ── Phase 1: Orders Received ──────────────────────────
-        case 'orders-received': {
-            const phase1Items = checklist.filter(i => i.uctPhase === 1);
-            const completedPhase1 = phase1Items.filter(i => i.status === 'COMPLETE').length;
-            const totalPhase1 = phase1Items.length;
-            const ordNextAction = checklist.find(i => i.uctPhase === 1 && i.status === 'NOT_STARTED');
-            const targetRoute = ordNextAction?.actionRoute || '/(tabs)/(pcs)';
+            // ── Phase 1: Orders Received ──────────────────────────
+            case 'orders-received': {
+                const phase1Items = checklist.filter(i => i.uctPhase === 1);
+                const completedPhase1 = phase1Items.filter(i => i.status === 'COMPLETE').length;
+                const totalPhase1 = phase1Items.length;
+                const ordNextAction = checklist.find(i => i.uctPhase === 1 && i.status === 'NOT_STARTED');
+                const targetRoute = ordNextAction?.actionRoute || '/(tabs)/(pcs)';
 
-            return (
-                <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <LinearGradient
-                            colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-amber-100 dark:bg-amber-900/60" border="border-amber-200 dark:border-amber-700/50">
-                                        <FileCheck size={26} color={isDark ? '#fbbf24' : '#d97706'} />
-                                    </IconBubble>
-                                    <View className="flex-1">
-                                        <Headline color="text-amber-900 dark:text-amber-100">Orders Received</Headline>
+                return (
+                    <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <LinearGradient
+                                colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/60" border="border-amber-200 dark:border-amber-700/50">
+                                            <FileCheck size={26} color={isDark ? '#fbbf24' : '#d97706'} />
+                                        </IconBubble>
+                                        <View className="flex-1">
+                                            <Headline color="text-amber-900 dark:text-amber-100">Orders Received</Headline>
+                                        </View>
                                     </View>
                                 </View>
                             </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
-        }
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
 
-        // ── Phase: Orders Processing ───────────────────────────────────────
-        case 'processing': {
-            const procEstDate = useDemoStore.getState().selectionDetails?.estimatedOrdersDate;
+            // ── Phase: Orders Processing ───────────────────────────────────────
+            case 'processing': {
+                const procEstDate = useDemoStore.getState().selectionDetails?.estimatedOrdersDate;
 
-            return (
-                <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <LinearGradient
-                            colors={isDark ? ['rgba(168,162,158,0.1)', 'transparent'] : ['rgba(168,162,158,0.05)', 'transparent']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-stone-100 dark:bg-stone-800/60" border="border-stone-200 dark:border-stone-700">
-                                        <FileCheck size={26} color={isDark ? '#a8a29e' : '#57534e'} />
-                                    </IconBubble>
-                                    <View className="flex-1">
-                                        <Headline>Orders Processing</Headline>
-                                        {procEstDate ? (
-                                            <Detail>ETA: {new Date(procEstDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</Detail>
-                                        ) : (
-                                            <Detail>Pending Detailer release</Detail>
-                                        )}
+                return (
+                    <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <LinearGradient
+                                colors={isDark ? ['rgba(168,162,158,0.1)', 'transparent'] : ['rgba(168,162,158,0.05)', 'transparent']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <IconBubble bg="bg-stone-100 dark:bg-stone-800/60" border="border-stone-200 dark:border-stone-700">
+                                            <FileCheck size={26} color={isDark ? '#a8a29e' : '#57534e'} />
+                                        </IconBubble>
+                                        <View className="flex-1">
+                                            <Headline>Orders Processing</Headline>
+                                            {procEstDate ? (
+                                                <Detail>ETA: {new Date(procEstDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</Detail>
+                                            ) : (
+                                                <Detail>Pending Detailer release</Detail>
+                                            )}
+                                        </View>
                                     </View>
                                 </View>
                             </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
-        }
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
 
-        // ── Phase: Selected ────────────────────
-        case 'selected': {
+            // ── Phase: Selected ────────────────────
+            case 'selected': {
 
-            return (
-                <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center gap-4">
-                                <View className="w-[52px] h-[52px] rounded-full overflow-hidden items-center justify-center border-[1.5px] border-black/5 dark:border-white/10 shadow-inner">
-                                    <LinearGradient colors={['#3AAE6C', '#1B6A3B']} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-                                    <Star size={26} color="#FFFFFF" fill="#FFFFFF" />
-                                </View>
-                                <View className="flex-1">
-                                    <Headline color="text-green-900 dark:text-white">Selection Confirmed</Headline>
-                                </View>
-                            </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
-        }
-
-        // ── Phase: MNA Negotiation ─────────────────────────────────────────
-        case 'negotiation': {
-            return (
-                <TouchableOpacity onPress={() => router.push('/(career)/cycle' as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <LinearGradient
-                            colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-amber-100 dark:bg-amber-900/60" border="border-amber-200 dark:border-amber-700/50">
-                                        <Users size={26} color={isDark ? '#fbbf24' : '#d97706'} />
-                                    </IconBubble>
+                return (
+                    <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center gap-4">
+                                    <View className="w-[52px] h-[52px] rounded-full overflow-hidden items-center justify-center border-[1.5px] border-black/5 dark:border-white/10 shadow-inner">
+                                        <LinearGradient colors={['#3AAE6C', '#1B6A3B']} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+                                        <Star size={26} color="#FFFFFF" fill="#FFFFFF" />
+                                    </View>
                                     <View className="flex-1">
-                                        <Headline color="text-amber-900 dark:text-amber-100">MNA Negotiation</Headline>
-                                        <Detail>Submit your ranked slate</Detail>
+                                        <Headline color="text-green-900 dark:text-white">Selection Confirmed</Headline>
                                     </View>
                                 </View>
                             </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
-        }
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
 
-        // ── Phase: Cycle Open (On-Ramp) ────────────────────────────────────
-        case 'cycle-open': {
-            const prdLabel = currentProfile?.prd ? new Date(currentProfile.prd).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : null;
-            const reviewed = Object.keys(realDecisions).length;
-            const hasPrepped = reviewed > 0;
-
-            return (
-                <TouchableOpacity onPress={() => router.push(hasPrepped ? '/(career)/discovery' as any : '/(tabs)/(profile)/preferences' as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <LinearGradient
-                            colors={isDark ? ['rgba(245,158,11,0.1)', 'transparent'] : ['rgba(245,158,11,0.05)', 'transparent']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-amber-100 dark:bg-amber-900/40" border="border-amber-200 dark:border-amber-800">
-                                        <Timer size={26} color={isDark ? '#C8921C' : '#B07500'} />
-                                    </IconBubble>
-                                    <View className="flex-1">
-                                        <Headline color="text-amber-900 dark:text-amber-100">Cycle {nextCycle}</Headline>
-                                        {prdLabel && <Detail>PRD {prdLabel}</Detail>}
+            // ── Phase: MNA Negotiation ─────────────────────────────────────────
+            case 'negotiation': {
+                return (
+                    <TouchableOpacity onPress={() => router.push('/(career)/cycle' as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <LinearGradient
+                                colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/60" border="border-amber-200 dark:border-amber-700/50">
+                                            <Users size={26} color={isDark ? '#fbbf24' : '#d97706'} />
+                                        </IconBubble>
+                                        <View className="flex-1">
+                                            <Headline color="text-amber-900 dark:text-amber-100">MNA Negotiation</Headline>
+                                            <Detail>Submit your ranked slate</Detail>
+                                        </View>
                                     </View>
                                 </View>
-                                <View className="flex-row items-baseline gap-1">
-                                    <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">{daysUntilOpen}</Text>
-                                    <Text className="text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-wider">Days</Text>
-                                </View>
                             </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
-        }
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
 
-        // ── Phase: Cycle Prep (Discovery / Default) ────────────────────────
-        case 'cycle-prep':
-        default: {
-            const prdDate = currentProfile?.prd ? new Date(currentProfile.prd) : null;
-            const monthsToPrd = prdDate ? Math.max(0, Math.round((prdDate.getTime() - Date.now()) / (30.44 * 86400000))) : 19;
-            const monthsToMna = Math.max(0, monthsToPrd - 12);
+            // ── Phase: Cycle Open (On-Ramp) ────────────────────────────────────
+            case 'cycle-open': {
+                const prdLabel = currentProfile?.prd ? new Date(currentProfile.prd).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : null;
+                const reviewed = Object.keys(realDecisions).length;
+                const hasPrepped = reviewed > 0;
 
-            return (
-                <TouchableOpacity onPress={() => router.push('/(career)/discovery' as any)} className="flex flex-col gap-2">
-                    <CardShell>
-                        <LinearGradient
-                            colors={isDark ? ['rgba(59,130,246,0.1)', 'transparent'] : ['rgba(59,130,246,0.05)', 'transparent']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                        />
-                        <View className="px-5 py-5">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-4 flex-1">
-                                    <IconBubble bg="bg-blue-100 dark:bg-blue-900/40" border="border-blue-200 dark:border-blue-800/60">
-                                        <Calendar size={26} color={isDark ? '#60A5FA' : '#1D4ED8'} />
-                                    </IconBubble>
-                                    <View className="flex-1">
-                                        <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle</Headline>
-                                        <Detail>Your PRD is in ~{monthsToPrd} months</Detail>
+                return (
+                    <TouchableOpacity onPress={() => router.push(hasPrepped ? '/(career)/discovery' as any : '/(tabs)/(profile)/preferences' as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <LinearGradient
+                                colors={isDark ? ['rgba(245,158,11,0.1)', 'transparent'] : ['rgba(245,158,11,0.05)', 'transparent']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/40" border="border-amber-200 dark:border-amber-800">
+                                            <Timer size={26} color={isDark ? '#C8921C' : '#B07500'} />
+                                        </IconBubble>
+                                        <View className="flex-1">
+                                            <Headline color="text-amber-900 dark:text-amber-100">Cycle {nextCycle}</Headline>
+                                            {prdLabel && <Detail>PRD {prdLabel}</Detail>}
+                                        </View>
+                                    </View>
+                                    <View className="flex-row items-baseline gap-1">
+                                        <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">{daysUntilOpen}</Text>
+                                        <Text className="text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-wider">Days</Text>
                                     </View>
                                 </View>
-                                <View className="flex-row items-baseline gap-1">
-                                    <Text className="text-blue-950 dark:text-white text-3xl font-black font-mono tracking-tighter">~{monthsToMna}</Text>
-                                    <Text className="text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wider">Months</Text>
+                            </View>
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
+
+            // ── Phase: Cycle Prep (Discovery / Default) ────────────────────────
+            case 'cycle-prep':
+            default: {
+                const prdDate = currentProfile?.prd ? new Date(currentProfile.prd) : null;
+                const monthsToPrd = prdDate ? Math.max(0, Math.round((prdDate.getTime() - Date.now()) / (30.44 * 86400000))) : 19;
+                const monthsToMna = Math.max(0, monthsToPrd - 12);
+
+                return (
+                    <TouchableOpacity onPress={() => router.push('/(career)/discovery' as any)} className="flex flex-col gap-2">
+                        <CardShell>
+                            <LinearGradient
+                                colors={isDark ? ['rgba(59,130,246,0.1)', 'transparent'] : ['rgba(59,130,246,0.05)', 'transparent']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                            />
+                            <View className="px-5 py-5">
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <IconBubble bg="bg-blue-100 dark:bg-blue-900/40" border="border-blue-200 dark:border-blue-800/60">
+                                            <Calendar size={26} color={isDark ? '#60A5FA' : '#1D4ED8'} />
+                                        </IconBubble>
+                                        <View className="flex-1">
+                                            <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle</Headline>
+                                            <Detail>Your PRD is in ~{monthsToPrd} months</Detail>
+                                        </View>
+                                    </View>
+                                    <View className="flex-row items-baseline gap-1">
+                                        <Text className="text-blue-950 dark:text-white text-3xl font-black font-mono tracking-tighter">~{monthsToMna}</Text>
+                                        <Text className="text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wider">Months</Text>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                    </CardShell>
-                </TouchableOpacity>
-            );
+                        </CardShell>
+                    </TouchableOpacity>
+                );
+            }
         }
-    }
+    };
+
+    return (
+        <View className="relative mt-2 mb-2">
+            {renderCard()}
+            <TouchableOpacity
+                onPress={() => setIsDismissed(true)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                className="absolute top-4 right-5 z-10 w-7 h-7 items-center justify-center rounded-full bg-black/5 dark:bg-white/10"
+            >
+                <X size={14} color={isDark ? '#9CA3AF' : '#6B7280'} strokeWidth={2.5} />
+            </TouchableOpacity>
+        </View>
+    );
 }
 
 // ── Shared Primitives ────────────────────────────────────────────────────────

@@ -39,9 +39,14 @@ function Phase2Widgets() {
     );
 }
 
+import { TransitSegmentWidget } from '@/components/pcs/widgets/TransitSegmentWidget';
+import { TravelReceiptLoggerWidget } from '@/components/pcs/widgets/TravelReceiptLoggerWidget';
+
 function Phase3Widgets() {
     return (
         <View className="gap-6 pt-2">
+            <TransitSegmentWidget />
+            <TravelReceiptLoggerWidget />
             <DigitalOrdersWallet />
         </View>
     );

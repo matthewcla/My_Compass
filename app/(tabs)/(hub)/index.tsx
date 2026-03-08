@@ -6,7 +6,6 @@ import { StatusCard } from '@/components/dashboard/StatusCard';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ScreenGradient } from '@/components/ScreenGradient';
-import { ScreenHeader } from '@/components/ScreenHeader';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
@@ -22,8 +21,9 @@ import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { Bell } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { Alert, Platform, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
@@ -31,6 +31,11 @@ import { useShallow } from 'zustand/react/shallow';
 const AnimatedFlashList = (Platform.OS === 'web'
     ? FlashList
     : Animated.createAnimatedComponent(FlashList)) as React.ComponentType<any>;
+
+// P2 FIX #8/#9: Stable component references prevent FlashList re-render thrashing
+const ItemSeparator = () => <View style={{ height: 16 }} />;
+const ListHeader = <View style={{ height: 16 }} />;
+const ListFooter = <View style={{ height: 250 }} />;
 
 type FilterTab = 'Hub' | 'My Career' | 'My Admin';
 
@@ -56,9 +61,6 @@ export default function HubDashboard() {
             .filter(Boolean)
             .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     }, [userLeaveRequestIds, leaveRequestsMap]);
-
-    // Track the dynamic height of the ScreenHeader so the StatusCard can perfectly flush away
-    const [minHeaderHeight, setMinHeaderHeight] = React.useState(82);
 
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -148,13 +150,21 @@ export default function HubDashboard() {
                                 router.push({ pathname: '/(career)/discovery', params: { filter: category, returnPath: '/(tabs)/(hub)' } } as any);
                             }}
                         />
-                    </Animated.View>
+                    </Animated.View >
                 );
-            case 'receiptCapture': {
-                const { ReceiptScannerWidget } = require('@/components/pcs/widgets/ReceiptScannerWidget');
+            case 'transitSegmentWidget': {
+                const { TransitSegmentWidget } = require('@/components/pcs/widgets/TransitSegmentWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <ReceiptScannerWidget />
+                        <TransitSegmentWidget />
+                    </Animated.View>
+                );
+            }
+            case 'travelReceiptLoggerWidget': {
+                const { TravelReceiptLoggerWidget } = require('@/components/pcs/widgets/TravelReceiptLoggerWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <TravelReceiptLoggerWidget />
                     </Animated.View>
                 );
             }
@@ -409,8 +419,9 @@ export default function HubDashboard() {
             // Focus: Active PCS Workflow
             if (activeUCTPhase === 3) {
                 // Exceptional case: Operational Travel Tools trump the UCT visually
-                feed.push('missionBrief');
-                feed.push('receiptCapture');
+                feed.push('transitSegmentWidget');
+                feed.push('travelReceiptLoggerWidget');
+                // Removed redundant receiptCapture and missionBrief components to resolve conflict
             } else if (activeUCTPhase === 4) {
                 // Focus: Post-Arrival reporting procedures
                 feed.push('arrivalBriefing');
@@ -470,16 +481,28 @@ export default function HubDashboard() {
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
-                minTopBarHeight={minHeaderHeight}
                 topBar={
                     <BlurView intensity={isDark ? 80 : 60} tint={isDark ? "dark" : "light"}>
-                        <View className="pt-2 pb-2" onLayout={(e) => setMinHeaderHeight(Math.round(e.nativeEvent.layout.height))}>
-                            <ScreenHeader
-                                title=""
-                                subtitle=""
-                                withSafeArea={false}
-                            />
+                        <View className="flex-row items-center justify-between px-4 pt-3 pb-3">
+                            <Text className="text-[28px] font-black tracking-tighter text-blue-600 dark:text-blue-400">
+                                MyCompass
+                            </Text>
+
+                            <Pressable
+                                onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
+                                hitSlop={12}
+                                className="active:opacity-70"
+                            >
+                                <Bell color={isDark ? Colors.dark.text : Colors.light.text} size={24} strokeWidth={2.5} />
+                            </Pressable>
                         </View>
+                        <View
+                            className="w-full"
+                            style={{
+                                height: 1, // Using integer value instead of StyleSheet.hairlineWidth for consistency
+                                backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'
+                            }}
+                        />
                     </BlurView>
                 }
                 contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -498,13 +521,12 @@ export default function HubDashboard() {
                         ref={listRef}
                         data={sections}
                         renderItem={renderItem}
-                        ItemSeparatorComponent={() => (
-                            <View style={{ height: 16 }} />
-                        )}
-                        ListHeaderComponent={<View style={{ height: 16 }} />}
-                        ListFooterComponent={<View style={{ height: 250 }} />}
+                        getItemType={(item: string) => item}
+                        ItemSeparatorComponent={ItemSeparator}
+                        ListHeaderComponent={ListHeader}
+                        ListFooterComponent={ListFooter}
 
-                        estimatedItemSize={150}
+                        estimatedItemSize={220}
                         style={{ flex: 1 }}
                         showsVerticalScrollIndicator={false}
                         scrollEventThrottle={scrollEventThrottle}

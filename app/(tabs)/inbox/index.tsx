@@ -88,8 +88,8 @@ export default function InboxScreen() {
     ), [handlePress, togglePin]);
 
     const renderSectionHeader = useCallback(({ section: { title } }: { section: { title: string } }) => (
-        <View className="px-4 py-2 bg-slate-100 dark:bg-slate-900">
-            <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
+        <View className="px-5 py-3 bg-transparent">
+            <Text className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
         </View>
     ), []);
 
@@ -174,7 +174,7 @@ export default function InboxScreen() {
                 );
             }}
         >
-            <View className="flex-row justify-between bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mt-2">
+            <View className="flex-row justify-between bg-black/5 dark:bg-slate-800/50 p-1 rounded-xl mt-2 border border-black/5 dark:border-white/5">
                 {(['All', 'Official', 'My Status', 'Pinned'] as FilterType[]).map((filter) => (
                     <Pressable
                         key={filter}
@@ -278,9 +278,23 @@ const styles = StyleSheet.create({
     },
     filterButtonActiveLight: {
         backgroundColor: '#ffffff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 1,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: 'rgba(0,0,0,0.05)',
     },
     filterButtonActiveDark: {
-        backgroundColor: '#475569',
+        backgroundColor: '#1e293b',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
+        elevation: 1,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: 'rgba(255,255,255,0.1)',
     },
     filterText: {
         fontSize: 12,

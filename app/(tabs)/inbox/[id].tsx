@@ -36,8 +36,8 @@ export default function MessageDetailsScreen() {
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <View className="p-4">
                     <View className="flex-row justify-between items-center mb-4">
-                        <View className="bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full">
-                            <Text className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <View className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                            <Text className={`text-[11px] tracking-[1.5px] font-bold uppercase ${message.type === 'NAVADMIN' ? 'text-blue-600 dark:text-blue-400' : message.type === 'STATUS_REPORT' ? 'text-amber-600 dark:text-amber-500' : 'text-slate-600 dark:text-slate-400'}`}>
                                 {message.type.replace('_', ' ')}
                             </Text>
                         </View>
@@ -72,9 +72,10 @@ export default function MessageDetailsScreen() {
                         <View className="mt-8 mb-8">
                             <TouchableOpacity
                                 onPress={() => router.push(actionRoute as any)}
-                                className="bg-blue-600 p-4 rounded-xl flex-row items-center justify-center shadow-sm active:bg-blue-700"
+                                activeOpacity={0.8}
+                                className="bg-blue-600 dark:bg-blue-500 py-4 rounded-xl flex-row items-center justify-center shadow-sm border border-blue-500/20 active:scale-[0.98] active:opacity-90"
                             >
-                                <Text className="text-white font-bold text-lg">View Details</Text>
+                                <Text className="text-white font-bold text-[17px] tracking-tight">View Details</Text>
                             </TouchableOpacity>
                         </View>
                     )}

@@ -439,7 +439,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     };
 
     return (
-        <View className="relative mt-2 mb-2">
+        <View className="relative">
             {renderCard()}
             <TouchableOpacity
                 onPress={() => setIsDismissed(true)}

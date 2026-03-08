@@ -65,7 +65,7 @@ export function TransitSegmentWidget() {
         : 'bg-blue-500';
 
     return (
-        <View className="mb-4">
+        <View>
             <GlassView
                 intensity={80}
                 tint={isDark ? 'dark' : 'light'}

@@ -33,8 +33,8 @@ const AnimatedFlashList = (Platform.OS === 'web'
     : Animated.createAnimatedComponent(FlashList)) as React.ComponentType<any>;
 
 // P2 FIX #8/#9: Stable component references prevent FlashList re-render thrashing
-const ItemSeparator = () => <View style={{ height: 16 }} />;
-const ListHeader = <View style={{ height: 16 }} />;
+const ItemSeparator = () => <View style={{ height: 24 }} />;
+const ListHeader = <View style={{ height: 24 }} />;
 const ListFooter = <View style={{ height: 250 }} />;
 
 type FilterTab = 'Hub' | 'My Career' | 'My Admin';
@@ -130,7 +130,7 @@ export default function HubDashboard() {
             case 'missionStatus':
                 return (
                     <Animated.View entering={FadeInUp.duration(350).springify()}>
-                        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1 pb-6 pt-2">
+                        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1">
                             <StatusCard
                                 nextCycle={data?.cycle?.cycleId ?? '24-02'}
                                 daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
@@ -172,21 +172,7 @@ export default function HubDashboard() {
                     </Animated.View>
                 );
             }
-            case 'tierRightNow':
-            case 'tierThisWeek':
-            case 'tierTracking': {
-                const tierLabel = item === 'tierRightNow' ? 'Right Now'
-                    : item === 'tierThisWeek' ? 'This Week'
-                        : 'Tracking';
-                return (
-                    <View className="flex-row items-center mt-3 mb-1 px-1">
-                        <Text className="text-[13px] font-bold tracking-widest uppercase text-slate-500 dark:text-slate-400">
-                            {tierLabel}
-                        </Text>
-                        <View className="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4" />
-                    </View>
-                );
-            }
+
 
             case 'digitalOrdersWallet': {
                 const { DigitalOrdersWallet } = require('@/components/pcs/widgets/DigitalOrdersWallet');
@@ -454,8 +440,6 @@ export default function HubDashboard() {
                 feed.push('discoveryStatus'); // Retain Billet Discovery engine
                 feed.push('slateSummary');    // Followed immediately by the Composition Analyzer
                 // Priority 4: Peacetime Promotion ("The Garrison State")
-                feed.push('tierThisWeek');
-                feed.push('tierTracking');
             }
         }
 

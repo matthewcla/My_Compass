@@ -282,6 +282,11 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                     </IconBubble>
                                     <View className="flex-1">
                                         <Headline>Orders Processing</Headline>
+                                        {procEstDate ? (
+                                            <Detail>ETA: {new Date(procEstDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</Detail>
+                                        ) : (
+                                            <Detail>Pending Detailer release</Detail>
+                                        )}
                                     </View>
                                 </View>
                             </View>

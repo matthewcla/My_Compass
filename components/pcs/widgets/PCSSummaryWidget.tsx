@@ -1,3 +1,4 @@
+import { ScalePressable } from '@/components/ScalePressable';
 import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { UCT_PHASES } from '@/constants/UCTPhases';
@@ -5,9 +6,10 @@ import { useActiveOrder, usePCSStore, useUCTPhaseStatus } from '@/store/usePCSSt
 import { UCTNodeStatus, UCTPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ArrowRight, CheckCircle2, CircleDashed, MapPin, Package } from 'lucide-react-native';
-import React, { useMemo } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { ArrowRight, CheckCircle2, ChevronDown, ChevronRight, CircleDashed, Lock, MapPin, Package } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 export function PCSSummaryWidget() {
     const isDark = useColorScheme() === 'dark';
@@ -26,10 +28,46 @@ export function PCSSummaryWidget() {
 
     const activePhaseConfig = UCT_PHASES.find(p => p.phase === activePhaseNum);
 
-    // Get Next Action
-    const nextAction = useMemo(() => {
-        return checklist.find(i => i.uctPhase === activePhaseNum && i.status === 'NOT_STARTED');
-    }, [checklist, activePhaseNum]);
+    // UI state for the "Look Ahead" accordion
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Get Next Action and Upcoming Tasks
+    const { nextAction, upcomingTasks } = useMemo(() => {
+        const profileItem = checklist.find(c => c.label === 'Profile Confirmation');
+        const isProfileLocked = profileItem && profileItem.status !== 'COMPLETE';
+
+        const pendingItems = checklist
+            .filter((c) => c.status !== 'COMPLETE')
+            .sort((a, b) => {
+                if (a.uctPhase !== b.uctPhase) return a.uctPhase - b.uctPhase;
+                if (a.actionRoute && !b.actionRoute) return -1;
+                if (!a.actionRoute && b.actionRoute) return 1;
+                return 0;
+            });
+
+        const activeAction = pendingItems[0] ?? null;
+        const upcoming = pendingItems.slice(1).map(task => ({
+            ...task,
+            isLocked: isProfileLocked && task.uctPhase > 1
+        }));
+
+        return { nextAction: activeAction, upcomingTasks: upcoming };
+    }, [checklist]);
+
+    // Accordion Animation styles
+    const accordionStyle = useAnimatedStyle(() => {
+        return {
+            height: withTiming(isExpanded ? (upcomingTasks.length || 0) * 50 + 20 : 0, { duration: 300 }),
+            opacity: withTiming(isExpanded ? 1 : 0, { duration: 250 }),
+            marginTop: withTiming(isExpanded ? 12 : 0, { duration: 300 }),
+        };
+    });
+
+    const chevronStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ rotate: withTiming(isExpanded ? '180deg' : '0deg', { duration: 300 }) }]
+        };
+    });
 
     // Compute progress
     const { completed, total } = useMemo(() => {
@@ -151,6 +189,55 @@ export function PCSSummaryWidget() {
                         <View className="bg-slate-100 dark:bg-slate-800/50 rounded-2xl p-4 flex-row items-center justify-center gap-2">
                             <CheckCircle2 size={16} color={isDark ? '#4ade80' : '#16a34a'} />
                             <Text className="text-slate-600 dark:text-slate-400 text-sm font-medium">All tasks complete for this phase</Text>
+                        </View>
+                    )}
+
+                    {/* ── Expandable Upcoming Tasks ── */}
+                    {upcomingTasks.length > 0 && (
+                        <View className="mt-1">
+                            <Pressable
+                                onPress={() => setIsExpanded(!isExpanded)}
+                                className="flex-row items-center justify-between py-2 px-1"
+                                hitSlop={10}
+                            >
+                                <Text className="text-slate-500 dark:text-slate-400 text-[13px] font-bold tracking-wider uppercase">
+                                    View Upcoming Tasks
+                                </Text>
+                                <Animated.View style={chevronStyle}>
+                                    <ChevronDown size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                                </Animated.View>
+                            </Pressable>
+
+                            <Animated.View style={[accordionStyle, { overflow: 'hidden' }]}>
+                                {upcomingTasks.map((task, idx) => (
+                                    <ScalePressable
+                                        key={task.id}
+                                        disabled={task.isLocked || !task.actionRoute}
+                                        onPress={() => {
+                                            if (!task.isLocked && task.actionRoute) {
+                                                router.push(task.actionRoute as any);
+                                            }
+                                        }}
+                                        className={`flex-row items-center py-3 px-3 ${idx < upcomingTasks.length - 1 ? 'border-b border-slate-200/50 dark:border-slate-700/50' : ''}`}
+                                    >
+                                        <View className={`w-8 h-8 rounded-full items-center justify-center border ${task.isLocked ? 'bg-slate-100 dark:bg-slate-800 border-slate-200/50 dark:border-slate-700/50' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200/50 dark:border-blue-700/50'}`}>
+                                            {task.isLocked ? (
+                                                <Lock size={14} color={isDark ? '#64748B' : '#94A3B8'} />
+                                            ) : (
+                                                <ChevronRight size={16} color={isDark ? '#60A5FA' : '#3B82F6'} />
+                                            )}
+                                        </View>
+                                        <View className="flex-1 ml-3">
+                                            <Text className={`text-[14px] font-semibold ${task.isLocked ? 'text-slate-500 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`} numberOfLines={1}>
+                                                {task.label}
+                                            </Text>
+                                            {!task.isLocked && task.helpText && (
+                                                <Text className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" numberOfLines={1}>{task.helpText}</Text>
+                                            )}
+                                        </View>
+                                    </ScalePressable>
+                                ))}
+                            </Animated.View>
                         </View>
                     )}
 

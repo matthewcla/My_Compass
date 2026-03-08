@@ -278,6 +278,14 @@ export default function HubDashboard() {
                     </Animated.View>
                 );
             }
+            case 'ordersProcessingWidget': {
+                const { OrdersProcessingWidget } = require('@/components/pcs/widgets/OrdersProcessingWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <OrdersProcessingWidget />
+                    </Animated.View>
+                );
+            }
             case 'pcsHeroBanner': {
                 const { PCSHeroBanner } = require('@/components/pcs/PCSHeroBanner');
                 return (
@@ -396,8 +404,7 @@ export default function HubDashboard() {
         // Surface the correct Phase Core Widget based on assignment/PCS lifecycle moment
         if (assignmentPhase === 'ORDERS_PROCESSING') {
             // Focus: Tracking administrative order steps
-            feed.push('pcsTaskTracker');
-            feed.push('digitalOrdersWallet');
+            feed.push('ordersProcessingWidget');
         } else if (assignmentPhase === 'ORDERS_RELEASED' || pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
             // Focus: Active PCS Workflow
             if (activeUCTPhase === 3) {
@@ -408,6 +415,7 @@ export default function HubDashboard() {
                 // Focus: Plan Your Move & Check-in. Summary Dashboard linking to workflows.
                 feed.push('pcsSummaryWidget');
             }
+            feed.push('digitalOrdersWallet');
         } else {
             // Priority 3: Career Discovery & Selection Details (if NOT in PCS processing)
             if (assignmentPhase === 'SELECTION') {

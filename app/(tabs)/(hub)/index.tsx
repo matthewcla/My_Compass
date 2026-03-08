@@ -16,7 +16,7 @@ import { useSession } from '@/lib/ctx';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
-import { usePCSPhase, usePCSStore, useSubPhase } from '@/store/usePCSStore';
+import { usePCSPhase, usePCSStore, useSubPhase, useUCTPhaseStatus } from '@/store/usePCSStore';
 import { getShadow } from '@/utils/getShadow';
 import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
@@ -71,6 +71,13 @@ export default function HubDashboard() {
     const obliserv = usePCSStore(state => state.financials.obliserv);
     const pcsPhase = usePCSPhase();
     const subPhase = useSubPhase();
+    const uctPhaseStatus = useUCTPhaseStatus();
+
+    const activeUCTPhase = React.useMemo(() => {
+        const active = Object.entries(uctPhaseStatus).find(([_, status]) => status === 'ACTIVE');
+        return active ? Number(active[0]) : 1;
+    }, [uctPhaseStatus]);
+
     // QW4: Reactive liquidation state (must be above early returns per Rules of Hooks)
     const liquidationStatus = usePCSStore((s) => s.financials.liquidation?.currentStatus);
     const shipments = usePCSStore(state => state.financials.hhg?.shipments ?? []);
@@ -115,9 +122,6 @@ export default function HubDashboard() {
 
         switch (item) {
             case 'missionStatus':
-                // Surpress the MNA StatusCard if the sailor is locked into active PCS execution
-                if (pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') return null;
-
                 return (
                     <Animated.View entering={FadeInUp.duration(350).springify()}>
                         <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1 pb-6 pt-2">
@@ -266,6 +270,14 @@ export default function HubDashboard() {
                     </Animated.View>
                 );
             }
+            case 'pcsSummaryWidget': {
+                const { PCSSummaryWidget } = require('@/components/pcs/widgets/PCSSummaryWidget');
+                return (
+                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
+                        <PCSSummaryWidget />
+                    </Animated.View>
+                );
+            }
             case 'pcsHeroBanner': {
                 const { PCSHeroBanner } = require('@/components/pcs/PCSHeroBanner');
                 return (
@@ -367,52 +379,37 @@ export default function HubDashboard() {
                 return null;
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDemoMode, selectedPhase, assignmentPhase, obliserv, pcsPhase, subPhase, data, leaveRequests, leaveBalance]);
+    }, [isDemoMode, selectedPhase, assignmentPhase, obliserv, pcsPhase, subPhase, data, leaveRequests, leaveBalance, activeUCTPhase]);
 
     const sections = React.useMemo(() => {
         const feed: string[] = [];
 
-        // Priority 0: Core Status (Always Top unless actively traveling)
-        if (pcsPhase !== 'CHECK_IN' && subPhase !== 'ACTIVE_TRAVEL') {
-            feed.push('missionStatus');
-        }
+        // Priority 0: Core Status (Always Top)
+        feed.push('missionStatus');
 
         // Priority 1: Critical Action Items (OBLISERV only applies during Selection before orders are released)
         if (assignmentPhase === 'SELECTION') {
             feed.push('obliserv');
         }
 
-        // Priority 2: PCS Active Window Navigation
-        if (pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
-            feed.push('baseWelcomeKit');
+        // Priority 2: PCS Lifecycle Integration
+        // Surface the correct Phase Core Widget based on assignment/PCS lifecycle moment
+        if (assignmentPhase === 'ORDERS_PROCESSING') {
+            // Focus: Tracking administrative order steps
+            feed.push('pcsTaskTracker');
             feed.push('digitalOrdersWallet');
-
-            const hasActiveLiquidation = liquidationStatus && liquidationStatus !== 'NOT_STARTED';
-            if (subPhase === 'ACTIVE_TRAVEL' || (pcsPhase === 'CHECK_IN' && !hasActiveLiquidation)) {
-                feed.push('travelClaimUrgency');
+        } else if (assignmentPhase === 'ORDERS_RELEASED' || pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
+            // Focus: Active PCS Workflow
+            if (activeUCTPhase === 3) {
+                // Exceptional case: Operational Travel Tools trump the UCT visually
+                feed.push('missionBrief');
+                feed.push('receiptCapture');
+            } else {
+                // Focus: Plan Your Move & Check-in. Summary Dashboard linking to workflows.
+                feed.push('pcsSummaryWidget');
             }
-
-            // Active PCS Tasks
-            if (pcsPhase !== 'CHECK_IN') {
-                feed.push('pcsTaskTracker');
-            }
-            if (hasActiveLiquidation && pcsPhase === 'CHECK_IN') {
-                feed.push('liquidationTracker');
-            }
-        }
-
-        // Priority 3: Mission Brief (Active Orders)
-        else if (['ORDERS_PROCESSING', 'ORDERS_RELEASED'].includes(assignmentPhase ?? '') && (pcsPhase === 'ORDERS_NEGOTIATION' || pcsPhase === 'TRANSIT_LEAVE')) {
-            feed.push('missionBrief');
-            if (assignmentPhase === 'ORDERS_RELEASED') {
-                feed.push('pcsTaskTracker');
-                feed.push('digitalOrdersWallet');
-                feed.push('leaveImpact');
-            }
-        }
-
-        // Priority 4: Career Discovery & Selection Details
-        else {
+        } else {
+            // Priority 3: Career Discovery & Selection Details (if NOT in PCS processing)
             if (assignmentPhase === 'SELECTION') {
                 feed.push('selectionDetail');
                 feed.push('selectionChecklist');
@@ -422,7 +419,7 @@ export default function HubDashboard() {
             } else if (assignmentPhase === 'NEGOTIATION') {
                 feed.push('discoveryStatus'); // Retain Billet Discovery engine
                 feed.push('slateSummary');    // Followed immediately by the Composition Analyzer
-                // Priority 5: Peacetime Promotion ("The Garrison State")
+                // Priority 4: Peacetime Promotion ("The Garrison State")
                 feed.push('tierThisWeek');
                 feed.push('tierTracking');
             }
@@ -433,7 +430,7 @@ export default function HubDashboard() {
         feed.push('leave');
 
         return feed;
-    }, [assignmentPhase, pcsPhase, subPhase, liquidationStatus, hasShipments, dependentCount]);
+    }, [assignmentPhase, pcsPhase, subPhase, liquidationStatus, hasShipments, dependentCount, activeUCTPhase]);
 
     // Loading state
     if (loading && !data) {

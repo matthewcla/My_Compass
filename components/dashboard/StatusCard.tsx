@@ -123,7 +123,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const completedPhase4 = phase4Items.filter(i => i.status === 'COMPLETE').length;
             const totalPhase4 = phase4Items.length;
             const nextAction = checklist.find(i => i.uctPhase === 4 && i.status === 'NOT_STARTED');
-            const targetRoute = nextAction?.actionRoute || '/(tabs)/(pcs)/pcs';
+            const targetRoute = nextAction?.actionRoute || '/(tabs)/(pcs)';
 
             return (
                 <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
@@ -157,7 +157,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const completedPlanItems = planItems.filter(i => i.status === 'COMPLETE').length;
             const totalPlanItems = planItems.length;
             const nextAction = checklist.find(i => (i.uctPhase === 1 || i.uctPhase === 2) && i.status === 'NOT_STARTED');
-            const targetRoute = nextAction?.actionRoute || '/(tabs)/(pcs)/pcs';
+            const targetRoute = nextAction?.actionRoute || '/(tabs)/(pcs)';
 
             const urgencyColor = daysToReport !== null
                 ? daysToReport < 30
@@ -199,7 +199,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const completedPhase3 = phase3Items.filter(i => i.status === 'COMPLETE').length;
             const totalPhase3 = phase3Items.length;
             const enNextAction = checklist.find(i => i.uctPhase === 3 && i.status === 'NOT_STARTED');
-            const targetRoute = enNextAction?.actionRoute || '/(tabs)/(pcs)/pcs';
+            const targetRoute = enNextAction?.actionRoute || '/(tabs)/(pcs)';
 
             return (
                 <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
@@ -233,7 +233,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
             const completedPhase1 = phase1Items.filter(i => i.status === 'COMPLETE').length;
             const totalPhase1 = phase1Items.length;
             const ordNextAction = checklist.find(i => i.uctPhase === 1 && i.status === 'NOT_STARTED');
-            const targetRoute = ordNextAction?.actionRoute || '/(tabs)/(pcs)/pcs';
+            const targetRoute = ordNextAction?.actionRoute || '/(tabs)/(pcs)';
 
             return (
                 <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">

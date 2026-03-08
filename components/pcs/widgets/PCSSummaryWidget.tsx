@@ -1,0 +1,189 @@
+import { GlassView } from '@/components/ui/GlassView';
+import { useColorScheme } from '@/components/useColorScheme';
+import { UCT_PHASES } from '@/constants/UCTPhases';
+import { useActiveOrder, usePCSStore, useUCTPhaseStatus } from '@/store/usePCSStore';
+import { UCTNodeStatus, UCTPhase } from '@/types/pcs';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ArrowRight, CheckCircle2, CircleDashed, MapPin, Package } from 'lucide-react-native';
+import React, { useMemo } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+
+export function PCSSummaryWidget() {
+    const isDark = useColorScheme() === 'dark';
+    const router = useRouter();
+
+    const activeOrder = useActiveOrder();
+    const checklist = usePCSStore(s => s.checklist);
+    const uctStatus = useUCTPhaseStatus();
+    const financials = usePCSStore(state => state.financials);
+
+    // Calculate active phase
+    const activePhaseNum = useMemo(() => {
+        const active = Object.entries(uctStatus).find(([_, status]) => status === 'ACTIVE');
+        return active ? Number(active[0]) as UCTPhase : 1;
+    }, [uctStatus]);
+
+    const activePhaseConfig = UCT_PHASES.find(p => p.phase === activePhaseNum);
+
+    // Get Next Action
+    const nextAction = useMemo(() => {
+        return checklist.find(i => i.uctPhase === activePhaseNum && i.status === 'NOT_STARTED');
+    }, [checklist, activePhaseNum]);
+
+    // Compute progress
+    const { completed, total } = useMemo(() => {
+        const phaseItems = checklist.filter(i => i.uctPhase === activePhaseNum);
+        return {
+            completed: phaseItems.filter(i => i.status === 'COMPLETE').length,
+            total: phaseItems.length
+        };
+    }, [checklist, activePhaseNum]);
+
+    const progressPercent = total > 0 ? (completed / total) * 100 : 0;
+
+    // Financials
+    const totalEntitlements = (financials.dla?.estimatedAmount || 0);
+
+    return (
+        <View className="flex flex-col gap-2">
+            <GlassView
+                intensity={80}
+                tint={isDark ? "dark" : "light"}
+                className="rounded-[24px] overflow-hidden shadow-sm dark:shadow-none bg-white/70 dark:bg-slate-900/60 border border-black/5 dark:border-white/10"
+            >
+                {/* Header Area */}
+                <View className="px-5 py-4 border-b border-black/5 dark:border-white/5">
+                    <View className="flex-row items-center gap-3">
+                        <View className="w-10 h-10 rounded-full items-center justify-center bg-blue-100 dark:bg-blue-900/50">
+                            <MapPin size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                My PCS Dashboard
+                            </Text>
+                            <Text className="text-lg font-black tracking-tight text-slate-900 dark:text-white" numberOfLines={1}>
+                                {activeOrder?.gainingCommand?.name || 'Awaiting Orders'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Body Area */}
+                <View className="px-5 py-5 gap-6">
+
+                    {/* Track Progress Map */}
+                    <View>
+                        <View className="flex-row items-center justify-between mb-3">
+                            <Text className="text-[15px] font-bold text-slate-900 dark:text-slate-100">
+                                Phase {activePhaseNum}: <Text className="font-semibold text-slate-600 dark:text-slate-400">{activePhaseConfig?.title}</Text>
+                            </Text>
+                        </View>
+
+                        {/* Node Timeline Visual */}
+                        <View className="flex-row items-center justify-between px-2">
+                            {UCT_PHASES.map((config, index) => {
+                                const status = uctStatus[config.phase];
+                                const isLast = index === UCT_PHASES.length - 1;
+                                return (
+                                    <React.Fragment key={config.phase}>
+                                        <NodeDot status={status} active={config.phase === activePhaseNum} />
+                                        {!isLast && <NodeLine status={status} />}
+                                    </React.Fragment>
+                                );
+                            })}
+                        </View>
+                    </View>
+
+                    {/* Financial Summary */}
+                    {activePhaseNum >= 2 && (
+                        <View className="bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/50">
+                            <View className="flex-row items-center gap-3 mb-2">
+                                <Package size={16} color={isDark ? '#94A3B8' : '#64748B'} />
+                                <Text className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                    Financial Snapshot
+                                </Text>
+                            </View>
+                            <View className="flex-row justify-between items-baseline">
+                                <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Est. Entitlements</Text>
+                                <Text className="text-green-700 dark:text-green-400 text-lg font-black font-mono tracking-tighter">
+                                    ${totalEntitlements.toFixed(2)}
+                                </Text>
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Next Action Hook */}
+                    {nextAction ? (
+                        <TouchableOpacity
+                            onPress={() => {
+                                if (nextAction.actionRoute) {
+                                    router.push(nextAction.actionRoute as any);
+                                }
+                            }}
+                            activeOpacity={0.7}
+                            className="mt-2 rounded-[20px] overflow-hidden border border-blue-500/20 dark:border-blue-400/30 shadow-sm"
+                        >
+                            <LinearGradient
+                                colors={isDark ? ['rgba(59,130,246,0.15)', 'rgba(37,99,235,0.05)'] : ['rgba(219,234,254,0.6)', 'rgba(191,219,254,0.3)']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                            >
+                                <View className="flex-row items-center justify-between p-4">
+                                    <View className="flex-row items-center gap-4 flex-1">
+                                        <View className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 items-center justify-center shadow-inner">
+                                            <ArrowRight size={22} color={isDark ? '#60A5FA' : '#2563EB'} strokeWidth={2.5} />
+                                        </View>
+                                        <View className="flex-1 pr-4">
+                                            <Text className="text-blue-700 dark:text-blue-400 text-[10px] font-black uppercase tracking-widest mb-1 opacity-80">
+                                                Next Action Required
+                                            </Text>
+                                            <Text className="text-slate-900 dark:text-slate-100 text-[15px] font-bold leading-tight tracking-tight" numberOfLines={2}>
+                                                {nextAction.label}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                    <ArrowRight size={20} color={isDark ? '#94A3B8' : '#64748B'} strokeWidth={2.5} />
+                                </View>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    ) : (
+                        <View className="bg-slate-100 dark:bg-slate-800/50 rounded-2xl p-4 flex-row items-center justify-center gap-2">
+                            <CheckCircle2 size={16} color={isDark ? '#4ade80' : '#16a34a'} />
+                            <Text className="text-slate-600 dark:text-slate-400 text-sm font-medium">All tasks complete for this phase</Text>
+                        </View>
+                    )}
+
+                </View>
+            </GlassView>
+        </View>
+    );
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function NodeDot({ status, active }: { status: UCTNodeStatus; active: boolean }) {
+    const isDark = useColorScheme() === 'dark';
+
+    if (active) {
+        return (
+            <View className="w-4 h-4 rounded-full bg-blue-500 items-center justify-center shadow-sm">
+                <View className="w-1.5 h-1.5 rounded-full bg-white" />
+            </View>
+        );
+    }
+    if (status === 'COMPLETED') {
+        return <CheckCircle2 size={18} color={isDark ? '#60A5FA' : '#3B82F6'} />;
+    }
+
+    return <CircleDashed size={16} color={isDark ? '#475569' : '#CBD5E1'} />;
+}
+
+function NodeLine({ status }: { status: UCTNodeStatus }) {
+    const isDark = useColorScheme() === 'dark';
+    const isActiveOrCompleted = status === 'COMPLETED' || status === 'ACTIVE';
+
+    return (
+        <View className={`flex-1 h-0.5 mx-2 ${isActiveOrCompleted ? 'bg-blue-500/50' : 'bg-slate-200 dark:bg-slate-700'}`} />
+    );
+}

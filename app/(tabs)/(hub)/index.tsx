@@ -19,7 +19,6 @@ import { usePCSPhase, usePCSStore, useSubPhase, useUCTPhaseStatus } from '@/stor
 import { getShadow } from '@/utils/getShadow';
 import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Bell } from 'lucide-react-native';
 import React, { useCallback } from 'react';
@@ -482,25 +481,36 @@ export default function HubDashboard() {
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 topBar={
-                    <BlurView intensity={isDark ? 80 : 60} tint={isDark ? "dark" : "light"}>
+                    <BlurView intensity={isDark ? 85 : 70} tint={isDark ? "dark" : "light"} className="overflow-hidden">
+                        {/* Inner Glass Top-Glow Highlight */}
+                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)' }} />
+
                         <View className="flex-row items-center justify-between px-4 pt-3 pb-3">
-                            <Text className="text-[28px] font-black tracking-tighter text-blue-600 dark:text-blue-400">
+                            <Text
+                                style={{
+                                    textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.4)',
+                                    textShadowOffset: { width: 0, height: 1 },
+                                    textShadowRadius: 4,
+                                    color: isDark ? '#FFFFFF' : '#0F172A'
+                                }}
+                                className="text-[28px] font-black tracking-tighter"
+                            >
                                 MyCompass
                             </Text>
 
                             <Pressable
                                 onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
                                 hitSlop={12}
-                                className="active:opacity-70"
+                                className="w-10 h-10 rounded-full items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 active:opacity-70"
                             >
-                                <Bell color={isDark ? Colors.dark.text : Colors.light.text} size={24} strokeWidth={2.5} />
+                                <Bell color={isDark ? '#E2E8F0' : '#334155'} size={20} strokeWidth={2.5} />
                             </Pressable>
                         </View>
                         <View
                             className="w-full"
                             style={{
                                 height: 1, // Using integer value instead of StyleSheet.hairlineWidth for consistency
-                                backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'
+                                backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
                             }}
                         />
                     </BlurView>
@@ -540,19 +550,6 @@ export default function HubDashboard() {
                     />
                 )}
             </CollapsibleScaffold>
-
-            {/* Bottom depth fade — suggests more content below, matches ScreenGradient end stop */}
-            <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 140 }}>
-                <LinearGradient
-                    colors={isDark
-                        ? ['transparent', 'rgba(6,14,24,0.88)']
-                        : ['transparent', 'rgba(221,227,238,0.82)']
-                    }
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={{ flex: 1 }}
-                />
-            </View>
 
             {/* Floating demo panel — outside CollapsibleScaffold */}
             <PCSDevPanel />

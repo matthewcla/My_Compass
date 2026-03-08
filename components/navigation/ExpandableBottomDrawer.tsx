@@ -2,7 +2,9 @@ import { DrawerMenuContent } from '@/components/navigation/DrawerMenuContent';
 import { useScrollContextSafe } from '@/components/navigation/ScrollControlContext';
 import { BottomSheetState, useBottomSheetStore } from '@/store/useBottomSheetStore';
 import { Ionicons } from '@expo/vector-icons';
+
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
 import { BackHandler, Keyboard, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
@@ -228,6 +230,25 @@ export default function ExpandableBottomDrawer() {
             <GestureDetector gesture={panGesture}>
                 <Animated.View style={[styles.translateContainer, animatedContainerStyle]} pointerEvents="box-none">
 
+                    {/* Progressive Gradient Footer (Fallback for MaskedView native module crash) */}
+                    <Animated.View
+                        style={[
+                            { position: 'absolute', top: -10, left: 0, right: 0, height: 250 },
+                            pillContentStyle
+                        ]}
+                        pointerEvents="none"
+                    >
+                        <LinearGradient
+                            colors={[
+                                'transparent',
+                                isDark ? 'rgba(2, 6, 23, 0.8)' : 'rgba(248, 250, 252, 0.8)',
+                                isDark ? 'rgba(2, 6, 23, 1)' : 'rgba(248, 250, 252, 1)'
+                            ]}
+                            locations={[0, 0.6, 1]}
+                            style={StyleSheet.absoluteFill}
+                        />
+                    </Animated.View>
+
                     {/* The Morphing Glass Shape */}
                     <Animated.View
                         style={[
@@ -304,19 +325,43 @@ export default function ExpandableBottomDrawer() {
                                         (tab.route === '/(admin)' && segs.includes('(admin)')) ||
                                         (tab.route === '/(hub)' && (pathname === '/' || pathname === '/(hub)' || segs.includes('(hub)')) && !segs.includes('(profile)') && !segs.includes('(calendar)') && !segs.includes('inbox') && !segs.includes('(admin)')) ||
                                         (tab.route === '/(tabs)/(profile)' && segs.includes('(profile)'));
-                                    const activeColor = isDark ? '#60A5FA' : '#0ea5e9';
+
+                                    // Neutral, high-contrast palette
                                     const inactiveColor = isDark ? '#94A3B8' : '#64748B';
-                                    const iconColor = isActive ? activeColor : inactiveColor;
+                                    const activeSolidHex = isDark ? '#FFFFFF' : '#0F172A';
+                                    const activeBgRgba = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(15, 23, 42, 0.08)';
+                                    const activeBorderRgba = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(15, 23, 42, 0.15)';
+
                                     const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
 
                                     return (
                                         <TouchableOpacity
                                             key={tab.route}
-                                            style={styles.tabItem}
+                                            style={[
+                                                styles.tabItem,
+                                                isActive && {
+                                                    flexDirection: 'row',
+                                                    flex: 1.4,
+                                                    backgroundColor: activeBgRgba,
+                                                    borderColor: activeBorderRgba,
+                                                    borderWidth: 1,
+                                                    borderRadius: 14,
+                                                    height: 44,
+                                                    marginHorizontal: 4
+                                                }
+                                            ]}
                                             onPress={() => { setSheetState(0); router.push(tab.route as any); }}
                                         >
-                                            <Ionicons name={iconName as any} size={24} color={iconColor} />
-                                            <Text style={[styles.tabLabel, { color: iconColor, fontWeight: isActive ? '800' : '600' }]}>{tab.label}</Text>
+                                            <Ionicons name={iconName as any} size={isActive ? 22 : 24} color={isActive ? activeSolidHex : inactiveColor} />
+                                            {isActive ? (
+                                                <Text style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '800', marginLeft: 6, marginTop: 0 }]}>
+                                                    {tab.label}
+                                                </Text>
+                                            ) : (
+                                                <Text style={[styles.tabLabel, { color: inactiveColor, fontWeight: '600', opacity: 0.8 }]}>
+                                                    {tab.label}
+                                                </Text>
+                                            )}
                                         </TouchableOpacity>
                                     );
                                 })}

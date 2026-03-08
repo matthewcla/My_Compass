@@ -31,6 +31,82 @@ const SPRING_CONFIG = {
     restSpeedThreshold: 2,
 };
 
+const TAB_CONFIG = [
+    { route: '/(hub)', iconUnselected: 'home-outline', iconSelected: 'home', label: 'Home' },
+    { route: '/(admin)', iconUnselected: 'briefcase-outline', iconSelected: 'briefcase', label: 'Admin' },
+    { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Calendar' },
+    { route: '/inbox', iconUnselected: 'mail-outline', iconSelected: 'mail', label: 'Inbox' },
+    { route: '/(tabs)/(profile)', iconUnselected: 'person-circle-outline', iconSelected: 'person-circle', label: 'Me' },
+] as const;
+
+const MemoizedTabItem = React.memo(({
+    tab,
+    isActive,
+    isDark,
+    onPress
+}: {
+    tab: typeof TAB_CONFIG[number];
+    isActive: boolean;
+    isDark: boolean;
+    onPress: (route: string) => void;
+}) => {
+    // Premium Naval Glass Cockpit palette
+    const inactiveColor = isDark ? '#64748B' : '#64748B'; // Deepen inactive dark mode contrast
+    const activeSolidHex = isDark ? '#FFFFFF' : '#0F172A';
+
+    // In light mode, a solid bright white background prevents shadow bleed and pops.
+    // In dark mode, we use a stronger translucent white to ensure it doesn't look dark against the blur map.
+    const activeBgRgba = isDark ? 'rgba(255, 255, 255, 0.25)' : '#FFFFFF';
+    const activeBorderRgba = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.05)';
+
+    const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
+
+    return (
+        <TouchableOpacity
+            style={[
+                {
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 54,
+                    borderRadius: 16,
+                },
+                isActive ? {
+                    flexDirection: 'row',
+                    flex: 1.8,
+                    backgroundColor: activeBgRgba,
+                    borderColor: activeBorderRgba,
+                    borderWidth: 1,
+                    borderRadius: 14,
+                    height: 44,
+                    marginHorizontal: 4,
+                    // Note: No shadow/elevation on translucent backgrounds to prevent dark bleed-through underneath
+                    ...(isDark ? {} : {
+                        shadowColor: '#000000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 4,
+                        elevation: 2
+                    })
+                } : {
+                    flex: 1
+                }
+            ]}
+            onPress={() => onPress(tab.route)}
+        >
+            <Ionicons name={iconName as any} size={isActive ? 22 : 24} color={isActive ? activeSolidHex : inactiveColor} />
+            {isActive ? (
+                <Text style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '800', marginLeft: 6, marginTop: 0 }]}>
+                    {tab.label}
+                </Text>
+            ) : (
+                <Text style={[styles.tabLabel, { color: inactiveColor, fontWeight: '600', opacity: 0.8, textAlign: 'center' }]}>
+                    {tab.label}
+                </Text>
+            )}
+        </TouchableOpacity>
+    );
+});
+
 export default function ExpandableBottomDrawer() {
     const insets = useSafeAreaInsets();
     const isDark = useColorScheme() === 'dark';
@@ -54,6 +130,11 @@ export default function ExpandableBottomDrawer() {
     const router = useRouter();
     const pathname = usePathname();
     const segments = useSegments();
+
+    const handleTabPress = React.useCallback((route: string) => {
+        setSheetState(0);
+        router.push(route as any);
+    }, [setSheetState, router]);
 
     // Tap into the global scroll control for CollapsibleScaffold background lists
     const scrollContext = useScrollContextSafe();
@@ -312,57 +393,24 @@ export default function ExpandableBottomDrawer() {
                             </View>
 
                             <View style={styles.pillIconRow}>
-                                {[
-                                    { route: '/(hub)', iconUnselected: 'home-outline', iconSelected: 'home', label: 'Home' },
-                                    { route: '/(admin)', iconUnselected: 'briefcase-outline', iconSelected: 'briefcase', label: 'Admin' },
-                                    { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Calendar' },
-                                    { route: '/inbox', iconUnselected: 'mail-outline', iconSelected: 'mail', label: 'Inbox' },
-                                    { route: '/(tabs)/(profile)', iconUnselected: 'person-circle-outline', iconSelected: 'person-circle', label: 'Me' },
-                                ].map((tab) => {
+                                {TAB_CONFIG.map((tab) => {
                                     const segs = segments as string[];
                                     const isActive =
                                         pathname === tab.route ||
                                         (tab.route === '/(admin)' && segs.includes('(admin)')) ||
                                         (tab.route === '/(hub)' && (pathname === '/' || pathname === '/(hub)' || segs.includes('(hub)')) && !segs.includes('(profile)') && !segs.includes('(calendar)') && !segs.includes('inbox') && !segs.includes('(admin)')) ||
+                                        (tab.route === '/calendar' && (pathname === '/calendar' || segs.includes('(calendar)'))) ||
+                                        (tab.route === '/inbox' && (pathname === '/inbox' || segs.includes('inbox'))) ||
                                         (tab.route === '/(tabs)/(profile)' && segs.includes('(profile)'));
 
-                                    // Neutral, high-contrast palette
-                                    const inactiveColor = isDark ? '#94A3B8' : '#64748B';
-                                    const activeSolidHex = isDark ? '#FFFFFF' : '#0F172A';
-                                    const activeBgRgba = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(15, 23, 42, 0.08)';
-                                    const activeBorderRgba = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(15, 23, 42, 0.15)';
-
-                                    const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
-
                                     return (
-                                        <TouchableOpacity
+                                        <MemoizedTabItem
                                             key={tab.route}
-                                            style={[
-                                                styles.tabItem,
-                                                isActive && {
-                                                    flexDirection: 'row',
-                                                    flex: 1.4,
-                                                    backgroundColor: activeBgRgba,
-                                                    borderColor: activeBorderRgba,
-                                                    borderWidth: 1,
-                                                    borderRadius: 14,
-                                                    height: 44,
-                                                    marginHorizontal: 4
-                                                }
-                                            ]}
-                                            onPress={() => { setSheetState(0); router.push(tab.route as any); }}
-                                        >
-                                            <Ionicons name={iconName as any} size={isActive ? 22 : 24} color={isActive ? activeSolidHex : inactiveColor} />
-                                            {isActive ? (
-                                                <Text style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '800', marginLeft: 6, marginTop: 0 }]}>
-                                                    {tab.label}
-                                                </Text>
-                                            ) : (
-                                                <Text style={[styles.tabLabel, { color: inactiveColor, fontWeight: '600', opacity: 0.8 }]}>
-                                                    {tab.label}
-                                                </Text>
-                                            )}
-                                        </TouchableOpacity>
+                                            tab={tab}
+                                            isActive={isActive}
+                                            isDark={isDark}
+                                            onPress={handleTabPress}
+                                        />
                                     );
                                 })}
                             </View>
@@ -438,11 +486,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
     },
     tabItem: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: 1,
-        height: 54,
-        borderRadius: 16,
+        // Obsolete (absorbed dynamically in component logic)
     },
     tabLabel: {
         fontSize: 10,

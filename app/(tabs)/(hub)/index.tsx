@@ -1,3 +1,10 @@
+import AdminFeedWidget from '@/components/admin/AdminFeedWidget';
+import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
+import MNAProcessWidget from '@/components/assignment/MNAProcessWidget';
+import ReadinessWidget from '@/components/assignment/ReadinessWidget';
+import SelectionChecklistWidget from '@/components/assignment/SelectionChecklistWidget';
+import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
+import SlateSummaryWidget from '@/components/assignment/SlateSummaryWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
 import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
@@ -6,6 +13,22 @@ import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
+import { PCSHeroBanner } from '@/components/pcs/PCSHeroBanner';
+import { ArrivalBriefingWidget } from '@/components/pcs/widgets/ArrivalBriefingWidget';
+import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
+import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
+import { DigitalSeaBagWidget } from '@/components/pcs/widgets/DigitalSeaBagWidget';
+import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
+import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
+import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
+import { OrdersProcessingWidget } from '@/components/pcs/widgets/OrdersProcessingWidget';
+import { PCSFinancialSnapshot } from '@/components/pcs/widgets/PCSFinancialSnapshot';
+import { PCSMissionBrief } from '@/components/pcs/widgets/PCSMissionBrief';
+import { PCSSummaryWidget } from '@/components/pcs/widgets/PCSSummaryWidget';
+import { PCSTaskTracker } from '@/components/pcs/widgets/PCSTaskTracker';
+import { TransitSegmentWidget } from '@/components/pcs/widgets/TransitSegmentWidget';
+import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
+import { TravelReceiptLoggerWidget } from '@/components/pcs/widgets/TravelReceiptLoggerWidget';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -157,7 +180,6 @@ export default function HubDashboard() {
                     </Animated.View >
                 );
             case 'transitSegmentWidget': {
-                const { TransitSegmentWidget } = require('@/components/pcs/widgets/TransitSegmentWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <TransitSegmentWidget />
@@ -165,7 +187,6 @@ export default function HubDashboard() {
                 );
             }
             case 'travelReceiptLoggerWidget': {
-                const { TravelReceiptLoggerWidget } = require('@/components/pcs/widgets/TravelReceiptLoggerWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <TravelReceiptLoggerWidget />
@@ -175,7 +196,6 @@ export default function HubDashboard() {
 
 
             case 'digitalOrdersWallet': {
-                const { DigitalOrdersWallet } = require('@/components/pcs/widgets/DigitalOrdersWallet');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <DigitalOrdersWallet />
@@ -183,7 +203,6 @@ export default function HubDashboard() {
                 );
             }
             case 'pcsFinancialSnapshot': {
-                const { PCSFinancialSnapshot } = require('@/components/pcs/widgets/PCSFinancialSnapshot');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <PCSFinancialSnapshot />
@@ -191,7 +210,6 @@ export default function HubDashboard() {
                 );
             }
             case 'gainingCommandCard': {
-                const { GainingCommandCard } = require('@/components/pcs/widgets/GainingCommandCard');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <GainingCommandCard />
@@ -199,7 +217,6 @@ export default function HubDashboard() {
                 );
             }
             case 'leaveImpact': {
-                const { LeaveImpactWidget } = require('@/components/pcs/widgets/LeaveImpactWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <LeaveImpactWidget />
@@ -207,7 +224,6 @@ export default function HubDashboard() {
                 );
             }
             case 'slateSummary': {
-                const SlateSummaryWidget = require('@/components/assignment/SlateSummaryWidget').default;
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <SlateSummaryWidget />
@@ -215,7 +231,6 @@ export default function HubDashboard() {
                 );
             }
             case 'digitalSeaBag': {
-                const { DigitalSeaBagWidget } = require('@/components/pcs/widgets/DigitalSeaBagWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <DigitalSeaBagWidget />
@@ -223,7 +238,6 @@ export default function HubDashboard() {
                 );
             }
             case 'adminFeed': {
-                const AdminFeedWidget = require('@/components/admin/AdminFeedWidget').default;
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <AdminFeedWidget />
@@ -231,7 +245,6 @@ export default function HubDashboard() {
                 );
             }
             case 'mnaProcess': {
-                const MNAProcessWidget = require('@/components/assignment/MNAProcessWidget').default;
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <MNAProcessWidget />
@@ -239,7 +252,6 @@ export default function HubDashboard() {
                 );
             }
             case 'careerReadiness': {
-                const ReadinessWidget = require('@/components/assignment/ReadinessWidget').default;
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <ReadinessWidget />
@@ -247,7 +259,6 @@ export default function HubDashboard() {
                 );
             }
             case 'detailerContact': {
-                const DetailerContactWidget = require('@/components/assignment/DetailerContactWidget').default;
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <DetailerContactWidget />
@@ -255,7 +266,6 @@ export default function HubDashboard() {
                 );
             }
             case 'selectionDetail': {
-                const SelectionDetailWidget = require('@/components/assignment/SelectionDetailWidget').default;
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <SelectionDetailWidget />
@@ -263,7 +273,6 @@ export default function HubDashboard() {
                 );
             }
             case 'selectionChecklist': {
-                const SelectionChecklistWidget = require('@/components/assignment/SelectionChecklistWidget').default;
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <SelectionChecklistWidget />
@@ -271,7 +280,6 @@ export default function HubDashboard() {
                 );
             }
             case 'pcsSummaryWidget': {
-                const { PCSSummaryWidget } = require('@/components/pcs/widgets/PCSSummaryWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <PCSSummaryWidget />
@@ -279,7 +287,6 @@ export default function HubDashboard() {
                 );
             }
             case 'ordersProcessingWidget': {
-                const { OrdersProcessingWidget } = require('@/components/pcs/widgets/OrdersProcessingWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <OrdersProcessingWidget />
@@ -287,7 +294,6 @@ export default function HubDashboard() {
                 );
             }
             case 'pcsHeroBanner': {
-                const { PCSHeroBanner } = require('@/components/pcs/PCSHeroBanner');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <PCSHeroBanner />
@@ -295,7 +301,6 @@ export default function HubDashboard() {
                 );
             }
             case 'baseWelcomeKit': {
-                const { BaseWelcomeKit } = require('@/components/pcs/widgets/BaseWelcomeKit');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <BaseWelcomeKit />
@@ -303,7 +308,6 @@ export default function HubDashboard() {
                 );
             }
             case 'arrivalBriefing': {
-                const { ArrivalBriefingWidget } = require('@/components/pcs/widgets/ArrivalBriefingWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <ArrivalBriefingWidget />
@@ -311,7 +315,6 @@ export default function HubDashboard() {
                 );
             }
             case 'travelClaimHUD': {
-                const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <TravelClaimHUDWidget />
@@ -319,7 +322,6 @@ export default function HubDashboard() {
                 );
             }
             case 'travelClaimUrgency': {
-                const { TravelClaimHUDWidget } = require('@/components/pcs/widgets/TravelClaimHUDWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <TravelClaimHUDWidget />
@@ -327,7 +329,6 @@ export default function HubDashboard() {
                 );
             }
             case 'liquidationTracker': {
-                const { LiquidationTrackerWidget } = require('@/components/pcs/widgets/LiquidationTrackerWidget');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <LiquidationTrackerWidget />
@@ -335,7 +336,6 @@ export default function HubDashboard() {
                 );
             }
             case 'pcsTaskTracker': {
-                const { PCSTaskTracker } = require('@/components/pcs/widgets/PCSTaskTracker');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <PCSTaskTracker />
@@ -343,7 +343,6 @@ export default function HubDashboard() {
                 );
             }
             case 'missionBrief': {
-                const { PCSMissionBrief } = require('@/components/pcs/widgets/PCSMissionBrief');
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <PCSMissionBrief />

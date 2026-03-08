@@ -1,9 +1,8 @@
+import { getLeaveDefaults } from '@/constants/MockLeaveDefaults';
 import { services } from '@/services/api/serviceRegistry';
 import { storage } from '@/services/storage';
 import { syncQueue } from '@/services/syncQueue';
 import { useDemoStore } from '@/store/useDemoStore';
-import { SecureLogger } from '@/utils/logger';
-import { getLeaveDefaults } from '@/constants/MockLeaveDefaults';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import {
     LeaveBalance,
@@ -14,6 +13,7 @@ import {
     Step2ContactSchema,
     Step3CommandSchema
 } from '@/types/schema';
+import { SecureLogger } from '@/utils/logger';
 import { create } from 'zustand';
 
 // =============================================================================
@@ -241,6 +241,17 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
 
             startDate = nextFriday.toISOString();
             endDate = followingMonday.toISOString();
+        } else {
+            const start = new Date(now);
+            start.setDate(now.getDate() + 1);
+            start.setHours(7, 0, 0, 0);
+
+            const end = new Date(start);
+            end.setDate(start.getDate() + 4);
+            end.setHours(16, 0, 0, 0);
+
+            startDate = start.toISOString();
+            endDate = end.toISOString();
         }
 
         const draft: LeaveRequest = {

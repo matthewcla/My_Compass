@@ -72,7 +72,9 @@ export function PCSDevPanel() {
     const fallbackTranslateY = useSharedValue(0);
     const tabBarTranslateY = scrollContext?.translateY ?? fallbackTranslateY;
     const insets = useSafeAreaInsets();
-    const BEAKER_RESTING_BOTTOM = 108; // collapsed-state `bottom` value
+    const PILL_BAR_HEIGHT = 82;
+    const PILL_BAR_BOTTOM_MARGIN = insets.bottom > 0 ? insets.bottom : 16;
+    const BEAKER_RESTING_BOTTOM = PILL_BAR_HEIGHT + PILL_BAR_BOTTOM_MARGIN + 16; // Adds a 16px gap
     const BEAKER_MIN_BOTTOM = 24 + insets.bottom; // comfortable floor above safe area
     const maxBeakerSlide = Math.max(BEAKER_RESTING_BOTTOM - BEAKER_MIN_BOTTOM, 0);
 
@@ -468,7 +470,7 @@ export function PCSDevPanel() {
                             disabled={lifecycleStep <= 0}
                             style={{
                                 position: 'absolute',
-                                bottom: 108 + 48 + 8 + 36 + 4,  // beaker bottom + beaker height + gap + chevron height + gap
+                                bottom: BEAKER_RESTING_BOTTOM + 48 + 8 + 36 + 4,  // beaker bottom + beaker height + gap + chevron height + gap
                                 right: 16 + (48 - 36) / 2,      // center within beaker column
                                 width: 36,
                                 height: 36,
@@ -490,7 +492,7 @@ export function PCSDevPanel() {
                             disabled={lifecycleStep >= LIFECYCLE_STEPS.length - 1}
                             style={{
                                 position: 'absolute',
-                                bottom: 108 + 48 + 8,            // beaker bottom + beaker height + gap
+                                bottom: BEAKER_RESTING_BOTTOM + 48 + 8,            // beaker bottom + beaker height + gap
                                 right: 16 + (48 - 36) / 2,      // center within beaker column
                                 width: 36,
                                 height: 36,
@@ -512,7 +514,7 @@ export function PCSDevPanel() {
                             activeOpacity={0.8}
                             style={{
                                 position: 'absolute',
-                                bottom: 108,
+                                bottom: BEAKER_RESTING_BOTTOM,
                                 right: 16,
                                 width: 48,
                                 height: 48,

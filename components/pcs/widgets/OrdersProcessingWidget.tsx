@@ -76,6 +76,11 @@ export function OrdersProcessingWidget() {
                             <Text className="text-[12px] font-[500] text-slate-500 dark:text-slate-400 mt-1">
                                 Orders are currently at this phase
                             </Text>
+                            <Text className="text-[11px] font-[500] text-slate-400 dark:text-slate-500 text-center mt-2 mx-8">
+                                {activeStepIndex === 1 && "Detailer review typically takes 7-14 days. No action required from you at this time."}
+                                {activeStepIndex === 2 && "Average funding approval takes 14-21 days. No action required from you at this time."}
+                                {activeStepIndex === 0 && "Your selection has been confirmed. Awaiting detailer review."}
+                            </Text>
                         </View>
 
                         <View className="flex-row items-center justify-between px-2">
@@ -114,7 +119,7 @@ export function OrdersProcessingWidget() {
                     <View className="bg-white/60 dark:bg-slate-800/60 rounded-xl px-4 py-3 border border-black/5 dark:border-white/5 shadow-sm flex-row justify-between items-center mt-2">
                         <View>
                             <Text className="text-[10px] uppercase font-[800] tracking-[0.5px] text-slate-500 dark:text-slate-400 mb-0.5">
-                                Estimated RNLT
+                                Estimated Report Date
                             </Text>
                             <Text className="text-slate-900 dark:text-slate-100 text-[15px] font-[800]">
                                 {rnltLabel}
@@ -125,6 +130,18 @@ export function OrdersProcessingWidget() {
                             className="bg-slate-100 dark:bg-slate-700/50 px-4 py-2.5 rounded-[12px] border border-slate-200 dark:border-slate-600 shadow-sm"
                         >
                             <Text className="text-[13px] font-[700] text-slate-700 dark:text-slate-300">Review</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Detailer Fallback */}
+                    <View className="items-center mt-2.5">
+                        <TouchableOpacity
+                            onPress={() => router.push('/(tabs)/(career)' as any)}
+                            hitSlop={8}
+                        >
+                            <Text className="text-[12px] font-[600] text-blue-600 dark:text-blue-400">
+                                Taking too long? Contact your Detailer
+                            </Text>
                         </TouchableOpacity>
                     </View>
 

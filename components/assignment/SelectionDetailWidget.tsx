@@ -4,7 +4,7 @@ import { useDemoStore } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Briefcase, Mail, Phone, User } from 'lucide-react-native';
+import { Briefcase, Mail, Phone, ShieldCheck, User } from 'lucide-react-native';
 import React from 'react';
 import { Linking, Text, TouchableOpacity, View } from 'react-native';
 
@@ -92,6 +92,39 @@ export default function SelectionDetailWidget() {
                             >
                                 <Mail size={14} color={isDark ? '#60A5FA' : '#2563EB'} />
                                 <Text className="text-blue-700 dark:text-blue-400 text-[13px] font-bold">Email</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* Sponsor Info */}
+                    <Text className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-5 mb-2 ml-1">
+                        Gaining Command Contact
+                    </Text>
+                    <View className="bg-white/60 dark:bg-slate-800/60 rounded-xl px-4 py-3 border border-slate-200/60 dark:border-slate-700/60 shadow-sm mb-2">
+                        <View className="flex-row items-center gap-3 mb-3">
+                            <ShieldCheck size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                            <Text className="text-slate-800 dark:text-slate-200 text-[15px] font-bold flex-1">
+                                Command Sponsor Coordinator
+                            </Text>
+                            <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                                Sponsor
+                            </Text>
+                        </View>
+
+                        <View className="flex-row gap-2">
+                            <TouchableOpacity
+                                onPress={() => Linking.openURL(`tel:5550198`)}
+                                className="flex-1 flex-row items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700/50 py-2.5 rounded-[12px] border border-slate-200 dark:border-slate-600 shadow-sm"
+                            >
+                                <Phone size={14} color={isDark ? '#94A3B8' : '#64748B'} />
+                                <Text className="text-slate-700 dark:text-slate-300 text-[13px] font-bold">Call</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => Linking.openURL(`mailto:sponsor@navy.mil`)}
+                                className="flex-1 flex-row items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700/50 py-2.5 rounded-[12px] border border-slate-200 dark:border-slate-600 shadow-sm"
+                            >
+                                <Mail size={14} color={isDark ? '#94A3B8' : '#64748B'} />
+                                <Text className="text-slate-700 dark:text-slate-300 text-[13px] font-bold">Email</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

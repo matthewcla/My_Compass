@@ -2,7 +2,6 @@ import AdminFeedWidget from '@/components/admin/AdminFeedWidget';
 import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
 import MNAProcessWidget from '@/components/assignment/MNAProcessWidget';
 import ReadinessWidget from '@/components/assignment/ReadinessWidget';
-import SelectionChecklistWidget from '@/components/assignment/SelectionChecklistWidget';
 import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
 import SlateSummaryWidget from '@/components/assignment/SlateSummaryWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
@@ -272,13 +271,6 @@ export default function HubDashboard() {
                     </Animated.View>
                 );
             }
-            case 'selectionChecklist': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <SelectionChecklistWidget />
-                    </Animated.View>
-                );
-            }
             case 'pcsSummaryWidget': {
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
@@ -431,7 +423,6 @@ export default function HubDashboard() {
             // Priority 3: Career Discovery & Selection Details (if NOT in PCS processing)
             if (assignmentPhase === 'SELECTION') {
                 feed.push('selectionDetail');
-                feed.push('selectionChecklist');
             } else if (assignmentPhase === 'ON_RAMP') {
                 feed.push('careerReadiness');
                 feed.push('discoveryStatus');

@@ -123,8 +123,8 @@ export function PCSSummaryWidget() {
                 {/* Header Area */}
                 <View className="px-5 py-4 border-b border-black/5 dark:border-white/5">
                     <View className="flex-row items-center gap-3">
-                        <View className="w-10 h-10 rounded-full items-center justify-center bg-blue-100 dark:bg-blue-900/50">
-                            <MapPin size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+                        <View className="w-10 h-10 rounded-full items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+                            <MapPin size={20} color={isDark ? '#94A3B8' : '#64748B'} />
                         </View>
                         <View className="flex-1">
                             <Text className="text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -174,7 +174,7 @@ export function PCSSummaryWidget() {
                             </View>
                             <View className="flex-row justify-between items-baseline">
                                 <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium">Est. Entitlements</Text>
-                                <Text className="text-green-700 dark:text-green-400 text-lg font-black font-mono tracking-tighter">
+                                <Text className="text-slate-900 dark:text-white text-lg font-black font-mono tracking-tighter">
                                     ${totalEntitlements.toFixed(2)}
                                 </Text>
                             </View>

@@ -46,7 +46,7 @@ import { BlurView } from 'expo-blur';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Bell } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { Alert, Image, Modal, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
@@ -482,21 +482,7 @@ export default function HubDashboard() {
                         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)' }} />
 
                         <View className="flex-row items-center justify-between px-4 pt-3 pb-3">
-                            <View className="flex-row items-center gap-2.5">
-                                <View
-                                    style={getShadow({
-                                        shadowColor: isDark ? '#000' : '#64748b',
-                                        shadowOpacity: isDark ? 0.6 : 0.2,
-                                        shadowRadius: 8,
-                                        elevation: 4
-                                    })}
-                                >
-                                    <Image
-                                        source={require('@/assets/images/app-logo.png')}
-                                        style={{ width: 40, height: 40 }}
-                                        resizeMode="contain"
-                                    />
-                                </View>
+                            <View className="flex-row items-center">
                                 <Text
                                     style={{
                                         textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.4)',

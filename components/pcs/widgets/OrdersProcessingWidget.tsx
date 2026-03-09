@@ -2,7 +2,6 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Briefcase, CheckCircle2 } from 'lucide-react-native';
 import React, { useMemo } from 'react';
@@ -47,19 +46,12 @@ export function OrdersProcessingWidget() {
                 tint={isDark ? "dark" : "light"}
                 className="rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/60 border border-black/5 dark:border-white/10 mx-4 mb-6"
             >
-                {/* Subtle Processing Glow */}
-                <LinearGradient
-                    colors={isDark ? ['rgba(245,158,11,0.08)', 'transparent'] : ['rgba(245,158,11,0.04)', 'transparent']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                />
 
                 {/* Header Area */}
                 <View className="px-5 py-5 border-b border-black/5 dark:border-white/5">
                     <View className="flex-row items-center gap-4">
-                        <View className="w-10 h-10 rounded-full bg-amber-500/10 dark:bg-amber-900/40 items-center justify-center border-[1.5px] border-amber-500/20 dark:border-amber-800/60 shadow-sm">
-                            <Briefcase size={20} color={isDark ? '#FBBF24' : '#D97706'} />
+                        <View className="w-10 h-10 rounded-full bg-slate-100/50 dark:bg-slate-800/50 items-center justify-center border-[1.5px] border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+                            <Briefcase size={20} color={isDark ? '#94A3B8' : '#64748B'} />
                         </View>
                         <View className="flex-1">
                             <Text className="text-[20px] font-[800] tracking-[-0.5px] leading-tight text-slate-900 dark:text-slate-100 mb-0.5" numberOfLines={2}>
@@ -130,9 +122,9 @@ export function OrdersProcessingWidget() {
                         </View>
                         <TouchableOpacity
                             onPress={() => router.push('/(tabs)/(assignment)' as any)}
-                            className="bg-blue-500/10 px-4 py-2.5 rounded-[12px] border border-blue-500/20 shadow-sm"
+                            className="bg-slate-100 dark:bg-slate-700/50 px-4 py-2.5 rounded-[12px] border border-slate-200 dark:border-slate-600 shadow-sm"
                         >
-                            <Text className="text-[13px] font-[700] text-blue-700 dark:text-blue-400">Review</Text>
+                            <Text className="text-[13px] font-[700] text-slate-700 dark:text-slate-300">Review</Text>
                         </TouchableOpacity>
                     </View>
 

@@ -1,12 +1,10 @@
 import AdminFeedWidget from '@/components/admin/AdminFeedWidget';
 import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
 import MNAProcessWidget from '@/components/assignment/MNAProcessWidget';
+import NegotiationWidget from '@/components/assignment/NegotiationWidget';
 import ReadinessWidget from '@/components/assignment/ReadinessWidget';
 import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
-import SlateSummaryWidget from '@/components/assignment/SlateSummaryWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
-import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
-import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
@@ -160,23 +158,14 @@ export default function HubDashboard() {
                         </View>
                     </Animated.View>
                 );
-            case 'discoveryStatus':
+            case 'negotiationWidget':
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <DiscoveryStatusCard
+                        <NegotiationWidget
                             onStartExploring={() => router.push({ pathname: '/(career)/discovery', params: { returnPath: '/(tabs)/(hub)' } } as any)}
-                            onBadgeTap={(category: DiscoveryBadgeCategory, count: number) => {
-                                if (count === 0) {
-                                    const labels: Record<DiscoveryBadgeCategory, string> = {
-                                        wow: 'WOW!', liked: 'Liked', passed: 'Passed', remaining: 'remaining'
-                                    };
-                                    Alert.alert('Nothing here yet', `You don't have any ${labels[category]} billets yet. Start exploring!`);
-                                    return;
-                                }
-                                router.push({ pathname: '/(career)/discovery', params: { filter: category, returnPath: '/(tabs)/(hub)' } } as any);
-                            }}
+                            onManageSlate={() => router.push('/(career)/cycle' as any)}
                         />
-                    </Animated.View >
+                    </Animated.View>
                 );
             case 'transitSegmentWidget': {
                 return (
@@ -223,11 +212,8 @@ export default function HubDashboard() {
                 );
             }
             case 'slateSummary': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <SlateSummaryWidget />
-                    </Animated.View>
-                );
+                // Return null since we removed this view, but keeping the case in case of legacy usage
+                return null;
             }
             case 'digitalSeaBag': {
                 return (
@@ -427,9 +413,7 @@ export default function HubDashboard() {
                 feed.push('careerReadiness');
                 feed.push('discoveryStatus');
             } else if (assignmentPhase === 'NEGOTIATION') {
-                feed.push('discoveryStatus'); // Retain Billet Discovery engine
-                feed.push('slateSummary');    // Followed immediately by the Composition Analyzer
-                // Priority 4: Peacetime Promotion ("The Garrison State")
+                feed.push('negotiationWidget'); // Consolidated Billet Explorer & Slate Summary
             }
         }
 

@@ -70,7 +70,7 @@ export function ThemeToggle() {
     });
 
     return (
-        <View style={{ marginBottom: 16 }}>
+        <View>
             <Text className="text-xs uppercase tracking-[1px] font-bold mb-2 ml-1" style={{ color: theme.text, opacity: 0.6 }}>
                 App Appearance
             </Text>

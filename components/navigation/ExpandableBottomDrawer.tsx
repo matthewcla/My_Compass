@@ -141,7 +141,7 @@ export default function ExpandableBottomDrawer() {
     const scrollCollapseY = scrollContext?.translateY;
 
     // --- Mathematical Constants for the Pill Morph Engine ---
-    const HEIGHT_COLLAPSED = 82;
+    const HEIGHT_COLLAPSED = 90;
     // Base floating margin dynamically scaled if standard insets (like Home Indicator) are present
     const COLLAPSED_BOTTOM_MARGIN = insets.bottom > 0 ? insets.bottom : 16;
     const RESTING_TOP_OFFSET_FROM_BOTTOM = HEIGHT_COLLAPSED + COLLAPSED_BOTTOM_MARGIN;
@@ -259,8 +259,8 @@ export default function ExpandableBottomDrawer() {
 
         // Floating Island Metaphor: Maintain margins and bottom inset so it never gets clipped by device bezels
         const marginH = 16;
-        const bottomRadius = 36;
-        const topRadius = 36;
+        const bottomRadius = 40;
+        const topRadius = 40;
 
         // Keep the bottom edge precisely hovering above the home indicator safe area
         const stretchDownHeight = HEIGHT_COLLAPSED - translateY.value;
@@ -366,10 +366,10 @@ export default function ExpandableBottomDrawer() {
                                 // Replicate radii internally so the stroke honors the corners
                                 useAnimatedStyle(() => {
                                     return {
-                                        borderTopLeftRadius: 36,
-                                        borderTopRightRadius: 36,
-                                        borderBottomLeftRadius: 36,
-                                        borderBottomRightRadius: 36,
+                                        borderTopLeftRadius: 40,
+                                        borderTopRightRadius: 40,
+                                        borderBottomLeftRadius: 40,
+                                        borderBottomRightRadius: 40,
                                     };
                                 })
                             ]}
@@ -387,7 +387,7 @@ export default function ExpandableBottomDrawer() {
                                         backgroundColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)',
                                         width: 36,
                                         height: 4,
-                                        marginTop: 6
+                                        marginTop: 10
                                     }
                                 ]} />
                             </View>

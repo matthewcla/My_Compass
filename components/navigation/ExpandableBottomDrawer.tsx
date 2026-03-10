@@ -138,7 +138,6 @@ export default function ExpandableBottomDrawer() {
 
     // Tap into the global scroll control for CollapsibleScaffold background lists
     const scrollContext = useScrollContextSafe();
-    const scrollCollapseY = scrollContext?.translateY;
 
     // --- Mathematical Constants for the Pill Morph Engine ---
     const HEIGHT_COLLAPSED = 90;
@@ -163,6 +162,21 @@ export default function ExpandableBottomDrawer() {
     const translateY = useSharedValue(0);
     const contextStartY = useSharedValue(0);
 
+    useEffect(() => {
+        if (isHidden) {
+            if (sheetState !== 0) {
+                setSheetState(0);
+            }
+
+            activeState.value = 0;
+            translateY.value = 0;
+            scrollContext?.resetBar();
+            return;
+        }
+
+        scrollContext?.resetBar();
+    }, [activeState, isHidden, scrollContext, setSheetState, sheetState, translateY]);
+
     // Sync global JS state -> local shared UI values
     useEffect(() => {
         if (activeState.value !== sheetState) {
@@ -175,6 +189,8 @@ export default function ExpandableBottomDrawer() {
     }, [sheetState]);
 
     const panGesture = Gesture.Pan()
+        .activeOffsetY([-10, 10])
+        .failOffsetX([-24, 24])
         .onStart(() => {
             contextStartY.value = translateY.value;
         })
@@ -280,23 +296,33 @@ export default function ExpandableBottomDrawer() {
     // Content Opacity Triggers
     const pillContentStyle = useAnimatedStyle(() => ({
         opacity: interpolate(translateY.value, [0, -40], [1, 0], Extrapolation.CLAMP),
-        pointerEvents: translateY.value < -40 ? 'none' : 'auto'
     }));
 
     const drawerContentStyle = useAnimatedStyle(() => ({
         opacity: interpolate(translateY.value, [-40, -80], [0, 1], Extrapolation.CLAMP),
-        pointerEvents: translateY.value > -40 ? 'none' : 'auto'
     }));
 
+
+    const innerBorderStyle = useAnimatedStyle(() => {
+        return {
+            borderTopLeftRadius: 40,
+            borderTopRightRadius: 40,
+            borderBottomLeftRadius: 40,
+            borderBottomRightRadius: 40,
+        };
+    });
+
+    if (isHidden) {
+        return null;
+    }
 
     return (
         <View
             style={[
                 styles.masterContainer,
                 { top: SCREEN_HEIGHT - RESTING_TOP_OFFSET_FROM_BOTTOM, height: HEIGHT_FULL },
-                isHidden ? { display: 'none' } : {}
             ]}
-            pointerEvents={isHidden ? "none" : "box-none"}
+            pointerEvents="box-none"
         >
             {/* Background Tap Dismissal overlay when Expanded */}
             {sheetState === 1 && (
@@ -309,29 +335,28 @@ export default function ExpandableBottomDrawer() {
                 />
             )}
 
-            <GestureDetector gesture={panGesture}>
-                <Animated.View style={[styles.translateContainer, animatedContainerStyle]} pointerEvents="box-none">
+            <Animated.View style={[styles.translateContainer, animatedContainerStyle]} pointerEvents="box-none">
 
-                    {/* Progressive Gradient Footer (Fallback for MaskedView native module crash) */}
-                    <Animated.View
-                        style={[
-                            { position: 'absolute', top: -10, left: 0, right: 0, height: 250 },
-                            pillContentStyle
+                {/* Progressive Gradient Footer (Fallback for MaskedView native module crash) */}
+                <Animated.View
+                    style={[
+                        { position: 'absolute', top: -10, left: 0, right: 0, height: 250 },
+                        pillContentStyle
+                    ]}
+                    pointerEvents="none"
+                >
+                    <LinearGradient
+                        colors={[
+                            'transparent',
+                            isDark ? 'rgba(2, 6, 23, 0.8)' : 'rgba(248, 250, 252, 0.8)',
+                            isDark ? 'rgba(2, 6, 23, 1)' : 'rgba(248, 250, 252, 1)'
                         ]}
-                        pointerEvents="none"
-                    >
-                        <LinearGradient
-                            colors={[
-                                'transparent',
-                                isDark ? 'rgba(2, 6, 23, 0.8)' : 'rgba(248, 250, 252, 0.8)',
-                                isDark ? 'rgba(2, 6, 23, 1)' : 'rgba(248, 250, 252, 1)'
-                            ]}
-                            locations={[0, 0.6, 1]}
-                            style={StyleSheet.absoluteFill}
-                        />
-                    </Animated.View>
+                        locations={[0, 0.6, 1]}
+                        style={StyleSheet.absoluteFill}
+                    />
+                </Animated.View>
 
-                    {/* The Morphing Glass Shape */}
+                <GestureDetector gesture={panGesture}>
                     <Animated.View
                         style={[
                             styles.glassShape,
@@ -364,20 +389,16 @@ export default function ExpandableBottomDrawer() {
                                     borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.6)',
                                 },
                                 // Replicate radii internally so the stroke honors the corners
-                                useAnimatedStyle(() => {
-                                    return {
-                                        borderTopLeftRadius: 40,
-                                        borderTopRightRadius: 40,
-                                        borderBottomLeftRadius: 40,
-                                        borderBottomRightRadius: 40,
-                                    };
-                                })
+                                innerBorderStyle
                             ]}
                         />
 
 
                         {/* --- STATE 0: THE FLOATING PILL NAV --- */}
-                        <Animated.View style={[StyleSheet.absoluteFill, styles.pillContents, pillContentStyle]}>
+                        <Animated.View
+                            style={[StyleSheet.absoluteFill, styles.pillContents, pillContentStyle]}
+                            pointerEvents={sheetState === 0 ? 'auto' : 'none'}
+                        >
 
                             {/* Visual Drag Indicator inside the Pill */}
                             <View style={styles.pillGrabberContainer}>
@@ -417,7 +438,10 @@ export default function ExpandableBottomDrawer() {
                         </Animated.View>
 
                         {/* --- STATE 1 & 2: THE EXPANDED DRAWER --- */}
-                        <Animated.View style={[StyleSheet.absoluteFill, styles.drawerContents, drawerContentStyle]}>
+                        <Animated.View
+                            style={[StyleSheet.absoluteFill, styles.drawerContents, drawerContentStyle]}
+                            pointerEvents={sheetState === 1 ? 'auto' : 'none'}
+                        >
                             <TouchableOpacity
                                 style={{ width: '100%', alignItems: 'center', paddingVertical: 10 }}
                                 onPress={() => {
@@ -441,8 +465,8 @@ export default function ExpandableBottomDrawer() {
                         </Animated.View>
 
                     </Animated.View>
-                </Animated.View>
-            </GestureDetector>
+                </GestureDetector>
+            </Animated.View>
         </View>
     );
 }

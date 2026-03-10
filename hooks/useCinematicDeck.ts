@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface UseCinematicDeckProps {
     totalSteps: number;
@@ -12,12 +12,24 @@ export function useCinematicDeck({ totalSteps, onComplete, onExit }: UseCinemati
     const [step, setStep] = useState(0);
 
     const next = useCallback(() => {
-        if (step < totalSteps - 1) {
-            setStep((prev) => prev + 1);
-        } else if (onComplete) {
-            onComplete();
+        setStep((prev) => {
+            if (totalSteps <= 0) {
+                return 0;
+            }
+
+            return Math.min(prev + 1, totalSteps);
+        });
+    }, [totalSteps]);
+
+    useEffect(() => {
+        setStep((prev) => Math.min(prev, totalSteps));
+    }, [totalSteps]);
+
+    useEffect(() => {
+        if (totalSteps > 0 && step === totalSteps) {
+            onComplete?.();
         }
-    }, [step, totalSteps, onComplete]);
+    }, [onComplete, step, totalSteps]);
 
     const back = useCallback(() => {
         if (step > 0) {
@@ -46,6 +58,6 @@ export function useCinematicDeck({ totalSteps, onComplete, onExit }: UseCinemati
         goTo,
         reset,
         isFirst: step === 0,
-        isLast: step === totalSteps - 1,
+        isLast: totalSteps > 0 && step >= totalSteps - 1,
     };
 }

@@ -15,7 +15,6 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Heart, HelpCircle, Star, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Stable no-op function for background cards to prevent re-renders
@@ -272,8 +271,7 @@ export default function DiscoveryScreen() {
     console.log('currentBillet ID:', currentBillet?.id);
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <ScreenGradient>
+        <ScreenGradient>
                 <Stack.Screen options={{ headerShown: false }} />
 
                 {/* Feedback Overlay */}
@@ -424,7 +422,6 @@ export default function DiscoveryScreen() {
                     onUpdateFilters={updateSandboxFilters}
                 />
             </ScreenGradient>
-        </GestureHandlerRootView>
     );
 }
 

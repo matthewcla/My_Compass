@@ -7,11 +7,10 @@
     "icon": "./assets/images/my-icon-1024.png",
     "scheme": "mycompass",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/app-logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A1628"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "icon": "./assets/images/my-icon-1024.png",
@@ -36,7 +35,6 @@
         "foregroundImage": "./assets/images/my-icon-1024.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA",
@@ -49,8 +47,8 @@
       "output": "static",
       "favicon": "./assets/images/my-icon-1024.png",
       "display": "standalone",
-      "backgroundColor": "#0A1628",
-      "themeColor": "#0A1628"
+      "backgroundColor": "#000000",
+      "themeColor": "#000000"
     },
     "plugins": [
       "expo-router",

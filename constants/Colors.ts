@@ -1,25 +1,25 @@
 const systemGray = '#8E8E93';
-const systemGray6Light = '#F2F2F7';
-const systemGray6Dark = '#1C1C1E';
-const systemBlueLight = '#1A4E8A';
-const systemBlueDark = '#5B8FCF';
-const navyBlue = '#0A1628';
-const navyLight = '#1E3A5F';
-const navyGold = '#C9A227';
+const systemGray6Light = '#FAFAFA';
+const systemGray6Dark = '#18181B';
+const systemBlueLight = '#006FEE';
+const systemBlueDark = '#338EF7';
+const navyBlue = '#000000';
+const navyLight = '#09090B';
+const navyGold = '#F5A524';
 
 export const Colors = {
   // Canvas gradient stops (shared with ScreenGradient)
   gradient: {
-    light: ['#EEF1F7', '#DDE3EE'] as const, // Cool blue-gray — naval, professional
-    dark: ['#0C1A2B', '#060E18'] as const,   // Navy abyss — blue-tinted, not generic slate
+    light: ['#FAFAFA', '#F4F4F5'] as const, // Crisp Light
+    dark: ['#000000', '#09090B'] as const,   // OLED Black
   },
   blue: {
-    500: '#5B8FCF', // systemBlueDark — muted professional (dark mode use)
-    600: '#1A4E8A', // systemBlueLight — federal blue (light mode use)
+    500: '#338EF7', // systemBlueDark (dark mode use)
+    600: '#006FEE', // systemBlueLight (light mode use)
   },
   green: {
-    500: '#3AAE6C', // muted forest green (dark mode use)
-    600: '#16a34a', // dark forest green (light mode use)
+    500: '#17C964', // vibrant emerald (dark mode use)
+    600: '#17C964', // vibrant emerald (light mode use)
   },
   gray: {
     400: '#9ca3af',
@@ -42,17 +42,17 @@ export const Colors = {
     labelSecondary: '#3C3C43',
     cardBackground: '#FFFFFF',
     wizardCardBackground: '#FFFFFF',
-    inputBackground: '#F8FAFC',
+    inputBackground: '#F4F4F5',
     accentText: systemBlueLight,
     surface: '#FFFFFF',
-    surfaceBorder: '#CBD5E4',  // clearer blue-tinted border on #EEF1F7 bg
+    surfaceBorder: '#E4E4E7',
     iconBubble: '#E8EDF6',
     iconBubbleLocked: '#F1F5F9',
 
     status: {
-      success: '#16a34a',
-      warning: '#d97706',
-      error: '#dc2626',
+      success: '#17C964',
+      warning: '#F5A524',
+      error: '#F31260',
     }
   },
   dark: {
@@ -70,19 +70,19 @@ export const Colors = {
     navyGold: navyGold,
     labelPrimary: '#FFFFFF',
     labelSecondary: '#EBEBF5',
-    cardBackground: '#1E293B',
-    wizardCardBackground: '#1E293B',
-    inputBackground: '#0F172A',
+    cardBackground: '#09090B',
+    wizardCardBackground: '#09090B',
+    inputBackground: '#18181B',
     accentText: '#FFFFFF',
-    surface: '#1E293B',
-    surfaceBorder: '#334155',
-    iconBubble: 'rgba(91, 143, 207, 0.18)',
-    iconBubbleLocked: '#334155',
+    surface: '#09090B',
+    surfaceBorder: '#27272A',
+    iconBubble: 'rgba(51, 142, 247, 0.18)',
+    iconBubbleLocked: '#27272A',
 
     status: {
-      success: '#3AAE6C',
-      warning: '#C8921C',
-      error: '#C84444',
+      success: '#17C964',
+      warning: '#F5A524',
+      error: '#F31260',
     }
   },
 };

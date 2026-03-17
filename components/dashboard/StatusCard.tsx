@@ -169,8 +169,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                         ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400', gradDark: ['rgba(239,68,68,0.1)', 'transparent'] as const, gradLight: ['rgba(239,68,68,0.05)', 'transparent'] as const }
                         : daysToReport <= 60
                             ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400', gradDark: ['rgba(249,115,22,0.1)', 'transparent'] as const, gradLight: ['rgba(249,115,22,0.05)', 'transparent'] as const }
-                            : { num: 'text-slate-900 dark:text-white', label: 'text-[#1A4E8A] dark:text-[#5B8FCF]', gradDark: ['rgba(26,78,138,0.1)', 'transparent'] as const, gradLight: ['rgba(26,78,138,0.05)', 'transparent'] as const }
-                    : { num: 'text-slate-900 dark:text-white', label: 'text-[#1A4E8A] dark:text-[#5B8FCF]', gradDark: ['rgba(26,78,138,0.1)', 'transparent'] as const, gradLight: ['rgba(26,78,138,0.05)', 'transparent'] as const };
+                            : { num: 'text-slate-900 dark:text-white', label: 'text-[#006FEE] dark:text-[#338EF7]', gradDark: ['rgba(51,142,247,0.1)', 'transparent'] as const, gradLight: ['rgba(0,111,238,0.05)', 'transparent'] as const }
+                    : { num: 'text-slate-900 dark:text-white', label: 'text-[#006FEE] dark:text-[#338EF7]', gradDark: ['rgba(51,142,247,0.1)', 'transparent'] as const, gradLight: ['rgba(0,111,238,0.05)', 'transparent'] as const };
 
                 return (
                     <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
@@ -184,8 +184,8 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                             <View className="px-5 py-5">
                                 <View className="flex-row items-center justify-between">
                                     <View className="flex-row items-center gap-4 flex-1">
-                                        <IconBubble bg="bg-[#E4EAF4] dark:bg-[#1A4E8A]/50" border="border-[#1A4E8A]/10 dark:border-[#5B8FCF]/30">
-                                            <Package size={26} color={isDark ? '#5B8FCF' : '#1A4E8A'} />
+                                        <IconBubble bg="bg-blue-100 dark:bg-[#338EF7]/20" border="border-[#006FEE]/10 dark:border-[#338EF7]/30">
+                                            <Package size={26} color={isDark ? '#338EF7' : '#006FEE'} />
                                         </IconBubble>
                                         <View className="flex-1">
                                             <Headline color="text-slate-900 dark:text-slate-100">Plan Your Move</Headline>
@@ -320,7 +320,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                                 <View className="flex-row items-center gap-4">
                                     <View className="w-[52px] h-[52px] rounded-full overflow-hidden items-center justify-center border-[1.5px] border-black/5 dark:border-white/10 shadow-inner">
                                         <LinearGradient colors={['#3AAE6C', '#1B6A3B']} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-                                        <Star size={26} color="#FFFFFF" fill="#FFFFFF" />
+                                        <Star size={22} color="#FFFFFF" fill="#FFFFFF" />
                                     </View>
                                     <View className="flex-1">
                                         <Headline color="text-green-900 dark:text-white">Selection Confirmed</Headline>

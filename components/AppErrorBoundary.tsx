@@ -26,7 +26,7 @@ export function AppErrorBoundary({ retry }: ErrorBoundaryProps) {
 
     return (
         <View
-            className="flex-1 bg-[#0A1628] justify-center items-center px-8"
+            className="flex-1 bg-[#000000] justify-center items-center px-8"
             style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
         >
             {/* Icon */}
@@ -57,7 +57,7 @@ export function AppErrorBoundary({ retry }: ErrorBoundaryProps) {
                 accessibilityLabel="Retry"
                 className="mt-8 bg-amber-400 rounded-2xl py-4 px-12 active:bg-amber-500"
             >
-                <Text className="text-[#0A1628] font-bold text-base tracking-wide">
+                <Text className="text-[#000000] font-bold text-base tracking-wide">
                     Retry
                 </Text>
             </Pressable>

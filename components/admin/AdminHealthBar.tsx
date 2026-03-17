@@ -2,7 +2,7 @@
 // Top status strip — three tappable buckets: Action Required / In Progress / Completed
 // Now includes "Last synced" footer and improved active state with glow effect.
 
-import { GlassView } from '@/components/ui/GlassView';
+import { DashboardCardSurface } from '@/components/ui/DashboardCardSurface';
 import { useColorScheme } from '@/components/useColorScheme';
 import { AdminStatus, useAdminStore } from '@/store/useAdminStore';
 import { getShadow } from '@/utils/getShadow';
@@ -80,17 +80,10 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
     const allClear = counts.actionRequired === 0;
 
     return (
-        <View style={getShadow({
-            shadowColor: isDark ? '#94a3b8' : '#64748b',
-            shadowOpacity: isDark ? 0.12 : 0.14,
-            shadowRadius: 12,
-            elevation: 4,
-        })}>
-            <GlassView
-                intensity={70}
-                tint={isDark ? 'dark' : 'light'}
-                className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
-            >
+        <DashboardCardSurface
+            intensity={70}
+            className="rounded-xl"
+        >
                 <View className="flex-row items-stretch p-2 gap-2">
                     {BUCKETS.map((bucket) => {
                         const isActive = activeFilter === bucket.key;
@@ -149,7 +142,6 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                         </Text>
                     </View>
                 )}
-            </GlassView>
-        </View>
+            </DashboardCardSurface>
     );
 }

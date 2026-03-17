@@ -534,7 +534,7 @@ export default function HubDashboard() {
                     setQuickLeaveDraft(null);
                 }}
             >
-                <View className="flex-1 justify-center px-4 bg-black/60 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                <View className="flex-1 justify-center px-4 bg-slate-900/20 dark:bg-black/60 shadow-[0_0_50px_rgba(0,0,0,0.3)] dark:shadow-[0_0_50px_rgba(0,0,0,0.8)]">
                     <Pressable
                         className="absolute inset-0"
                         onPress={() => {

@@ -34,12 +34,12 @@ export default function Root({ children }: { children: React.ReactNode }) {
 // Global CSS for web - prevents white flash on dark mode
 const globalCss = `
 body {
-  background-color: #EFF6FF;
+  background-color: #FAFAFA;
   margin: 0;
 }
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: #0A1628;
+    background-color: #000000;
   }
 }
 `;

@@ -1,4 +1,4 @@
-import { GlassView } from '@/components/ui/GlassView';
+import { DashboardCardSurface } from '@/components/ui/DashboardCardSurface';
 import { useColorScheme } from '@/components/useColorScheme';
 import { MAX_SLATE_SIZE, useAssignmentStore } from '@/store/useAssignmentStore';
 import { getShadow } from '@/utils/getShadow';
@@ -84,11 +84,11 @@ export default function NegotiationWidget({ onStartExploring, onManageSlate }: N
                     borderWidth: 1,
                     borderColor: isDark
                         ? 'rgba(51, 65, 85, 0.6)'
-                        : 'rgba(180, 200, 225, 0.5)',
+                        : 'rgba(228, 228, 231, 0.7)',
                     ...getShadow({
-                        shadowColor: isDark ? '#5B8FCF' : '#B8C9DF',
+                        shadowColor: isDark ? '#000000' : '#475569',
                         shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: isDark ? 0.2 : 0.15,
+                        shadowOpacity: isDark ? 0.3 : 0.08,
                         shadowRadius: 12,
                         elevation: 4,
                     }),
@@ -96,8 +96,8 @@ export default function NegotiationWidget({ onStartExploring, onManageSlate }: N
             >
                 <LinearGradient
                     colors={isDark
-                        ? ['#1e293b', '#0f172a']
-                        : ['#F0F4FB', '#E5EBF5']
+                        ? ['#09090B', '#18181B']
+                        : ['#FFFFFF', '#FAFAFA']
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
@@ -106,7 +106,7 @@ export default function NegotiationWidget({ onStartExploring, onManageSlate }: N
 
                 <View className="relative z-10 p-5">
                     <View className="w-12 h-12 rounded-full bg-blue-500/10 dark:bg-blue-900/40 items-center justify-center border-[1.5px] border-blue-500/20 dark:border-blue-500/30 mb-4 shadow-sm">
-                        <Compass size={24} color={isDark ? '#5B8FCF' : '#1A4E8A'} />
+                        <Compass size={24} color={isDark ? '#338EF7' : '#006FEE'} />
                     </View>
                     <Text className="text-[20px] font-[800] tracking-[-0.5px] mb-1 text-slate-900 dark:text-white">
                         Build Your Slate
@@ -125,21 +125,21 @@ export default function NegotiationWidget({ onStartExploring, onManageSlate }: N
                                 className="w-full py-3.5 rounded-xl flex-row items-center justify-center gap-2 shadow-sm"
                                 style={{
                                     backgroundColor: isDark
-                                        ? 'rgba(91, 143, 207, 0.15)'
-                                        : 'rgba(26, 78, 138, 0.07)',
+                                        ? 'rgba(51, 142, 247, 0.15)'
+                                        : 'rgba(0, 111, 238, 0.07)',
                                     borderWidth: 1,
                                     borderColor: isDark
-                                        ? 'rgba(91, 143, 207, 0.3)'
-                                        : 'rgba(26, 78, 138, 0.2)',
+                                        ? 'rgba(51, 142, 247, 0.3)'
+                                        : 'rgba(0, 111, 238, 0.2)',
                                 }}
                             >
                                 <Text
-                                    style={{ color: isDark ? '#5B8FCF' : '#1A4E8A' }}
+                                    style={{ color: isDark ? '#338EF7' : '#006FEE' }}
                                     className="font-bold text-base"
                                 >
                                     Start Exploring
                                 </Text>
-                                <ArrowRight size={18} color={isDark ? '#5B8FCF' : '#1A4E8A'} />
+                                <ArrowRight size={18} color={isDark ? '#338EF7' : '#006FEE'} />
                             </View>
                         </Animated.View>
                     </Pressable>
@@ -150,7 +150,7 @@ export default function NegotiationWidget({ onStartExploring, onManageSlate }: N
 
     return (
         <View>
-            <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-[24px] overflow-hidden shadow-sm border border-black/5 dark:border-white/10 mb-6 mx-4">
+            <DashboardCardSurface intensity={80} className="rounded-[24px] mb-6 mx-4">
                 <LinearGradient
                     colors={isDark ? ['rgba(99,102,241,0.15)', 'transparent'] : ['rgba(99,102,241,0.08)', 'transparent']}
                     start={{ x: 0, y: 0 }}
@@ -242,7 +242,7 @@ export default function NegotiationWidget({ onStartExploring, onManageSlate }: N
                         </View>
                     </View>
                 </View>
-            </GlassView>
+            </DashboardCardSurface>
         </View>
     );
 }

@@ -23,7 +23,7 @@ export function AliveInput({ icon, containerClassName, style, isValid, hasError,
     // Determine target border color based on state
     const getTargetBorderColor = (focused: boolean) => {
         if (hasError) return '#ef4444'; // red-500
-        if (isValid && focused) return '#22c55e'; // green-500
+        if (isValid && focused) return isDark ? '#4ade80' : '#15803d'; // green validation
         if (focused) return isDark ? '#3b82f6' : '#2563eb'; // blue focus
         if (isValid) return isDark ? '#334155' : '#e2e8f0'; // base
         return isDark ? '#334155' : '#e2e8f0';
@@ -72,7 +72,7 @@ export function AliveInput({ icon, containerClassName, style, isValid, hasError,
                 />
                 {isValid && !hasError && (
                     <Animated.View entering={ZoomIn} exiting={ZoomOut} className="ml-2">
-                        <Ionicons name="checkmark-circle" size={20} color="#22c55e" />
+                        <Ionicons name="checkmark-circle" size={20} color={isDark ? '#4ade80' : '#15803d'} />
                     </Animated.View>
                 )}
                 {hasError && (

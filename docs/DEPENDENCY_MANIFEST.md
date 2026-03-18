@@ -145,7 +145,7 @@ This document audits every production dependency for license, risk level, and AT
 
 | Package | Version | License | Risk | Notes |
 |---------|---------|---------|------|-------|
-| `@vercel/analytics` | ^1.6.1 | MIT | 🔴 **High** | **Transmits telemetry to Vercel commercial servers.** Must remove for DoD. |
+| ~~`@vercel/analytics`~~ | ~~^1.6.1~~ | ~~MIT~~ | 🟢 **Resolved** | **Removed 2026-02-27.** Was transmitting telemetry to commercial servers. |
 
 ### FlashList
 
@@ -161,7 +161,7 @@ This document audits every production dependency for license, risk level, and AT
 
 | Package | Reason | Replacement |
 |---------|--------|-------------|
-| `@vercel/analytics` | Commercial telemetry | Self-hosted analytics or remove entirely |
+| ~~`@vercel/analytics`~~ | ~~Commercial telemetry~~ | ~~Self-hosted analytics or remove entirely~~ |
 
 ### Must Replace Before ATO
 

@@ -19,7 +19,7 @@ export const Colors = {
   },
   green: {
     500: '#17C964', // vibrant emerald (dark mode use)
-    600: '#17C964', // vibrant emerald (light mode use)
+    600: '#15803d', // forest green (light mode use — 4.54:1 on white)
   },
   gray: {
     400: '#9ca3af',
@@ -50,9 +50,9 @@ export const Colors = {
     iconBubbleLocked: '#F1F5F9',
 
     status: {
-      success: '#17C964',
-      warning: '#F5A524',
-      error: '#F31260',
+      success: '#15803d', // green-700 — 4.54:1 on white
+      warning: '#B45309', // amber-700 — 4.67:1 on white
+      error: '#BE123C',   // rose-700  — 5.63:1 on white
     }
   },
   dark: {
@@ -80,9 +80,9 @@ export const Colors = {
     iconBubbleLocked: '#27272A',
 
     status: {
-      success: '#17C964',
-      warning: '#F5A524',
-      error: '#F31260',
+      success: '#4ade80', // green-400 — luminous on dark
+      warning: '#fbbf24', // amber-400 — luminous on dark
+      error: '#fb7185',   // rose-400  — luminous on dark
     }
   },
 };

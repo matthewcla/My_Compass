@@ -197,7 +197,7 @@ Before declaring "API-ready," ensure:
 - [ ] Implement audit logging (TD-008)
 - [ ] Encrypt sync queue payloads (TD-009)
 - [ ] Replace `console.log` with `SecureLogger` in all stores (TD-010)
-- [ ] Remove `@vercel/analytics` (TD-003)
+- [x] Remove `@vercel/analytics` (TD-003)
 - [ ] Add DoD consent banner
 - [ ] Add session timeout (15 min)
 - [ ] Add certificate pinning for Navy API endpoints

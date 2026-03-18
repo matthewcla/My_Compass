@@ -58,7 +58,7 @@ export const SlateSlot = memo(({
                                 {billet.location} • {billet.payGrade}
                             </Text>
                             {application?.status === 'submitted' && (
-                                <Text className="text-[10px] text-green-600 font-bold mt-1">SUBMITTED</Text>
+                                <Text className="text-[10px] text-green-700 dark:text-green-400 font-bold mt-1">SUBMITTED</Text>
                             )}
                         </View>
                     ) : (

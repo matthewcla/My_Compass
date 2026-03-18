@@ -41,11 +41,7 @@ This directory contains developer-facing documentation for the My Compass projec
 | [TOOLS_IMPLEMENTED.md](./TOOLS_IMPLEMENTED.md) | All built tools (Billet Discovery, Slating, HHG Estimator, Inbox, Calendar, etc.) |
 | [TOOLS_NOT_IMPLEMENTED.md](./TOOLS_NOT_IMPLEMENTED.md) | Planned tools (BAH Calculator, TMO Scheduler, Document Vault, LES Viewer, etc.) |
 
-### Other
 
-| Document | Description |
-|----------|-------------|
-| [verification_storage_analysis.md](./verification_storage_analysis.md) | Storage layer verification analysis (legacy) |
 
 ---
 

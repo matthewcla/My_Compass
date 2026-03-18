@@ -581,9 +581,9 @@ export default function ProfileConfirmationScreen() {
     );
 
     // ── Field update helpers ───────────────────────────────
-    const u = (field: string, value: any) => updateUser({ [field]: value } as any);
+    const u = (field: string, value: unknown) => updateUser({ [field]: value });
 
-    const updateNested = (root: string, field: string, value: any) => {
+    const updateNested = (root: string, field: string, value: unknown) => {
         const current = (user as any)?.[root] || {};
         updateUser({ [root]: { ...current, [field]: value } } as any);
     };
@@ -663,7 +663,7 @@ export default function ProfileConfirmationScreen() {
     };
 
     // ── PADD management ───────────────────────────────────
-    const updatePADD = (field: string, value: any) => {
+    const updatePADD = (field: string, value: unknown) => {
         const current = user?.padd || {};
         updateUser({ padd: { ...current, [field]: value } } as any);
     };

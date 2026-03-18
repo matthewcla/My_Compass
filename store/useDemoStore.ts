@@ -115,7 +115,7 @@ export const useDemoStore = create<DemoState>()(
           const { usePCSStore } = require('./usePCSStore');
           const pcsStore = usePCSStore.getState();
           // Don't override if user already completed it normally, but ensure it completes if not
-          const pci = pcsStore.checklist.find((c: any) => c.label === 'Profile Confirmation');
+          const pci = pcsStore.checklist.find((c: { label: string; id: string; status: string }) => c.label === 'Profile Confirmation');
           if (pci?.id && pci.status !== 'COMPLETE') {
             pcsStore.updateChecklistItemStatus(pci.id, 'COMPLETE');
           }
@@ -252,9 +252,9 @@ export const useDemoStore = create<DemoState>()(
       name: 'demo-storage',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
-      migrate: (persisted: any, version: number) => {
+      migrate: (persisted: unknown, version: number) => {
         if (version === 0 || version === undefined) {
-          const state = persisted as any;
+          const state = persisted as Record<string, unknown>;
           if (state.lifecycleStep === undefined) state.lifecycleStep = 0;
           if (state.showDevFloatingIcons === undefined) state.showDevFloatingIcons = true;
           if (state.pcsContextOverride === undefined) state.pcsContextOverride = null;

@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Linking, TouchableOpacity } from 'react-native';
 
 // Safely import Camera for Expo Go compatibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let Camera: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let useCameraDevice: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let useCodeScanner: any = null;
 
 try {
@@ -60,6 +63,7 @@ export function ScannerView({ onScan, torchOn = false }: ScannerViewProps) {
 
     const codeScanner = useCodeScanner({
         codeTypes: ['qr', 'ean-13'],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onCodeScanned: (codes: any[]) => {
             if (codes.length > 0 && codes[0].value) {
                 onScan(codes[0].value);

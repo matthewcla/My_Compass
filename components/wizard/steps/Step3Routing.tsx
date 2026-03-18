@@ -8,7 +8,7 @@ import { Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-n
 
 interface Step3RoutingProps {
     formData: Partial<CreateLeaveRequestPayload>;
-    onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    onUpdate: (field: keyof CreateLeaveRequestPayload, value: unknown) => void;
     embedded?: boolean;
 }
 

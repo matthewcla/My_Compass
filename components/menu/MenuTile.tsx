@@ -7,7 +7,7 @@ import { Text, TouchableOpacity, useColorScheme, View, ViewStyle } from 'react-n
 interface MenuTileProps {
     label: string;
     subtitle?: string;
-    icon: any; // Lucide icon component
+    icon: React.ElementType<any>; // Lucide icon component
     onPress: () => void;
     locked?: boolean;
     /** Accent color for active/important state — adds a left border accent and tinted icon bubble */

@@ -1,8 +1,10 @@
 # My Compass — Technical Debt Register (Index)
 
-> **Version:** 1.1 · **Updated:** 2026-02-27 · **Status:** Pre-Production (Offline-First, Mock Data Only)
+> **Version:** 1.1 · **Updated:** 2026-03-17 · **Status:** Prototype (Offline-First, Mock Data Only)
 
-This register has been split into frontend and backend files for clearer ownership and sprint planning.
+> ⚠️ **Development Status:** This project is currently a **prototype**. Security controls, centralized authentication, and live API integrations represent deferred production requirements, not immediately actionable technical debt.
+
+This register has been split to track both actionable frontend technical debt and deferred backend/security requirements for future API integration.
 
 ---
 
@@ -15,27 +17,38 @@ This register has been split into frontend and backend files for clearer ownersh
 
 ---
 
-## Quick Reference — All Items
+## Deferred Production Requirements (Security & Backend)
+
+Items in this category represent features deferred to the formal API integration phase.
 
 | ID | Title | Priority | Owner |
 |----|-------|----------|-------|
-| **TD-001** | Encryption Disabled | P0 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-001-encryption-disabled) |
-| **TD-002** | `crypto-js` Not FIPS-Validated | P0 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-002-crypto-js-not-fips-validated) |
-| ~~**TD-003**~~ | ~~`@vercel/analytics` Commercial Servers~~ ✅ RESOLVED 2026-02-27 | P0 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-003-vercelanalytics-sends-data-to-commercial-servers) / [Backend](TECHNICAL_DEBT_BACKEND.md#td-003-backend-component-dod-approved-analytics-endpoint) |
-| **TD-004** | Encryption Key Management Insecure | P0 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-004-encryption-key-management-insecure) |
-| **TD-005** | Service Registry Wired to Mocks Only | P1 | [Backend](TECHNICAL_DEBT_BACKEND.md#td-005-service-registry-wired-to-mocks-only) |
-| **TD-006** | No Real Authentication Flow | P1 | [Backend](TECHNICAL_DEBT_BACKEND.md#td-006-no-real-authentication-flow) |
-| **TD-007** | No Role-Based Access Control | P1 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-007-frontend-component-no-role-based-access-control--client-enforcement) + [Backend](TECHNICAL_DEBT_BACKEND.md#td-007-backend-component-no-role-based-access-control--server-enforcement) |
-| **TD-008** | No Audit Logging | P1 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-008-frontend-component-no-audit-logging--local-persistence) + [Backend](TECHNICAL_DEBT_BACKEND.md#td-008-backend-component-no-audit-logging--server-side-ingestion) |
-| **TD-009** | Sync Queue Payloads Unencrypted | P1 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-009-sync-queue-payloads-unencrypted) |
-| ~~**TD-010**~~ | ~~`console.log` Instead of SecureLogger~~ ✅ RESOLVED 2026-02-27 | P1 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-010-consolelog-used-instead-of-securelogger-in-stores) |
-| **TD-011** | `storage.ts` Monolith (1,517 Lines) | P2 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-011-storagets-monolith-1517-lines) |
-| **TD-012** | Mock Data Hardcoded in Stores | P2 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-012-mock-data-hardcoded-in-stores) |
-| **TD-013** | No Database Migration System | P2 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-013-no-database-migration-system) |
-| **TD-014** | Limited Test Coverage | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-014-limited-test-coverage) |
-| **TD-015** | No Performance Benchmarks | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-015-no-performance-benchmarks) |
-| **TD-016** | `moti` Animation Library Redundancy | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-016-moti-animation-library-redundancy) |
-| **TD-017** | No Per-Screen Error Boundaries | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-017-no-per-screen-error-boundaries) |
+| **REQ-001** | Enable and Configure Encryption | P0 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-001-encryption-disabled) |
+| **REQ-002** | FIPS-Validated Cryptography Implementation | P0 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-002-crypto-js-not-fips-validated) |
+| ~~**REQ-003**~~ | ~~`@vercel/analytics` Commercial Servers~~ ✅ RESOLVED 2026-02-27 | P0 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-003-vercelanalytics-sends-data-to-commercial-servers) / [Backend](TECHNICAL_DEBT_BACKEND.md#td-003-backend-component-dod-approved-analytics-endpoint) |
+| **REQ-004** | Hardware-Backed Key Management | P0 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-004-encryption-key-management-insecure) |
+| **REQ-005** | Service Registry Real Implementation | P1 | [Backend](TECHNICAL_DEBT_BACKEND.md#td-005-service-registry-wired-to-mocks-only) |
+| **REQ-006** | Real Authentication Flow (IdP Integration) | P1 | [Backend](TECHNICAL_DEBT_BACKEND.md#td-006-no-real-authentication-flow) |
+| **REQ-007** | Role-Based Access Control | P1 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-007-frontend-component-no-role-based-access-control--client-enforcement) + [Backend](TECHNICAL_DEBT_BACKEND.md#td-007-backend-component-no-role-based-access-control--server-enforcement) |
+| **REQ-008** | Server-Side Audit Logging | P1 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-008-frontend-component-no-audit-logging--local-persistence) + [Backend](TECHNICAL_DEBT_BACKEND.md#td-008-backend-component-no-audit-logging--server-side-ingestion) |
+| **REQ-009** | Encrypted Sync Queue Payloads | P1 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-009-sync-queue-payloads-unencrypted) |
+| ~~**REQ-010**~~ | ~~`console.log` Instead of SecureLogger~~ ✅ RESOLVED 2026-02-27 | P1 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-010-consolelog-used-instead-of-securelogger-in-stores) |
+
+---
+
+## Actionable Technical Debt (Frontend)
+
+Items in this category represent genuine technical debt in the current React Native implementation.
+
+| ID | Title | Priority | Owner |
+|----|-------|----------|-------|
+| **TD-011** | `storage.ts` Monolith Refactor (1,517 Lines) | P2 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-011-storagets-monolith-1517-lines) |
+| **TD-012** | Abstract Mock Data out of Global Stores | P2 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-012-mock-data-hardcoded-in-stores) |
+| **TD-013** | Implement Local Database Migration System | P2 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-013-no-database-migration-system) |
+| **TD-014** | Expand Unit and Integration Test Coverage | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-014-limited-test-coverage) |
+| **TD-015** | Establish Component Performance Benchmarks | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-015-no-performance-benchmarks) |
+| **TD-016** | Consolidate Animation Libraries (`moti` Redundancy) | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-016-moti-animation-library-redundancy) |
+| **TD-017** | Implement Per-Screen Error Boundaries | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-017-no-per-screen-error-boundaries) |
 
 ---
 

@@ -14,7 +14,7 @@ const formatDate = (iso: string) => {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-const EMPTY_SHIPMENTS: any[] = [];
+const EMPTY_SHIPMENTS: import('@/types/pcs').HHGShipment[] = [];
 
 interface MoveDatePlannerProps {
     originZip?: string;

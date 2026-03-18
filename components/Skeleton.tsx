@@ -9,8 +9,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 interface SkeletonProps {
-    width?: number | string;
-    height?: number | string;
+    width?: import('react-native').DimensionValue;
+    height?: import('react-native').DimensionValue;
     borderRadius?: number;
     style?: ViewStyle;
 }
@@ -39,7 +39,7 @@ export function Skeleton({
     }));
 
     // Create a style object that considers width/height props but allows override via style prop
-    const containerStyle: any = {
+    const containerStyle: import('react-native').StyleProp<import('react-native').ViewStyle> = {
         width,
         height,
         borderRadius,

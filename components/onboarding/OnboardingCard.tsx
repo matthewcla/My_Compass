@@ -19,7 +19,7 @@ const OnboardingCard = () => {
 
     const handlePress = (item: string) => {
         if (__DEV__) {
-            console.log(`Navigate to ${item}`);
+            // Navigate to item
         }
     };
 

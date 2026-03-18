@@ -126,7 +126,7 @@ export function TravelStep4Meals({
     );
 }
 
-function MealToggle({ icon, label, active, onPress }: any) {
+function MealToggle({ icon, label, active, onPress }: { icon: React.ReactElement, label: string, active: boolean, onPress: () => void }) {
     return (
         <Pressable
             onPress={onPress}
@@ -135,7 +135,7 @@ function MealToggle({ icon, label, active, onPress }: any) {
                     : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700'
                 }`}
         >
-            {React.cloneElement(icon, { color: active ? 'white' : '#94a3b8' })}
+            {React.cloneElement(icon as React.ReactElement<{ color?: string }>, { color: active ? 'white' : '#94a3b8' })}
         </Pressable>
     )
 }

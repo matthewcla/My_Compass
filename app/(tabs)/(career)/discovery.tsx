@@ -175,7 +175,7 @@ export default function DiscoveryScreen() {
 
     // 2. DECK LOGIC
     const handleDeckComplete = useCallback(() => {
-        console.log('Deck Empty');
+        // Deck Empty
     }, []);
 
     const deck = useCinematicDeck({
@@ -263,12 +263,6 @@ export default function DiscoveryScreen() {
     // Calculate Saved Count (Shortlist) for Header
     const activeDecisions = mode === 'real' ? realDecisions : sandboxDecisions;
     const savedCount = Object.values(activeDecisions).filter(d => d === 'like' || d === 'super').length;
-
-    console.log('--- DISCOVERY SCREEN RENDER ---');
-    console.log('categoryFilter:', categoryFilter);
-    console.log('activeBillets.length:', activeBillets.length);
-    console.log('deck.step:', deck.step);
-    console.log('currentBillet ID:', currentBillet?.id);
 
     return (
         <ScreenGradient>

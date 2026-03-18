@@ -321,9 +321,9 @@ export const usePCSArchiveStore = create<PCSArchiveState>()(
       name: 'pcs-archive-storage',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
-      migrate: (persisted: any, version: number) => {
+      migrate: (persisted: unknown, version: number) => {
         if (version === 0 || version === undefined) {
-          const state = persisted as any;
+          const state = persisted as Record<string, unknown>;
           if (!Array.isArray(state.historicalOrders)) state.historicalOrders = [];
         }
         return persisted;

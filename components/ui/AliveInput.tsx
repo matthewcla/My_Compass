@@ -42,12 +42,14 @@ export function AliveInput({ icon, containerClassName, style, isValid, hasError,
         };
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleFocus = (e: any) => {
         setIsFocused(true);
         scale.value = withSpring(1.02, { damping: 10, stiffness: 100 });
         props.onFocus?.(e);
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleBlur = (e: any) => {
         setIsFocused(false);
         scale.value = withSpring(1, { damping: 10, stiffness: 100 });

@@ -10,7 +10,7 @@ import Animated, { FadeIn, FadeOut, LinearTransition, ZoomIn } from 'react-nativ
 
 interface Step2ContactProps {
     formData: Partial<CreateLeaveRequestPayload>;
-    onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    onUpdate: (field: keyof CreateLeaveRequestPayload, value: unknown) => void;
     embedded?: boolean;
 }
 

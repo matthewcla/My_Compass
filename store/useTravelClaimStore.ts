@@ -62,7 +62,7 @@ const round2 = (n: number): number => Math.round(n * 100) / 100;
 /** Validation result returned by validateStep. */
 export interface StepValidationResult {
     success: boolean;
-    errors?: any;
+    errors?: unknown;
 }
 
 interface TravelClaimActions {
@@ -80,7 +80,7 @@ interface TravelClaimActions {
     /**
      * Convenience wrapper — update a single field on a draft.
      */
-    updateDraftField: (claimId: string, field: keyof TravelClaim, value: any) => Promise<void>;
+    updateDraftField: (claimId: string, field: keyof TravelClaim, value: unknown) => Promise<void>;
 
     /**
      * Discard (delete) a draft from the store and persistence.
@@ -229,7 +229,7 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
             updateDraftField: async (
                 claimId: string,
                 field: keyof TravelClaim,
-                value: any,
+                value: unknown,
             ) => {
                 await get().updateDraft(claimId, { [field]: value } as Partial<TravelClaim>);
             },
@@ -522,9 +522,9 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
             name: STORAGE_KEY,
             storage: createJSONStorage(() => AsyncStorage),
             version: 1,
-            migrate: (persisted: any, version: number) => {
+            migrate: (persisted: unknown, version: number) => {
                 if (version === 0 || version === undefined) {
-                    const state = persisted as any;
+                    const state = persisted as Record<string, unknown>;
                     if (!state.travelClaims) state.travelClaims = {};
                     if (!Array.isArray(state.userClaimIds)) state.userClaimIds = [];
                     if (state.activeDraftId === undefined) state.activeDraftId = null;

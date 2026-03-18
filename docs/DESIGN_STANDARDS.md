@@ -8,9 +8,9 @@ This document defines the design philosophy, interaction patterns, and coding co
 
 ## 1. Design Philosophy
 
-### 1.1 Glass Cockpit
+### 1.1 High-Density UI
 
-The app's layout philosophy mirrors an aircraft cockpit — **high-density, zero-scroll situational awareness**. Every screen should give the user an immediate snapshot of their operational state without requiring interaction.
+The application prioritizes **high-density, zero-scroll situational awareness**. Every screen should give the user an immediate snapshot of their operational state without requiring interaction.
 
 **Principles:**
 - Critical data is always visible above the fold
@@ -60,9 +60,9 @@ UnifiedContextualTrack
 
 **Reference:** [TIMELINE.md](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/TIMELINE.md) (full UCT spec)
 
-### 2.2 Tactical Wizard (Flow Pattern)
+### 2.2 Continuous Scrolling Form (Flow Pattern)
 
-All multi-step forms follow the **single-page continuous-scroll wizard** pattern established by the Leave Flow.
+All multi-step forms follow the **single-page continuous-scroll** pattern established by the Leave Flow.
 
 **Canonical implementation:** [request.tsx](file:///Users/matthewclark/Documents/_PERS/My_Compass/My_Compass/app/leave/request.tsx)
 
@@ -321,7 +321,7 @@ const inputRefs = useRef<Record<string, TextInput | null>>({});
 
 **Conforming components:** `MovingCostProjection`, `AdvancePayVisualizer`
 
-### 2.3 Smart Stack (Widget Pattern)
+### 2.3 Contextual Widget Pattern
 
 Widgets are small, glanceable components that can render in two modes:
 - `variant="full"` — Full detail view (standalone screen)
@@ -338,7 +338,7 @@ All widget headers must adhere to the premium HUD standard to prevent aggressive
 - **Text Wrapping:** The Title (`text-[20px]`) and Subtitle (`text-[13px]`) must use `numberOfLines={2}`. 
   - ❌ **Anti-pattern:** Never use `numberOfLines={1}` on widget headers, as this aggressively crops dynamic entity names (e.g., Command Names, Billet Titles) on smaller screens.
 
-### 2.4 Hero Status Card (Dashboard Phase Tile)
+### 2.4 Phase Status Card (Dashboard Hero Tile)
 
 The `StatusCard` is the top-of-dashboard hero tile that communicates the Sailor's current lifecycle phase at a glance. It uses a **phase-aware variant** system — each PCS phase renders a distinct card with its own accent color, icon, and contextual metric.
 

@@ -12,12 +12,18 @@ const AnimatedFlashList = (Platform.OS === 'web'
     ? FlashList
     : Animated.createAnimatedComponent(FlashList)) as React.ComponentType<any>;
 
+// PERFORMANCE FIX: Stable component references
+const ItemSeparator = () => <View style={{ height: 24 }} />;
+const ListHeader = () => <View style={{ height: 24 }} />;
+const ListFooter = () => <View style={{ height: 250 }} />;
+const SECTIONS = ['adminFeed']; // Stable primitive array
+const getItemType = (item: string) => item;
+
 export default function AdminDashboard() {
     const isDark = useColorScheme() === 'dark';
     const listRef = useRef<any>(null);
 
-    const sections = ['adminFeed'];
-
+    // PERFORMANCE FIX: Empty dependency array ensures permanent stability
     const renderItem = useCallback(({ item, index }: { item: string; index: number }) => {
         const delay = index * 60;
         switch (item) {
@@ -32,6 +38,8 @@ export default function AdminDashboard() {
         }
     }, []);
 
+    // PERFORMANCE FIX: Stable key extractor
+    const keyExtractor = useCallback((item: string) => item, []);
 
     return (
         <ScreenGradient>
@@ -53,13 +61,13 @@ export default function AdminDashboard() {
                 }) => (
                     <AnimatedFlashList
                         ref={listRef}
-                        data={sections}
+                        data={SECTIONS}
                         renderItem={renderItem}
-                        ItemSeparatorComponent={() => (
-                            <View style={{ height: 24 }} />
-                        )}
-                        ListHeaderComponent={<View style={{ height: 24 }} />}
-                        ListFooterComponent={<View style={{ height: 250 }} />}
+                        getItemType={getItemType}
+                        keyExtractor={keyExtractor}
+                        ItemSeparatorComponent={ItemSeparator}
+                        ListHeaderComponent={ListHeader}
+                        ListFooterComponent={ListFooter}
                         estimatedItemSize={250}
                         style={{ flex: 1 }}
                         showsVerticalScrollIndicator={false}

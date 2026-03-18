@@ -39,6 +39,12 @@ const formatDTG = (dateString: string) => {
     }
 };
 
+const ListEmpty = () => (
+    <View className="p-8 items-center">
+        <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>
+    </View>
+);
+
 export default function InboxScreen() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -254,11 +260,7 @@ export default function InboxScreen() {
                         onLayout={onLayout}
                         onContentSizeChange={onContentSizeChange}
                         scrollEnabled={scrollEnabled}
-                        ListEmptyComponent={
-                            <View className="p-8 items-center">
-                                <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>
-                            </View>
-                        }
+                        ListEmptyComponent={ListEmpty}
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
                         onScrollEndDrag={onScrollEndDrag}

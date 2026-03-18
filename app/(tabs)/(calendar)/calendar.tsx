@@ -12,11 +12,13 @@ import * as Haptics from 'expo-haptics';
 import { Stack, useFocusEffect } from 'expo-router';
 import { Clock, MapPin, QrCode } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, SectionList, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, SectionList, SectionListProps, Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
+const AnimatedSectionList = Animated.createAnimatedComponent(SectionList) as unknown as React.ComponentClass<
+    SectionListProps<CareerEvent, { title: string; data: CareerEvent[] }>
+>;
 
 // =============================================================================
 // HELPER COMPONENTS
@@ -100,6 +102,18 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
 // MAIN SCREEN
 // =============================================================================
 
+// PERFORMANCE FIX: Stable List components
+const ListHeader = () => <View style={{ height: 8 }} />;
+
+// PERFORMANCE FIX: Extract renderSectionHeader to prevent inline reallocation
+const renderSectionHeader = ({ section: { title } }: { section: { title: string } | any }) => (
+    <View className="bg-slate-50/95 dark:bg-black/95 px-5 py-2 z-10">
+        <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+            {title}
+        </Text>
+    </View>
+);
+
 export default function CalendarScreen() {
     const { groupedEvents, loading, refresh } = useCareerEvents();
     const insets = useSafeAreaInsets();
@@ -135,7 +149,6 @@ export default function CalendarScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         // 3. Mock Validation Logic (In real app, parse JSON: { eventId, token })
-        console.log('[Calendar] Scanned Code:', data);
 
         // Show Success
         if (data) {
@@ -143,6 +156,14 @@ export default function CalendarScreen() {
             // TODO: Update local attendance status in useCareerEvents store
         }
     };
+
+    // PERFORMANCE FIX: Stable keyExtractor and renderItem
+    const keyExtractor = useCallback((item: CareerEvent) => item.eventId, []);
+    const renderItem = useCallback(({ item }: { item: CareerEvent }) => (
+        <View className="px-5">
+            <EventCard event={item} />
+        </View>
+    ), []);
 
     return (
         <>
@@ -180,21 +201,11 @@ export default function CalendarScreen() {
                                 sections={groupedEvents}
                                 initialNumToRender={10}
                                 windowSize={5}
-                                keyExtractor={(item: any) => item.eventId}
-                                renderItem={({ item }: { item: any }) => (
-                                    <View className="px-5">
-                                        <EventCard event={item} />
-                                    </View>
-                                )}
-                                renderSectionHeader={({ section: { title } }: { section: { title: string } | any }) => (
-                                    <View className="bg-slate-50/95 dark:bg-black/95 px-5 py-2 z-10">
-                                        <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                                            {title}
-                                        </Text>
-                                    </View>
-                                )}
+                                keyExtractor={keyExtractor}
+                                renderItem={renderItem}
+                                renderSectionHeader={renderSectionHeader}
                                 contentContainerStyle={contentContainerStyle}
-                                ListHeaderComponent={<View style={{ height: 8 }} />}
+                                ListHeaderComponent={ListHeader}
                                 stickySectionHeadersEnabled={true}
                                 refreshing={loading}
                                 onRefresh={refresh}

@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-const SEGMENTS: { label: string; mode: ThemeMode; icon: any }[] = [
+const SEGMENTS: { label: string; mode: ThemeMode; icon: React.ElementType<any> }[] = [
     { label: 'Day', mode: 'light', icon: Sun },
     { label: 'System', mode: 'system', icon: Monitor },
     { label: 'Tactical', mode: 'dark', icon: Moon },

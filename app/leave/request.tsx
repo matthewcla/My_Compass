@@ -124,7 +124,6 @@ export default function LeaveRequestScreen() {
 
         if (drafts.length > 0 && !currentDraftId) {
             const draft = drafts[0];
-            console.log("Auto-Resuming Draft:", draft.id);
             setCurrentDraftId(draft.id);
             setFormData({
                 leaveType: draft.leaveType,
@@ -174,7 +173,6 @@ export default function LeaveRequestScreen() {
     // Smart Defaults: Pre-fill on Mount if New Request
     React.useEffect(() => {
         if (!draftId && !currentDraftId && userDefaults) {
-            console.log('Applying Smart Defaults from History');
             setFormData(prev => ({
                 ...prev,
                 leaveAddress: userDefaults.leaveAddress,
@@ -196,17 +194,15 @@ export default function LeaveRequestScreen() {
         const timer = setTimeout(async () => {
             if (currentDraftId) {
                 // Update Existing
-                console.log('Auto-Saving Draft:', currentDraftId);
                 // We need to match the LeaveRequest shape somewhat or just patch known fields
                 // The store updateDraft takes Partial<LeaveRequest>.
                 // Mapping formData (CreatePayload) to LeaveRequest partial:
-                const patch: any = { ...formData };
+                const patch: Record<string, unknown> = { ...formData };
                 await updateDraft(currentDraftId, patch);
             } else {
                 // Create New Draft if we have minimal viable data
                 // Only create if user has actually interacted (e.g. selected a date)
                 if (formData.startDate && userId) {
-                    console.log('Creating New Auto-Draft');
                     // Use authenticated user ID
                     const newDraft = generateQuickDraft('standard', userId);
                     // Override defaults with current form data
@@ -236,7 +232,6 @@ export default function LeaveRequestScreen() {
 
         // Only update if different
         if (formData.startTime !== dep.end || formData.endTime !== ret.start) {
-            console.log('Enforcing Leave Times:', dep.end, ret.start);
             setFormData(prev => ({
                 ...prev,
                 startTime: dep.end, // Departure at End of Shift
@@ -279,13 +274,9 @@ export default function LeaveRequestScreen() {
         });
     }, [availableDays, leaveBalance?.maxCarryOver, formData.startDate, formData.endDate, chargeableDays, formData.leaveType, leaveRequests, currentDraftId]);
 
-    console.log('[LeaveRequest] Render Balance:', leaveBalance);
-    console.log('[LeaveRequest] Available Days:', availableDays);
-    console.log('[LeaveRequest] Is Hydrated:', isHydrated);
-
     // --- Helpers ---
 
-    const updateField = (field: keyof CreateLeaveRequestPayload, value: any) => {
+    const updateField = (field: keyof CreateLeaveRequestPayload, value: unknown) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
@@ -357,7 +348,6 @@ export default function LeaveRequestScreen() {
 
             // Cleanup: Remove the draft so it doesn't persist as a zombie
             if (currentDraftId) {
-                console.log('Cleaning up draft:', currentDraftId);
                 await discardDraft(currentDraftId);
             }
 

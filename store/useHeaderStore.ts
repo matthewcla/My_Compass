@@ -37,8 +37,8 @@ let globalSearchDismissHandler: (() => void) | null = null;
 interface HeaderState {
     title: string;
     subtitle: string | React.ReactNode;
-    leftAction?: { icon: any; onPress: () => void } | null;
-    rightAction?: { icon: any; onPress: () => void } | null;
+    leftAction?: { icon: React.ElementType<any>; onPress: () => void } | null;
+    rightAction?: { icon: React.ElementType<any>; onPress: () => void } | null;
     searchConfig?: SearchConfig | null;
     globalSearchBottomY: number | null;
     globalSearchFrame: GlobalSearchFrame | null;
@@ -47,10 +47,10 @@ interface HeaderState {
     setHeader: (
         title: string,
         subtitle: string | React.ReactNode,
-        rightAction?: { icon: any; onPress: () => void } | null,
+        rightAction?: { icon: React.ElementType<any>; onPress: () => void } | null,
         variant?: 'large' | 'inline',
         searchConfig?: SearchConfig | null,
-        leftAction?: { icon: any; onPress: () => void } | null
+        leftAction?: { icon: React.ElementType<any>; onPress: () => void } | null
     ) => void;
     setSearchConfig: (config: SearchConfig | null) => void;
     setGlobalSearchBottomY: (value: number | null) => void;

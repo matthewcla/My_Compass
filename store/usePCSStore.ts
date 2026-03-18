@@ -205,7 +205,7 @@ interface PCSState {
 
   // Caching
   cachedOrders: CachedPDF | null;
-  cacheOrders: (url: string) => Promise<{ success: boolean; cached?: CachedPDF; error?: any }>;
+  cacheOrders: (url: string) => Promise<{ success: boolean; cached?: CachedPDF; error?: unknown }>;
   initializeOrdersCache: () => Promise<void>;
 }
 
@@ -740,7 +740,7 @@ export const usePCSStore = create<PCSState>()(
           departureLocation: firstSeg?.location.name || '',
           destinationLocation: activeOrder.gainingCommand.name,
           isOconus: activeOrder.isOconus,
-          travelMode: (firstSeg?.userPlan.mode?.toLowerCase() as any) || 'pov',
+          travelMode: (firstSeg?.userPlan.mode?.toLowerCase() as 'pov' | 'commercial_air' | 'gov_vehicle' | 'mixed' | 'rail') || 'pov',
 
           // Entitlements — pre-filled from Phase 2 financial review
           maltAmount: financials.totalMalt || 0,
@@ -1141,9 +1141,10 @@ export const usePCSStore = create<PCSState>()(
       name: 'pcs-storage',
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
-      migrate: (persisted: any, version: number) => {
+      migrate: (persisted: unknown, version: number) => {
         if (version === 0 || version === undefined) {
           // Backfill fields that may not exist in older persisted state
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const state = persisted as any;
           if (!state.financials) state.financials = {};
           const f = state.financials;
@@ -1184,7 +1185,7 @@ export const usePCSRoute = (): PCSRoute | null => {
 
   // Check if user has pcsRoute data (from demo personas)
   if (user && 'pcsRoute' in user) {
-    return (user as any).pcsRoute || null;
+    return (user as Record<string, unknown>).pcsRoute as PCSRoute || null;
   }
 
   return null;

@@ -54,8 +54,72 @@ const AnimatedFlashList = (Platform.OS === 'web'
 
 // P2 FIX #8/#9: Stable component references prevent FlashList re-render thrashing
 const ItemSeparator = () => <View style={{ height: 24 }} />;
-const ListHeader = <View style={{ height: 24 }} />;
-const ListFooter = <View style={{ height: 250 }} />;
+const ListHeader = () => <View style={{ height: 24 }} />;
+const ListFooter = () => <View style={{ height: 250 }} />;
+const getItemType = (item: string) => item;
+
+const HubMissionStatusItem = React.memo(() => {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+    const { data } = useDashboardData();
+    const isDemoMode = useDemoStore(state => state.isDemoMode);
+    const demoTimeline = useDemoStore(state => state.demoTimelineOverride);
+    
+    return (
+        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1">
+            <StatusCard
+                nextCycle={data?.cycle?.cycleId ?? '24-02'}
+                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
+            />
+        </View>
+    );
+});
+
+const HubLeaveItem = React.memo(({ 
+    listRef, 
+    onQuickRequest 
+}: { 
+    listRef: React.RefObject<any>, 
+    onQuickRequest: () => void 
+}) => {
+    const router = useRouter();
+    const { data } = useDashboardData();
+    const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
+    const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
+    const leaveBalance = useLeaveStore(state => state.leaveBalance);
+
+    const leaveRequests = React.useMemo(() => {
+        return userLeaveRequestIds
+            .map(id => leaveRequestsMap[id])
+            .filter(Boolean)
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    }, [userLeaveRequestIds, leaveRequestsMap]);
+
+    return (
+        <LeaveCard
+            balance={data?.leave?.currentBalance ?? 0}
+            leaveBalance={leaveBalance}
+            requests={leaveRequests}
+            allRequests={leaveRequests}
+            onPressRequest={(req) => {
+                if (req.status === 'draft') {
+                    router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
+                } else {
+                    router.push(`/leave/${req.id}` as any);
+                }
+            }}
+            onQuickRequest={onQuickRequest}
+            onFullRequest={() => router.push('/leave/request' as any)}
+            onExpand={(expanded) => {
+                if (expanded) {
+                    setTimeout(() => {
+                        listRef.current?.scrollToEnd({ animated: true });
+                    }, 300);
+                }
+            }}
+        />
+    );
+});
 
 type FilterTab = 'Hub' | 'My Career' | 'My Admin';
 
@@ -71,20 +135,19 @@ export default function HubDashboard() {
 
     const listRef = React.useRef<any>(null);
 
-    const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
-    const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
-    const leaveBalance = useLeaveStore(state => state.leaveBalance);
-
     // Quick Leave State
     const [showQuickLeave, setShowQuickLeave] = React.useState(false);
     const [quickLeaveDraft, setQuickLeaveDraft] = React.useState<any>(null);
 
-    const leaveRequests = React.useMemo(() => {
-        return userLeaveRequestIds
-            .map(id => leaveRequestsMap[id])
-            .filter(Boolean)
-            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    }, [userLeaveRequestIds, leaveRequestsMap]);
+    const handleQuickRequest = useCallback(() => {
+        if (user?.id) {
+            const draft = generateQuickDraft('standard', user.id);
+            setQuickLeaveDraft(draft);
+            setShowQuickLeave(true);
+        } else {
+            Alert.alert('Error', 'User not found. Cannot create quick leave.');
+        }
+    }, [user?.id, generateQuickDraft]);
 
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -142,20 +205,14 @@ export default function HubDashboard() {
     // QW1: Wrapped in useCallback to prevent FlashList re-creating the callback on every render
     // QW2: Each widget section gets a FadeInUp stagger for polished entrance
     // IMPORTANT: Must be above early returns to satisfy Rules of Hooks
-    const renderItem = useCallback(({ item, index }: { item: any; index: number }) => {
-        const isPCSPhase = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
+    const renderItem = useCallback(({ item, index }: { item: string; index: number }) => {
         const delay = index * 60;
 
         switch (item) {
             case 'missionStatus':
                 return (
                     <Animated.View entering={FadeInUp.duration(350).springify()}>
-                        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1">
-                            <StatusCard
-                                nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
-                            />
-                        </View>
+                        <HubMissionStatusItem />
                     </Animated.View>
                 );
             case 'negotiationWidget':
@@ -336,43 +393,13 @@ export default function HubDashboard() {
             case 'leave':
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <LeaveCard
-                            balance={data?.leave?.currentBalance ?? 0}
-                            leaveBalance={leaveBalance}
-                            requests={leaveRequests}
-                            allRequests={leaveRequests}
-                            onPressRequest={(req) => {
-                                if (req.status === 'draft') {
-                                    router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
-                                } else {
-                                    router.push(`/leave/${req.id}` as any);
-                                }
-                            }}
-                            onQuickRequest={() => {
-                                if (user?.id) {
-                                    const draft = generateQuickDraft('standard', user.id);
-                                    setQuickLeaveDraft(draft);
-                                    setShowQuickLeave(true);
-                                } else {
-                                    Alert.alert('Error', 'User not found. Cannot create quick leave.');
-                                }
-                            }}
-                            onFullRequest={() => router.push('/leave/request' as any)}
-                            onExpand={(expanded) => {
-                                if (expanded) {
-                                    setTimeout(() => {
-                                        listRef.current?.scrollToEnd({ animated: true });
-                                    }, 300);
-                                }
-                            }}
-                        />
+                        <HubLeaveItem listRef={listRef} onQuickRequest={handleQuickRequest} />
                     </Animated.View>
                 );
             default:
                 return null;
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDemoMode, selectedPhase, assignmentPhase, obliserv, pcsPhase, subPhase, data, leaveRequests, leaveBalance, activeUCTPhase]);
+    }, [router, handleQuickRequest]);
 
     const sections = React.useMemo(() => {
         const feed: string[] = [];
@@ -504,7 +531,7 @@ export default function HubDashboard() {
                         ref={listRef}
                         data={sections}
                         renderItem={renderItem}
-                        getItemType={(item: string) => item}
+                        getItemType={getItemType}
                         ItemSeparatorComponent={ItemSeparator}
                         ListHeaderComponent={ListHeader}
                         ListFooterComponent={ListFooter}

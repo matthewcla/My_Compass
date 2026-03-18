@@ -153,7 +153,6 @@ export default function CalendarScreen() {
         // Show Success
         if (data) {
             Alert.alert("Check-in Complete", "You have successfully mustered for this event.");
-            // TODO: Update local attendance status in useCareerEvents store
         }
     };
 

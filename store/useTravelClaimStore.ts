@@ -491,7 +491,7 @@ export const useTravelClaimStore = create<TravelClaimStore>()(
                     tleAmount: 0,
                     perDiemDays: [],
 
-                    // Expenses - TODO: Link to Phase 3 scanned receipts from ReceiptScannerWidget
+                    // Expenses
                     expenses: [],
 
                     // Totals

@@ -176,6 +176,29 @@ Migrations exist but are ad-hoc SQL strings. No version tracking or rollback cap
 
 ---
 
+### TD-018: Implement Frame Processor for Receipt OCR
+
+**Files:** [utils/receiptOCR.ts](../utils/receiptOCR.ts)
+
+Vision Camera Frame Processor logic is currently stubbed out.
+
+**Frontend Remediation:**
+- Implement `react-native-vision-camera` frame processors to parse text from receipt images.
+- Map extracted text to `amount`, `merchant`, and `date` fields.
+
+---
+
+### TD-019: Link Scanned Receipts in Travel Claim Store
+
+**Files:** [store/useTravelClaimStore.ts](../store/useTravelClaimStore.ts)
+
+The expense data structure relies on a placeholder rather than linking to actual persisted receipts.
+
+**Frontend Remediation:**
+- Connect the `ReceiptScannerWidget` from Phase 3 directly to the Travel Claim expenses array.
+
+---
+
 ## P3 — Nice to Have
 
 ### TD-014: Limited Test Coverage
@@ -222,3 +245,25 @@ Per-screen boundaries would allow graceful degradation: a broken PCS wizard step
 - Export route-level `ErrorBoundary` from high-risk flow layouts: `app/leave/_layout.tsx`, `app/pcs-wizard/_layout.tsx`, `app/travel-claim/_layout.tsx`
 - Add inline widget-level boundaries for Hub dashboard widgets
 - Each boundary must follow the same SI-11 rule: no raw error content shown to user, include a support reference code
+
+---
+
+### TD-020: Hydrate Leave Balance from User Store
+
+**Files:** [components/pcs/widgets/LeaveImpactWidget.tsx](../components/pcs/widgets/LeaveImpactWidget.tsx)
+
+The `LeaveImpactWidget` displays a static mock leave balance.
+
+**Frontend Remediation:**
+- Pull actual leave balance directly from the `useUserStore`.
+
+---
+
+### TD-021: Sync Local Attendance in Career Events Store
+
+**Files:** [app/(tabs)/(calendar)/calendar.tsx](../app/(tabs)/(calendar)/calendar.tsx)
+
+Local attendance status toggles are not persisting their state locally.
+
+**Frontend Remediation:**
+- Update local attendance status within the `useCareerEvents` store upon toggle.

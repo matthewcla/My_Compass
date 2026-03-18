@@ -49,6 +49,10 @@ Items in this category represent genuine technical debt in the current React Nat
 | **TD-015** | Establish Component Performance Benchmarks | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-015-no-performance-benchmarks) |
 | **TD-016** | Consolidate Animation Libraries (`moti` Redundancy) | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-016-moti-animation-library-redundancy) |
 | **TD-017** | Implement Per-Screen Error Boundaries | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-017-no-per-screen-error-boundaries) |
+| **TD-018** | Implement Frame Processor for Receipt OCR | P2 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-018-implement-frame-processor-for-receipt-ocr) |
+| **TD-019** | Link Scanned Receipts in Travel Claim Store | P2 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-019-link-scanned-receipts-in-travel-claim-store) |
+| **TD-020** | Hydrate Leave Balance from User Store | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-020-hydrate-leave-balance-from-user-store) |
+| **TD-021** | Sync Local Attendance in Career Events Store | P3 | [Frontend](TECHNICAL_DEBT_FRONTEND.md#td-021-sync-local-attendance-in-career-events-store) |
 
 ---
 

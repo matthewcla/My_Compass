@@ -365,6 +365,7 @@ Reference implementation: `app/leave/request.tsx`
 - Theme colors defined as CSS variables in `global.css`, extended in `tailwind.config.js`
 - Custom shadows: `apple-sm`, `apple-md`, `apple-lg`
 - Haptic feedback on interactive elements via `expo-haptics` with `Platform.OS !== 'web'` guard
+- **Android rendering caution:** `expo-blur` (`BlurView`) renders differently on Android vs iOS. Android does not support `backdrop-filter` natively — verify blur intensity values on both platforms. Custom shadows (`apple-sm/md/lg`) may require `elevation` fallbacks on Android.
 
 ---
 
@@ -432,6 +433,8 @@ docs/                   # Developer documentation (see Section 6)
 | `npm run android` | Launch Android emulator |
 | `npm run web` | Launch web dev server |
 | `npm run build` | Export web static build |
+| `npx expo prebuild --platform android --clean` | Regenerate Android native project from `app.json` |
+| `eas build --platform android --profile development` | Build Android dev client via EAS |
 | `npx jest` | Run tests |
 | `npx tsc --noEmit` | Type-check without emitting |
 
@@ -447,5 +450,7 @@ docs/                   # Developer documentation (see Section 6)
 ## 10. Deployment
 
 - **Web:** Vercel — builds via `expo export --platform web`, outputs to `dist/`
-- **Mobile:** Expo managed workflow
+- **iOS:** EAS Build — profiles in `eas.json` (development, preview, production). Signing managed via Apple Developer account.
+- **Android:** EAS Build — profiles in `eas.json`. Current signing uses debug keystore. Production requires a dedicated release keystore before Play Store submission.
 - **Deep linking:** `mycompass://` scheme configured in `app.json`
+- **Version sync:** `app.json` `version` is the source of truth. Android `versionCode`/`versionName` in `android/app/build.gradle` and iOS `buildNumber` must stay in sync. Run `npx expo prebuild` after version bumps to propagate.

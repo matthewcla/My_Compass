@@ -7,7 +7,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
-import { BackHandler, Keyboard, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
+import { BackHandler, Keyboard, Platform, Pressable, StyleSheet, Text, TouchableOpacity, useColorScheme, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     Extrapolation,
@@ -369,11 +369,16 @@ export default function ExpandableBottomDrawer() {
                     >
                         <BlurView
                             tint={isDark ? 'dark' : 'light'}
-                            intensity={isDark ? 80 : 80}
+                            intensity={Platform.OS === 'android'
+                                ? (isDark ? 30 : 35)
+                                : (isDark ? 80 : 80)
+                            }
                             style={[
                                 StyleSheet.absoluteFill,
                                 {
-                                    backgroundColor: isDark ? 'rgba(15, 23, 42, 0.45)' : 'rgba(255, 255, 255, 0.5)'
+                                    backgroundColor: isDark
+                                        ? (Platform.OS === 'android' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(15, 23, 42, 0.45)')
+                                        : (Platform.OS === 'android' ? 'rgba(255, 255, 255, 0.82)' : 'rgba(255, 255, 255, 0.5)')
                                 }
                             ]}
                         />

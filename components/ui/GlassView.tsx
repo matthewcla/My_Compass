@@ -34,15 +34,27 @@ export function GlassView({
         );
     }
 
-    // Native (iOS + Android): real blur via expo-blur
-    // iOS: native UIVisualEffectView gaussian blur
-    // Android: translucent dimmed surface (expo-blur fallback)
+    // Android: BlurView renders at ~2x perceived intensity vs iOS, and on
+    // SDK < 31 it falls back to a dim translucent surface. Scale intensity
+    // down and layer a semi-transparent background to ensure consistent
+    // Glass Cockpit aesthetic across platforms.
+    const isAndroid = Platform.OS === 'android';
+    const adjustedIntensity = isAndroid
+        ? Math.min(Math.round(intensity * 0.5), 60)
+        : Math.min(intensity, 100);
+
     return (
         <BlurView
-            intensity={Math.min(intensity, 100)}
+            intensity={adjustedIntensity}
             tint={tint}
             className={className}
-            style={[{ overflow: 'hidden' }, style]}
+            style={[
+                { overflow: 'hidden' },
+                // Android fallback: layer a subtle background so the surface
+                // is never fully transparent even when BlurView degrades
+                isAndroid && { backgroundColor: fallbackBg },
+                style,
+            ]}
             {...props}
         >
             {children}

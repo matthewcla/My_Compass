@@ -1,4 +1,5 @@
 import { GlassView } from '@/components/ui/GlassView';
+import { SwipeToDismiss } from '@/components/ui/SwipeToDismiss';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAssignmentStore } from '@/store/useAssignmentStore';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
@@ -7,8 +8,8 @@ import { useUserDependents } from '@/store/useUserStore';
 import { AssignmentPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Anchor, Calendar, FileCheck, Package, Plane, Star, Timer, Users, X } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
+import { Anchor, Calendar, FileCheck, Package, Plane, Star, Timer, Users } from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 interface StatusCardProps {
@@ -57,7 +58,7 @@ function deriveVariant(
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
-    const [isDismissed, setIsDismissed] = useState(false);
+    const [dismissedVariants, setDismissedVariants] = useState<Set<StatusVariant>>(new Set());
 
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -118,7 +119,11 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
         return Math.max(0, Math.ceil((close.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
     }, [negotiationDetails?.windowCloseDate]);
 
-    if (isDismissed) return null;
+    const handleDismiss = useCallback(() => {
+        setDismissedVariants(prev => new Set(prev).add(variant));
+    }, [variant]);
+
+    if (dismissedVariants.has(variant)) return null;
 
     const renderCard = () => {
         switch (variant) {
@@ -439,16 +444,9 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
     };
 
     return (
-        <View className="relative">
+        <SwipeToDismiss onDismiss={handleDismiss}>
             {renderCard()}
-            <TouchableOpacity
-                onPress={() => setIsDismissed(true)}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                className="absolute top-4 right-5 z-10 w-7 h-7 items-center justify-center rounded-full bg-black/5 dark:bg-white/10"
-            >
-                <X size={14} color={isDark ? '#9CA3AF' : '#6B7280'} strokeWidth={2.5} />
-            </TouchableOpacity>
-        </View>
+        </SwipeToDismiss>
     );
 }
 

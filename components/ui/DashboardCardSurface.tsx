@@ -44,7 +44,7 @@ export function DashboardCardSurface({
             {...props}
         >
             <View 
-                className="overflow-hidden bg-white border border-slate-200/60" 
+                className="overflow-hidden bg-white border border-slate-200/80" 
                 style={{ borderRadius: (style as any)?.borderRadius ?? 24 }}
             >
                 {children}

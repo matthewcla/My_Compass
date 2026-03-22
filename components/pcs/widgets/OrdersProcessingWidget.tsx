@@ -2,6 +2,7 @@ import { GlassView } from '@/components/ui/GlassView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useDemoStore } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Briefcase, CheckCircle2 } from 'lucide-react-native';
 import React, { useMemo } from 'react';
@@ -46,6 +47,12 @@ export function OrdersProcessingWidget() {
                 tint={isDark ? "dark" : "light"}
                 className="rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-none bg-white/70 dark:bg-slate-900/60 border border-black/5 dark:border-white/10 mx-4 mb-6"
             >
+                <LinearGradient
+                    colors={isDark ? ['rgba(245,158,11,0.12)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                />
 
                 {/* Header Area */}
                 <View className="px-5 py-5 border-b border-black/5 dark:border-white/5">

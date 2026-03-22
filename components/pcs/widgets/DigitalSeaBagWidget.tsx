@@ -16,7 +16,7 @@ export function DigitalSeaBagWidget() {
         >
             <GlassView intensity={80} tint={isDark ? 'dark' : 'light'} className="rounded-2xl overflow-hidden shadow-sm border border-black/5 dark:border-white/10">
                 <LinearGradient
-                    colors={isDark ? ['#0F2027', '#203A43', '#2C5364'] : ['rgba(56,189,248,0.15)', 'rgba(56,189,248,0.02)']}
+                    colors={isDark ? ['#0F2027', '#203A43', '#2C5364'] : ['rgba(56,189,248,0.15)', 'rgba(56,189,248,0.06)']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}

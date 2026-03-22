@@ -134,7 +134,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
                         <CardShell>
                             <LinearGradient
-                                colors={isDark ? ['rgba(22,163,74,0.15)', 'transparent'] : ['rgba(22,163,74,0.08)', 'transparent']}
+                                colors={isDark ? ['rgba(22,163,74,0.15)', 'transparent'] : ['rgba(22,163,74,0.12)', 'transparent']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -166,11 +166,11 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                 const urgencyColor = daysToReport !== null
                     ? daysToReport < 30
-                        ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400', gradDark: ['rgba(239,68,68,0.1)', 'transparent'] as const, gradLight: ['rgba(239,68,68,0.05)', 'transparent'] as const }
+                        ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400', gradDark: ['rgba(239,68,68,0.1)', 'transparent'] as const, gradLight: ['rgba(239,68,68,0.08)', 'transparent'] as const }
                         : daysToReport <= 60
-                            ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400', gradDark: ['rgba(249,115,22,0.1)', 'transparent'] as const, gradLight: ['rgba(249,115,22,0.05)', 'transparent'] as const }
-                            : { num: 'text-slate-900 dark:text-white', label: 'text-[#006FEE] dark:text-[#338EF7]', gradDark: ['rgba(51,142,247,0.1)', 'transparent'] as const, gradLight: ['rgba(0,111,238,0.05)', 'transparent'] as const }
-                    : { num: 'text-slate-900 dark:text-white', label: 'text-[#006FEE] dark:text-[#338EF7]', gradDark: ['rgba(51,142,247,0.1)', 'transparent'] as const, gradLight: ['rgba(0,111,238,0.05)', 'transparent'] as const };
+                            ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400', gradDark: ['rgba(249,115,22,0.1)', 'transparent'] as const, gradLight: ['rgba(249,115,22,0.08)', 'transparent'] as const }
+                            : { num: 'text-slate-900 dark:text-white', label: 'text-[#006FEE] dark:text-[#338EF7]', gradDark: ['rgba(51,142,247,0.1)', 'transparent'] as const, gradLight: ['rgba(0,111,238,0.12)', 'transparent'] as const }
+                    : { num: 'text-slate-900 dark:text-white', label: 'text-[#006FEE] dark:text-[#338EF7]', gradDark: ['rgba(51,142,247,0.1)', 'transparent'] as const, gradLight: ['rgba(0,111,238,0.12)', 'transparent'] as const };
 
                 return (
                     <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
@@ -208,11 +208,11 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                 const urgencyColor = daysToReport !== null
                     ? daysToReport < 3
-                        ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400', gradDark: ['rgba(239,68,68,0.1)', 'transparent'] as const, gradLight: ['rgba(239,68,68,0.05)', 'transparent'] as const }
+                        ? { num: 'text-red-600 dark:text-red-400', label: 'text-red-500 dark:text-red-400', gradDark: ['rgba(239,68,68,0.1)', 'transparent'] as const, gradLight: ['rgba(239,68,68,0.08)', 'transparent'] as const }
                         : daysToReport < 7
-                            ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400', gradDark: ['rgba(249,115,22,0.1)', 'transparent'] as const, gradLight: ['rgba(249,115,22,0.05)', 'transparent'] as const }
-                            : { num: 'text-blue-950 dark:text-white', label: 'text-blue-700 dark:text-blue-400', gradDark: ['rgba(59,130,246,0.15)', 'transparent'] as const, gradLight: ['rgba(59,130,246,0.08)', 'transparent'] as const }
-                    : { num: 'text-blue-950 dark:text-white', label: 'text-blue-700 dark:text-blue-400', gradDark: ['rgba(59,130,246,0.15)', 'transparent'] as const, gradLight: ['rgba(59,130,246,0.08)', 'transparent'] as const };
+                            ? { num: 'text-orange-600 dark:text-orange-400', label: 'text-orange-500 dark:text-orange-400', gradDark: ['rgba(249,115,22,0.1)', 'transparent'] as const, gradLight: ['rgba(249,115,22,0.08)', 'transparent'] as const }
+                            : { num: 'text-blue-950 dark:text-white', label: 'text-blue-700 dark:text-blue-400', gradDark: ['rgba(59,130,246,0.15)', 'transparent'] as const, gradLight: ['rgba(59,130,246,0.12)', 'transparent'] as const }
+                    : { num: 'text-blue-950 dark:text-white', label: 'text-blue-700 dark:text-blue-400', gradDark: ['rgba(59,130,246,0.15)', 'transparent'] as const, gradLight: ['rgba(59,130,246,0.12)', 'transparent'] as const };
 
 
                 return (
@@ -253,7 +253,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <TouchableOpacity onPress={() => router.push(targetRoute as any)} className="flex flex-col gap-2">
                         <CardShell>
                             <LinearGradient
-                                colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
+                                colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.12)', 'transparent']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -283,7 +283,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
                         <CardShell>
                             <LinearGradient
-                                colors={isDark ? ['rgba(168,162,158,0.1)', 'transparent'] : ['rgba(168,162,158,0.05)', 'transparent']}
+                                colors={isDark ? ['rgba(168,162,158,0.1)', 'transparent'] : ['rgba(168,162,158,0.10)', 'transparent']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -338,7 +338,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <TouchableOpacity onPress={() => router.push('/(career)/cycle' as any)} className="flex flex-col gap-2">
                         <CardShell>
                             <LinearGradient
-                                colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.08)', 'transparent']}
+                                colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.12)', 'transparent']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -371,7 +371,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <TouchableOpacity onPress={() => router.push(hasPrepped ? '/(career)/discovery' as any : '/(tabs)/(profile)/preferences' as any)} className="flex flex-col gap-2">
                         <CardShell>
                             <LinearGradient
-                                colors={isDark ? ['rgba(245,158,11,0.1)', 'transparent'] : ['rgba(245,158,11,0.05)', 'transparent']}
+                                colors={isDark ? ['rgba(245,158,11,0.1)', 'transparent'] : ['rgba(245,158,11,0.12)', 'transparent']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -409,7 +409,7 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                     <TouchableOpacity onPress={() => router.push('/(career)/discovery' as any)} className="flex flex-col gap-2">
                         <CardShell>
                             <LinearGradient
-                                colors={isDark ? ['rgba(59,130,246,0.1)', 'transparent'] : ['rgba(59,130,246,0.05)', 'transparent']}
+                                colors={isDark ? ['rgba(59,130,246,0.1)', 'transparent'] : ['rgba(59,130,246,0.12)', 'transparent']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}

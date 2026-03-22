@@ -417,7 +417,7 @@ export default function HubDashboard() {
         if (assignmentPhase === 'ORDERS_PROCESSING') {
             // Focus: Tracking administrative order steps
             feed.push('ordersProcessingWidget');
-        } else if (assignmentPhase === 'ORDERS_RELEASED' || pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
+        } else if (assignmentPhase === 'ORDERS_RELEASED' || pcsPhase === 'CHECK_IN') {
             // Focus: Active PCS Workflow
             if (activeUCTPhase === 3) {
                 // Exceptional case: Operational Travel Tools trump the UCT visually

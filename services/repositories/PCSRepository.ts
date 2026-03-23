@@ -60,22 +60,35 @@ export class SQLitePCSRepository {
       );
 
       // Upsert associated documents
-      for (const doc of order.documents) {
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < order.documents.length; i += CHUNK_SIZE) {
+        const chunk = order.documents.slice(i, i + CHUNK_SIZE);
+        if (chunk.length === 0) continue;
+
+        const placeholders = chunk.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+        const values: any[] = [];
+
+        for (const doc of chunk) {
+          values.push(
+            doc.id,
+            doc.pcsOrderId,
+            doc.category,
+            doc.filename,
+            doc.displayName,
+            doc.localUri,
+            doc.originalUrl || null,
+            doc.sizeBytes,
+            doc.uploadedAt,
+            doc.metadata ? encryptData(JSON.stringify(doc.metadata)) : null
+          );
+        }
+
         await runner.runAsync(
           `INSERT OR REPLACE INTO pcs_documents (
             id, pcs_order_id, category, filename, display_name,
             local_uri, original_url, size_bytes, uploaded_at, metadata
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-          doc.id,
-          doc.pcsOrderId,
-          doc.category,
-          doc.filename,
-          doc.displayName,
-          doc.localUri,
-          doc.originalUrl || null,
-          doc.sizeBytes,
-          doc.uploadedAt,
-          doc.metadata ? encryptData(JSON.stringify(doc.metadata)) : null
+          ) VALUES ${placeholders};`,
+          ...values
         );
       }
     });

@@ -7,7 +7,7 @@ import React from 'react';
 import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-export function DrawerMenuContent() {
+export const DrawerMenuContent = React.memo(function DrawerMenuContent() {
     const { signOut } = useSession();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -68,4 +68,4 @@ export function DrawerMenuContent() {
             </Animated.View>
         </ScrollView>
     );
-}
+});

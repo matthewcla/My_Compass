@@ -133,7 +133,13 @@ export default function ExpandableBottomDrawer() {
 
     const handleTabPress = React.useCallback((route: string) => {
         setSheetState(0);
-        router.push(route as any);
+        // Defer routing to the end of the event loop. 
+        // This ensures the JS thread clears the tap's visual release (TouchableOpacity opacity) 
+        // and gives the UI thread a pristine frame to begin the sheet closing animation (if open) 
+        // before locking up to render the new screen.
+        setTimeout(() => {
+            router.push(route as any);
+        }, 0);
     }, [setSheetState, router]);
 
     // Tap into the global scroll control for CollapsibleScaffold background lists
@@ -175,7 +181,7 @@ export default function ExpandableBottomDrawer() {
         }
 
         scrollContext?.resetBar();
-    }, [activeState, isHidden, scrollContext, setSheetState, sheetState, translateY]);
+    }, [isHidden, activeState, translateY, sheetState, setSheetState, scrollContext]);
 
     // Sync global JS state -> local shared UI values
     useEffect(() => {
@@ -186,6 +192,7 @@ export default function ExpandableBottomDrawer() {
                 : 0;
             translateY.value = withSpring(targetY, SPRING_CONFIG);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sheetState]);
 
     const panGesture = Gesture.Pan()
@@ -303,14 +310,7 @@ export default function ExpandableBottomDrawer() {
     }));
 
 
-    const innerBorderStyle = useAnimatedStyle(() => {
-        return {
-            borderTopLeftRadius: 40,
-            borderTopRightRadius: 40,
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-        };
-    });
+    // Static border radii — no animated interpolation needed (P0 fix: eliminates wasted worklet mapper)
 
     if (isHidden) {
         return null;
@@ -394,7 +394,7 @@ export default function ExpandableBottomDrawer() {
                                     borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.6)',
                                 },
                                 // Replicate radii internally so the stroke honors the corners
-                                innerBorderStyle
+                                styles.innerBorder
                             ]}
                         />
 
@@ -521,6 +521,14 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: '600',
         marginTop: 2,
+    },
+    innerBorder: {
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: 'rgba(255,255,255,0.1)',
+        borderTopLeftRadius: 40,
+        borderTopRightRadius: 40,
+        borderBottomLeftRadius: 40,
+        borderBottomRightRadius: 40,
     },
     drawerContents: {
         alignItems: 'center',

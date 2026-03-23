@@ -81,7 +81,8 @@ export class SQLiteInboxRepository {
       }
 
       if (idsToDelete.length > 0) {
-        const DELETE_CHUNK_SIZE = 50;
+        // According to Expo SQLite limits, variables limit is typically 999
+        const DELETE_CHUNK_SIZE = 900;
         for (let i = 0; i < idsToDelete.length; i += DELETE_CHUNK_SIZE) {
           const chunk = idsToDelete.slice(i, i + DELETE_CHUNK_SIZE);
           const placeholders = chunk.map(() => '?').join(', ');

@@ -102,10 +102,37 @@ export class SQLitePCSRepository {
         userId
       );
 
+      if (!rows || rows.length === 0) {
+        return [];
+      }
+
+      // Optimize: batch fetch all documents to avoid N+1 query problem
+      const orderIds = rows.map((r: any) => r.id);
+      let allDocs: any[] = [];
+      const CHUNK_SIZE = 900; // Safe limit for SQLite placeholders
+
+      for (let i = 0; i < orderIds.length; i += CHUNK_SIZE) {
+        const chunk = orderIds.slice(i, i + CHUNK_SIZE);
+        const placeholders = chunk.map(() => '?').join(',');
+        const docs = await db.getAllAsync<any>(
+          `SELECT * FROM pcs_documents WHERE pcs_order_id IN (${placeholders}) ORDER BY uploaded_at DESC`,
+          ...chunk
+        );
+        allDocs = allDocs.concat(docs);
+      }
+
+      // Group documents by order ID
+      const docsByOrderId: Record<string, PCSDocument[]> = {};
+      for (const docRow of allDocs) {
+        if (!docsByOrderId[docRow.pcs_order_id]) {
+          docsByOrderId[docRow.pcs_order_id] = [];
+        }
+        docsByOrderId[docRow.pcs_order_id].push(this.mapRowToPCSDocument(docRow));
+      }
+
       const orders: HistoricalPCSOrder[] = [];
       for (const row of rows) {
-        const docs = await this.getPCSDocuments(row.id);
-        orders.push(this.mapRowToHistoricalOrder(row, docs));
+        orders.push(this.mapRowToHistoricalOrder(row, docsByOrderId[row.id] || []));
       }
       return orders;
     } catch (error: any) {

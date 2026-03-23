@@ -25,6 +25,7 @@ import {
     Pressable,
     Switch,
     Text,
+    useColorScheme,
     View,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
@@ -46,6 +47,8 @@ const fmt = (n: number) => {
 export default function FinancialReviewScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const colorScheme = useColorScheme() ?? 'light';
+    const isDark = colorScheme === 'dark';
 
     const financials = usePCSStore((s) => s.financials);
     const setChecklistItemStatus = usePCSStore((s) => s.setChecklistItemStatus);
@@ -145,7 +148,7 @@ export default function FinancialReviewScreen() {
                 },
             }));
         }
-        router.replace('/(tabs)/(pcs)/pcs' as any);
+        router.replace('/(tabs)/(hub)' as any);
     };
 
     // ─── Submit Requests ─────────────────────────────────────
@@ -179,18 +182,18 @@ export default function FinancialReviewScreen() {
     };
 
     return (
-        <View className="flex-1 bg-slate-950">
+        <View className="flex-1 bg-slate-50 dark:bg-slate-950">
             {/* ── Header ───────────────────────────────────────── */}
-            <View style={{ paddingTop: insets.top }} className="bg-slate-950 px-4 pb-0 pt-2">
+            <View style={{ paddingTop: insets.top }} className="bg-slate-50 dark:bg-slate-950 px-4 pb-0 pt-2">
                 <View className="flex-row items-center gap-3 mt-2 mb-1">
-                    <Pressable onPress={handleExit} className="p-2 -ml-2 rounded-full active:bg-slate-800">
-                        <ChevronLeft size={24} color="#e2e8f0" />
+                    <Pressable onPress={handleExit} className="p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+                        <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                     </Pressable>
                     <View className="flex-1">
-                        <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-gray-500 mb-0">
+                        <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }} className="text-slate-500 dark:text-gray-500 mb-0">
                             PHASE 2
                         </Text>
-                        <Text style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }} className="text-white mb-1">
+                        <Text style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }} className="text-slate-900 dark:text-white mb-1">
                             Financial Review
                         </Text>
                     </View>
@@ -218,8 +221,8 @@ export default function FinancialReviewScreen() {
                     ═══════════════════════════════════════════════════ */}
                 <View onLayout={(e) => handleSectionLayout(0, e)}>
                     <Animated.View entering={FadeIn} className="px-4 mb-6">
-                        <Text className="text-lg font-bold text-white mb-1">Your Estimated Costs</Text>
-                        <Text className="text-zinc-500 text-xs mb-3">Enter your expected out-of-pocket expenses</Text>
+                        <Text className="text-lg font-bold text-slate-900 dark:text-white mb-1">Your Estimated Costs</Text>
+                        <Text className="text-slate-500 dark:text-zinc-500 text-xs mb-3">Enter your expected out-of-pocket expenses</Text>
                         <MovingCostProjection hideGapAnalysis />
                     </Animated.View>
                 </View>
@@ -230,17 +233,17 @@ export default function FinancialReviewScreen() {
                     ═══════════════════════════════════════════════════ */}
                 <View onLayout={(e) => handleSectionLayout(1, e)}>
                     <Animated.View entering={FadeInDown.delay(100)} className="px-4 mb-6">
-                        <Text className="text-lg font-bold text-white mb-1">Your Entitlements</Text>
-                        <Text className="text-zinc-500 text-xs mb-4">What the Navy covers — and what to request</Text>
+                        <Text className="text-lg font-bold text-slate-900 dark:text-white mb-1">Your Entitlements</Text>
+                        <Text className="text-slate-500 dark:text-zinc-500 text-xs mb-4">What the Navy covers — and what to request</Text>
 
                         {/* ── Dependent Relocation (Geo-Bachelor) ──── */}
                         {hasDependentsOnProfile && (
-                            <View className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-4 gap-3 mb-4">
+                            <View className="rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 p-4 gap-3 mb-4 shadow-sm dark:shadow-none">
                                 <View className="flex-row items-center gap-3">
-                                    <Users size={20} color="#60a5fa" />
+                                    <Users size={20} color={isDark ? '#60a5fa' : '#3b82f6'} />
                                     <View className="flex-1">
-                                        <Text className="text-zinc-200 text-sm font-semibold">Are your dependents moving with you?</Text>
-                                        <Text className="text-zinc-400 text-xs mt-0.5">
+                                        <Text className="text-slate-900 dark:text-zinc-200 text-sm font-semibold">Are your dependents moving with you?</Text>
+                                        <Text className="text-slate-500 dark:text-zinc-400 text-xs mt-0.5">
                                             Affects DLA rate, HHG weight allowance, and per diem calculations
                                         </Text>
                                     </View>
@@ -254,12 +257,12 @@ export default function FinancialReviewScreen() {
                                             triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
                                         }}
                                         className={`flex-1 rounded-xl py-3 items-center border ${!isGeoBachelor
-                                            ? 'bg-blue-900/30 border-blue-600/50'
-                                            : 'bg-zinc-900/50 border-zinc-700/30'
+                                            ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/30 dark:border-blue-600/50'
+                                            : 'bg-slate-50 border-slate-200 dark:bg-zinc-900/50 dark:border-zinc-700/30'
                                             }`}
                                         style={{ minHeight: 44 }}
                                     >
-                                        <Text className={`text-sm font-semibold ${!isGeoBachelor ? 'text-blue-300' : 'text-zinc-500'
+                                        <Text className={`text-sm font-semibold ${!isGeoBachelor ? 'text-blue-700 dark:text-blue-300' : 'text-slate-500 dark:text-zinc-500'
                                             }`}>Yes, relocating</Text>
                                     </Pressable>
                                     <Pressable
@@ -268,19 +271,19 @@ export default function FinancialReviewScreen() {
                                             triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
                                         }}
                                         className={`flex-1 rounded-xl py-3 items-center border ${isGeoBachelor
-                                            ? 'bg-amber-900/30 border-amber-600/50'
-                                            : 'bg-zinc-900/50 border-zinc-700/30'
+                                            ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/30 dark:border-amber-600/50'
+                                            : 'bg-slate-50 border-slate-200 dark:bg-zinc-900/50 dark:border-zinc-700/30'
                                             }`}
                                         style={{ minHeight: 44 }}
                                     >
-                                        <Text className={`text-sm font-semibold ${isGeoBachelor ? 'text-amber-300' : 'text-zinc-500'
+                                        <Text className={`text-sm font-semibold ${isGeoBachelor ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500 dark:text-zinc-500'
                                             }`}>No, geo-bachelor</Text>
                                     </Pressable>
                                 </View>
 
                                 {isGeoBachelor && (
-                                    <View className="bg-amber-950/30 border border-amber-700/30 rounded-xl px-4 py-2.5">
-                                        <Text className="text-amber-400 text-xs">
+                                    <View className="bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-700/30 rounded-xl px-4 py-2.5">
+                                        <Text className="text-amber-700 dark:text-amber-400 text-xs">
                                             Entitlements calculated at the without-dependents rate. Your dependents' BAH continues at your current location.
                                         </Text>
                                     </View>
@@ -290,92 +293,92 @@ export default function FinancialReviewScreen() {
 
                         {/* ── Entitlement Summary Cards ──────────────── */}
                         <View className="flex-row gap-3 mb-3">
-                            <View className="flex-1 rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-3">
-                                <Text className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">MALT</Text>
-                                <Text className="text-white text-lg font-black mt-0.5">{fmt(financials.totalMalt)}</Text>
-                                <Text className="text-zinc-600 text-[10px] mt-0.5">Mileage allowance</Text>
+                            <View className="flex-1 rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 p-3 shadow-sm dark:shadow-none">
+                                <Text className="text-slate-500 dark:text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">MALT</Text>
+                                <Text className="text-slate-900 dark:text-white text-lg font-black mt-0.5">{fmt(financials.totalMalt)}</Text>
+                                <Text className="text-slate-400 dark:text-zinc-600 text-[10px] mt-0.5">Mileage allowance</Text>
                             </View>
-                            <View className="flex-1 rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-3">
-                                <Text className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">Per Diem</Text>
-                                <Text className="text-white text-lg font-black mt-0.5">{fmt(financials.totalPerDiem)}</Text>
-                                <Text className="text-zinc-600 text-[10px] mt-0.5">Meals & lodging</Text>
+                            <View className="flex-1 rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 p-3 shadow-sm dark:shadow-none">
+                                <Text className="text-slate-500 dark:text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">Per Diem</Text>
+                                <Text className="text-slate-900 dark:text-white text-lg font-black mt-0.5">{fmt(financials.totalPerDiem)}</Text>
+                                <Text className="text-slate-400 dark:text-zinc-600 text-[10px] mt-0.5">Meals & lodging</Text>
                             </View>
-                            <View className="flex-1 rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-3">
-                                <Text className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">DLA</Text>
-                                <Text className="text-white text-lg font-black mt-0.5">{fmt(financials.dla.estimatedAmount)}</Text>
-                                <Text className="text-zinc-600 text-[10px] mt-0.5">
+                            <View className="flex-1 rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 p-3 shadow-sm dark:shadow-none">
+                                <Text className="text-slate-500 dark:text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">DLA</Text>
+                                <Text className="text-slate-900 dark:text-white text-lg font-black mt-0.5">{fmt(financials.dla.estimatedAmount)}</Text>
+                                <Text className="text-slate-400 dark:text-zinc-600 text-[10px] mt-0.5">
                                     {isGeoBachelor ? '🏠 W/O dep rate' : 'Dislocation allowance'}
                                 </Text>
                             </View>
                         </View>
 
                         {/* Total entitlements callout */}
-                        <View className="bg-emerald-950/30 border border-emerald-700/30 rounded-xl px-4 py-3 flex-row items-center justify-between mb-4">
-                            <Text className="text-emerald-400 text-sm font-semibold">Total Entitlements</Text>
-                            <Text className="text-emerald-300 text-lg font-black">
+                        <View className="bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-700/30 rounded-xl px-4 py-3 flex-row items-center justify-between mb-4">
+                            <Text className="text-emerald-700 dark:text-emerald-400 text-sm font-semibold">Total Entitlements</Text>
+                            <Text className="text-emerald-600 dark:text-emerald-300 text-lg font-black">
                                 {fmt((financials.totalMalt || 0) + (financials.totalPerDiem || 0) + (financials.dla.estimatedAmount || 0))}
                             </Text>
                         </View>
 
                         {/* ── DLA Request ───────────────────────────── */}
-                        <View className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-4 gap-3 mb-4">
+                        <View className="rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 p-4 gap-3 mb-4 shadow-sm dark:shadow-none">
                             <View className="flex-row items-center gap-3">
-                                <Shield size={20} color="#10b981" />
+                                <Shield size={20} color={isDark ? '#10b981' : '#059669'} />
                                 <View className="flex-1">
-                                    <Text className="text-zinc-200 text-sm font-semibold">Dislocation Allowance (DLA)</Text>
-                                    <Text className="text-zinc-400 text-xs mt-0.5">
+                                    <Text className="text-slate-900 dark:text-zinc-200 text-sm font-semibold">Dislocation Allowance (DLA)</Text>
+                                    <Text className="text-slate-500 dark:text-zinc-400 text-xs mt-0.5">
                                         Partially reimburses mandatory relocation expenses (deposits, temporary lodging, etc.)
                                     </Text>
                                 </View>
                             </View>
 
-                            <View className="bg-emerald-950/30 border border-emerald-700/30 rounded-xl px-4 py-3">
+                            <View className="bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-700/30 rounded-xl px-4 py-3">
                                 <View className="flex-row items-center justify-between">
-                                    <Text className="text-emerald-400 text-sm font-semibold">Estimated Amount</Text>
-                                    <Text className="text-emerald-300 text-lg font-black">{fmt(financials.dla.estimatedAmount)}</Text>
+                                    <Text className="text-emerald-700 dark:text-emerald-400 text-sm font-semibold">Estimated Amount</Text>
+                                    <Text className="text-emerald-600 dark:text-emerald-300 text-lg font-black">{fmt(financials.dla.estimatedAmount)}</Text>
                                 </View>
                                 {isGeoBachelor && (
-                                    <Text className="text-amber-400/70 text-[10px] mt-1">🏠 Without-dependents rate</Text>
+                                    <Text className="text-amber-600 dark:text-amber-400/70 text-[10px] mt-1">🏠 Without-dependents rate</Text>
                                 )}
                             </View>
 
                             {financials.dla.receivedFY && (
-                                <View className="bg-amber-950/30 border border-amber-700/30 rounded-xl px-4 py-2.5">
-                                    <Text className="text-amber-400 text-xs font-semibold">
+                                <View className="bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-700/30 rounded-xl px-4 py-2.5">
+                                    <Text className="text-amber-700 dark:text-amber-400 text-xs font-semibold">
                                         ⚠ DLA was already received this Fiscal Year — may not be eligible for an additional payment.
                                     </Text>
                                 </View>
                             )}
 
-                            <View className="flex-row items-center justify-between bg-zinc-900/50 border border-zinc-700/30 rounded-xl px-4 py-3">
-                                <Text className="text-zinc-200 text-sm font-semibold">Request DLA</Text>
+                            <View className="flex-row items-center justify-between bg-slate-50 border border-slate-200 dark:bg-zinc-900/50 dark:border-zinc-700/30 rounded-xl px-4 py-3">
+                                <Text className="text-slate-900 dark:text-zinc-200 text-sm font-semibold">Request DLA</Text>
                                 <Switch
                                     value={requestDLA}
                                     onValueChange={(val) => {
                                         setRequestDLA(val);
                                         triggerHaptic(Haptics.ImpactFeedbackStyle.Light);
                                     }}
-                                    trackColor={{ false: '#3f3f46', true: '#065f46' }}
-                                    thumbColor={requestDLA ? '#34d399' : '#a1a1aa'}
+                                    trackColor={{ false: isDark ? '#3f3f46' : '#e2e8f0', true: isDark ? '#065f46' : '#10b981' }}
+                                    thumbColor={requestDLA ? (isDark ? '#34d399' : '#0f766e') : (isDark ? '#a1a1aa' : '#ffffff')}
                                 />
                             </View>
                         </View>
 
                         {/* ── Advance Pay Request ───────────────────── */}
-                        <View className="rounded-2xl border border-zinc-700/50 bg-zinc-800/50 p-4 gap-3">
+                        <View className="rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 p-4 gap-3 shadow-sm dark:shadow-none">
                             <View className="flex-row items-center gap-3">
-                                <Banknote size={20} color="#f59e0b" />
+                                <Banknote size={20} color={isDark ? '#f59e0b' : '#d97706'} />
                                 <View className="flex-1">
-                                    <Text className="text-zinc-200 text-sm font-semibold">Advance Basic Pay</Text>
-                                    <Text className="text-zinc-400 text-xs mt-0.5">
+                                    <Text className="text-slate-900 dark:text-zinc-200 text-sm font-semibold">Advance Basic Pay</Text>
+                                    <Text className="text-slate-500 dark:text-zinc-400 text-xs mt-0.5">
                                         Up to 3 months' base pay advanced before your PCS — repaid via payroll deduction.
                                     </Text>
                                 </View>
                             </View>
 
                             {/* Opt-in toggle */}
-                            <View className="flex-row items-center justify-between bg-zinc-900/50 border border-zinc-700/30 rounded-xl px-4 py-3">
-                                <Text className="text-zinc-200 text-sm font-semibold">Request Advance Pay</Text>
+                            <View className="flex-row items-center justify-between bg-slate-50 border border-slate-200 dark:bg-zinc-900/50 dark:border-zinc-700/30 rounded-xl px-4 py-3">
+                                <Text className="text-slate-900 dark:text-zinc-200 text-sm font-semibold">Request Advance Pay</Text>
                                 <Switch
                                     value={requestAdvancePay}
                                     onValueChange={(val) => {
@@ -388,9 +391,9 @@ export default function FinancialReviewScreen() {
                             </View>
 
                             {/* Caveat banner — always visible */}
-                            <View className="flex-row items-start gap-2 bg-amber-950/30 border border-amber-700/30 rounded-xl px-4 py-2.5">
-                                <AlertTriangle size={14} color="#fbbf24" style={{ marginTop: 2 }} />
-                                <Text className="text-amber-400 text-xs flex-1 leading-4">
+                            <View className="flex-row items-start gap-2 bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-700/30 rounded-xl px-4 py-2.5">
+                                <AlertTriangle size={14} color={isDark ? '#fbbf24' : '#d97706'} style={{ marginTop: 2 }} />
+                                <Text className="text-amber-700 dark:text-amber-400 text-xs flex-1 leading-4">
                                     Advance pay reduces your take-home pay for up to 24 months. Review the impact below before deciding.
                                 </Text>
                             </View>
@@ -406,14 +409,14 @@ export default function FinancialReviewScreen() {
                                     />
 
                                     {/* Confirm summary */}
-                                    <View className="mt-3 bg-amber-950/20 border border-amber-700/20 rounded-xl px-4 py-3">
-                                        <Text className="text-zinc-300 text-xs font-semibold uppercase tracking-wider mb-1">
+                                    <View className="mt-3 bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-700/20 rounded-xl px-4 py-3">
+                                        <Text className="text-slate-700 dark:text-zinc-300 text-xs font-semibold uppercase tracking-wider mb-1">
                                             Your Request
                                         </Text>
-                                        <Text className="text-amber-300 text-base font-black">
+                                        <Text className="text-amber-700 dark:text-amber-300 text-base font-black">
                                             {fmt(computedAdvanceAmount)} advance
                                         </Text>
-                                        <Text className="text-zinc-400 text-xs mt-0.5">
+                                        <Text className="text-slate-500 dark:text-zinc-400 text-xs mt-0.5">
                                             {advanceMonths} month{advanceMonths > 1 ? 's' : ''} base pay · repaid over {advanceRepaymentTerm} months
                                         </Text>
                                     </View>
@@ -445,12 +448,12 @@ export default function FinancialReviewScreen() {
                     </Animated.View>
 
                     {/* Content */}
-                    <Animated.View entering={ZoomIn.duration(200)} className="bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-700 shadow-2xl">
+                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl">
                         <View className="p-6 items-center">
-                            <Text className="text-xl font-bold text-white mb-2 text-center">
+                            <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
                                 Save Progress?
                             </Text>
-                            <Text className="text-slate-400 text-center mb-6">
+                            <Text className="text-slate-500 dark:text-slate-400 text-center mb-6">
                                 Would you like to save your selections before exiting?
                             </Text>
 
@@ -466,9 +469,9 @@ export default function FinancialReviewScreen() {
                                 {/* Discard */}
                                 <Pressable
                                     onPress={() => confirmExit('discard')}
-                                    className="w-full py-3 bg-red-900/20 rounded-xl items-center active:bg-red-900/30"
+                                    className="w-full py-3 bg-red-50 dark:bg-red-900/20 rounded-xl items-center active:bg-red-100 dark:active:bg-red-900/30"
                                 >
-                                    <Text className="text-red-400 font-semibold">Discard</Text>
+                                    <Text className="text-red-600 dark:text-red-400 font-semibold">Discard</Text>
                                 </Pressable>
 
                                 {/* Cancel */}
@@ -476,7 +479,7 @@ export default function FinancialReviewScreen() {
                                     onPress={() => setShowExitModal(false)}
                                     className="w-full py-3 mt-2 items-center"
                                 >
-                                    <Text className="text-slate-400 font-medium">Cancel</Text>
+                                    <Text className="text-slate-500 dark:text-slate-400 font-medium">Cancel</Text>
                                 </Pressable>
                             </View>
                         </View>
@@ -548,11 +551,11 @@ function PreSubmitSummary({
     const coveredOnlyWithAdvance = !isCovered ? false : (totalEntitlements < totalCosts && totalCoverage >= totalCosts);
 
     const netColor = isCovered
-        ? (coveredOnlyWithAdvance ? 'text-amber-400' : 'text-emerald-400')
-        : 'text-red-400';
+        ? (coveredOnlyWithAdvance ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')
+        : 'text-red-600 dark:text-red-400';
     const netBgColor = isCovered
-        ? (coveredOnlyWithAdvance ? 'bg-amber-950/30 border-amber-700/30' : 'bg-emerald-950/30 border-emerald-700/30')
-        : 'bg-red-950/30 border-red-700/30';
+        ? (coveredOnlyWithAdvance ? 'bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-700/30' : 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-700/30')
+        : 'bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-700/30';
     const netLabel = isCovered
         ? (coveredOnlyWithAdvance ? 'Covered w/ advance' : 'Covered')
         : 'Shortfall';
@@ -560,36 +563,36 @@ function PreSubmitSummary({
     return (
         <View
             style={{ paddingBottom }}
-            className="absolute bottom-0 left-0 right-0 border-t border-zinc-800 bg-slate-950 px-4 pt-3 pb-4"
+            className="absolute bottom-0 left-0 right-0 border-t border-slate-200 dark:border-zinc-800 bg-white dark:bg-slate-950 px-4 pt-3 pb-4 shadow-sm"
         >
             {/* Summary Row */}
             <View className="flex-row items-center justify-between mb-2.5">
                 <View className="flex-1 items-center">
-                    <Text className="text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Entitlements</Text>
-                    <Text className="text-emerald-400 text-sm font-bold">{fmt(totalEntitlements)}</Text>
+                    <Text className="text-slate-500 dark:text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Entitlements</Text>
+                    <Text className="text-emerald-600 dark:text-emerald-400 text-sm font-bold">{fmt(totalEntitlements)}</Text>
                 </View>
 
                 {advanceAmount > 0 && (
                     <>
-                        <Text className="text-zinc-600 text-xs mx-1">+</Text>
+                        <Text className="text-slate-400 dark:text-zinc-600 text-xs mx-1">+</Text>
                         <View className="flex-1 items-center">
-                            <Text className="text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Advance</Text>
-                            <Text className="text-amber-400 text-sm font-bold">{fmt(advanceAmount)}</Text>
+                            <Text className="text-slate-500 dark:text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Advance</Text>
+                            <Text className="text-amber-600 dark:text-amber-400 text-sm font-bold">{fmt(advanceAmount)}</Text>
                         </View>
                     </>
                 )}
 
-                <Text className="text-zinc-600 text-xs mx-1">vs</Text>
+                <Text className="text-slate-400 dark:text-zinc-600 text-xs mx-1">vs</Text>
 
                 <View className="flex-1 items-center">
-                    <Text className="text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Costs</Text>
-                    <Text className="text-zinc-200 text-sm font-bold">{fmt(totalCosts)}</Text>
+                    <Text className="text-slate-500 dark:text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">Costs</Text>
+                    <Text className="text-slate-900 dark:text-zinc-200 text-sm font-bold">{fmt(totalCosts)}</Text>
                 </View>
 
-                <Text className="text-zinc-600 text-xs mx-1">=</Text>
+                <Text className="text-slate-400 dark:text-zinc-600 text-xs mx-1">=</Text>
 
                 <View className={`items-center rounded-lg border px-2.5 py-1 ${netBgColor}`}>
-                    <Text className="text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">{netLabel}</Text>
+                    <Text className="text-slate-500 dark:text-zinc-500 text-[9px] font-semibold uppercase tracking-wider">{netLabel}</Text>
                     <Text className={`text-sm font-black ${netColor}`}>
                         {isCovered ? '+' : '-'}{fmt(net)}
                     </Text>

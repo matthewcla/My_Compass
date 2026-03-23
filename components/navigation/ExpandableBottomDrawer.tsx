@@ -56,8 +56,8 @@ const MemoizedTabItem = React.memo(({
 
     // In light mode, a solid bright white background prevents shadow bleed and pops.
     // In dark mode, we use a stronger translucent white to ensure it doesn't look dark against the blur map.
-    const activeBgRgba = isDark ? 'rgba(255, 255, 255, 0.25)' : '#FFFFFF';
-    const activeBorderRgba = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.05)';
+    const activeBgRgba = isDark ? 'rgba(255, 255, 255, 0.35)' : '#FFFFFF';
+    const activeBorderRgba = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.05)';
 
     const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
 

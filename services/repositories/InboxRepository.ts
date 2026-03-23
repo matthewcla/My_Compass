@@ -83,14 +83,18 @@ export class SQLiteInboxRepository {
       if (idsToDelete.length > 0) {
         // According to Expo SQLite limits, variables limit is typically 999
         const DELETE_CHUNK_SIZE = 900;
+        const deletePromises = [];
         for (let i = 0; i < idsToDelete.length; i += DELETE_CHUNK_SIZE) {
           const chunk = idsToDelete.slice(i, i + DELETE_CHUNK_SIZE);
           const placeholders = chunk.map(() => '?').join(', ');
-          await runner.runAsync(
-            `DELETE FROM inbox_messages WHERE id IN (${placeholders});`,
-            ...chunk
+          deletePromises.push(
+            runner.runAsync(
+              `DELETE FROM inbox_messages WHERE id IN (${placeholders});`,
+              ...chunk
+            )
           );
         }
+        await Promise.all(deletePromises);
       }
     });
   }

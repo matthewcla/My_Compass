@@ -60,22 +60,35 @@ export class SQLitePCSRepository {
       );
 
       // Upsert associated documents
-      for (const doc of order.documents) {
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < order.documents.length; i += CHUNK_SIZE) {
+        const chunk = order.documents.slice(i, i + CHUNK_SIZE);
+        if (chunk.length === 0) continue;
+
+        const placeholders = chunk.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+        const values: any[] = [];
+
+        for (const doc of chunk) {
+          values.push(
+            doc.id,
+            doc.pcsOrderId,
+            doc.category,
+            doc.filename,
+            doc.displayName,
+            doc.localUri,
+            doc.originalUrl || null,
+            doc.sizeBytes,
+            doc.uploadedAt,
+            doc.metadata ? encryptData(JSON.stringify(doc.metadata)) : null
+          );
+        }
+
         await runner.runAsync(
           `INSERT OR REPLACE INTO pcs_documents (
             id, pcs_order_id, category, filename, display_name,
             local_uri, original_url, size_bytes, uploaded_at, metadata
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-          doc.id,
-          doc.pcsOrderId,
-          doc.category,
-          doc.filename,
-          doc.displayName,
-          doc.localUri,
-          doc.originalUrl || null,
-          doc.sizeBytes,
-          doc.uploadedAt,
-          doc.metadata ? encryptData(JSON.stringify(doc.metadata)) : null
+          ) VALUES ${placeholders};`,
+          ...values
         );
       }
     });
@@ -89,10 +102,37 @@ export class SQLitePCSRepository {
         userId
       );
 
+      if (!rows || rows.length === 0) {
+        return [];
+      }
+
+      // Optimize: batch fetch all documents to avoid N+1 query problem
+      const orderIds = rows.map((r: any) => r.id);
+      let allDocs: any[] = [];
+      const CHUNK_SIZE = 900; // Safe limit for SQLite placeholders
+
+      for (let i = 0; i < orderIds.length; i += CHUNK_SIZE) {
+        const chunk = orderIds.slice(i, i + CHUNK_SIZE);
+        const placeholders = chunk.map(() => '?').join(',');
+        const docs = await db.getAllAsync<any>(
+          `SELECT * FROM pcs_documents WHERE pcs_order_id IN (${placeholders}) ORDER BY uploaded_at DESC`,
+          ...chunk
+        );
+        allDocs = allDocs.concat(docs);
+      }
+
+      // Group documents by order ID
+      const docsByOrderId: Record<string, PCSDocument[]> = {};
+      for (const docRow of allDocs) {
+        if (!docsByOrderId[docRow.pcs_order_id]) {
+          docsByOrderId[docRow.pcs_order_id] = [];
+        }
+        docsByOrderId[docRow.pcs_order_id].push(this.mapRowToPCSDocument(docRow));
+      }
+
       const orders: HistoricalPCSOrder[] = [];
       for (const row of rows) {
-        const docs = await this.getPCSDocuments(row.id);
-        orders.push(this.mapRowToHistoricalOrder(row, docs));
+        orders.push(this.mapRowToHistoricalOrder(row, docsByOrderId[row.id] || []));
       }
       return orders;
     } catch (error: any) {

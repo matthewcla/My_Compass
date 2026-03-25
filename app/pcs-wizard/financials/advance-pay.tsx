@@ -262,7 +262,7 @@ function SectionLabel({ icon, label }: { icon: React.ReactNode, label: string })
   );
 }
 
-function InfoIcon(props: any) {
+function InfoIcon(props: React.ComponentProps<typeof AlertCircle>) {
   return (
     <View className="bg-blue-100 dark:bg-blue-900 rounded-full p-0.5">
       <AlertCircle {...props} />

@@ -1,151 +1,151 @@
 const { performance } = require('perf_hooks');
-
-// Mock Data
-const messages = Array.from({ length: 1000 }).map((_, i) => ({
-    id: `msg-${i}`,
-    type: 'NAVADMIN',
-    subject: `Test Message ${i}`,
-    body: 'Some body content...',
-    timestamp: new Date().toISOString(),
-    isRead: false,
-    isPinned: false,
-    metadata: {}
-}));
-
-// Mock DB Runner Factory
-function createMockRunner() {
-    return {
-        callCount: 0,
-        async runAsync(sql, ...args) {
-            this.callCount++;
-            await new Promise(resolve => setTimeout(resolve, 0.1));
-            return Promise.resolve();
-        },
-        async getAllAsync(sql, ...args) {
-            this.callCount++;
-            await new Promise(resolve => setTimeout(resolve, 0.1));
-            // Simulate existing records that need to be deleted
-            return Promise.resolve(Array.from({ length: 100 }).map((_, i) => ({ id: `old-${i}` })));
-        }
-    };
-}
-
-// Current Implementation (Before Optimization)
-async function saveInboxMessagesBefore(messages, runner) {
-    if (messages.length === 0) {
-        await runner.runAsync('DELETE FROM inbox_messages;');
-        return;
-    }
-
-    for (const msg of messages) {
-        await runner.runAsync(
-          `INSERT OR REPLACE INTO inbox_messages (
-            id, type, subject, body, timestamp, is_read, is_pinned, metadata, last_sync_timestamp, sync_status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-          msg.id,
-          msg.type,
-          msg.subject,
-          msg.body,
-          msg.timestamp,
-          msg.isRead ? 1 : 0,
-          msg.isPinned ? 1 : 0,
-          JSON.stringify(msg.metadata || {}),
-          new Date().toISOString(),
-          'synced'
-        );
-    }
-
-    const placeholders = messages.map(() => '?').join(', ');
-    await runner.runAsync(
-        `DELETE FROM inbox_messages WHERE id NOT IN (${placeholders});`,
-        ...messages.map((msg) => msg.id)
-    );
-}
-
-// Optimized Implementation (As Implemented in services/storage.ts)
-async function saveInboxMessagesAfter(messages, runner) {
-    if (messages.length === 0) {
-        await runner.runAsync('DELETE FROM inbox_messages;');
-        return;
-    }
-
-    // Chunk size to avoid SQLite variable limit (default usually 999 or 32766)
-    const CHUNK_SIZE = 50;
-
-    for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
-        const chunk = messages.slice(i, i + CHUNK_SIZE);
-        if (chunk.length === 0) continue;
-
-        const placeholders = chunk.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
-        const values = [];
-
-        for (const msg of chunk) {
-            values.push(
-                msg.id,
-                msg.type,
-                msg.subject,
-                msg.body,
-                msg.timestamp,
-                msg.isRead ? 1 : 0,
-                msg.isPinned ? 1 : 0,
-                JSON.stringify(msg.metadata || {}),
-                new Date().toISOString(),
-                'synced'
-            );
-        }
-
-        await runner.runAsync(
-            `INSERT OR REPLACE INTO inbox_messages (
-            id, type, subject, body, timestamp, is_read, is_pinned, metadata, last_sync_timestamp, sync_status
-            ) VALUES ${placeholders};`,
-            ...values
-        );
-    }
-
-    // New Robust Sync Logic
-    const existingRows = await runner.getAllAsync('SELECT id FROM inbox_messages');
-    const existingIds = new Set(existingRows.map((row) => row.id));
-    const newIds = new Set(messages.map((msg) => msg.id));
-
-    const idsToDelete = [];
-    for (const id of existingIds) {
-        if (!newIds.has(id)) {
-            idsToDelete.push(id);
-        }
-    }
-
-    if (idsToDelete.length > 0) {
-        const DELETE_CHUNK_SIZE = 50;
-        for (let i = 0; i < idsToDelete.length; i += DELETE_CHUNK_SIZE) {
-            const chunk = idsToDelete.slice(i, i + DELETE_CHUNK_SIZE);
-            const placeholders = chunk.map(() => '?').join(', ');
-            await runner.runAsync(
-                `DELETE FROM inbox_messages WHERE id IN (${placeholders});`,
-                ...chunk
-            );
-        }
-    }
-}
+const sqlite3 = require('sqlite3').verbose();
 
 async function runBenchmark() {
-    console.log(`Benchmarking with ${messages.length} messages...`);
+  const db = new sqlite3.Database(':memory:');
 
-    // Test Before
-    const runnerBefore = createMockRunner();
-    const startBefore = performance.now();
-    await saveInboxMessagesBefore(messages, runnerBefore);
-    const endBefore = performance.now();
-    console.log(`Before: ${(endBefore - startBefore).toFixed(2)}ms (Calls: ${runnerBefore.callCount})`);
+  await new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run(`CREATE TABLE inbox_messages (
+        id TEXT PRIMARY KEY,
+        type TEXT,
+        subject TEXT,
+        body TEXT,
+        timestamp TEXT,
+        is_read INTEGER,
+        is_pinned INTEGER,
+        metadata TEXT,
+        last_sync_timestamp TEXT,
+        sync_status TEXT
+      )`, resolve);
+    });
+  });
 
-    // Test After
-    const runnerAfter = createMockRunner();
-    const startAfter = performance.now();
-    await saveInboxMessagesAfter(messages, runnerAfter);
-    const endAfter = performance.now();
-    console.log(`After: ${(endAfter - startAfter).toFixed(2)}ms (Calls: ${runnerAfter.callCount})`);
+  const runner = {
+    getAllAsync: async (query) => {
+      return new Promise((resolve, reject) => {
+        db.all(query, (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows);
+        });
+      });
+    },
+    runAsync: async (query, ...params) => {
+      return new Promise((resolve, reject) => {
+        db.run(query, params, function(err) {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    }
+  };
 
-    const improvement = (endBefore - startBefore) / (endAfter - startAfter);
-    console.log(`Speedup: ${improvement.toFixed(2)}x`);
+  const existingCount = 10000;
+
+  // Insert initial messages
+  await new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION");
+      const stmt = db.prepare("INSERT INTO inbox_messages (id) VALUES (?)");
+      for (let i = 0; i < existingCount; i++) {
+        stmt.run(`msg_${i}`);
+      }
+      stmt.finalize();
+      db.run("COMMIT", err => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  });
+
+  // Array of new message ids
+  const newMessagesIds = [];
+  for (let i = 0; i < 2000; i++) {
+    newMessagesIds.push(`msg_${i}`);
+  }
+
+  // Set JS-side latency to better simulate what happens in React Native with a real DB.
+
+  const runnerSimulated = {
+    getAllAsync: async (query) => {
+      await new Promise(r => setTimeout(r, 2)); // simulate RN bridge overhead
+      return runner.getAllAsync(query);
+    },
+    runAsync: async (query, ...params) => {
+      await new Promise(r => setTimeout(r, 2)); // simulate RN bridge overhead
+      return runner.runAsync(query, ...params);
+    }
+  };
+
+  // === Baseline approach: fetch all, diff, chunked IN clause ===
+  const startBaseline = performance.now();
+
+  const existingRows = await runnerSimulated.getAllAsync('SELECT id FROM inbox_messages');
+  const existingIds = new Set(existingRows.map((row) => row.id));
+  const newIds = new Set(newMessagesIds);
+
+  const idsToDelete = [];
+  for (const id of existingIds) {
+    if (!newIds.has(id)) {
+      idsToDelete.push(id);
+    }
+  }
+
+  const DELETE_CHUNK_SIZE = 900;
+  for (let i = 0; i < idsToDelete.length; i += DELETE_CHUNK_SIZE) {
+    const chunk = idsToDelete.slice(i, i + DELETE_CHUNK_SIZE);
+    const placeholders = chunk.map(() => '?').join(', ');
+    await runnerSimulated.runAsync(
+      `DELETE FROM inbox_messages WHERE id IN (${placeholders});`,
+      ...chunk
+    );
+  }
+
+  const endBaseline = performance.now();
+  console.log(`Baseline (Fetch, Diff, Chunked IN sequentially): ${endBaseline - startBaseline}ms`);
+
+  // Reset database for optimized approach
+  await new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION");
+      db.run('DELETE FROM inbox_messages');
+      const stmt = db.prepare("INSERT INTO inbox_messages (id) VALUES (?)");
+      for (let i = 0; i < existingCount; i++) {
+        stmt.run(`msg_${i}`);
+      }
+      stmt.finalize();
+      db.run("COMMIT", err => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  });
+
+  const startOptimizedManual = performance.now();
+  try {
+    const deletePromises = [];
+
+    // Just batch run them in parallel
+    for (let i = 0; i < idsToDelete.length; i += DELETE_CHUNK_SIZE) {
+      const chunk = idsToDelete.slice(i, i + DELETE_CHUNK_SIZE);
+      const placeholders = chunk.map(() => '?').join(', ');
+
+      deletePromises.push(
+        runnerSimulated.runAsync(
+          `DELETE FROM inbox_messages WHERE id IN (${placeholders});`,
+          ...chunk
+        )
+      );
+    }
+    await Promise.all(deletePromises);
+
+    const endOptimizedManual = performance.now();
+    console.log(`Optimized (Parallel Chunked IN): ${endOptimizedManual - startOptimizedManual}ms`);
+  } catch(e) {
+    console.log(`Failed: ${e.message}`);
+  }
+
+  db.close();
 }
 
-runBenchmark();
+runBenchmark().catch(console.error);

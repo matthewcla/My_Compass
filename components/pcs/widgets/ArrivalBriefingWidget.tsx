@@ -136,8 +136,8 @@ export function ArrivalBriefingWidget() {
                 {/* Header Area - Converted to Premium Slate/Blue */}
                 <View className="px-5 py-4 border-b border-black/5 dark:border-white/5 flex-row items-center justify-between">
                     <View className="flex-row items-center gap-3 flex-1 pr-2">
-                        <View className="w-10 h-10 rounded-full items-center justify-center bg-blue-100 dark:bg-blue-900/50">
-                            <MapPin size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+                        <View className="w-10 h-10 rounded-full items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+                            <MapPin size={20} color={isDark ? '#94A3B8' : '#64748B'} />
                         </View>
                         <View className="flex-1">
                             <Text className="text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -191,15 +191,14 @@ export function ArrivalBriefingWidget() {
                                     </View>
                                 </View>
 
-                                {/* Communications Block */}
                                 <View className="flex-row gap-2">
                                     {sponsor?.phone && (
                                         <ScalePressable
                                             onPress={() => handlePhonePress(sponsor.phone!)}
-                                            className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 items-center justify-center shadow-sm"
+                                            className="w-10 h-10 rounded-full bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 items-center justify-center shadow-sm"
                                             accessibilityRole="button"
                                         >
-                                            <Phone size={16} color={isDark ? '#818CF8' : '#4F46E5'} />
+                                            <Phone size={16} color={isDark ? '#94A3B8' : '#64748B'} />
                                         </ScalePressable>
                                     )}
                                     {sponsor?.phone && (
@@ -210,10 +209,10 @@ export function ArrivalBriefingWidget() {
                                                 }
                                                 Linking.openURL(`sms:${sponsor.phone}`).catch(() => undefined);
                                             }}
-                                            className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 items-center justify-center shadow-sm"
+                                            className="w-10 h-10 rounded-full bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 items-center justify-center shadow-sm"
                                             accessibilityRole="button"
                                         >
-                                            <MessageSquare size={16} color={isDark ? '#818CF8' : '#4F46E5'} />
+                                            <MessageSquare size={16} color={isDark ? '#94A3B8' : '#64748B'} />
                                         </ScalePressable>
                                     )}
                                 </View>
@@ -227,12 +226,12 @@ export function ArrivalBriefingWidget() {
                                     onPress={handleMapPress}
                                     className="bg-white/40 dark:bg-slate-800/40 rounded-[16px] p-3 border border-black/5 dark:border-white/5 flex-row items-center"
                                 >
-                                    <View className="w-10 h-10 rounded-full items-center justify-center bg-emerald-500/10 dark:bg-emerald-900/30 mr-3 border border-emerald-500/20 dark:border-emerald-700/50">
-                                        <MapPin size={18} color={isDark ? '#34D399' : '#059669'} />
+                                    <View className="w-10 h-10 rounded-full items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 mr-3 border border-slate-200/50 dark:border-slate-700/50">
+                                        <MapPin size={18} color={isDark ? '#94A3B8' : '#64748B'} />
                                     </View>
                                     <View className="flex-1">
-                                        <Text className="text-[10px] uppercase font-bold tracking-widest text-emerald-600 dark:text-emerald-400 mb-0.5" numberOfLines={1}>Navigate</Text>
-                                        <Text className="text-[15px] font-bold text-emerald-800 dark:text-emerald-300 leading-tight">Quarterdeck</Text>
+                                        <Text className="text-[10px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-400 mb-0.5" numberOfLines={1}>Navigate</Text>
+                                        <Text className="text-[15px] font-bold text-slate-900 dark:text-white leading-tight">Quarterdeck</Text>
                                     </View>
                                 </ScalePressable>
                             )}
@@ -242,8 +241,8 @@ export function ArrivalBriefingWidget() {
                                     onPress={() => handlePhonePress(quarterdeckPhone)}
                                     className="bg-white/40 dark:bg-slate-800/40 rounded-[16px] p-3 border border-black/5 dark:border-white/5 flex-row items-center"
                                 >
-                                    <View className="w-10 h-10 rounded-full items-center justify-center bg-blue-500/10 dark:bg-blue-900/30 mr-3 border border-blue-500/20 dark:border-blue-700/50">
-                                        <Phone size={18} color={isDark ? '#60A5FA' : '#2563EB'} />
+                                    <View className="w-10 h-10 rounded-full items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 mr-3 border border-slate-200/50 dark:border-slate-700/50">
+                                        <Phone size={18} color={isDark ? '#94A3B8' : '#64748B'} />
                                     </View>
                                     <View className="flex-1">
                                         <Text className="text-[10px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-400 mb-0.5" numberOfLines={1}>Call Quarterdeck</Text>

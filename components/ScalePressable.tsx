@@ -15,7 +15,7 @@ export function ScalePressable({
     ...props
 }: ScalePressableProps) {
 
-    const handlePressIn = (event: any) => {
+    const handlePressIn = (event: import('react-native').GestureResponderEvent) => {
         if (Platform.OS !== 'web') {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {
                 // Haptics might fail or be unavailable, fail silently

@@ -60,11 +60,11 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
                 borderWidth: 1,
                 borderColor: isDark
                     ? 'rgba(51, 65, 85, 0.6)'
-                    : 'rgba(180, 200, 225, 0.5)',
+                    : 'rgba(228, 228, 231, 0.7)',
                 ...getShadow({
-                    shadowColor: isDark ? '#5B8FCF' : '#B8C9DF',
+                    shadowColor: isDark ? '#000000' : '#475569',
                     shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: isDark ? 0.2 : 0.15,
+                    shadowOpacity: isDark ? 0.3 : 0.08,
                     shadowRadius: 12,
                     elevation: 4,
                 }),
@@ -72,8 +72,8 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
         >
             <LinearGradient
                 colors={isDark
-                    ? ['#1e293b', '#0f172a']
-                    : ['#F0F4FB', '#E5EBF5']
+                    ? ['#09090B', '#18181B']
+                    : ['#FFFFFF', '#FAFAFA']
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -96,12 +96,12 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
             {hasBillets && (
                 <View className="relative z-10 flex-row px-5 pt-3 pb-3 gap-3">
                     <StatBadge
-                        icon={<Star size={16} color={isDark ? '#5B8FCF' : '#1A4E8A'} />}
+                        icon={<Star size={16} color={isDark ? '#338EF7' : '#006FEE'} />}
                         count={stats.slated}
                         label="WOW!"
                         isDark={isDark}
-                        bg={isDark ? 'rgba(91,143,207,0.2)' : 'rgba(26,78,138,0.08)'}
-                        textColor={isDark ? '#7BAED6' : '#1A4E8A'}
+                        bg={isDark ? 'rgba(51,142,247,0.15)' : 'rgba(0,111,238,0.08)'}
+                        textColor={isDark ? '#818CF8' : '#006FEE'}
                         onPress={() => onBadgeTap?.('wow', stats.slated)}
                     />
                     <StatBadge
@@ -147,21 +147,21 @@ export function DiscoveryStatusCard({ onBadgeTap, onStartExploring }: DiscoveryS
                                 className="w-full py-3.5 rounded-xl flex-row items-center justify-center gap-2"
                                 style={{
                                     backgroundColor: isDark
-                                        ? 'rgba(91, 143, 207, 0.15)'
-                                        : 'rgba(26, 78, 138, 0.07)',
+                                        ? 'rgba(51, 142, 247, 0.15)'
+                                        : 'rgba(0, 111, 238, 0.07)',
                                     borderWidth: 1,
                                     borderColor: isDark
-                                        ? 'rgba(91, 143, 207, 0.3)'
-                                        : 'rgba(26, 78, 138, 0.2)',
+                                        ? 'rgba(51, 142, 247, 0.3)'
+                                        : 'rgba(0, 111, 238, 0.2)',
                                 }}
                             >
                                 <Text
-                                    style={{ color: isDark ? '#5B8FCF' : '#1A4E8A' }}
+                                    style={{ color: isDark ? '#338EF7' : '#006FEE' }}
                                     className="font-bold text-base"
                                 >
                                     Start Exploring
                                 </Text>
-                                <ArrowRight size={16} color={isDark ? '#5B8FCF' : '#1A4E8A'} />
+                                <ArrowRight size={16} color={isDark ? '#338EF7' : '#006FEE'} />
                             </View>
                         </Animated.View>
                     </Pressable>

@@ -21,14 +21,14 @@
     /* System Colors - Light Mode */
     --color-system-gray: 142 142 147;
     /* #8E8E93 */
-    --color-system-gray6: 242 242 247;
-    /* #F2F2F7 */
-    --color-system-blue: 26 78 138;
-    /* #1A4E8A */
+    --color-system-gray6: 250 250 250;
+    /* #FAFAFA */
+    --color-system-blue: 0 111 238;
+    /* #006FEE */
 
     /* Semantic Colors - Light Mode */
-    --color-background: 255 255 255;
-    /* #FFFFFF */
+    --color-background: 250 250 250;
+    /* #FAFAFA */
     --color-foreground: 0 0 0;
     /* #000000 */
     --color-label-primary: 0 0 0;
@@ -38,26 +38,26 @@
     /* #FFFFFF */
     --color-wizard-card-background: 255 255 255;
     /* #FFFFFF */
-    --color-input-background: 248 250 252;
-    /* #F8FAFC */
-    --color-accent-text: 26 78 138;
-    /* #1A4E8A */
+    --color-input-background: 244 244 245;
+    /* #F4F4F5 */
+    --color-accent-text: 0 111 238;
+    /* #006FEE */
 
     /* Brand Colors */
-    --color-navy-blue: 10 22 40;
-    /* #0A1628 */
-    --color-navy-gold: 201 162 39;
-    /* #C9A227 */
+    --color-navy-blue: 0 0 0;
+    /* #000000 */
+    --color-navy-gold: 245 165 36;
+    /* #F5A524 */
   }
 
   .dark {
     /* System Colors - Dark Mode */
     --color-system-gray: 142 142 147;
     /* #8E8E93 */
-    --color-system-gray6: 28 28 30;
-    /* #1C1C1E */
-    --color-system-blue: 91 143 207;
-    /* #5B8FCF */
+    --color-system-gray6: 24 24 27;
+    /* #18181B */
+    --color-system-blue: 51 142 247;
+    /* #338EF7 */
 
     /* Semantic Colors - Dark Mode */
     --color-background: 0 0 0;
@@ -67,18 +67,18 @@
     --color-label-primary: 255 255 255;
     --color-label-secondary: 235 235 245;
     /* #EBEBF5 */
-    --color-card-background: 30 41 59;
-    /* Slate 800 */
-    --color-wizard-card-background: 30 41 59;
-    /* Slate 800 */
-    --color-input-background: 15 23 42;
-    /* Slate 900 */
+    --color-card-background: 9 9 11;
+    /* Zinc 950 */
+    --color-wizard-card-background: 9 9 11;
+    /* Zinc 950 */
+    --color-input-background: 24 24 27;
+    /* Zinc 900 */
     --color-accent-text: 255 255 255;
     /* #FFFFFF */
 
     /* Brand Colors - Dark Mode */
-    --color-navy-blue: 10 22 40;
-    --color-navy-gold: 201 162 39;
+    --color-navy-blue: 0 0 0;
+    --color-navy-gold: 245 165 36;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -86,10 +86,10 @@
       /* System Colors - Dark Mode */
       --color-system-gray: 142 142 147;
       /* #8E8E93 */
-      --color-system-gray6: 28 28 30;
-      /* #1C1C1E */
-      --color-system-blue: 91 143 207;
-      /* #5B8FCF */
+      --color-system-gray6: 24 24 27;
+      /* #18181B */
+      --color-system-blue: 51 142 247;
+      /* #338EF7 */
 
       /* Semantic Colors - Dark Mode */
       --color-background: 0 0 0;
@@ -99,18 +99,18 @@
       --color-label-primary: 255 255 255;
       --color-label-secondary: 235 235 245;
       /* #EBEBF5 */
-      --color-card-background: 30 41 59;
-      /* Slate 800 */
-      --color-wizard-card-background: 30 41 59;
-      /* Slate 800 */
-      --color-input-background: 15 23 42;
-      /* Slate 900 */
+      --color-card-background: 9 9 11;
+      /* Zinc 950 */
+      --color-wizard-card-background: 9 9 11;
+      /* Zinc 950 */
+      --color-input-background: 24 24 27;
+      /* Zinc 900 */
       --color-accent-text: 255 255 255;
       /* #FFFFFF */
 
       /* Brand Colors - Dark Mode */
-      --color-navy-blue: 10 22 40;
-      --color-navy-gold: 201 162 39;
+      --color-navy-blue: 0 0 0;
+      --color-navy-gold: 245 165 36;
     }
   }
 }

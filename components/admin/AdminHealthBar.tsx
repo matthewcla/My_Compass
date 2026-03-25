@@ -2,7 +2,7 @@
 // Top status strip — three tappable buckets: Action Required / In Progress / Completed
 // Now includes "Last synced" footer and improved active state with glow effect.
 
-import { GlassView } from '@/components/ui/GlassView';
+import { DashboardCardSurface } from '@/components/ui/DashboardCardSurface';
 import { useColorScheme } from '@/components/useColorScheme';
 import { AdminStatus, useAdminStore } from '@/store/useAdminStore';
 import { getShadow } from '@/utils/getShadow';
@@ -15,12 +15,9 @@ interface BucketConfig {
     label: string;
     icon: typeof AlertTriangle;
     colors: {
-        activeBg: string;
-        activeBorder: string;
         activeText: string;
         iconActive: string;
         iconInactive: string;
-        glowColor: string;
     };
 }
 
@@ -30,12 +27,9 @@ const BUCKETS: BucketConfig[] = [
         label: 'Action\nRequired',
         icon: AlertTriangle,
         colors: {
-            activeBg: 'bg-amber-100 dark:bg-amber-900/50',
-            activeBorder: 'border-amber-400 dark:border-amber-600',
             activeText: 'text-amber-900 dark:text-amber-100',
             iconActive: '#d97706',
             iconInactive: '#64748b',
-            glowColor: '#f59e0b',
         },
     },
     {
@@ -43,12 +37,9 @@ const BUCKETS: BucketConfig[] = [
         label: 'In\nProgress',
         icon: Clock,
         colors: {
-            activeBg: 'bg-blue-100 dark:bg-blue-900/50',
-            activeBorder: 'border-blue-400 dark:border-blue-600',
             activeText: 'text-blue-900 dark:text-blue-100',
             iconActive: '#2563eb',
             iconInactive: '#64748b',
-            glowColor: '#3b82f6',
         },
     },
     {
@@ -56,12 +47,9 @@ const BUCKETS: BucketConfig[] = [
         label: 'Completed',
         icon: CheckCircle,
         colors: {
-            activeBg: 'bg-green-100 dark:bg-green-900/50',
-            activeBorder: 'border-green-400 dark:border-green-600',
             activeText: 'text-green-900 dark:text-green-100',
             iconActive: '#15803d',
             iconInactive: '#64748b',
-            glowColor: '#22c55e',
         },
     },
 ];
@@ -92,17 +80,10 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
     const allClear = counts.actionRequired === 0;
 
     return (
-        <View style={getShadow({
-            shadowColor: isDark ? '#94a3b8' : '#64748b',
-            shadowOpacity: isDark ? 0.12 : 0.14,
-            shadowRadius: 12,
-            elevation: 4,
-        })}>
-            <GlassView
-                intensity={70}
-                tint={isDark ? 'dark' : 'light'}
-                className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
-            >
+        <DashboardCardSurface
+            intensity={70}
+            className="rounded-xl"
+        >
                 <View className="flex-row items-stretch p-2 gap-2">
                     {BUCKETS.map((bucket) => {
                         const isActive = activeFilter === bucket.key;
@@ -118,16 +99,10 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                                 key={bucket.key}
                                 activeOpacity={0.7}
                                 onPress={() => setStatusFilter(isActive ? null : bucket.key)}
-                                className={`flex-1 items-center justify-center py-2.5 px-2 rounded-lg border-2 ${isActive
-                                    ? `${bucket.colors.activeBg} ${bucket.colors.activeBorder}`
+                                className={`flex-1 items-center justify-center py-2.5 px-2 rounded-lg border ${isActive
+                                    ? 'bg-slate-100/80 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600'
                                     : 'bg-transparent border-transparent'
                                     }`}
-                                style={isActive ? getShadow({
-                                    shadowColor: bucket.colors.glowColor,
-                                    shadowOpacity: isDark ? 0.35 : 0.25,
-                                    shadowRadius: 8,
-                                    elevation: 4,
-                                }) : undefined}
                             >
                                 <Icon
                                     size={16}
@@ -167,7 +142,6 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                         </Text>
                     </View>
                 )}
-            </GlassView>
-        </View>
+            </DashboardCardSurface>
     );
 }

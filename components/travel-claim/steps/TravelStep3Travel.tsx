@@ -163,7 +163,7 @@ export function TravelStep3Travel({
   );
 }
 
-function AddButton({ label, icon, onPress, color }: any) {
+function AddButton({ label, icon, onPress, color }: { label: string, icon: React.ReactNode, onPress: () => void, color?: string }) {
   return (
     <Pressable
       onPress={onPress}

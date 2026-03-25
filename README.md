@@ -1,6 +1,8 @@
 # My Compass
 
-> **Offline-first career management for Navy service members.** A universal React Native app (iOS, Android, Web) built with Expo.
+> **React Native prototype for Navy career management.** A universal cross-platform application (iOS, Android, Web) built with Expo.
+
+> ⚠️ **Development Status:** This is an offline-first **prototype**. All backend APIs, centralized authentication, and production security controls (including encryption and RBAC) are simulated or deferred pending formal API integration.
 
 ---
 
@@ -80,10 +82,10 @@ scripts/              # Build & dev scripts
 
 ---
 
-## Design Philosophy
+## Design Guidelines
 
-- **Glass Cockpit** — high-density situational awareness, no clutter
-- **Tactical Wizard** — single-scroll, continuous-step form flows
-- **Smart Stack** — context-aware widget injection per lifecycle phase
-- **Offline-First** — works without network (ship-grade reliability)
-- **Navy Terminology** — Leave (not Vacation), Detailer (not Recruiter), PRD (not End Date)
+- **High-Density UI** — Maximize situational awareness without scrolling (Information density).
+- **Continuous Scrolling Forms** — Single-scroll, multi-step wizards for complex data entry.
+- **Contextual Widget Framework** — Dynamic component injection based on current lifecycle phase.
+- **Offline-First Resilience** — Architecture designed to tolerate intermittent connectivity via local persistence.
+- **Domain Terminology** — Standard Navy vernacular: Leave (not Vacation), Detailer (not Recruiter), PRD (not End Date).

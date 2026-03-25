@@ -2,7 +2,7 @@
 
 > **Last Updated:** 2026-02-14
 
-This directory contains developer-facing documentation for the My Compass project. All docs reflect the **current codebase state** — fully offline-first with mock data, no live API connections.
+This directory contains developer-facing documentation for the My Compass project. All docs reflect the **current prototyping state** — offline-first with mock data, pending live API and Identity Provider integration.
 
 ---
 
@@ -12,8 +12,8 @@ This directory contains developer-facing documentation for the My Compass projec
 
 | Document | Description |
 |----------|-------------|
-| [COMPASS_LIFECYCLE.md](./COMPASS_LIFECYCLE.md) | Full sailor lifecycle (Accession → DD-214): Assignment phases, PCS UCT phases, transition rules, feature activation map |
-| [DESIGN_STANDARDS.md](./DESIGN_STANDARDS.md) | Glass Cockpit philosophy, UCT pattern, Flow pattern, animation standards, Navy terminology, component conventions |
+| [COMPASS_LIFECYCLE.md](./COMPASS_LIFECYCLE.md) | Full sailor lifecycle: Assignment phases, PCS phases, transition rules, and feature activation map |
+| [DESIGN_STANDARDS.md](./DESIGN_STANDARDS.md) | High-Density UI philosophy, Continuous form patterns, animation standards, terminology, and component conventions |
 
 ### Security & Compliance
 
@@ -27,25 +27,16 @@ This directory contains developer-facing documentation for the My Compass projec
 
 | Document | Description |
 |----------|-------------|
-| [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) | Prioritized debt register (P0–P3), 16 items including CUI/PII API prep |
-| [API_INTEGRATION_ROADMAP.md](./API_INTEGRATION_ROADMAP.md) | Mock-to-real transition plan for NSIPS, eCRM, MNA, ADE integration |
+| [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) | Prioritized debt register, including deferred production requirements (Auth, Crypto, APIs) and frontend component debt |
+| [API_INTEGRATION_ROADMAP.md](./API_INTEGRATION_ROADMAP.md) | Mock-to-production transition plan for system integration (NSIPS, eCRM, MNA) |
 
 ### Feature Inventory
 
 | Document | Description |
 |----------|-------------|
-| [FLOWS_IMPLEMENTED.md](./FLOWS_IMPLEMENTED.md) | All built multi-screen flows (Leave Wizard, PCS Wizard, Travel Claim, etc.) with user paths |
-| [FLOWS_NOT_IMPLEMENTED.md](./FLOWS_NOT_IMPLEMENTED.md) | Planned flows not yet built (Profile Confirmation, OBLISERV Check, Screenings, etc.) |
-| [WIDGETS_IMPLEMENTED.md](./WIDGETS_IMPLEMENTED.md) | All built widgets (40+) — dashboard, PCS, assignment, leave, travel, inbox |
-| [WIDGETS_NOT_IMPLEMENTED.md](./WIDGETS_NOT_IMPLEMENTED.md) | Planned widgets not yet built (BAH, housing, status trackers, etc.) |
-| [TOOLS_IMPLEMENTED.md](./TOOLS_IMPLEMENTED.md) | All built tools (Billet Discovery, Slating, HHG Estimator, Inbox, Calendar, etc.) |
-| [TOOLS_NOT_IMPLEMENTED.md](./TOOLS_NOT_IMPLEMENTED.md) | Planned tools (BAH Calculator, TMO Scheduler, Document Vault, LES Viewer, etc.) |
+| [FEATURE_INVENTORY.md](./FEATURE_INVENTORY.md) | Universal inventory of all Flows, Tools, and Widgets (both implemented and strictly planned) |
 
-### Other
 
-| Document | Description |
-|----------|-------------|
-| [verification_storage_analysis.md](./verification_storage_analysis.md) | Storage layer verification analysis (legacy) |
 
 ---
 

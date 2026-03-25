@@ -75,8 +75,8 @@ export function TransitSegmentWidget() {
                     {/* Header */}
                     <View className="flex-row items-center justify-between mb-4">
                         <View className="flex-row items-center gap-3">
-                            <View className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800/60 items-center justify-center">
-                                <Plane size={20} color={isDark ? '#60A5FA' : '#2563EB'} />
+                            <View className="w-10 h-10 rounded-full bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 shadow-sm items-center justify-center">
+                                <Plane size={20} color={isDark ? '#94A3B8' : '#64748B'} />
                             </View>
                             <View>
                                 <Text className="text-slate-900 dark:text-white text-[18px] font-black tracking-tight" numberOfLines={2}>Transit Overview</Text>

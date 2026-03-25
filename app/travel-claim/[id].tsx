@@ -104,7 +104,7 @@ export default function TravelClaimDetail() {
     );
 }
 
-function Row({ label, value, bold, negative }: any) {
+function Row({ label, value, bold, negative }: { label: string; value: number; bold?: boolean; negative?: boolean }) {
     return (
         <View className="flex-row justify-between items-center mb-2">
             <Text className="text-slate-600 dark:text-slate-400">{label}</Text>

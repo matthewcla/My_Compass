@@ -5,7 +5,7 @@ import { Car, Plane, Shuffle } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-const MODE_OPTIONS: { mode: PCSSegmentMode; label: string; icon: any; description: string }[] = [
+const MODE_OPTIONS: { mode: PCSSegmentMode; label: string; icon: React.ElementType<any>; description: string }[] = [
     {
         mode: 'POV',
         label: 'POV (Privately Owned Vehicle)',

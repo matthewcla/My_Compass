@@ -18,7 +18,7 @@ interface TravelStep1Props {
   destinationZip: string;
   estimatedMileage: number;
   actualMileage: number;
-  onUpdate: (field: string, value: any) => void;
+  onUpdate: (field: string, value: unknown) => void;
   embedded?: boolean;
 }
 
@@ -232,7 +232,7 @@ export function TravelStep1TripDetails({
 
         range.forEach((day) => {
           const dayKey = format(day, 'yyyy-MM-dd');
-          let mark: any = { color: rangeColor, textColor: rangeTextColor };
+          let mark: Record<string, unknown> = { color: rangeColor, textColor: rangeTextColor };
 
           if (dayKey === start) {
             mark = {

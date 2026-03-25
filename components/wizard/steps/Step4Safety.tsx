@@ -8,7 +8,7 @@ import { Text, TextInput, View, useColorScheme } from 'react-native';
 
 interface Step4SafetyProps {
     formData: Partial<CreateLeaveRequestPayload>;
-    onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    onUpdate: (field: keyof CreateLeaveRequestPayload, value: unknown) => void;
     embedded?: boolean;
 }
 

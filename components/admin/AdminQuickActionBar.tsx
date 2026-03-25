@@ -84,13 +84,13 @@ export function AdminQuickActionBar() {
                                     key={action.label}
                                     activeOpacity={0.7}
                                     onPress={action.onPress}
-                                    className="items-center justify-center px-3 py-1.5"
-                                    style={{ minWidth: 64 }}
+                                    className="items-center justify-center px-3 py-2"
+                                    style={{ minWidth: 64, minHeight: 44 }}
                                 >
-                                    <View className="bg-slate-800 dark:bg-slate-200 w-10 h-10 rounded-full items-center justify-center mb-1">
+                                    <View className="bg-slate-100 dark:bg-slate-800 w-10 h-10 rounded-full items-center justify-center mb-1">
                                         <Icon
                                             size={18}
-                                            color={isDark ? '#0f172a' : '#ffffff'}
+                                            color={isDark ? '#e2e8f0' : '#475569'}
                                             strokeWidth={2}
                                         />
                                     </View>

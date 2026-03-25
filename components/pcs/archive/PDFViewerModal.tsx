@@ -53,16 +53,16 @@ export function PDFViewerModal({ visible, document, onClose }: PDFViewerModalPro
             <Pdf
                 source={{ uri: document.localUri, cache: true }}
                 onLoadComplete={(numberOfPages, filePath) => {
-                    console.log(`Number of pages: ${numberOfPages}`);
+                    // Load complete
                 }}
                 onPageChanged={(page, numberOfPages) => {
-                    console.log(`Current page: ${page}`);
+                    // Page changed
                 }}
                 onError={(error) => {
-                    console.log(error);
+                    // Error handled quietly
                 }}
                 onPressLink={(uri) => {
-                    console.log(`Link pressed: ${uri}`);
+                    // Link pressed
                 }}
                 style={styles.pdf}
                 trustAllCerts={false}

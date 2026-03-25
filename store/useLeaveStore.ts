@@ -63,7 +63,7 @@ interface LeaveActions {
      * Invalidates preReviewChecks on any edit.
      */
     updateDraft: (draftId: string, patch: Partial<LeaveRequest>) => Promise<void>;
-    updateDraftField: (draftId: string, field: keyof LeaveRequest, value: any) => Promise<void>;
+    updateDraftField: (draftId: string, field: keyof LeaveRequest, value: unknown) => Promise<void>;
 
     /**
      * Create a new draft in the store and persistence.
@@ -73,7 +73,7 @@ interface LeaveActions {
     /**
      * Validate a specific wizard step for a draft.
      */
-    validateStep: (draftId: string, step: 1 | 2 | 3) => { success: boolean; errors?: any };
+    validateStep: (draftId: string, step: 1 | 2 | 3) => { success: boolean; errors?: unknown };
 
     /**
      * Discard a draft (remove locally and from storage).
@@ -503,7 +503,7 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
         }
     },
 
-    updateDraftField: async (draftId: string, field: keyof LeaveRequest, value: any) => {
+    updateDraftField: async (draftId: string, field: keyof LeaveRequest, value: unknown) => {
         await get().updateDraft(draftId, { [field]: value });
     },
 

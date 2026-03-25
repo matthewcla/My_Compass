@@ -19,7 +19,6 @@ export function LeaveImpactWidget() {
     // Derive leave impact from the draft segment's entitlements
     const chargeableDays = currentDraft.entitlements?.leaveDays ?? 0;
 
-    // TODO: Pull actual leave balance from user store when available
     const availableOnDeparture = (user as any)?.leaveBalance ?? 30;
     const remainingOnReturn = availableOnDeparture - chargeableDays;
     const isOverdraft = remainingOnReturn < 0;

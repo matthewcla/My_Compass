@@ -42,14 +42,15 @@ export function AdminFilterChips() {
                         activeOpacity={0.7}
                         onPress={() => setTypeFilter(chip.key)}
                         className={`px-3.5 py-2 rounded-full border ${isActive
-                                ? 'bg-slate-800 dark:bg-slate-100 border-slate-800 dark:border-slate-100'
-                                : 'bg-transparent border-slate-300 dark:border-slate-600'
+                            ? 'bg-slate-800 dark:bg-slate-100 border-slate-800 dark:border-slate-100'
+                            : 'bg-transparent border-slate-300 dark:border-slate-600'
                             }`}
+                        style={{ minHeight: 44, justifyContent: 'center' }}
                     >
                         <Text
                             className={`text-xs font-bold ${isActive
-                                    ? 'text-white dark:text-slate-900'
-                                    : 'text-slate-600 dark:text-slate-300'
+                                ? 'text-white dark:text-slate-900'
+                                : 'text-slate-600 dark:text-slate-300'
                                 }`}
                         >
                             {chip.label}

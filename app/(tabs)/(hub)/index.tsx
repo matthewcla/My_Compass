@@ -1,13 +1,10 @@
 import AdminFeedWidget from '@/components/admin/AdminFeedWidget';
 import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
 import MNAProcessWidget from '@/components/assignment/MNAProcessWidget';
+import NegotiationWidget from '@/components/assignment/NegotiationWidget';
 import ReadinessWidget from '@/components/assignment/ReadinessWidget';
-import SelectionChecklistWidget from '@/components/assignment/SelectionChecklistWidget';
 import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
-import SlateSummaryWidget from '@/components/assignment/SlateSummaryWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
-import type { DiscoveryBadgeCategory } from '@/components/dashboard/DiscoveryCard';
-import { DiscoveryStatusCard } from '@/components/dashboard/DiscoveryCard';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
@@ -57,8 +54,72 @@ const AnimatedFlashList = (Platform.OS === 'web'
 
 // P2 FIX #8/#9: Stable component references prevent FlashList re-render thrashing
 const ItemSeparator = () => <View style={{ height: 24 }} />;
-const ListHeader = <View style={{ height: 24 }} />;
-const ListFooter = <View style={{ height: 250 }} />;
+const ListHeader = () => <View style={{ height: 24 }} />;
+const ListFooter = () => <View style={{ height: 250 }} />;
+const getItemType = (item: string) => item;
+
+const HubMissionStatusItem = React.memo(() => {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+    const { data } = useDashboardData();
+    const isDemoMode = useDemoStore(state => state.isDemoMode);
+    const demoTimeline = useDemoStore(state => state.demoTimelineOverride);
+    
+    return (
+        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1">
+            <StatusCard
+                nextCycle={data?.cycle?.cycleId ?? '24-02'}
+                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
+            />
+        </View>
+    );
+});
+
+const HubLeaveItem = React.memo(({ 
+    listRef, 
+    onQuickRequest 
+}: { 
+    listRef: React.RefObject<any>, 
+    onQuickRequest: () => void 
+}) => {
+    const router = useRouter();
+    const { data } = useDashboardData();
+    const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
+    const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
+    const leaveBalance = useLeaveStore(state => state.leaveBalance);
+
+    const leaveRequests = React.useMemo(() => {
+        return userLeaveRequestIds
+            .map(id => leaveRequestsMap[id])
+            .filter(Boolean)
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    }, [userLeaveRequestIds, leaveRequestsMap]);
+
+    return (
+        <LeaveCard
+            balance={data?.leave?.currentBalance ?? 0}
+            leaveBalance={leaveBalance}
+            requests={leaveRequests}
+            allRequests={leaveRequests}
+            onPressRequest={(req) => {
+                if (req.status === 'draft') {
+                    router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
+                } else {
+                    router.push(`/leave/${req.id}` as any);
+                }
+            }}
+            onQuickRequest={onQuickRequest}
+            onFullRequest={() => router.push('/leave/request' as any)}
+            onExpand={(expanded) => {
+                if (expanded) {
+                    setTimeout(() => {
+                        listRef.current?.scrollToEnd({ animated: true });
+                    }, 300);
+                }
+            }}
+        />
+    );
+});
 
 type FilterTab = 'Hub' | 'My Career' | 'My Admin';
 
@@ -74,20 +135,19 @@ export default function HubDashboard() {
 
     const listRef = React.useRef<any>(null);
 
-    const userLeaveRequestIds = useLeaveStore(useShallow(state => state.userLeaveRequestIds));
-    const leaveRequestsMap = useLeaveStore(useShallow(state => state.leaveRequests));
-    const leaveBalance = useLeaveStore(state => state.leaveBalance);
-
     // Quick Leave State
     const [showQuickLeave, setShowQuickLeave] = React.useState(false);
     const [quickLeaveDraft, setQuickLeaveDraft] = React.useState<any>(null);
 
-    const leaveRequests = React.useMemo(() => {
-        return userLeaveRequestIds
-            .map(id => leaveRequestsMap[id])
-            .filter(Boolean)
-            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    }, [userLeaveRequestIds, leaveRequestsMap]);
+    const handleQuickRequest = useCallback(() => {
+        if (user?.id) {
+            const draft = generateQuickDraft('standard', user.id);
+            setQuickLeaveDraft(draft);
+            setShowQuickLeave(true);
+        } else {
+            Alert.alert('Error', 'User not found. Cannot create quick leave.');
+        }
+    }, [user?.id, generateQuickDraft]);
 
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -145,39 +205,24 @@ export default function HubDashboard() {
     // QW1: Wrapped in useCallback to prevent FlashList re-creating the callback on every render
     // QW2: Each widget section gets a FadeInUp stagger for polished entrance
     // IMPORTANT: Must be above early returns to satisfy Rules of Hooks
-    const renderItem = useCallback(({ item, index }: { item: any; index: number }) => {
-        const isPCSPhase = isDemoMode && selectedPhase === DemoPhase.MY_PCS;
+    const renderItem = useCallback(({ item, index }: { item: string; index: number }) => {
         const delay = index * 60;
 
         switch (item) {
             case 'missionStatus':
                 return (
                     <Animated.View entering={FadeInUp.duration(350).springify()}>
-                        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1">
-                            <StatusCard
-                                nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
-                            />
-                        </View>
+                        <HubMissionStatusItem />
                     </Animated.View>
                 );
-            case 'discoveryStatus':
+            case 'negotiationWidget':
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <DiscoveryStatusCard
+                        <NegotiationWidget
                             onStartExploring={() => router.push({ pathname: '/(career)/discovery', params: { returnPath: '/(tabs)/(hub)' } } as any)}
-                            onBadgeTap={(category: DiscoveryBadgeCategory, count: number) => {
-                                if (count === 0) {
-                                    const labels: Record<DiscoveryBadgeCategory, string> = {
-                                        wow: 'WOW!', liked: 'Liked', passed: 'Passed', remaining: 'remaining'
-                                    };
-                                    Alert.alert('Nothing here yet', `You don't have any ${labels[category]} billets yet. Start exploring!`);
-                                    return;
-                                }
-                                router.push({ pathname: '/(career)/discovery', params: { filter: category, returnPath: '/(tabs)/(hub)' } } as any);
-                            }}
+                            onManageSlate={() => router.push('/(career)/cycle' as any)}
                         />
-                    </Animated.View >
+                    </Animated.View>
                 );
             case 'transitSegmentWidget': {
                 return (
@@ -224,11 +269,8 @@ export default function HubDashboard() {
                 );
             }
             case 'slateSummary': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <SlateSummaryWidget />
-                    </Animated.View>
-                );
+                // Return null since we removed this view, but keeping the case in case of legacy usage
+                return null;
             }
             case 'digitalSeaBag': {
                 return (
@@ -269,13 +311,6 @@ export default function HubDashboard() {
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
                         <SelectionDetailWidget />
-                    </Animated.View>
-                );
-            }
-            case 'selectionChecklist': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <SelectionChecklistWidget />
                     </Animated.View>
                 );
             }
@@ -358,43 +393,13 @@ export default function HubDashboard() {
             case 'leave':
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <LeaveCard
-                            balance={data?.leave?.currentBalance ?? 0}
-                            leaveBalance={leaveBalance}
-                            requests={leaveRequests}
-                            allRequests={leaveRequests}
-                            onPressRequest={(req) => {
-                                if (req.status === 'draft') {
-                                    router.push({ pathname: '/leave/request', params: { draftId: req.id } } as any);
-                                } else {
-                                    router.push(`/leave/${req.id}` as any);
-                                }
-                            }}
-                            onQuickRequest={() => {
-                                if (user?.id) {
-                                    const draft = generateQuickDraft('standard', user.id);
-                                    setQuickLeaveDraft(draft);
-                                    setShowQuickLeave(true);
-                                } else {
-                                    Alert.alert('Error', 'User not found. Cannot create quick leave.');
-                                }
-                            }}
-                            onFullRequest={() => router.push('/leave/request' as any)}
-                            onExpand={(expanded) => {
-                                if (expanded) {
-                                    setTimeout(() => {
-                                        listRef.current?.scrollToEnd({ animated: true });
-                                    }, 300);
-                                }
-                            }}
-                        />
+                        <HubLeaveItem listRef={listRef} onQuickRequest={handleQuickRequest} />
                     </Animated.View>
                 );
             default:
                 return null;
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDemoMode, selectedPhase, assignmentPhase, obliserv, pcsPhase, subPhase, data, leaveRequests, leaveBalance, activeUCTPhase]);
+    }, [router, handleQuickRequest]);
 
     const sections = React.useMemo(() => {
         const feed: string[] = [];
@@ -412,7 +417,7 @@ export default function HubDashboard() {
         if (assignmentPhase === 'ORDERS_PROCESSING') {
             // Focus: Tracking administrative order steps
             feed.push('ordersProcessingWidget');
-        } else if (assignmentPhase === 'ORDERS_RELEASED' || pcsPhase === 'CHECK_IN' || subPhase === 'ACTIVE_TRAVEL') {
+        } else if (assignmentPhase === 'ORDERS_RELEASED' || pcsPhase === 'CHECK_IN') {
             // Focus: Active PCS Workflow
             if (activeUCTPhase === 3) {
                 // Exceptional case: Operational Travel Tools trump the UCT visually
@@ -431,14 +436,11 @@ export default function HubDashboard() {
             // Priority 3: Career Discovery & Selection Details (if NOT in PCS processing)
             if (assignmentPhase === 'SELECTION') {
                 feed.push('selectionDetail');
-                feed.push('selectionChecklist');
             } else if (assignmentPhase === 'ON_RAMP') {
                 feed.push('careerReadiness');
                 feed.push('discoveryStatus');
             } else if (assignmentPhase === 'NEGOTIATION') {
-                feed.push('discoveryStatus'); // Retain Billet Discovery engine
-                feed.push('slateSummary');    // Followed immediately by the Composition Analyzer
-                // Priority 4: Peacetime Promotion ("The Garrison State")
+                feed.push('negotiationWidget'); // Consolidated Billet Explorer & Slate Summary
             }
         }
 
@@ -482,17 +484,19 @@ export default function HubDashboard() {
                         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)' }} />
 
                         <View className="flex-row items-center justify-between px-4 pt-3 pb-3">
-                            <Text
-                                style={{
-                                    textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.4)',
-                                    textShadowOffset: { width: 0, height: 1 },
-                                    textShadowRadius: 4,
-                                    color: isDark ? '#FFFFFF' : '#0F172A'
-                                }}
-                                className="text-[28px] font-black tracking-tighter"
-                            >
-                                MyCompass
-                            </Text>
+                            <View className="flex-row items-center">
+                                <Text
+                                    style={{
+                                        textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.4)',
+                                        textShadowOffset: { width: 0, height: 1 },
+                                        textShadowRadius: 4,
+                                        color: isDark ? '#FFFFFF' : '#0F172A'
+                                    }}
+                                    className="text-[28px] font-black tracking-tighter"
+                                >
+                                    MyCompass
+                                </Text>
+                            </View>
 
                             <Pressable
                                 onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
@@ -527,7 +531,7 @@ export default function HubDashboard() {
                         ref={listRef}
                         data={sections}
                         renderItem={renderItem}
-                        getItemType={(item: string) => item}
+                        getItemType={getItemType}
                         ItemSeparatorComponent={ItemSeparator}
                         ListHeaderComponent={ListHeader}
                         ListFooterComponent={ListFooter}
@@ -557,7 +561,7 @@ export default function HubDashboard() {
                     setQuickLeaveDraft(null);
                 }}
             >
-                <View className="flex-1 justify-center px-4 bg-black/60 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                <View className="flex-1 justify-center px-4 bg-slate-900/20 dark:bg-black/60 shadow-[0_0_50px_rgba(0,0,0,0.3)] dark:shadow-[0_0_50px_rgba(0,0,0,0.8)]">
                     <Pressable
                         className="absolute inset-0"
                         onPress={() => {

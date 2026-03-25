@@ -14,15 +14,12 @@ export const MessageCard: React.FC<MessageCardProps> = React.memo(({ message, on
     const isNavAdmin = message.type === 'NAVADMIN';
     const isStatusReport = message.type === 'STATUS_REPORT';
 
-    let accentColor = 'bg-slate-200 dark:bg-slate-800'; // Default
-    let accentBorder = 'border-l-4 border-slate-300 dark:border-slate-700';
+    let badgeText = 'text-slate-600 dark:text-slate-400';
 
     if (isNavAdmin) {
-        accentColor = 'bg-blue-50 dark:bg-blue-950/20';
-        accentBorder = 'border-l-4 border-blue-500';
+        badgeText = 'text-blue-600 dark:text-blue-400';
     } else if (isStatusReport) {
-        accentColor = 'bg-yellow-50 dark:bg-yellow-950/20';
-        accentBorder = 'border-l-4 border-yellow-500';
+        badgeText = 'text-amber-600 dark:text-amber-500';
     }
 
     const formattedDate = format(new Date(message.timestamp), 'dd MMM yy').toUpperCase();
@@ -31,15 +28,16 @@ export const MessageCard: React.FC<MessageCardProps> = React.memo(({ message, on
     return (
         <TouchableOpacity
             onPress={() => onPress?.(message.id)}
-            className={`mb-3 mx-4 p-4 rounded-lg shadow-sm ${accentColor} ${accentBorder}`}
+            activeOpacity={0.8}
+            className="mb-3 mx-4 p-4 rounded-2xl shadow-sm bg-white/95 dark:bg-slate-800/90 border border-slate-200/50 dark:border-slate-700/50 active:scale-[0.98]"
         >
             <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-row items-center gap-2">
                     {isUnread && (
-                        <View className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                        <View className="w-2.5 h-2.5 rounded-full bg-[#C9A227] shadow-[0_0_8px_rgba(201,162,39,0.5)]" />
                     )}
-                    <View className={`px-2 py-1 rounded-full ${isNavAdmin ? 'bg-blue-100 dark:bg-blue-900' : isStatusReport ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-slate-200 dark:bg-slate-700'}`}>
-                        <Text className={`text-xs font-bold ${isNavAdmin ? 'text-blue-800 dark:text-blue-200' : isStatusReport ? 'text-yellow-800 dark:text-yellow-200' : 'text-slate-700 dark:text-slate-300'}`}>
+                    <View className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50">
+                        <Text className={`text-[10px] tracking-[1.5px] font-bold uppercase ${badgeText}`}>
                             {message.type.replace('_', ' ')}
                         </Text>
                     </View>

@@ -21,7 +21,7 @@ interface IconProps {
     size?: number;
     color?: string;
     className?: string;
-    style?: any;
+    style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
 }
 
 export function Icon({ icon: IconComponent, size = 24, color, className, style }: IconProps) {

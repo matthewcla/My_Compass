@@ -61,6 +61,10 @@ export default function AdminFeedWidget() {
         [filteredRequests]
     );
 
+    const isFiltered = activeStatusFilter !== null || activeTypeFilter !== 'ALL';
+    const mainFeedRequests = activeStatusFilter === 'completed' ? completedRequests : activeRequests;
+    const showAccordion = activeStatusFilter === null && completedRequests.length > 0;
+
     // ── Last synced label ────────────────────────────────────────────────────
     const lastSyncedLabel = useMemo(() => {
         try {
@@ -95,12 +99,20 @@ export default function AdminFeedWidget() {
             </View>
 
             {/* Active Requests Feed */}
-            {activeRequests.length === 0 && completedRequests.length === 0 ? (
-                <AdminEmptyState />
+            {mainFeedRequests.length === 0 && !showAccordion ? (
+                isFiltered ? (
+                    <View className="items-center py-12">
+                        <Text className="text-sm text-slate-400 dark:text-slate-500">
+                            No requests match this filter.
+                        </Text>
+                    </View>
+                ) : (
+                    <AdminEmptyState />
+                )
             ) : (
                 <>
-                    {/* Active Request Cards */}
-                    {activeRequests.map((request) => (
+                    {/* Main Request Cards */}
+                    {mainFeedRequests.map((request) => (
                         <View key={request.id} className="mb-3">
                             <AdminRequestCard
                                 request={request}
@@ -110,20 +122,19 @@ export default function AdminFeedWidget() {
                                     else Alert.alert(request.actionLabel || 'Action Needed', 'This action will be available in a future update.');
                                 }}
                             />
+                            {/* Resolution Note for completed items in main feed */}
+                            {request.status === 'completed' && request.resolutionNote && (
+                                <View className="px-4 pt-1.5 pb-2">
+                                    <Text className="text-[10px] text-slate-400 dark:text-slate-500 italic">
+                                        {request.resolutionNote}
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     ))}
 
-                    {/* Active empty state (when only filter hides actives) */}
-                    {activeRequests.length === 0 && completedRequests.length > 0 && (
-                        <View className="items-center py-8">
-                            <Text className="text-sm text-slate-400 dark:text-slate-500">
-                                No active requests match this filter
-                            </Text>
-                        </View>
-                    )}
-
-                    {/* Completed Accordion */}
-                    {completedRequests.length > 0 && (
+                    {/* Completed Accordion (Only visible when unfiltered by status) */}
+                    {showAccordion && (
                         <View className="mt-4">
                             <TouchableOpacity
                                 activeOpacity={0.7}

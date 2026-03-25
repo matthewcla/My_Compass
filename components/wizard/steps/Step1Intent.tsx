@@ -42,7 +42,7 @@ interface Step1IntentProps {
     endTime?: string;
     departureWorkingHours?: string;
     returnWorkingHours?: string;
-    onUpdate: (field: keyof CreateLeaveRequestPayload, value: any) => void;
+    onUpdate: (field: keyof CreateLeaveRequestPayload, value: unknown) => void;
     embedded?: boolean;
 }
 
@@ -87,7 +87,8 @@ export function Step1Intent({
 
     // --- Calendar Marking ---
     const markedDates = useMemo(() => {
-        let marks: any = {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let marks: Record<string, any> = {};
 
         // Premium Range Colors
         // Light Mode: Use a solid light blue (Tailwind blue-100 equivalent) for a distinct "connected" strip
@@ -106,7 +107,8 @@ export function Step1Intent({
                 range.forEach((date: Date) => {
                     const dateStr = format(date, 'yyyy-MM-dd');
                     // Intermediate days use the premium range color
-                    let mark: any = { color: rangeColor, textColor: rangeTextColor };
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    let mark: Record<string, any> = { color: rangeColor, textColor: rangeTextColor };
 
                     if (dateStr === startDate) {
                         mark = { ...mark, startingDay: true, color: themeColors.tint, textColor: 'white' };
@@ -173,6 +175,7 @@ export function Step1Intent({
     }, [startDate, endDate]);
 
     // --- Time Handling ---
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleTimeChange = (event: any, selectedDate?: Date) => {
         if (Platform.OS === 'android') {
             if (event.type === 'dismissed') {

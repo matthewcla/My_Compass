@@ -8,8 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 interface ScreenHeaderProps {
     title: string;
     subtitle: string | React.ReactNode;
-    leftAction?: { icon: any; onPress: () => void } | null;
-    rightAction?: { icon: any; onPress: () => void } | null;
+    leftAction?: { icon: React.ElementType<any>; onPress: () => void } | null;
+    rightAction?: { icon: React.ElementType<any>; onPress: () => void } | null;
     withSafeArea?: boolean;
     variant?: 'large' | 'inline';
     searchConfig?: SearchConfig | null;

@@ -1,4 +1,4 @@
-import { GlassView } from '@/components/ui/GlassView';
+import { DashboardCardSurface } from '@/components/ui/DashboardCardSurface';
 import { useColorScheme } from '@/components/useColorScheme';
 import { LeaveBalance, LeaveRequest } from '@/types/schema';
 import { formatDays } from '@/utils/formatDays';
@@ -80,10 +80,9 @@ export function LeaveCard({
 
     return (
         <View className="mx-4 mb-6">
-            <GlassView
+            <DashboardCardSurface
                 intensity={80}
-                tint={isDark ? 'dark' : 'light'}
-                className="rounded-[24px] overflow-hidden shadow-sm border border-black/5 dark:border-white/10"
+                className="rounded-[24px]"
             >
                 <LinearGradient
                     colors={isDark ? ['rgba(244,63,94,0.15)', 'transparent'] : ['rgba(244,63,94,0.08)', 'transparent']}
@@ -266,7 +265,7 @@ export function LeaveCard({
                         )}
                     </View>
                 </View>
-            </GlassView>
+            </DashboardCardSurface>
         </View>
     );
 }

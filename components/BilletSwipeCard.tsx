@@ -23,8 +23,7 @@ import {
     Gesture,
     GestureDetector,
     GestureUpdateEvent,
-    PanGestureHandlerEventPayload,
-    TapGestureHandlerEventPayload
+    PanGestureHandlerEventPayload
 } from 'react-native-gesture-handler';
 import Animated, {
     Easing,
@@ -160,15 +159,6 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
         cardHeight.value = e.nativeEvent.layout.height;
     }, []);
 
-    // --- TAP GESTURE: Triggers in top trigger zone (below header) ---
-    const tap = Gesture.Tap()
-        .onEnd((event: GestureUpdateEvent<TapGestureHandlerEventPayload>) => {
-            const tapY = event.y;
-            if (tapY >= HEADER_HEIGHT && tapY <= HEADER_HEIGHT + TRIGGER_BAR_HEIGHT) {
-                runOnJS(openDrawer)();
-            }
-        });
-
     const gestureAxis = useSharedValue<0 | 1 | 2>(0); // 0: null, 1: x-axis, 2: y-axis
     const hapticFired = useSharedValue(false);
     const LOCK_THRESHOLD = 25; // Increased to allow the thumb's arc to establish before locking
@@ -266,8 +256,6 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
             translateY.value = withSpring(0, SNAP_BACK_CONFIG);
         });
 
-    const composedGesture = Gesture.Simultaneous(tap, pan);
-
     const cardStyle = useAnimatedStyle(() => {
         const rotate = active && gestureAxis.value === 1
             ? interpolate(
@@ -318,7 +306,7 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
     }));
 
     return (
-        <GestureDetector gesture={composedGesture}>
+        <GestureDetector gesture={pan}>
             <Animated.View
                 style={[{ position: 'absolute', width: '100%', height: '100%' }, cardStyle]}
                 onLayout={onCardLayout}

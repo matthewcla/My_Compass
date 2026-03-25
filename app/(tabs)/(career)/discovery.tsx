@@ -15,7 +15,6 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Heart, HelpCircle, Star, X } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Stable no-op function for background cards to prevent re-renders
@@ -176,7 +175,7 @@ export default function DiscoveryScreen() {
 
     // 2. DECK LOGIC
     const handleDeckComplete = useCallback(() => {
-        console.log('Deck Empty');
+        // Deck Empty
     }, []);
 
     const deck = useCinematicDeck({
@@ -265,15 +264,8 @@ export default function DiscoveryScreen() {
     const activeDecisions = mode === 'real' ? realDecisions : sandboxDecisions;
     const savedCount = Object.values(activeDecisions).filter(d => d === 'like' || d === 'super').length;
 
-    console.log('--- DISCOVERY SCREEN RENDER ---');
-    console.log('categoryFilter:', categoryFilter);
-    console.log('activeBillets.length:', activeBillets.length);
-    console.log('deck.step:', deck.step);
-    console.log('currentBillet ID:', currentBillet?.id);
-
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <ScreenGradient>
+        <ScreenGradient>
                 <Stack.Screen options={{ headerShown: false }} />
 
                 {/* Feedback Overlay */}
@@ -424,7 +416,6 @@ export default function DiscoveryScreen() {
                     onUpdateFilters={updateSandboxFilters}
                 />
             </ScreenGradient>
-        </GestureHandlerRootView>
     );
 }
 

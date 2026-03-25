@@ -34,12 +34,22 @@ export const getShadow = ({
     };
   }
 
+  // Android ignores shadowColor/shadowOffset/shadowOpacity/shadowRadius —
+  // it only respects `elevation`. Auto-derive a reasonable elevation from
+  // shadowRadius when not explicitly provided, so existing consumers get
+  // proper depth on Android without per-call changes.
+  const resolvedElevation = elevation ?? (
+    Platform.OS === 'android'
+      ? Math.max(Math.ceil(shadowRadius / 2), 1)
+      : undefined
+  );
+
   return {
     shadowColor,
     shadowOffset,
     shadowOpacity,
     shadowRadius,
-    elevation,
+    elevation: resolvedElevation,
   };
 };
 

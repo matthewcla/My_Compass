@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { LayoutChangeEvent, Pressable, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-const SEGMENTS: { label: string; mode: ThemeMode; icon: any }[] = [
+const SEGMENTS: { label: string; mode: ThemeMode; icon: React.ElementType<any> }[] = [
     { label: 'Day', mode: 'light', icon: Sun },
     { label: 'System', mode: 'system', icon: Monitor },
     { label: 'Tactical', mode: 'dark', icon: Moon },
@@ -30,8 +30,8 @@ export function ThemeToggle() {
 
         // Pure CSS Color Crossfade
         // Capture the EXACT old background color right now, before the CSS variables swap
-        // MenuHubScreen uses '#000000' for dark, '#F2F2F7' for light
-        const oldColor = isDark ? '#000000' : '#F2F2F7';
+        // MenuHubScreen uses '#000000' for dark, '#FAFAFA' for light
+        const oldColor = isDark ? '#000000' : '#FAFAFA';
 
         // Instantly mount the solid overlay to mask the jarring CSS swap
         setThemeTransitionColor(oldColor);
@@ -70,7 +70,7 @@ export function ThemeToggle() {
     });
 
     return (
-        <View style={{ marginBottom: 16 }}>
+        <View>
             <Text className="text-xs uppercase tracking-[1px] font-bold mb-2 ml-1" style={{ color: theme.text, opacity: 0.6 }}>
                 App Appearance
             </Text>
@@ -127,13 +127,13 @@ export function ThemeToggle() {
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%' }}>
                                 <Icon
                                     size={16}
-                                    color={isActive ? (segment.mode === 'dark' ? '#0A1628' : theme.text) : (isDark ? '#94a3b8' : '#64748b')}
+                                    color={isActive ? (segment.mode === 'dark' ? '#FFFFFF' : '#000000') : (isDark ? '#94a3b8' : '#64748b')}
                                     strokeWidth={isActive ? 2.5 : 2}
                                 />
                                 <Text
                                     className={`text-sm tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}
                                     style={{
-                                        color: isActive ? (segment.mode === 'dark' ? '#0A1628' : theme.text) : (isDark ? '#94a3b8' : '#64748b'),
+                                        color: isActive ? (segment.mode === 'dark' ? '#FFFFFF' : '#000000') : (isDark ? '#94a3b8' : '#64748b'),
                                     }}
                                     numberOfLines={1}
                                     adjustsFontSizeToFit

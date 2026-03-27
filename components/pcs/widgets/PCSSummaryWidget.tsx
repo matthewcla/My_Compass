@@ -7,9 +7,9 @@ import { UCTNodeStatus, UCTPhase } from '@/types/pcs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ArrowRight, CheckCircle2, ChevronDown, ChevronRight, CircleDashed, Lock, MapPin, Package } from 'lucide-react-native';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Pressable, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withTiming, useSharedValue, withSpring, useDerivedValue } from 'react-native-reanimated';
 import { TaskClusterHeader, TaskClusterType } from './TaskClusterHeader';
 
 export function PCSSummaryWidget() {
@@ -29,13 +29,21 @@ export function PCSSummaryWidget() {
     const activePhaseConfig = UCT_PHASES.find(p => p.phase === activePhaseNum);
 
     // UI state for the "Look Ahead" accordion
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [accordionContentHeight, setAccordionContentHeight] = useState(0);
+    const isExpanded = useSharedValue(false);
+    const accordionContentHeight = useSharedValue(0);
+
+    const toggleAccordion = useCallback(() => {
+        isExpanded.value = !isExpanded.value;
+    }, []);
+
+    const onAccordionLayout = useCallback((e: any) => {
+        accordionContentHeight.value = e.nativeEvent.layout.height;
+    }, []);
 
     // Get Next Action and Upcoming Tasks
-    const { nextAction, groupedUpcomingTasks, upcomingTasksCount, clusterCount } = useMemo(() => {
+    const { nextAction, groupedUpcomingTasks, upcomingTasksCount, clusterCount, isProfileLocked } = useMemo(() => {
         const profileItem = checklist.find(c => c.label === 'Profile Confirmation');
-        const isProfileLocked = profileItem && profileItem.status !== 'COMPLETE';
+        const isProfileLocked = profileItem ? profileItem.status !== 'COMPLETE' : false;
 
         const pendingItems = checklist
             .filter((c) => c.status !== 'COMPLETE')
@@ -47,10 +55,7 @@ export function PCSSummaryWidget() {
             });
 
         const activeAction = pendingItems[0] ?? null;
-        const upcoming = pendingItems.slice(1).map(task => ({
-            ...task,
-            isLocked: isProfileLocked && task.uctPhase > 1
-        }));
+        const upcoming = pendingItems.slice(1);
 
         // Group upcoming tasks
         const clusteredTasks = upcoming.reduce((acc, task) => {
@@ -80,24 +85,44 @@ export function PCSSummaryWidget() {
             nextAction: activeAction,
             groupedUpcomingTasks: grouped,
             upcomingTasksCount: upcoming.length,
-            clusterCount: grouped.length
+            clusterCount: grouped.length,
+            isProfileLocked
         };
     }, [checklist]);
 
     // Accordion Animation styles
+    const animationProgress = useDerivedValue(() => {
+        return withSpring(isExpanded.value ? 1 : 0, {
+            damping: 20,
+            stiffness: 200,
+        });
+    });
+
     const accordionStyle = useAnimatedStyle(() => {
         return {
-            height: withTiming(isExpanded ? accordionContentHeight : 0, { duration: 300 }),
-            opacity: withTiming(isExpanded ? 1 : 0, { duration: 250 }),
-            marginTop: withTiming(isExpanded ? 12 : 0, { duration: 300 }),
+            height: isExpanded.value ? withSpring(accordionContentHeight.value, {
+                damping: 20,
+                stiffness: 200,
+            }) : withSpring(0, {
+                damping: 20,
+                stiffness: 200,
+            }),
+            opacity: withTiming(isExpanded.value ? 1 : 0, { duration: 250 }),
+            marginTop: animationProgress.value * 12,
         };
-    }, [isExpanded, accordionContentHeight]);
+    });
 
     const chevronStyle = useAnimatedStyle(() => {
         return {
-            transform: [{ rotate: withTiming(isExpanded ? '180deg' : '0deg', { duration: 300 }) }]
+            transform: [{ rotate: `${animationProgress.value * 180}deg` }]
         };
     });
+
+    const handleNextActionPress = useCallback(() => {
+        if (nextAction?.actionRoute) {
+            router.push(nextAction.actionRoute as any);
+        }
+    }, [nextAction?.actionRoute, router]);
 
     // Compute progress
     const { completed, total } = useMemo(() => {
@@ -184,11 +209,7 @@ export function PCSSummaryWidget() {
                     {/* Next Action Hook */}
                     {nextAction ? (
                         <TouchableOpacity
-                            onPress={() => {
-                                if (nextAction.actionRoute) {
-                                    router.push(nextAction.actionRoute as any);
-                                }
-                            }}
+                            onPress={handleNextActionPress}
                             activeOpacity={0.7}
                             className="mt-2 rounded-[20px] overflow-hidden border border-blue-500/20 dark:border-blue-400/30 shadow-sm"
                         >
@@ -226,7 +247,7 @@ export function PCSSummaryWidget() {
                     {upcomingTasksCount > 0 && (
                         <View className="mt-1">
                             <Pressable
-                                onPress={() => setIsExpanded(!isExpanded)}
+                                onPress={toggleAccordion}
                                 className="flex-row items-center justify-between py-2 px-1"
                                 hitSlop={10}
                             >
@@ -240,8 +261,8 @@ export function PCSSummaryWidget() {
 
                             <Animated.View style={[accordionStyle, { overflow: 'hidden' }]}>
                                 <View
-                                    onLayout={(e) => setAccordionContentHeight(e.nativeEvent.layout.height)}
-                                    style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+                                    onLayout={onAccordionLayout}
+                                    className="absolute top-0 left-0 right-0"
                                 >
                                     {groupedUpcomingTasks.map(({ cluster, tasks }, index) => (
                                         <View key={cluster} className={index < groupedUpcomingTasks.length - 1 ? 'mb-2' : ''}>
@@ -252,32 +273,13 @@ export function PCSSummaryWidget() {
                                             />
                                             <View className="bg-white/40 dark:bg-slate-800/40 rounded-[16px] overflow-hidden border border-black/5 dark:border-white/5">
                                                 {tasks.map((task, idx) => (
-                                                    <ScalePressable
-                                                        key={task.id}
-                                                        disabled={task.isLocked || !task.actionRoute}
-                                                        onPress={() => {
-                                                            if (!task.isLocked && task.actionRoute) {
-                                                                router.push(task.actionRoute as any);
-                                                            }
-                                                        }}
-                                                        className={`flex-row items-center py-3 px-3 ${idx < tasks.length - 1 ? 'border-b border-slate-200/50 dark:border-slate-700/50' : ''}`}
-                                                    >
-                                                        <View className={`w-8 h-8 rounded-full items-center justify-center border ${task.isLocked ? 'bg-slate-100 dark:bg-slate-800 border-slate-200/50 dark:border-slate-700/50' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200/50 dark:border-blue-700/50'}`}>
-                                                            {task.isLocked ? (
-                                                                <Lock size={14} color={isDark ? '#64748B' : '#94A3B8'} />
-                                                            ) : (
-                                                                <ChevronRight size={16} color={isDark ? '#60A5FA' : '#3B82F6'} />
-                                                            )}
-                                                        </View>
-                                                        <View className="flex-1 ml-3">
-                                                            <Text className={`text-[14px] font-semibold ${task.isLocked ? 'text-slate-500 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`} numberOfLines={1}>
-                                                                {task.label}
-                                                            </Text>
-                                                            {!task.isLocked && task.helpText && (
-                                                                <Text className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" numberOfLines={1}>{task.helpText}</Text>
-                                                            )}
-                                                        </View>
-                                                    </ScalePressable>
+                                                    <AccordionTaskItem 
+                                                        key={task.id} 
+                                                        task={task} 
+                                                        isLocked={isProfileLocked && task.uctPhase > 1}
+                                                        isLast={idx === tasks.length - 1} 
+                                                        isDark={isDark} 
+                                                    />
                                                 ))}
                                             </View>
                                         </View>
@@ -294,6 +296,40 @@ export function PCSSummaryWidget() {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+
+const AccordionTaskItem = React.memo(({ task, isLocked, isLast, isDark }: { task: any; isLocked: boolean; isLast: boolean; isDark: boolean }) => {
+    const router = useRouter();
+
+    const handlePress = useCallback(() => {
+        if (!isLocked && task.actionRoute) {
+            router.push(task.actionRoute as any);
+        }
+    }, [isLocked, task.actionRoute, router]);
+
+    return (
+        <ScalePressable
+            disabled={isLocked || !task.actionRoute}
+            onPress={handlePress}
+            className={`flex-row items-center py-3 px-3 ${!isLast ? 'border-b border-slate-200/50 dark:border-slate-700/50' : ''}`}
+        >
+            <View className={`w-8 h-8 rounded-full items-center justify-center border ${isLocked ? 'bg-slate-100 dark:bg-slate-800 border-slate-200/50 dark:border-slate-700/50' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200/50 dark:border-blue-700/50'}`}>
+                {isLocked ? (
+                    <Lock size={14} color={isDark ? '#64748B' : '#94A3B8'} />
+                ) : (
+                    <ChevronRight size={16} color={isDark ? '#60A5FA' : '#3B82F6'} />
+                )}
+            </View>
+            <View className="flex-1 ml-3">
+                <Text className={`text-[14px] font-semibold ${isLocked ? 'text-slate-500 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}`} numberOfLines={1}>
+                    {task.label}
+                </Text>
+                {!isLocked && task.helpText && (
+                    <Text className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" numberOfLines={1}>{task.helpText}</Text>
+                )}
+            </View>
+        </ScalePressable>
+    );
+});
 
 function NodeDot({ status, active }: { status: UCTNodeStatus; active: boolean }) {
     const isDark = useColorScheme() === 'dark';

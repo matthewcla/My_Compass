@@ -389,6 +389,9 @@ Before creating any new component, flow, widget, or tool — check the relevant 
 | Planned but unbuilt tools | `docs/TOOLS_NOT_IMPLEMENTED.md` | When scoping new tool work |
 | USN Data Governance (VAULTIS, Zero Trust, Data Quality) | `docs/USN_DATA_GOVERNANCE_SUMMARY.md` | Before designing data models, APIs, or storage patterns |
 | API integration governance, service contracts, DSA patterns | `services/api/CLAUDE.md` | Before building or modifying service implementations |
+| Government security: storage & encryption | `docs/skills/government-secure-storage/SKILL.md` | Before implementing storage, encryption, or key management |
+| Government security: auth & access | `docs/skills/government-auth-and-access/SKILL.md` | Before implementing auth, authorization, or audit logging |
+| Government security: data handling | `docs/skills/government-data-handling/SKILL.md` | Before handling PII/CUI, external data, or logging |
 
 ---
 

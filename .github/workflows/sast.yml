@@ -1,0 +1,107 @@
+name: SAST
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # CodeQL — GitHub-native SAST for JS/TS
+  # Free for all repos. Results appear in GitHub Security > Code Scanning.
+  # ──────────────────────────────────────────────────────────────
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # security-extended adds ~100 more queries on top of the default security set
+          queries: security-extended
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
+
+  # ──────────────────────────────────────────────────────────────
+  # Semgrep — rule-based static analysis
+  # Runs without a token (OSS rules only). No cost.
+  # Relevant rule sets: react, typescript, owasp-top-ten, secrets.
+  # ──────────────────────────────────────────────────────────────
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep scan
+        # Exit code 1 = findings, 0 = clean. We capture findings via SARIF
+        # rather than hard-failing here so both SARIF paths always execute.
+        run: |
+          semgrep \
+            --config=p/react \
+            --config=p/typescript \
+            --config=p/owasp-top-ten \
+            --config=p/secrets \
+            --sarif \
+            --output=semgrep.sarif \
+            . || true
+
+      - name: Upload Semgrep SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        # Requires GitHub Advanced Security on private repos.
+        # On public repos this is always free and always available.
+        continue-on-error: true
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+      - name: Upload Semgrep results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          retention-days: 30
+
+      - name: Fail on HIGH severity Semgrep findings
+        run: |
+          pip install jq 2>/dev/null || true
+          HIGH=$(python3 -c "
+          import json, sys
+          with open('semgrep.sarif') as f:
+              data = json.load(f)
+          high = [
+              r for run in data.get('runs', [])
+              for r in run.get('results', [])
+              if r.get('properties', {}).get('severity', '').upper() == 'ERROR'
+          ]
+          print(len(high))
+          ")
+          echo "High severity findings: $HIGH"
+          if [ "$HIGH" -gt "0" ]; then
+            echo "::error::Semgrep found $HIGH high-severity issue(s). Review semgrep-sarif artifact."
+            exit 1
+          fi

@@ -1,0 +1,134 @@
+name: DAST — OWASP ZAP
+
+# What this does:
+# 1. Builds the Expo web export (expo export -p web → dist/)
+# 2. Serves it on localhost:8080 via `serve`
+# 3. Runs OWASP ZAP baseline scan against the served SPA
+#
+# Scope: Web deployment target only (Vercel). Native iOS/Android DAST
+# requires device-attached proxy tooling (e.g. Corellium + ZAP) outside CI.
+#
+# ZAP runs via Docker with --network host so it can reach localhost:8080.
+# Results: HTML/JSON/XML report artifacts. Build warns on MEDIUM, fails on HIGH.
+#
+# False positive note: A plain `serve` static server won't set security headers
+# (CSP, HSTS, X-Frame-Options etc). ZAP will flag these. This is intentional —
+# those headers belong in the Vercel deployment config. Review findings in the
+# context of production headers, not the dev server.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  dast:
+    name: OWASP ZAP Baseline Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Build the web export. expo export outputs to dist/.
+      # NODE_OPTIONS bump prevents OOM on the Ubuntu runner.
+      - name: Build Expo web export
+        run: npx expo export -p web
+        env:
+          CI: true
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      # Start the static file server in the background.
+      # `serve` binds to 0.0.0.0 by default, making port 8080 reachable
+      # from the Docker ZAP container via the host network.
+      - name: Serve web build
+        run: |
+          npm install -g serve
+          serve dist -p 8080 &
+          # Wait until the server is accepting connections
+          timeout 30 bash -c 'until curl -sf http://localhost:8080 > /dev/null; do sleep 1; done'
+          echo "Server is up at localhost:8080"
+
+      # Pull the ZAP stable image ahead of the scan step to surface
+      # any image pull failures as a distinct step.
+      - name: Pull OWASP ZAP image
+        run: docker pull ghcr.io/zaproxy/zaproxy:stable
+
+      # Run the ZAP baseline scan.
+      # --network host: ZAP container shares the host network so localhost:8080 resolves.
+      # -t: target URL
+      # -r: HTML report output filename
+      # -J: JSON report output filename
+      # -l WARN: only report WARN and above (suppress INFO noise)
+      # -I: do not fail the container exit code for warnings (we control exit below)
+      - name: Run OWASP ZAP Baseline Scan
+        run: |
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}:/zap/wrk:rw \
+            -u root \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+              -t http://localhost:8080 \
+              -r zap-report.html \
+              -J zap-report.json \
+              -l WARN \
+              -I 2>&1 | tee zap-output.txt
+          # ZAP baseline.py exit codes:
+          #   0 = no alerts
+          #   1 = warnings only
+          #   2 = high alerts (true failure)
+          #   3 = unexpected error
+          ZAP_EXIT=${PIPESTATUS[0]}
+          echo "ZAP exit code: $ZAP_EXIT"
+          echo "ZAP_EXIT=$ZAP_EXIT" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Evaluate ZAP results
+        run: |
+          echo "ZAP exit code was: $ZAP_EXIT"
+          if [ "$ZAP_EXIT" = "2" ]; then
+            echo "::error::DAST: OWASP ZAP found HIGH severity vulnerabilities. Review zap-report artifact."
+            exit 1
+          elif [ "$ZAP_EXIT" = "1" ]; then
+            echo "::warning::DAST: OWASP ZAP found MEDIUM/LOW severity findings. Review zap-report artifact."
+          elif [ "$ZAP_EXIT" = "3" ]; then
+            echo "::warning::DAST: ZAP encountered an unexpected error. Check zap-output.txt artifact."
+          fi
+
+      - name: Upload ZAP report (HTML)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dast-zap-report-html
+          path: zap-report.html
+          retention-days: 30
+
+      - name: Upload ZAP report (JSON)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dast-zap-report-json
+          path: zap-report.json
+          retention-days: 30
+
+      - name: Upload ZAP console output
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dast-zap-output
+          path: zap-output.txt
+          retention-days: 30

@@ -1,0 +1,56 @@
+name: IAST — Security-Instrumented Tests
+
+# What this does:
+# Runs the full Jest test suite with an additional security setup layer
+# (jest.security.config.js) that instruments the runtime to detect:
+#   - PII (SSN, DoD ID, email, phone) appearing in console.log/warn/error
+#   - PII written to AsyncStorage (should go through expo-secure-store instead)
+#
+# This is the closest practical equivalent of IAST for a React Native codebase.
+# True IAST agents (runtime bytecode instrumentation) are not available for
+# React Native native targets — this covers the security-relevant equivalent
+# for the mobile client layer.
+#
+# Results: iast-report.json artifact. Build fails if violations are found.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  iast:
+    name: Security-Instrumented Jest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security-instrumented tests
+        # --runInBand: single process so violation aggregation across test
+        # files is accurate (workers are isolated Node.js processes).
+        # --detectOpenHandles: tracks async handles via async_hooks and closes
+        # them gracefully — avoids the "worker failed to exit" warning that
+        # --forceExit produces by killing workers before they drain.
+        run: npm run test:security
+
+      - name: Upload IAST security report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iast-security-report
+          path: iast-report.json
+          retention-days: 30

@@ -51,13 +51,9 @@ const MemoizedTabItem = React.memo(({
     onPress: (route: string) => void;
 }) => {
     // Premium Naval Glass Cockpit palette
-    const inactiveColor = isDark ? '#64748B' : '#64748B'; // Deepen inactive dark mode contrast
-    const activeSolidHex = isDark ? '#FFFFFF' : '#0F172A';
-
-    // In light mode, a solid bright white background prevents shadow bleed and pops.
-    // In dark mode, we use a stronger translucent white to ensure it doesn't look dark against the blur map.
-    const activeBgRgba = isDark ? 'rgba(255, 255, 255, 0.35)' : '#FFFFFF';
-    const activeBorderRgba = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.05)';
+    const activeSolidHex = isDark ? '#131313' : '#131313'; // Surface color
+    const inactiveColor = isDark ? '#e5e2e1' : '#e5e2e1'; // text-on-surface
+    const activeBgRgba = '#fdc400'; // secondary-container
 
     const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
 
@@ -68,25 +64,15 @@ const MemoizedTabItem = React.memo(({
                     alignItems: 'center',
                     justifyContent: 'center',
                     height: 54,
-                    borderRadius: 16,
+                    borderRadius: 0, // Sharp corners
                 },
                 isActive ? {
                     flexDirection: 'row',
                     flex: 1.8,
                     backgroundColor: activeBgRgba,
-                    borderColor: activeBorderRgba,
-                    borderWidth: 1,
-                    borderRadius: 14,
-                    height: 44,
-                    marginHorizontal: 4,
-                    // Note: No shadow/elevation on translucent backgrounds to prevent dark bleed-through underneath
-                    ...(isDark ? {} : {
-                        shadowColor: '#000000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 4,
-                        elevation: 2
-                    })
+                    borderWidth: 0,
+                    height: 54,
+                    marginHorizontal: 0,
                 } : {
                     flex: 1
                 }
@@ -95,11 +81,11 @@ const MemoizedTabItem = React.memo(({
         >
             <Ionicons name={iconName as any} size={isActive ? 22 : 24} color={isActive ? activeSolidHex : inactiveColor} />
             {isActive ? (
-                <Text style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '800', marginLeft: 6, marginTop: 0 }]}>
+                <Text style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '900', marginLeft: 6, marginTop: 0, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }]}>
                     {tab.label}
                 </Text>
             ) : (
-                <Text style={[styles.tabLabel, { color: inactiveColor, fontWeight: '600', opacity: 0.8, textAlign: 'center' }]}>
+                <Text style={[styles.tabLabel, { color: inactiveColor, fontWeight: '700', opacity: 0.8, textAlign: 'center', textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }]}>
                     {tab.label}
                 </Text>
             )}
@@ -280,10 +266,9 @@ export default function ExpandableBottomDrawer() {
         // Transition fully within the first 65px of drag
         const morphProgress = interpolate(translateY.value, [0, -65], [0, 1], Extrapolation.CLAMP);
 
-        // Floating Island Metaphor: Maintain margins and bottom inset so it never gets clipped by device bezels
-        const marginH = 16;
-        const bottomRadius = 40;
-        const topRadius = 40;
+        // Anchor Point bottom bar: full width, no margins, sharp corners
+        const marginH = interpolate(morphProgress, [0, 1], [0, 0]);
+        const radius = 0;
 
         // Keep the bottom edge precisely hovering above the home indicator safe area
         const stretchDownHeight = HEIGHT_COLLAPSED - translateY.value;
@@ -293,10 +278,10 @@ export default function ExpandableBottomDrawer() {
             left: marginH,
             right: marginH,
             height: mappedHeight,
-            borderTopLeftRadius: topRadius,
-            borderTopRightRadius: topRadius,
-            borderBottomLeftRadius: bottomRadius,
-            borderBottomRightRadius: bottomRadius,
+            borderTopLeftRadius: radius,
+            borderTopRightRadius: radius,
+            borderBottomLeftRadius: radius,
+            borderBottomRightRadius: radius,
         };
     });
 
@@ -367,18 +352,13 @@ export default function ExpandableBottomDrawer() {
                             }
                         ]}
                     >
-                        <BlurView
-                            tint={isDark ? 'dark' : 'light'}
-                            intensity={Platform.OS === 'android'
-                                ? (isDark ? 30 : 35)
-                                : (isDark ? 80 : 80)
-                            }
+                        <View
                             style={[
                                 StyleSheet.absoluteFill,
                                 {
-                                    backgroundColor: isDark
-                                        ? (Platform.OS === 'android' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(15, 23, 42, 0.45)')
-                                        : (Platform.OS === 'android' ? 'rgba(255, 255, 255, 0.82)' : 'rgba(255, 255, 255, 0.5)')
+                                    backgroundColor: '#131313', // Anchor Point surface
+                                    borderTopWidth: 2,
+                                    borderTopColor: 'rgba(174, 198, 254, 0.1)', // primary/10
                                 }
                             ]}
                         />
@@ -390,11 +370,8 @@ export default function ExpandableBottomDrawer() {
                                 StyleSheet.absoluteFill,
                                 {
                                     top: 1, left: 1, right: 1, bottom: 1,
-                                    borderWidth: 1,
-                                    borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.6)',
-                                },
-                                // Replicate radii internally so the stroke honors the corners
-                                styles.innerBorder
+                                    borderWidth: 0,
+                                }
                             ]}
                         />
 
@@ -490,13 +467,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0, // Anchored to the top of translateContainer, expands downwards
         overflow: 'hidden',
-        borderWidth: 1,
-
-        // Deep shadow for isolation
-        elevation: 20,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.35,
-        shadowRadius: 24,
+        borderWidth: 0,
+        borderRadius: 0,
     },
     pillContents: {
         width: '100%',
@@ -511,8 +483,8 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-evenly',
-        paddingHorizontal: 8,
+        justifyContent: 'space-between',
+        paddingHorizontal: 0,
     },
     tabItem: {
         // Obsolete (absorbed dynamically in component logic)

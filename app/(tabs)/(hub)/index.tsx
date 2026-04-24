@@ -41,11 +41,13 @@ import { getShadow } from '@/utils/getShadow';
 import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Bell } from 'lucide-react-native';
+import { Bell, Menu } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { Alert, Modal, Platform, Pressable, Text, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useShallow } from 'zustand/react/shallow';
 
 const AnimatedFlashList = (Platform.OS === 'web'
@@ -54,7 +56,25 @@ const AnimatedFlashList = (Platform.OS === 'web'
 
 // P2 FIX #8/#9: Stable component references prevent FlashList re-render thrashing
 const ItemSeparator = () => <View style={{ height: 24 }} />;
-const ListHeader = () => <View style={{ height: 24 }} />;
+const ListHeader = () => (
+    <View className="relative w-full h-48 md:h-64 bg-[#2a2a2a] overflow-hidden border-b-4 border-secondary-container mb-6">
+        <LinearGradient
+            colors={['rgba(19,19,19,1)', 'rgba(19,19,19,0)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.66, y: 0 }}
+            style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '100%', zIndex: 10 }}
+        />
+        <Image
+            source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlk0EQB3AeeQZRB_5FtVwpVzBeqCT1W0966Y_uc6miRy4RCqlHyN9u54wBUvBVHYSZRT4jH_YTMJBVtfzeOFakU7hnZeBDqDQc4kr75YMTipBs1Q-HH3H_CLaPpMIHeQAKyvdSp7yqWaR97VxVKNC2goiGrKZUb3eKHO3sYi9P4Bit9Zm5XVJPzd744sVbF4gk13iIY5aFsSs-Yl0VPPeMoJ5IILKO0levwWL_ggbVRUN-lfLGR_OIlDWX1XhwAsFq_JerR59KS3o' }}
+            style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.4 }}
+            contentFit="cover"
+        />
+        <View className="absolute bottom-6 left-5 z-20">
+            <Text className="font-label text-secondary-container font-bold tracking-widest text-sm mb-1 uppercase">Personnel Status</Text>
+            <Text className="font-display text-4xl md:text-5xl font-extrabold text-white tracking-tighter uppercase leading-none">DASHBOARD</Text>
+        </View>
+    </View>
+);
 const ListFooter = () => <View style={{ height: 250 }} />;
 const getItemType = (item: string) => item;
 
@@ -483,28 +503,31 @@ export default function HubDashboard() {
                         {/* Inner Glass Top-Glow Highlight */}
                         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)' }} />
 
-                        <View className="flex-row items-center justify-between px-4 pt-3 pb-3">
-                            <View className="flex-row items-center">
-                                <Text
-                                    style={{
-                                        textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.4)',
-                                        textShadowOffset: { width: 0, height: 1 },
-                                        textShadowRadius: 4,
-                                        color: isDark ? '#FFFFFF' : '#0F172A'
-                                    }}
-                                    className="text-[28px] font-black tracking-tighter"
+                        <View className="flex-row items-center justify-between px-5 pt-3 pb-3">
+                            <View className="flex-row items-center gap-3">
+                                <Pressable
+                                    onPress={() => Alert.alert('Menu', 'Menu opened')}
+                                    hitSlop={12}
+                                    className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
                                 >
-                                    MyCompass
+                                    <Menu color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
+                                </Pressable>
+                                <Text
+                                    className="text-xl font-black font-headline uppercase tracking-tighter text-primary dark:text-primary"
+                                >
+                                    ANCHOR POINT
                                 </Text>
                             </View>
 
-                            <Pressable
-                                onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
-                                hitSlop={12}
-                                className="w-10 h-10 rounded-full items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 active:opacity-70"
-                            >
-                                <Bell color={isDark ? '#E2E8F0' : '#334155'} size={20} strokeWidth={2.5} />
-                            </Pressable>
+                            <View className="flex items-center">
+                                <Pressable
+                                    onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
+                                    hitSlop={12}
+                                    className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
+                                >
+                                    <Bell color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
+                                </Pressable>
+                            </View>
                         </View>
                         <View
                             className="w-full"

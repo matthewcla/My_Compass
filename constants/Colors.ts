@@ -44,8 +44,10 @@ export const Colors = {
     wizardCardBackground: '#FFFFFF',
     inputBackground: '#F4F4F5',
     accentText: systemBlueLight,
-    surface: '#FFFFFF',
+    surface: '#131313',
     surfaceBorder: '#E4E4E7',
+    primary: '#aec6fe',
+    secondaryContainer: '#fdc400',
     iconBubble: '#E8EDF6',
     iconBubbleLocked: '#F1F5F9',
 
@@ -74,8 +76,10 @@ export const Colors = {
     wizardCardBackground: '#09090B',
     inputBackground: '#18181B',
     accentText: '#FFFFFF',
-    surface: '#09090B',
+    surface: '#131313',
     surfaceBorder: '#27272A',
+    primary: '#aec6fe',
+    secondaryContainer: '#fdc400',
     iconBubble: 'rgba(51, 142, 247, 0.18)',
     iconBubbleLocked: '#27272A',
 

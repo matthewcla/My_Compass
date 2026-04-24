@@ -287,29 +287,24 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 return (
                     <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
                         <CardShell>
-                            <LinearGradient
-                                colors={isDark ? ['rgba(168,162,158,0.1)', 'transparent'] : ['rgba(168,162,158,0.10)', 'transparent']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                            />
-                            <View className="px-5 py-5">
-                                <View className="flex-row items-center justify-between">
-                                    <View className="flex-row items-center gap-4 flex-1">
-                                        <IconBubble bg="bg-stone-100 dark:bg-stone-800/60" border="border-stone-200 dark:border-stone-700">
-                                            <FileCheck size={26} color={isDark ? '#a8a29e' : '#57534e'} />
-                                        </IconBubble>
-                                        <View className="flex-1">
-                                            <Headline>Orders Processing</Headline>
-                                            {procEstDate ? (
-                                                <Detail>ETA: {new Date(procEstDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</Detail>
-                                            ) : (
-                                                <Detail>Pending Detailer release</Detail>
-                                            )}
-                                        </View>
-                                    </View>
+                            <View className="flex-row items-center justify-between mb-6">
+                                <Headline>Orders Processing</Headline>
+                                <FileCheck size={26} color="#aec6fe" />
+                            </View>
+                            <View className="bg-surface border-l-4 border-secondary-container p-3 flex-row items-start gap-3">
+                                <FileCheck size={20} color="#fdc400" />
+                                <View>
+                                    <Text className="font-headline font-semibold text-white text-sm uppercase">Pending Release</Text>
+                                    {procEstDate ? (
+                                        <Text className="font-body text-xs text-on-surface-variant mt-1">ETA: {new Date(procEstDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
+                                    ) : (
+                                        <Text className="font-body text-xs text-on-surface-variant mt-1">Pending Detailer release</Text>
+                                    )}
                                 </View>
                             </View>
+                            <TouchableOpacity className="w-full mt-4 bg-primary flex items-center justify-center py-3 border-2 border-transparent active:border-primary active:bg-surface transition-colors">
+                                <Text className="text-on-primary font-headline font-bold uppercase tracking-widest">VIEW DETAILS</Text>
+                            </TouchableOpacity>
                         </CardShell>
                     </TouchableOpacity>
                 );
@@ -320,17 +315,13 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
                 return (
                     <TouchableOpacity onPress={() => router.push('/(tabs)/(assignment)' as any)} className="flex flex-col gap-2">
-                        <CardShell>
-                            <View className="px-5 py-5">
-                                <View className="flex-row items-center gap-4">
-                                    <View className="w-[52px] h-[52px] rounded-full overflow-hidden items-center justify-center border-[1.5px] border-black/5 dark:border-white/10 shadow-inner">
-                                        <LinearGradient colors={['#3AAE6C', '#1B6A3B']} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-                                        <Star size={22} color="#FFFFFF" fill="#FFFFFF" />
-                                    </View>
-                                    <View className="flex-1">
-                                        <Headline color="text-green-900 dark:text-white">Selection Confirmed</Headline>
-                                    </View>
-                                </View>
+                        <CardShell type="congratulations">
+                            <IconBubble bg="bg-transparent">
+                                <Star size={36} color="#fdc400" fill="#fdc400" />
+                            </IconBubble>
+                            <View className="text-center md:text-left z-10 flex-1">
+                                <Text className="font-display text-3xl md:text-4xl font-extrabold tracking-tighter uppercase mb-2 text-surface">CONGRATULATIONS!</Text>
+                                <Text className="font-headline text-lg md:text-xl font-bold tracking-wide text-surface">Selection Confirmed</Text>
                             </View>
                         </CardShell>
                     </TouchableOpacity>
@@ -342,25 +333,20 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 return (
                     <TouchableOpacity onPress={() => router.push('/(career)/cycle' as any)} className="flex flex-col gap-2">
                         <CardShell>
-                            <LinearGradient
-                                colors={isDark ? ['rgba(245,158,11,0.15)', 'transparent'] : ['rgba(245,158,11,0.12)', 'transparent']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                            />
-                            <View className="px-5 py-5">
-                                <View className="flex-row items-center justify-between">
-                                    <View className="flex-row items-center gap-4 flex-1">
-                                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/60" border="border-amber-200 dark:border-amber-700/50">
-                                            <Users size={26} color={isDark ? '#fbbf24' : '#d97706'} />
-                                        </IconBubble>
-                                        <View className="flex-1">
-                                            <Headline color="text-amber-900 dark:text-amber-100">MNA Negotiation</Headline>
-                                            <Detail>Submit your ranked slate</Detail>
-                                        </View>
-                                    </View>
+                            <View className="flex-row items-center justify-between mb-6">
+                                <Headline>MNA Negotiation</Headline>
+                                <Users size={26} color="#aec6fe" />
+                            </View>
+                            <View className="bg-surface border-l-4 border-secondary-container p-3 flex-row items-start gap-3">
+                                <Users size={20} color="#fdc400" />
+                                <View>
+                                    <Text className="font-headline font-semibold text-white text-sm uppercase">Submit Slate</Text>
+                                    <Text className="font-body text-xs text-on-surface-variant mt-1">Submit your ranked slate</Text>
                                 </View>
                             </View>
+                            <TouchableOpacity className="w-full mt-4 bg-primary flex items-center justify-center py-3 border-2 border-transparent active:border-primary active:bg-surface transition-colors">
+                                <Text className="text-on-primary font-headline font-bold uppercase tracking-widest">VIEW DETAILS</Text>
+                            </TouchableOpacity>
                         </CardShell>
                     </TouchableOpacity>
                 );
@@ -375,28 +361,27 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 return (
                     <TouchableOpacity onPress={() => router.push(hasPrepped ? '/(career)/discovery' as any : '/(tabs)/(profile)/preferences' as any)} className="flex flex-col gap-2">
                         <CardShell>
-                            <LinearGradient
-                                colors={isDark ? ['rgba(245,158,11,0.1)', 'transparent'] : ['rgba(245,158,11,0.12)', 'transparent']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                            />
-                            <View className="px-5 py-5">
-                                <View className="flex-row items-center justify-between">
-                                    <View className="flex-row items-center gap-4 flex-1">
-                                        <IconBubble bg="bg-amber-100 dark:bg-amber-900/40" border="border-amber-200 dark:border-amber-800">
-                                            <Timer size={26} color={isDark ? '#C8921C' : '#B07500'} />
-                                        </IconBubble>
-                                        <View className="flex-1">
-                                            <Headline color="text-amber-900 dark:text-amber-100">Cycle {nextCycle}</Headline>
-                                            {prdLabel && <Detail>PRD {prdLabel}</Detail>}
-                                        </View>
-                                    </View>
-                                    <View className="flex-row items-baseline gap-1">
-                                        <Text className="text-amber-950 dark:text-white text-3xl font-black font-mono tracking-tighter">{daysUntilOpen}</Text>
-                                        <Text className="text-amber-700 dark:text-amber-400 text-[11px] font-bold uppercase tracking-wider">Days</Text>
-                                    </View>
+                            <View className="flex-row items-start justify-between mb-6">
+                                <View>
+                                    <Headline>Cycle {nextCycle}</Headline>
+                                    {prdLabel && <Detail>PRD {prdLabel}</Detail>}
                                 </View>
+                                <Timer size={26} color="#fdc400" />
+                            </View>
+                            <View className="flex-1 flex flex-col justify-center">
+                                <View className="flex-row justify-between items-end mb-2">
+                                    <Text className="font-headline font-bold text-primary uppercase text-sm">Status: Open</Text>
+                                    <Text className="font-display font-extrabold text-secondary-container text-2xl">{daysUntilOpen} Days</Text>
+                                </View>
+                                {/* Tactical Blocky Progress Bar */}
+                                <View className="flex-row gap-1 h-6 w-full bg-surface-container-highest p-1 border border-outline-variant/30">
+                                    <View className="flex-1 bg-secondary-container h-full" />
+                                    <View className="flex-1 bg-secondary-container h-full" />
+                                    <View className="flex-1 bg-secondary-container h-full" />
+                                    <View className="flex-1 bg-surface-variant h-full" />
+                                    <View className="flex-1 bg-surface-variant h-full" />
+                                </View>
+                                <Text className="font-label text-xs text-on-surface-variant text-right mt-2 uppercase tracking-widest">Time Remaining</Text>
                             </View>
                         </CardShell>
                     </TouchableOpacity>
@@ -413,29 +398,20 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
                 return (
                     <TouchableOpacity onPress={() => router.push('/(career)/discovery' as any)} className="flex flex-col gap-2">
                         <CardShell>
-                            <LinearGradient
-                                colors={isDark ? ['rgba(59,130,246,0.1)', 'transparent'] : ['rgba(59,130,246,0.12)', 'transparent']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                            />
-                            <View className="px-5 py-5">
-                                <View className="flex-row items-center justify-between">
-                                    <View className="flex-row items-center gap-4 flex-1">
-                                        <IconBubble bg="bg-blue-100 dark:bg-blue-900/40" border="border-blue-200 dark:border-blue-800/60">
-                                            <Calendar size={26} color={isDark ? '#60A5FA' : '#1D4ED8'} />
-                                        </IconBubble>
-                                        <View className="flex-1">
-                                            <Headline color="text-blue-900 dark:text-blue-100">MNA Cycle</Headline>
-                                            <Detail>Your PRD is in ~{monthsToPrd} months</Detail>
-                                        </View>
-                                    </View>
-                                    <View className="flex-row items-baseline gap-1">
-                                        <Text className="text-blue-950 dark:text-white text-3xl font-black font-mono tracking-tighter">~{monthsToMna}</Text>
-                                        <Text className="text-blue-700 dark:text-blue-400 text-[11px] font-bold uppercase tracking-wider">Months</Text>
-                                    </View>
+                            <View className="flex-row items-center justify-between mb-6">
+                                <Headline>MNA Cycle</Headline>
+                                <Calendar size={26} color="#aec6fe" />
+                            </View>
+                            <View className="bg-surface border-l-4 border-secondary-container p-3 flex-row items-start gap-3">
+                                <Calendar size={20} color="#fdc400" />
+                                <View>
+                                    <Text className="font-headline font-semibold text-white text-sm uppercase">Preparation</Text>
+                                    <Text className="font-body text-xs text-on-surface-variant mt-1">Your PRD is in ~{monthsToPrd} months</Text>
                                 </View>
                             </View>
+                            <TouchableOpacity className="w-full mt-4 bg-primary flex items-center justify-center py-3 border-2 border-transparent active:border-primary active:bg-surface transition-colors">
+                                <Text className="text-on-primary font-headline font-bold uppercase tracking-widest">VIEW DETAILS</Text>
+                            </TouchableOpacity>
                         </CardShell>
                     </TouchableOpacity>
                 );
@@ -452,22 +428,52 @@ export function StatusCard({ nextCycle, daysUntilOpen }: StatusCardProps) {
 
 // ── Shared Primitives ────────────────────────────────────────────────────────
 
-function CardShell({ children }: { children: React.ReactNode }) {
-    const isDark = useColorScheme() === 'dark';
+function CardShell({ children, type = 'default' }: { children: React.ReactNode, type?: 'default' | 'congratulations' }) {
+    if (type === 'congratulations') {
+        return (
+            <View
+                className="bg-secondary-container p-6 md:p-8 rounded-none relative overflow-hidden flex flex-col md:flex-row items-center gap-6"
+                style={{
+                    shadowColor: 'rgba(253, 196, 0, 1)',
+                    shadowOffset: { width: 4, height: 4 },
+                    shadowOpacity: 1,
+                    shadowRadius: 0,
+                    elevation: 5
+                }}
+            >
+                {children}
+            </View>
+        );
+    }
+
     return (
-        <GlassView
-            intensity={80}
-            tint={isDark ? 'dark' : 'light'}
-            className="rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-none bg-white/70 dark:bg-slate-900/60 border border-black/5 dark:border-white/10"
+        <View
+            className="bg-surface-container border-t-4 border-secondary-container p-6 flex flex-col rounded-none"
+            style={{
+                shadowColor: 'rgba(174, 198, 254, 1)',
+                shadowOffset: { width: 4, height: 4 },
+                shadowOpacity: 1,
+                shadowRadius: 0,
+                elevation: 5
+            }}
         >
             {children}
-        </GlassView>
+        </View>
     );
 }
 
 function IconBubble({ bg, border, children }: { bg: string; border?: string; children: React.ReactNode }) {
     return (
-        <View className={`${bg} w-[52px] h-[52px] rounded-full items-center justify-center border-[1.5px] shadow-sm ${border || 'border-transparent'}`}>
+        <View
+            className="shrink-0 bg-surface text-secondary-container p-4 rounded-full border-4 border-surface z-10"
+            style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.5,
+                shadowRadius: 20,
+                elevation: 5
+            }}
+        >
             {children}
         </View>
     );
@@ -475,7 +481,7 @@ function IconBubble({ bg, border, children }: { bg: string; border?: string; chi
 
 function Headline({ children, color }: { children: React.ReactNode; color?: string }) {
     return (
-        <Text className={`${color || 'text-slate-900 dark:text-slate-100'} text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5`} numberOfLines={2}>
+        <Text className={`${color || 'text-white'} font-headline text-xl font-bold uppercase tracking-tight`} numberOfLines={2}>
             {children}
         </Text>
     );
@@ -483,7 +489,7 @@ function Headline({ children, color }: { children: React.ReactNode; color?: stri
 
 function Detail({ children }: { children: React.ReactNode }) {
     return (
-        <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>
+        <Text className="font-body text-sm text-on-surface-variant mt-1" numberOfLines={2}>
             {children}
         </Text>
     );

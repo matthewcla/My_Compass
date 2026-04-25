@@ -1,31 +1,8 @@
-import AdminFeedWidget from '@/components/admin/AdminFeedWidget';
-import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
-import MNAProcessWidget from '@/components/assignment/MNAProcessWidget';
-import NegotiationWidget from '@/components/assignment/NegotiationWidget';
-import ReadinessWidget from '@/components/assignment/ReadinessWidget';
-import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
-import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
-import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { PCSHeroBanner } from '@/components/pcs/PCSHeroBanner';
-import { ArrivalBriefingWidget } from '@/components/pcs/widgets/ArrivalBriefingWidget';
-import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
-import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
-import { DigitalSeaBagWidget } from '@/components/pcs/widgets/DigitalSeaBagWidget';
-import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
-import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
-import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
-import { OrdersProcessingWidget } from '@/components/pcs/widgets/OrdersProcessingWidget';
-import { PCSFinancialSnapshot } from '@/components/pcs/widgets/PCSFinancialSnapshot';
-import { PCSMissionBrief } from '@/components/pcs/widgets/PCSMissionBrief';
-import { PCSSummaryWidget } from '@/components/pcs/widgets/PCSSummaryWidget';
-import { PCSTaskTracker } from '@/components/pcs/widgets/PCSTaskTracker';
-import { TransitSegmentWidget } from '@/components/pcs/widgets/TransitSegmentWidget';
-import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
-import { TravelReceiptLoggerWidget } from '@/components/pcs/widgets/TravelReceiptLoggerWidget';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -77,23 +54,6 @@ const ListHeader = () => (
 );
 const ListFooter = () => <View style={{ height: 250 }} />;
 const getItemType = (item: string) => item;
-
-const HubMissionStatusItem = React.memo(() => {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
-    const { data } = useDashboardData();
-    const isDemoMode = useDemoStore(state => state.isDemoMode);
-    const demoTimeline = useDemoStore(state => state.demoTimelineOverride);
-    
-    return (
-        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1">
-            <StatusCard
-                nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
-            />
-        </View>
-    );
-});
 
 const HubLeaveItem = React.memo(({ 
     listRef, 
@@ -229,187 +189,6 @@ export default function HubDashboard() {
         const delay = index * 60;
 
         switch (item) {
-            case 'missionStatus':
-                return (
-                    <Animated.View entering={FadeInUp.duration(350).springify()}>
-                        <HubMissionStatusItem />
-                    </Animated.View>
-                );
-            case 'negotiationWidget':
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <NegotiationWidget
-                            onStartExploring={() => router.push({ pathname: '/(career)/discovery', params: { returnPath: '/(tabs)/(hub)' } } as any)}
-                            onManageSlate={() => router.push('/(career)/cycle' as any)}
-                        />
-                    </Animated.View>
-                );
-            case 'transitSegmentWidget': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <TransitSegmentWidget />
-                    </Animated.View>
-                );
-            }
-            case 'travelReceiptLoggerWidget': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <TravelReceiptLoggerWidget />
-                    </Animated.View>
-                );
-            }
-
-
-            case 'digitalOrdersWallet': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <DigitalOrdersWallet />
-                    </Animated.View>
-                );
-            }
-            case 'pcsFinancialSnapshot': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSFinancialSnapshot />
-                    </Animated.View>
-                );
-            }
-            case 'gainingCommandCard': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <GainingCommandCard />
-                    </Animated.View>
-                );
-            }
-            case 'leaveImpact': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <LeaveImpactWidget />
-                    </Animated.View>
-                );
-            }
-            case 'slateSummary': {
-                // Return null since we removed this view, but keeping the case in case of legacy usage
-                return null;
-            }
-            case 'digitalSeaBag': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <DigitalSeaBagWidget />
-                    </Animated.View>
-                );
-            }
-            case 'adminFeed': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <AdminFeedWidget />
-                    </Animated.View>
-                );
-            }
-            case 'mnaProcess': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <MNAProcessWidget />
-                    </Animated.View>
-                );
-            }
-            case 'careerReadiness': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <ReadinessWidget />
-                    </Animated.View>
-                );
-            }
-            case 'detailerContact': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <DetailerContactWidget />
-                    </Animated.View>
-                );
-            }
-            case 'selectionDetail': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <SelectionDetailWidget />
-                    </Animated.View>
-                );
-            }
-            case 'pcsSummaryWidget': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSSummaryWidget />
-                    </Animated.View>
-                );
-            }
-            case 'ordersProcessingWidget': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <OrdersProcessingWidget />
-                    </Animated.View>
-                );
-            }
-            case 'pcsHeroBanner': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSHeroBanner />
-                    </Animated.View>
-                );
-            }
-            case 'baseWelcomeKit': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <BaseWelcomeKit />
-                    </Animated.View>
-                );
-            }
-            case 'arrivalBriefing': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <ArrivalBriefingWidget />
-                    </Animated.View>
-                );
-            }
-            case 'travelClaimHUD': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <TravelClaimHUDWidget />
-                    </Animated.View>
-                );
-            }
-            case 'travelClaimUrgency': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <TravelClaimHUDWidget />
-                    </Animated.View>
-                );
-            }
-            case 'liquidationTracker': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <LiquidationTrackerWidget />
-                    </Animated.View>
-                );
-            }
-            case 'pcsTaskTracker': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSTaskTracker />
-                    </Animated.View>
-                );
-            }
-            case 'missionBrief': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSMissionBrief />
-                    </Animated.View>
-                );
-            }
-            case 'obliserv':
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <ObliservBanner variant="widget" />
-                    </Animated.View>
-                );
             case 'leave':
                 return (
                     <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
@@ -423,51 +202,7 @@ export default function HubDashboard() {
 
     const sections = React.useMemo(() => {
         const feed: string[] = [];
-
-        // Priority 0: Core Status (Always Top)
-        feed.push('missionStatus');
-
-        // Priority 1: Critical Action Items (OBLISERV only applies during Selection before orders are released)
-        if (assignmentPhase === 'SELECTION') {
-            feed.push('obliserv');
-        }
-
-        // Priority 2: PCS Lifecycle Integration
-        // Surface the correct Phase Core Widget based on assignment/PCS lifecycle moment
-        if (assignmentPhase === 'ORDERS_PROCESSING') {
-            // Focus: Tracking administrative order steps
-            feed.push('ordersProcessingWidget');
-        } else if (assignmentPhase === 'ORDERS_RELEASED' || pcsPhase === 'CHECK_IN') {
-            // Focus: Active PCS Workflow
-            if (activeUCTPhase === 3) {
-                // Exceptional case: Operational Travel Tools trump the UCT visually
-                feed.push('transitSegmentWidget');
-                feed.push('travelReceiptLoggerWidget');
-                // Removed redundant receiptCapture and missionBrief components to resolve conflict
-            } else if (activeUCTPhase === 4) {
-                // Focus: Post-Arrival reporting procedures
-                feed.push('arrivalBriefing');
-            } else {
-                // Focus: Plan Your Move & Check-in. Summary Dashboard linking to workflows.
-                feed.push('pcsSummaryWidget');
-            }
-            feed.push('digitalOrdersWallet');
-        } else {
-            // Priority 3: Career Discovery & Selection Details (if NOT in PCS processing)
-            if (assignmentPhase === 'SELECTION') {
-                feed.push('selectionDetail');
-            } else if (assignmentPhase === 'ON_RAMP') {
-                feed.push('careerReadiness');
-                feed.push('discoveryStatus');
-            } else if (assignmentPhase === 'NEGOTIATION') {
-                feed.push('negotiationWidget'); // Consolidated Billet Explorer & Slate Summary
-            }
-        }
-
-        // Anchor: Universal Utilities (Never omit these, sit at the bottom of the feed)
-        feed.push('digitalSeaBag');
         feed.push('leave');
-
         return feed;
     }, [assignmentPhase, pcsPhase, subPhase, liquidationStatus, hasShipments, dependentCount, activeUCTPhase]);
 

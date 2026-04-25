@@ -1,5 +1,5 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
-import { MessageCard } from '@/components/inbox/MessageCard';
+
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -85,12 +85,9 @@ export default function InboxScreen() {
     }, [router]);
 
     const renderMessageItem = useCallback(({ item }: { item: InboxMessage }) => (
-        <MessageCard
-            message={item}
-            // Pass stable handler to enable React.memo optimization
-            onPress={handlePress}
-            onTogglePin={togglePin}
-        />
+        <View className="bg-slate-800 p-4 m-2 rounded-xl">
+            <Text className="text-white">Message Card (Unimplemented): {item.subject}</Text>
+        </View>
     ), [handlePress, togglePin]);
 
     const renderSectionHeader = useCallback(({ section: { title } }: { section: { title: string } }) => (

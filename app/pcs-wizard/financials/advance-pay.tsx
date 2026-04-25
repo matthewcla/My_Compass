@@ -1,4 +1,4 @@
-import { AdvancePayVisualizer } from '@/components/pcs/financials/AdvancePayVisualizer';
+
 import { useCurrentProfile } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
 import { useRouter } from 'expo-router';
@@ -219,12 +219,7 @@ export default function AdvancePayScreen() {
           </View>
 
           <View className="mb-8">
-            <AdvancePayVisualizer
-              monthsRequested={amountMonths}
-              onMonthsRequestedChange={setAmountMonths}
-              repaymentTerm={repaymentMonths}
-              onRepaymentTermChange={setRepaymentMonths}
-            />
+            <View className="p-4 bg-slate-800 rounded-xl"><Text className="text-white text-center">Advance Pay Visualizer (Unimplemented)</Text></View>
           </View>
 
         </ScrollView>

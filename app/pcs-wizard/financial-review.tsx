@@ -1,6 +1,5 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { AdvancePayVisualizer } from '@/components/pcs/financials/AdvancePayVisualizer';
-import { MovingCostProjection } from '@/components/pcs/financials/MovingCostProjection';
+
 import { FinancialWizardStatusBar } from '@/components/pcs/wizard/FinancialWizardStatusBar';
 import { useCurrentProfile } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
@@ -223,7 +222,7 @@ export default function FinancialReviewScreen() {
                     <Animated.View entering={FadeIn} className="px-4 mb-6">
                         <Text className="text-lg font-bold text-slate-900 dark:text-white mb-1">Your Estimated Costs</Text>
                         <Text className="text-slate-500 dark:text-zinc-500 text-xs mb-3">Enter your expected out-of-pocket expenses</Text>
-                        <MovingCostProjection hideGapAnalysis />
+                        <View className="p-4 bg-slate-800 rounded-xl"><Text className="text-white text-center">Moving Cost Projection (Unimplemented)</Text></View>
                     </Animated.View>
                 </View>
 
@@ -401,12 +400,7 @@ export default function FinancialReviewScreen() {
                             {/* Visualizer + summary — only when opted in */}
                             {requestAdvancePay && (
                                 <Animated.View entering={FadeInDown.duration(300)}>
-                                    <AdvancePayVisualizer
-                                        monthsRequested={advanceMonths}
-                                        onMonthsRequestedChange={setAdvanceMonths}
-                                        repaymentTerm={advanceRepaymentTerm}
-                                        onRepaymentTermChange={setAdvanceRepaymentTerm}
-                                    />
+                                    <View className="p-4 bg-slate-800 rounded-xl"><Text className="text-white text-center">Advance Pay Visualizer (Unimplemented)</Text></View>
 
                                     {/* Confirm summary */}
                                     <View className="mt-3 bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-700/20 rounded-xl px-4 py-3">

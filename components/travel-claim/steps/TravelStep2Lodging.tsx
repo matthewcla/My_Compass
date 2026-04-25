@@ -3,7 +3,6 @@
  * Lodging expenses are now managed inline in request.tsx Step 2.
  * Kept for reference only.
  */
-import { ReceiptUploader } from '@/components/travel-claim/ReceiptUploader';
 import { WizardCard } from '@/components/wizard/WizardCard';
 import Colors from '@/constants/Colors';
 import { addDays, differenceInCalendarDays, format } from 'date-fns';
@@ -308,11 +307,7 @@ function LodgingExpenseCard({
             </View>
           </View>
 
-          <ReceiptUploader
-            onPhotoSelected={(uri) => onUpdate({ receiptUri: uri })}
-            existingUri={expense.receiptUri}
-            label="Receipt Photo"
-          />
+          <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Receipt Uploader (Unimplemented)</Text></View>
 
           <Pressable
             onPress={onDelete}

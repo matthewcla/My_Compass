@@ -805,6 +805,45 @@ This document combines the status of all Flows, Tools, and Widgets to provide a 
 
 ---
 
+## 🧹 Recently Pruned Widgets (Placeholders)
+The following widgets were removed from the codebase to reduce technical bloat and sharpen focus. They are currently replaced with "Unimplemented" UI placeholders in their respective screens:
+
+### Hub & Admin Widgets
+- `AdminFeedWidget`
+- `MessageCard`
+
+### PCS & Financials Widgets
+- `AdvancePayVisualizer`
+- `MovingCostProjection`
+- `HHGCostProjection`
+- `HHGWeightRing`
+- `MoveDatePlanner`
+- `ShipmentCreationModal`
+- `ObliservBanner`
+- `PCSFinancialSnapshot`
+- `HHGWeightGaugeWidget`
+- `LeaveImpactWidget`
+- `TransitSegmentWidget`
+- `TravelReceiptLoggerWidget`
+- `DigitalOrdersWallet`
+- `BaseWelcomeKit`
+- `TravelClaimHUDWidget`
+- `LiquidationTrackerWidget`
+- `ArrivalBriefingWidget`
+
+### Travel Claim Widgets
+- `TravelClaimHUD`
+- `ReceiptUploader`
+
+### Career Cycle Widgets
+- `ManifestRail`
+- `SlateSlot`
+
+### Leave Widgets
+- `LeaveImpactHUD`
+
+---
+
 ## PCS Widgets Needed
 
 ### Gaining Command Card

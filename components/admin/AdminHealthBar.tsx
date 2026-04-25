@@ -2,8 +2,7 @@
 // Top status strip — three tappable buckets: Action Required / In Progress / Completed
 // Now includes "Last synced" footer and improved active state with glow effect.
 
-import { DashboardCardSurface } from '@/components/ui/DashboardCardSurface';
-import { useColorScheme } from '@/components/useColorScheme';
+import { GlassView } from '@/components/ui/GlassView';
 import { AdminStatus, useAdminStore } from '@/store/useAdminStore';
 import { getShadow } from '@/utils/getShadow';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react-native';
@@ -27,9 +26,9 @@ const BUCKETS: BucketConfig[] = [
         label: 'Action\nRequired',
         icon: AlertTriangle,
         colors: {
-            activeText: 'text-amber-900 dark:text-amber-100',
-            iconActive: '#d97706',
-            iconInactive: '#64748b',
+            activeText: 'text-amber-400',
+            iconActive: '#fbbf24',
+            iconInactive: '#475569',
         },
     },
     {
@@ -37,9 +36,9 @@ const BUCKETS: BucketConfig[] = [
         label: 'In\nProgress',
         icon: Clock,
         colors: {
-            activeText: 'text-blue-900 dark:text-blue-100',
-            iconActive: '#2563eb',
-            iconInactive: '#64748b',
+            activeText: 'text-blue-400',
+            iconActive: '#60a5fa',
+            iconInactive: '#475569',
         },
     },
     {
@@ -47,9 +46,9 @@ const BUCKETS: BucketConfig[] = [
         label: 'Completed',
         icon: CheckCircle,
         colors: {
-            activeText: 'text-green-900 dark:text-green-100',
-            iconActive: '#15803d',
-            iconInactive: '#64748b',
+            activeText: 'text-green-400',
+            iconActive: '#4ade80',
+            iconInactive: '#475569',
         },
     },
 ];
@@ -59,8 +58,6 @@ interface AdminHealthBarProps {
 }
 
 export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
     const requests = useAdminStore(state => state.requests);
     const activeFilter = useAdminStore(state => state.activeStatusFilter);
     const setStatusFilter = useAdminStore(state => state.setStatusFilter);
@@ -80,9 +77,10 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
     const allClear = counts.actionRequired === 0;
 
     return (
-        <DashboardCardSurface
-            intensity={70}
-            className="rounded-xl"
+        <GlassView
+            intensity={80}
+            tint="dark"
+            className="rounded-sm border border-slate-800"
         >
                 <View className="flex-row items-stretch p-2 gap-2">
                     {BUCKETS.map((bucket) => {
@@ -90,17 +88,15 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                         const count = countMap[bucket.key];
                         const Icon = bucket.icon;
 
-                        const iconColorActive = isDark
-                            ? (bucket.key === 'action_required' ? '#fbbf24' : bucket.key === 'in_progress' ? '#60a5fa' : '#4ade80')
-                            : bucket.colors.iconActive;
+                        const iconColorActive = bucket.colors.iconActive;
 
                         return (
                             <TouchableOpacity
                                 key={bucket.key}
                                 activeOpacity={0.7}
                                 onPress={() => setStatusFilter(isActive ? null : bucket.key)}
-                                className={`flex-1 items-center justify-center py-2.5 px-2 rounded-lg border ${isActive
-                                    ? 'bg-slate-100/80 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600'
+                                className={`flex-1 items-center justify-center py-2.5 px-2 rounded-sm border ${isActive
+                                    ? 'bg-slate-900/80 border-slate-700'
                                     : 'bg-transparent border-transparent'
                                     }`}
                             >
@@ -110,12 +106,12 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                                     strokeWidth={2.5}
                                 />
                                 <Text
-                                    className={`text-2xl font-black mt-0.5 ${isActive ? bucket.colors.activeText : 'text-slate-700 dark:text-slate-200'}`}
+                                    className={`text-2xl font-black mt-0.5 ${isActive ? bucket.colors.activeText : 'text-slate-300'}`}
                                 >
                                     {count}
                                 </Text>
                                 <Text
-                                    className={`text-[8px] font-bold uppercase tracking-wider text-center leading-[11px] ${isActive ? bucket.colors.activeText : 'text-slate-500 dark:text-slate-400'}`}
+                                    className={`text-[8px] font-bold uppercase tracking-wider text-center leading-[11px] ${isActive ? bucket.colors.activeText : 'text-slate-500'}`}
                                     numberOfLines={2}
                                 >
                                     {bucket.label}
@@ -127,8 +123,8 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
 
                 {/* All Clear Banner */}
                 {allClear && (
-                    <View className="bg-green-50 dark:bg-green-900/20 px-4 py-1.5 border-t border-green-100 dark:border-green-800/30">
-                        <Text className="text-green-700 dark:text-green-300 text-xs font-bold text-center">
+                    <View className="bg-green-900/30 px-4 py-1.5 border-t border-green-800/50">
+                        <Text className="text-green-400 text-xs font-bold text-center">
                             ✅ All clear — no pending actions
                         </Text>
                     </View>
@@ -136,12 +132,12 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
 
                 {/* Last Synced Footer */}
                 {lastSyncedLabel && (
-                    <View className="border-t border-slate-100 dark:border-slate-700/50 px-3 py-1.5">
-                        <Text className="text-[10px] font-medium text-slate-400 dark:text-slate-500 text-center">
+                    <View className="border-t border-slate-800/80 px-3 py-1.5">
+                        <Text className="text-[10px] font-medium text-slate-500 text-center">
                             Last synced: {lastSyncedLabel}
                         </Text>
                     </View>
                 )}
-            </DashboardCardSurface>
+            </GlassView>
     );
 }

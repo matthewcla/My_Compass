@@ -1,20 +1,10 @@
-import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
-import { TrackChecklistItem } from '@/components/pcs/track/TrackChecklistItem';
-import { TrackNode } from '@/components/pcs/track/TrackNode';
-import { ArrivalBriefingWidget } from '@/components/pcs/widgets/ArrivalBriefingWidget';
-import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
-import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
-import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
-import { HHGWeightGaugeWidget } from '@/components/pcs/widgets/HHGWeightGaugeWidget';
-import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
-import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
-import { PCSFinancialSnapshot } from '@/components/pcs/widgets/PCSFinancialSnapshot';
-import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
 import { UCT_PHASES } from '@/constants/UCTPhases';
 import { useActiveOrder, usePCSStore, useUCTPhaseStatus } from '@/store/usePCSStore';
 import { ChecklistItem, UCTNodeStatus, UCTPhase } from '@/types/pcs';
 import React, { useCallback, useMemo } from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
+import { TrackChecklistItem } from '@/components/pcs/track/TrackChecklistItem';
+import { TrackNode } from '@/components/pcs/track/TrackNode';
 
 // ─── Widget Sets Per Phase ─────────────────────────────────────
 // Widgets render inside their respective task flows or on the Home Hub,
@@ -23,8 +13,8 @@ import { View } from 'react-native';
 function Phase1Widgets() {
     return (
         <View className="gap-6">
-            <ObliservBanner variant="widget" />
-            <GainingCommandCard />
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Obliserv Banner (Unimplemented)</Text></View>
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Gaining Command Card (Unimplemented)</Text></View>
         </View>
     );
 }
@@ -32,22 +22,20 @@ function Phase1Widgets() {
 function Phase2Widgets() {
     return (
         <View className="gap-6 pt-2">
-            <PCSFinancialSnapshot />
-            <HHGWeightGaugeWidget />
-            <LeaveImpactWidget />
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">PCS Financial Snapshot (Unimplemented)</Text></View>
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">HHG Weight Gauge Widget (Unimplemented)</Text></View>
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Leave Impact Widget (Unimplemented)</Text></View>
         </View>
     );
 }
 
-import { TransitSegmentWidget } from '@/components/pcs/widgets/TransitSegmentWidget';
-import { TravelReceiptLoggerWidget } from '@/components/pcs/widgets/TravelReceiptLoggerWidget';
 
 function Phase3Widgets() {
     return (
         <View className="gap-6 pt-2">
-            <TransitSegmentWidget />
-            <TravelReceiptLoggerWidget />
-            <DigitalOrdersWallet />
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Transit Segment Widget (Unimplemented)</Text></View>
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Travel Receipt Logger Widget (Unimplemented)</Text></View>
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Digital Orders Wallet (Unimplemented)</Text></View>
         </View>
     );
 }
@@ -55,10 +43,10 @@ function Phase3Widgets() {
 function Phase4Widgets() {
     return (
         <View className="gap-6 pt-2">
-            <BaseWelcomeKit />
-            <TravelClaimHUDWidget />
-            <LiquidationTrackerWidget />
-            <ArrivalBriefingWidget />
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Base Welcome Kit (Unimplemented)</Text></View>
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Travel Claim HUD Widget (Unimplemented)</Text></View>
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Liquidation Tracker Widget (Unimplemented)</Text></View>
+            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Arrival Briefing Widget (Unimplemented)</Text></View>
         </View>
     );
 }

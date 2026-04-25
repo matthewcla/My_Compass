@@ -2,7 +2,6 @@
 // Persistent bottom tray with quick-submit buttons for common request types.
 
 import { GlassView } from '@/components/ui/GlassView';
-import { useColorScheme } from '@/components/useColorScheme';
 import { getShadow } from '@/utils/getShadow';
 import { useRouter } from 'expo-router';
 import {
@@ -22,8 +21,6 @@ interface QuickAction {
 }
 
 export function AdminQuickActionBar() {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
     const insets = useSafeAreaInsets();
     const router = useRouter();
 
@@ -36,7 +33,7 @@ export function AdminQuickActionBar() {
         {
             icon: FileText,
             label: 'Admin',
-            onPress: () => Alert.alert('Coming Soon', 'Admin request submission will be available in a future update.'),
+            onPress: () => router.push('/admin/submit' as any),
         },
         {
             icon: Shield,
@@ -65,16 +62,16 @@ export function AdminQuickActionBar() {
             <View style={[
                 { marginHorizontal: 16 },
                 getShadow({
-                    shadowColor: isDark ? '#000' : '#334155',
-                    shadowOpacity: isDark ? 0.4 : 0.2,
+                    shadowColor: '#000',
+                    shadowOpacity: 0.4,
                     shadowRadius: 16,
                     elevation: 8,
                 }),
             ]}>
                 <GlassView
                     intensity={100}
-                    tint={isDark ? 'dark' : 'light'}
-                    className="rounded-2xl overflow-hidden border border-slate-300 dark:border-slate-600"
+                    tint="dark"
+                    className="rounded-sm overflow-hidden border border-slate-700/50"
                 >
                     <View className="flex-row items-center justify-around py-3 px-2">
                         {actions.map((action) => {
@@ -87,14 +84,14 @@ export function AdminQuickActionBar() {
                                     className="items-center justify-center px-3 py-2"
                                     style={{ minWidth: 64, minHeight: 44 }}
                                 >
-                                    <View className="bg-slate-100 dark:bg-slate-800 w-10 h-10 rounded-full items-center justify-center mb-1">
+                                    <View className="bg-slate-800 w-10 h-10 rounded-sm items-center justify-center mb-1 border border-slate-700/50">
                                         <Icon
                                             size={18}
-                                            color={isDark ? '#e2e8f0' : '#475569'}
+                                            color="#e2e8f0"
                                             strokeWidth={2}
                                         />
                                     </View>
-                                    <Text className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                    <Text className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
                                         {action.label}
                                     </Text>
                                 </TouchableOpacity>

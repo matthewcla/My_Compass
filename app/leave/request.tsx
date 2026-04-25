@@ -1,5 +1,5 @@
 import { SignatureButton } from '@/components/ui/SignatureButton';
-import { LeaveImpactHUD } from '@/components/wizard/LeaveImpactHUD';
+
 import { WizardStatusBar } from '@/components/wizard/WizardStatusBar';
 import { ReviewSign } from '@/components/wizard/steps/ReviewSign';
 import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
@@ -521,13 +521,7 @@ export default function LeaveRequestScreen() {
                         style={{ paddingBottom: Math.max(insets.bottom, 20) }}
                     >
                         <View className="pt-4 px-4">
-                            <LeaveImpactHUD
-                                chargeableDays={chargeableDays}
-                                availableOnDeparture={projection.availableOnDeparture}
-                                remainingOnReturn={projection.remainingOnReturn}
-                                isOverdraft={projection.isOverdraft}
-                                isUnchargeable={projection.isUnchargeable}
-                            />
+                            {/* LeaveImpactHUD Widget (Unimplemented) */}
                             <View className="mt-4">
                                 <View className="flex-1">
                                     <SignatureButton

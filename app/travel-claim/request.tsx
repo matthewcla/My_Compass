@@ -1,4 +1,3 @@
-import { TravelClaimHUD } from '@/components/travel-claim/TravelClaimHUD';
 import { TravelStep1TripDetails } from '@/components/travel-claim/steps/TravelStep1TripDetails';
 import { TravelStep5Review } from '@/components/travel-claim/steps/TravelStep5Review';
 import { SignatureButton } from '@/components/ui/SignatureButton';
@@ -587,12 +586,7 @@ export default function TravelClaimRequestScreen() {
                         style={{ paddingBottom: Math.max(insets.bottom, 20) }}
                     >
                         <View className="pt-4 px-4">
-                            <TravelClaimHUD
-                                totalClaim={draft.totalClaimAmount}
-                                receiptCount={receiptCount}
-                                hasWarnings={hasWarnings}
-                                isValid={true}
-                            />
+                            <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Travel Claim HUD (Unimplemented)</Text></View>
 
                             <View className="mt-2">
                                 <SignatureButton

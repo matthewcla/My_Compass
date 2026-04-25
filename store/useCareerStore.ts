@@ -9,6 +9,8 @@ interface CareerState {
     isLoading: boolean;
     error: string | null;
     lastFetched: number | null;
+    eventScope: 'personal' | 'command';
+    setEventScope: (scope: 'personal' | 'command') => void;
     fetchEvents: (options?: { force?: boolean }) => Promise<void>;
 }
 
@@ -17,6 +19,12 @@ export const useCareerStore = create<CareerState>((set, get) => ({
     isLoading: false,
     error: null,
     lastFetched: null,
+    eventScope: 'personal',
+
+    setEventScope: (scope) => {
+        set({ eventScope: scope });
+        get().fetchEvents({ force: true });
+    },
 
     fetchEvents: async (options) => {
         const { events, lastFetched, isLoading } = get();
@@ -43,7 +51,7 @@ export const useCareerStore = create<CareerState>((set, get) => ({
             }
 
             // Fetch fresh data via service
-            const result = await services.career.fetchEvents();
+            const result = await services.career.fetchEvents(get().eventScope);
 
             if (result.success) {
                 const newEvents = result.data;

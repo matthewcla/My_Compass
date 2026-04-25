@@ -302,10 +302,30 @@ const CAREER_EVENTS_BY_USER: Record<string, CareerEvent[]> = {
     'demo-user-4': CAREER_EVENTS_IT,
 };
 
+export const MOCK_ALL_COMMAND_EVENTS: CareerEvent[] = [
+    ...MOCK_CAREER_EVENTS,
+    ...CAREER_EVENTS_AT,
+    ...CAREER_EVENTS_SWO,
+    ...CAREER_EVENTS_ETN,
+    ...CAREER_EVENTS_IT,
+];
+
 /**
  * Get career events for a specific persona/user ID.
  * Falls back to the legacy shared array for unknown user IDs.
  */
 export const getCareerEventsByUserId = (userId: string): CareerEvent[] => {
     return CAREER_EVENTS_BY_USER[userId] ?? MOCK_CAREER_EVENTS;
+};
+
+/**
+ * Get all command events across all personas.
+ */
+export const getAllCommandEvents = (): CareerEvent[] => {
+    // Return a unique set of events based on title/date to avoid dupes if any exist
+    const uniqueEvents = Array.from(
+        new Map(MOCK_ALL_COMMAND_EVENTS.map(item => [`${item.title}-${item.date}`, item])).values()
+    );
+    // Sort by date ascending
+    return uniqueEvents.sort((a, b) => a.date.localeCompare(b.date));
 };

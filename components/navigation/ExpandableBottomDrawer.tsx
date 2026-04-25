@@ -34,7 +34,7 @@ const SPRING_CONFIG = {
 const TAB_CONFIG = [
     { route: '/(hub)', iconUnselected: 'home-outline', iconSelected: 'home', label: 'Home' },
     { route: '/(admin)', iconUnselected: 'briefcase-outline', iconSelected: 'briefcase', label: 'Admin' },
-    { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Calendar' },
+    { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Events' },
     { route: '/inbox', iconUnselected: 'mail-outline', iconSelected: 'mail', label: 'Inbox' },
     { route: '/(tabs)/(profile)', iconUnselected: 'person-circle-outline', iconSelected: 'person-circle', label: 'Me' },
 ] as const;
@@ -63,29 +63,36 @@ const MemoizedTabItem = React.memo(({
                 {
                     alignItems: 'center',
                     justifyContent: 'center',
-                    height: 54,
-                    borderRadius: 0, // Sharp corners
+                    height: 44,
+                    borderRadius: 22,
                 },
                 isActive ? {
                     flexDirection: 'row',
-                    flex: 1.8,
+                    flex: 1.45,
                     backgroundColor: activeBgRgba,
                     borderWidth: 0,
-                    height: 54,
-                    marginHorizontal: 0,
+                    marginHorizontal: 6,
                 } : {
                     flex: 1
                 }
             ]}
             onPress={() => onPress(tab.route)}
         >
-            <Ionicons name={iconName as any} size={isActive ? 22 : 24} color={isActive ? activeSolidHex : inactiveColor} />
+            <Ionicons name={iconName as any} size={20} color={isActive ? activeSolidHex : inactiveColor} />
             {isActive ? (
-                <Text style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '900', marginLeft: 6, marginTop: 0, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }]}>
+                <Text 
+                    numberOfLines={1} 
+                    adjustsFontSizeToFit 
+                    style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '700', marginLeft: 6, marginTop: 0, textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.5 }]}
+                >
                     {tab.label}
                 </Text>
             ) : (
-                <Text style={[styles.tabLabel, { color: inactiveColor, fontWeight: '700', opacity: 0.8, textAlign: 'center', textTransform: 'uppercase', fontSize: 10, letterSpacing: 1 }]}>
+                <Text 
+                    numberOfLines={1} 
+                    adjustsFontSizeToFit 
+                    style={[styles.tabLabel, { color: inactiveColor, fontWeight: '500', opacity: 0.7, textAlign: 'center', textTransform: 'uppercase', fontSize: 10, letterSpacing: 0 }]}
+                >
                     {tab.label}
                 </Text>
             )}
@@ -266,9 +273,9 @@ export default function ExpandableBottomDrawer() {
         // Transition fully within the first 65px of drag
         const morphProgress = interpolate(translateY.value, [0, -65], [0, 1], Extrapolation.CLAMP);
 
-        // Anchor Point bottom bar: full width, no margins, sharp corners
-        const marginH = interpolate(morphProgress, [0, 1], [0, 0]);
-        const radius = 0;
+        // Anchor Point bottom bar exception: pill margins and rounded corners when floating/expanded
+        const marginH = interpolate(morphProgress, [0, 1], [20, 0]);
+        const radius = 40;
 
         // Keep the bottom edge precisely hovering above the home indicator safe area
         const stretchDownHeight = HEIGHT_COLLAPSED - translateY.value;
@@ -348,7 +355,8 @@ export default function ExpandableBottomDrawer() {
                             glassStyle,
                             {
                                 shadowColor: isDark ? '#000000' : '#1e293b',
-                                borderColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.1)',
+                                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                                borderWidth: 1,
                             }
                         ]}
                     >
@@ -357,8 +365,6 @@ export default function ExpandableBottomDrawer() {
                                 StyleSheet.absoluteFill,
                                 {
                                     backgroundColor: '#131313', // Anchor Point surface
-                                    borderTopWidth: 2,
-                                    borderTopColor: 'rgba(174, 198, 254, 0.1)', // primary/10
                                 }
                             ]}
                         />
@@ -484,7 +490,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 0,
+        paddingHorizontal: 12,
     },
     tabItem: {
         // Obsolete (absorbed dynamically in component logic)

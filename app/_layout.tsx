@@ -1,4 +1,12 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import {
+  Lexend_400Regular,
+  Lexend_500Medium,
+  Lexend_600SemiBold,
+  Lexend_700Bold,
+  Lexend_800ExtraBold,
+  Lexend_900Black,
+} from '@expo-google-fonts/lexend';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -55,6 +63,12 @@ function InnerLayout() {
   const [fontsLoaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
+    Lexend_400Regular,
+    Lexend_500Medium,
+    Lexend_600SemiBold,
+    Lexend_700Bold,
+    Lexend_800ExtraBold,
+    Lexend_900Black,
   });
   const [dbInitialized, setDbInitialized] = useState(false);
   const [isLayoutReady, setIsLayoutReady] = useState(false);

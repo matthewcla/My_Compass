@@ -1,6 +1,6 @@
 # store/ — Zustand Store Conventions
 
-> Read the root `CLAUDE.md` first. This file covers store-specific patterns only.
+> Read the root `GEMINI.md` first. This file covers store-specific patterns only.
 
 ---
 
@@ -95,7 +95,7 @@ Reference: `services/syncQueue.ts`
 
 ## Data Governance (USN Framework Alignment)
 
-Per the USN Data Governance Framework and root `CLAUDE.md` Rule 4.11:
+Per the USN Data Governance Framework and root `GEMINI.md` Rule 4.11:
 
 ### Validate Before Persisting
 

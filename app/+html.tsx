@@ -37,6 +37,9 @@ body {
   background-color: #FAFAFA;
   margin: 0;
 }
+html.dark body {
+  background-color: #000000;
+}
 @media (prefers-color-scheme: dark) {
   body {
     background-color: #000000;

@@ -1,6 +1,6 @@
 # services/api/ — API Integration Governance
 
-> Read the root `CLAUDE.md` first. This file covers API-specific patterns, service contract SOPs, and data governance alignment for the service layer.
+> Read the root `GEMINI.md` first. This file covers API-specific patterns, service contract SOPs, and data governance alignment for the service layer.
 
 ---
 
@@ -145,7 +145,7 @@ Production-ready HTTP client with:
 
 ## Reference
 
-- Root `CLAUDE.md` Rule 4.11 (USN Data Governance Compliance)
+- Root `GEMINI.md` Rule 4.11 (USN Data Governance Compliance)
 - `docs/API_INTEGRATION_ROADMAP.md` — full mock-to-real transition plan
 - `docs/USN_DATA_GOVERNANCE_SUMMARY.md` — VAULTIS, Zero Trust, Data Quality reference
 - `config/api.ts` — API endpoint configuration

@@ -1,4 +1,3 @@
-import { ScreenGradient } from '@/components/ScreenGradient';
 import { useScreenHeader } from '@/hooks/useScreenHeader';
 import { useInboxStore } from '@/store/useInboxStore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -51,37 +50,44 @@ export default function MessageDetailsScreen() {
 
     if (!message) {
         return (
-            <ScreenGradient style={{ justifyContent: 'center', alignItems: 'center' }}>
-                <Text className="text-slate-500">Message not found</Text>
-            </ScreenGradient>
+            <View className="flex-1 bg-background justify-center items-center">
+                <Text className="text-outline">Message not found</Text>
+            </View>
         );
     }
 
     const actionRoute = message.metadata?.route || message.metadata?.link;
 
+    const isNavadmin = message.type === 'NAVADMIN' || message.type === 'ALNAV';
+    const isStatus = message.type === 'STATUS_REPORT';
+
+    const badgeBg = isNavadmin ? 'bg-secondary-container' : isStatus ? 'bg-primary-container' : 'bg-surface-container-high';
+    const badgeBorder = isNavadmin ? 'border-secondary-container' : isStatus ? 'border-primary-container' : 'border-outline-variant';
+    const badgeText = isNavadmin ? 'text-on-secondary-container' : isStatus ? 'text-on-primary-container' : 'text-on-surface-variant';
+
     return (
-        <ScreenGradient>
+        <View className="flex-1 bg-background">
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <View className="px-5 py-6">
                     {/* Header Section */}
                     <View className="flex-row justify-between items-center mb-6">
-                        <View className="px-3 py-1 rounded-sm bg-slate-800 border border-slate-700/50">
-                            <Text className={`text-[10px] tracking-wider font-bold uppercase ${message.type === 'NAVADMIN' ? 'text-blue-500' : message.type === 'STATUS_REPORT' ? 'text-amber-500' : 'text-slate-400'}`}>
+                        <View className={`px-3 py-1 rounded-sm border ${badgeBg} ${badgeBorder}`}>
+                            <Text className={`text-[10px] tracking-wider font-bold uppercase ${badgeText}`}>
                                 {message.type.replace('_', ' ')}
                             </Text>
                         </View>
-                        <Text className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                        <Text className="text-[10px] font-bold tracking-wider text-outline uppercase">
                             {formatDTG(message.timestamp)}
                         </Text>
                     </View>
 
-                    <Text className="text-2xl font-bold text-white mb-6 leading-8">
+                    <Text className="text-2xl font-bold text-on-surface mb-6 leading-8">
                         {message.subject}
                     </Text>
 
                     {/* Content Section */}
-                    <View className="p-5 rounded-sm bg-slate-900/90 border border-slate-800 border-t-slate-700/50 mb-8">
-                        <Text className="text-base text-slate-300 leading-relaxed">
+                    <View className="p-5 rounded-sm bg-surface-container border border-outline-variant mb-8">
+                        <Text className="text-base text-on-surface-variant leading-relaxed">
                             {message.body}
                         </Text>
                     </View>
@@ -91,19 +97,19 @@ export default function MessageDetailsScreen() {
                         <View className="mb-8">
                             <Pressable
                                 onPress={() => router.push(actionRoute as any)}
-                                className="bg-slate-800 border border-slate-700 py-4 rounded-sm flex-row items-center justify-center"
+                                className="bg-primary border border-transparent py-4 rounded-sm flex-row items-center justify-center"
                                 style={({ pressed }) => ({
                                     opacity: pressed ? 0.8 : 1,
                                     transform: [{ scale: pressed ? 0.98 : 1 }]
                                 })}
                             >
-                                <Text className="text-white font-bold text-[15px] tracking-wide mr-2">Open Linked Item</Text>
-                                <ArrowRight size={18} color="#fff" />
+                                <Text className="text-on-primary font-bold text-[15px] tracking-wide mr-2">Open Linked Item</Text>
+                                <ArrowRight size={18} className="text-on-primary" />
                             </Pressable>
                         </View>
                     )}
                 </View>
             </ScrollView>
-        </ScreenGradient>
+        </View>
     );
 }

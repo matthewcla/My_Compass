@@ -28,25 +28,25 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
     const isDark = colorScheme === 'dark';
 
     // 1. Determine Date Bubble Styling
-    let bgTint = 'bg-[#1c1b1b]';
-    let dateClass = 'text-[#e5e2e1]';
-    let monthClass = 'text-[#8e909a]';
-    let borderTint = 'border-[#44474f]';
+    let bgTint = 'bg-white dark:bg-[#1c1b1b]';
+    let dateClass = 'text-slate-900 dark:text-[#e5e2e1]';
+    let monthClass = 'text-slate-500 dark:text-[#8e909a]';
+    let borderTint = 'border-slate-200 dark:border-[#44474f]';
 
     if (event.eventType === 'ADVANCEMENT_EXAM') {
-        bgTint = 'bg-[#00204e]';
-        dateClass = 'text-[#aec6fe]';
-        monthClass = 'text-[#7189bc]';
-        borderTint = 'border-[#aec6fe]/30';
+        bgTint = 'bg-blue-50 dark:bg-[#00204e]';
+        dateClass = 'text-blue-800 dark:text-[#aec6fe]';
+        monthClass = 'text-blue-600 dark:text-[#7189bc]';
+        borderTint = 'border-blue-200 dark:border-[#aec6fe]/30';
     } else if (event.eventType === 'STATUTORY_BOARD') {
-        bgTint = 'bg-[#c6c6c7]/10'; // Tertiary Dim
-        dateClass = 'text-[#e2e2e2]'; // Tertiary Fixed
-        monthClass = 'text-[#888989]'; // On-Tertiary Container
-        borderTint = 'border-[#c6c6c7]/30';
+        bgTint = 'bg-slate-50 dark:bg-[#c6c6c7]/10'; // Tertiary Dim
+        dateClass = 'text-slate-700 dark:text-[#e2e2e2]'; // Tertiary Fixed
+        monthClass = 'text-slate-500 dark:text-[#888989]'; // On-Tertiary Container
+        borderTint = 'border-slate-200 dark:border-[#c6c6c7]/30';
     }
 
     const isCritical = event.priority === 'CRITICAL';
-    const cardBorder = isCritical ? 'border-t-4 border-t-[#fdc400] border-x border-b border-[#44474f]' : 'border border-[#44474f]';
+    const cardBorder = isCritical ? 'border-t-4 border-t-amber-500 dark:border-t-[#fdc400] border-x border-b border-slate-200 dark:border-[#44474f]' : 'border border-slate-200 dark:border-[#44474f]';
 
     // 2. Format Date
     const dateObj = new Date(event.date);
@@ -56,7 +56,7 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
 
     return (
         <ScalePressable
-            className={`bg-[#1c1b1b] rounded-none mb-4 flex-row items-center p-4 ${cardBorder}`}
+            className={`bg-white dark:bg-[#1c1b1b] rounded-none mb-4 flex-row items-center p-4 ${cardBorder}`}
         >
             {/* Left Box: Date Bubble */}
             <View className={`w-14 h-14 rounded-none items-center justify-center mr-4 border ${borderTint} ${bgTint}`}>
@@ -71,30 +71,30 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
             {/* Right Box: Details */}
             <View className="flex-1 justify-center">
                 <View className="flex-row items-center gap-2 mb-1">
-                    <Text className="text-[10px] font-bold text-[#8e909a] uppercase tracking-wider">
+                    <Text className="text-[10px] font-bold text-slate-500 dark:text-[#8e909a] uppercase tracking-wider">
                         {event.eventType.replace('_', ' ')}
                     </Text>
                     {isCritical && (
-                        <View className="px-1.5 py-0.5 border border-[#fdc400]/50 rounded-none bg-[#fdc400]/5">
-                            <Text className="text-[9px] font-bold text-[#fdc400] uppercase tracking-widest">
+                        <View className="px-1.5 py-0.5 border border-amber-400 dark:border-[#fdc400]/50 rounded-none bg-amber-50 dark:bg-[#fdc400]/5">
+                            <Text className="text-[9px] font-bold text-amber-700 dark:text-[#fdc400] uppercase tracking-widest">
                                 Critical
                             </Text>
                         </View>
                     )}
                 </View>
 
-                <Text className="text-base font-bold text-[#e5e2e1] mb-2 leading-tight" numberOfLines={2}>
+                <Text className="text-base font-bold text-slate-900 dark:text-[#e5e2e1] mb-2 leading-tight" numberOfLines={2}>
                     {event.title}
                 </Text>
 
                 <View className="flex-row items-center gap-4">
                     <View className="flex-row items-center gap-1.5">
-                        <Clock size={12} color="#8e909a" />
-                        <Text className="text-xs font-medium text-[#c4c6d0]">{time}</Text>
+                        <Clock size={12} color={isDark ? "#8e909a" : "#64748b"} />
+                        <Text className="text-xs font-medium text-slate-600 dark:text-[#c4c6d0]">{time}</Text>
                     </View>
                     <View className="flex-row items-center gap-1.5 flex-1">
-                        <MapPin size={12} color="#8e909a" />
-                        <Text className="text-xs font-medium text-[#c4c6d0]" numberOfLines={1}>{event.location}</Text>
+                        <MapPin size={12} color={isDark ? "#8e909a" : "#64748b"} />
+                        <Text className="text-xs font-medium text-slate-600 dark:text-[#c4c6d0]" numberOfLines={1}>{event.location}</Text>
                     </View>
                 </View>
             </View>
@@ -109,20 +109,20 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
 // PERFORMANCE FIX: Stable List components
 const ScopeToggle = ({ scope, setScope }: { scope: 'personal' | 'command', setScope: (s: 'personal' | 'command') => void }) => (
     <View className="px-5 py-4">
-        <View className="flex-row border-b border-[#353534]">
+        <View className="flex-row border-b border-slate-200 dark:border-[#353534]">
             <Pressable 
                 onPress={() => setScope('personal')}
-                className={`flex-1 py-3 items-center justify-center ${scope === 'personal' ? 'border-b-2 border-[#fdc400]' : ''}`}
+                className={`flex-1 py-3 items-center justify-center ${scope === 'personal' ? 'border-b-2 border-amber-500 dark:border-[#fdc400]' : ''}`}
             >
-                <Text className={`text-xs font-bold uppercase tracking-wider ${scope === 'personal' ? 'text-[#e5e2e1]' : 'text-[#8e909a]'}`}>
+                <Text className={`text-xs font-bold uppercase tracking-wider ${scope === 'personal' ? 'text-slate-900 dark:text-[#e5e2e1]' : 'text-slate-500 dark:text-[#8e909a]'}`}>
                     My Events
                 </Text>
             </Pressable>
             <Pressable 
                 onPress={() => setScope('command')}
-                className={`flex-1 py-3 items-center justify-center ${scope === 'command' ? 'border-b-2 border-[#fdc400]' : ''}`}
+                className={`flex-1 py-3 items-center justify-center ${scope === 'command' ? 'border-b-2 border-amber-500 dark:border-[#fdc400]' : ''}`}
             >
-                <Text className={`text-xs font-bold uppercase tracking-wider ${scope === 'command' ? 'text-[#e5e2e1]' : 'text-[#8e909a]'}`}>
+                <Text className={`text-xs font-bold uppercase tracking-wider ${scope === 'command' ? 'text-slate-900 dark:text-[#e5e2e1]' : 'text-slate-500 dark:text-[#8e909a]'}`}>
                     All Events
                 </Text>
             </Pressable>
@@ -132,8 +132,8 @@ const ScopeToggle = ({ scope, setScope }: { scope: 'personal' | 'command', setSc
 
 // PERFORMANCE FIX: Extract renderSectionHeader to prevent inline reallocation
 const renderSectionHeader = ({ section: { title } }: { section: { title: string } | any }) => (
-    <View className="bg-[#131313]/95 px-5 py-2 z-10 border-b border-[#201f1f] mb-3">
-        <Text className="text-sm font-bold text-[#8e909a] uppercase tracking-widest">
+    <View className="bg-slate-50/95 dark:bg-[#131313]/95 px-5 py-2 z-10 border-b border-slate-200 dark:border-[#201f1f] mb-3">
+        <Text className="text-sm font-bold text-slate-600 dark:text-[#8e909a] uppercase tracking-widest">
             {title}
         </Text>
     </View>
@@ -177,7 +177,7 @@ export default function CalendarScreen() {
 
             <ScreenGradient>
                 <CollapsibleScaffold
-                    statusBarShimBackgroundColor="#131313"
+                    statusBarShimBackgroundColor={isDark ? "#131313" : "#ffffff"}
                     topBar={
                         <ScreenHeader
                             title="Events"

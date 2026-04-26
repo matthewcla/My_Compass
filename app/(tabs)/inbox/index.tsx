@@ -1,6 +1,5 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 
-import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useInboxStore } from '@/store/useInboxStore';
 import type { InboxMessage } from '@/types/inbox';
@@ -9,6 +8,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Mail, AlertCircle, FileText, Bookmark } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColorScheme } from 'nativewind';
 
 // Create Animated SectionList
 type InboxSection = { title: string; data: InboxMessage[] };
@@ -41,22 +42,33 @@ const formatDTG = (dateString: string) => {
 
 const ListEmpty = () => (
     <View className="p-8 items-center">
-        <Text className="text-slate-400 text-center">No messages found.</Text>
+        <Text className="text-outline text-center">No messages found.</Text>
     </View>
 );
 
-const getMessageIcon = (type: string) => {
-    switch(type) {
-        case 'NAVADMIN':
-        case 'ALNAV': return <AlertCircle size={16} color="#fbbf24" />;
-        case 'STATUS_REPORT': return <FileText size={16} color="#60a5fa" />;
-        default: return <Mail size={16} color="#94a3b8" />;
-    }
-};
-
 export default function InboxScreen() {
-    const { messages, fetchMessages, isLoading, togglePin } = useInboxStore();
     const router = useRouter();
+    const insets = useSafeAreaInsets();
+    const { messages, fetchMessages, isLoading, togglePin } = useInboxStore();
+    const { colorScheme } = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
+    const themeColors = {
+        primary: isDark ? '#338EF7' : '#000A23',
+        secondary: isDark ? '#F5A524' : '#785A00',
+        outline: isDark ? '#8E909A' : '#747780',
+        background: isDark ? '#131313' : '#FFFFFF'
+    };
+
+    const getMessageIcon = (type: string) => {
+        switch(type) {
+            case 'NAVADMIN':
+            case 'ALNAV': return <AlertCircle size={16} color={themeColors.secondary} />;
+            case 'STATUS_REPORT': return <FileText size={16} color={themeColors.primary} />;
+            default: return <Mail size={16} color={themeColors.outline} />;
+        }
+    };
+
     const [, startTransition] = useTransition();
     const [activeFilter, setActiveFilter] = useState<FilterType>('My Messages');
     const [searchQuery, setSearchQuery] = useState('');
@@ -94,51 +106,58 @@ export default function InboxScreen() {
         return (
             <Pressable 
                 onPress={() => handlePress(item.id)}
-                className="mx-4 mb-2 p-4 rounded-sm bg-slate-900/90 border border-slate-800 border-t-slate-700/50"
+                className="mx-4 mb-2 p-4 rounded-sm bg-surface-container border border-outline-variant"
                 style={({ pressed }) => ({
                     opacity: pressed ? 0.8 : 1,
                     transform: [{ scale: pressed ? 0.98 : 1 }]
                 })}
             >
                 <View className="flex-row justify-between items-start mb-2">
-                    <View className="flex-row items-center flex-1 pr-4">
-                        {getMessageIcon(item.type)}
-                        <Text className="text-[10px] font-bold tracking-wider text-slate-500 uppercase ml-2" numberOfLines={1}>
-                            {item.type.replace('_', ' ')}
-                        </Text>
-                    </View>
-                    <Text className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                    <Text className="text-[10px] font-bold tracking-wider text-outline uppercase">
                         {formatDTG(item.timestamp)}
                     </Text>
                 </View>
                 <View className="flex-row items-start justify-between">
                     <View className="flex-1 pr-2">
-                        <Text className={`text-base font-semibold mb-1 ${isUnread ? 'text-white' : 'text-slate-300'}`} numberOfLines={1}>
-                            {item.subject}
-                        </Text>
-                        <Text className="text-sm text-slate-400" numberOfLines={2}>
+                        <View className="flex-row items-center mb-1">
+                            {isUnread && <View className="w-2 h-2 rounded-full bg-primary mr-2" />}
+                            <Text className={`text-base font-semibold flex-1 ${isUnread ? 'text-on-surface' : 'text-on-surface-variant'}`} numberOfLines={1}>
+                                {item.subject}
+                            </Text>
+                        </View>
+                        <Text className="text-sm text-on-surface-variant" numberOfLines={2}>
                             {item.body}
                         </Text>
+                        <View className="flex-row items-center mt-1 w-full justify-between pr-2">
+                            <View className="flex-row items-center">
+                                {getMessageIcon(item.type)}
+                                <Text className={`text-[10px] font-bold tracking-wider uppercase ml-2 ${item.type === 'NAVADMIN' || item.type === 'ALNAV' ? 'text-secondary' : item.type === 'STATUS_REPORT' ? 'text-primary' : 'text-outline'}`} numberOfLines={1}>
+                                    {item.type.replace('_', ' ')}
+                                </Text>
+                            </View>
+                        </View>
                     </View>
+                    
+                    {/* Pin/Bookmark Action */}
                     <Pressable
                         onPress={() => togglePin(item.id)}
                         hitSlop={12}
                         className="mt-1 p-1"
                     >
                         {item.isPinned ? (
-                            <Bookmark size={20} color="#fbbf24" fill="#fbbf24" />
+                            <Bookmark size={20} color={themeColors.secondary} fill={themeColors.secondary} />
                         ) : (
-                            <Bookmark size={20} color="#475569" />
+                            <Bookmark size={20} color={themeColors.outline} />
                         )}
                     </Pressable>
                 </View>
             </Pressable>
         );
-    }, [handlePress, togglePin]);
+    }, [handlePress, togglePin, themeColors]);
 
     const renderSectionHeader = useCallback(({ section: { title } }: { section: { title: string } }) => (
         <View className="px-5 py-3 bg-transparent">
-            <Text className="text-xs font-bold tracking-wider text-slate-500 uppercase">{title}</Text>
+            <Text className="text-xs font-bold tracking-wider text-outline uppercase">{title}</Text>
         </View>
     ), []);
 
@@ -208,27 +227,25 @@ export default function InboxScreen() {
 
     const renderHeader = () => (
         <View className="px-4 pb-3 pt-2">
-            <View className="flex-row justify-between bg-slate-800/50 p-1 rounded-sm border border-white/5">
+            <View className="flex-row justify-between bg-surface-container-low p-1 rounded-sm border border-outline-variant">
                 {(['All', 'My Messages', 'Bookmarked'] as FilterType[]).map((filter) => (
                     <Pressable
                         key={filter}
                         onPress={() => startTransition(() => {
                             setActiveFilter(prev => (prev === filter ? prev : filter));
                         })}
-                        style={[
-                            styles.filterButton,
+                        className={`flex-1 items-center py-1.5 rounded-sm border ${
                             activeFilter === filter
-                                ? styles.filterButtonActive
-                                : null,
-                        ]}
+                                ? 'bg-surface-container-highest border-outline-variant shadow-sm'
+                                : 'border-transparent'
+                        }`}
                     >
                         <Text
-                            style={[
-                                styles.filterText,
+                            className={`text-xs font-semibold ${
                                 activeFilter === filter
-                                    ? styles.filterTextActive
-                                    : styles.filterTextInactive,
-                            ]}
+                                    ? 'text-on-surface'
+                                    : 'text-on-surface-variant'
+                            }`}
                         >
                             {filter}
                         </Text>
@@ -239,11 +256,11 @@ export default function InboxScreen() {
     );
 
     return (
-        <ScreenGradient>
+        <View className="flex-1 bg-background">
             <CollapsibleScaffold
-                statusBarShimBackgroundColor="#0f172a"
+                statusBarShimBackgroundColor={themeColors.background}
                 topBar={
-                    <View className="bg-black">
+                    <View className="bg-background">
                         <ScreenHeader
                             title="Inbox"
                             subtitle=""
@@ -295,35 +312,7 @@ export default function InboxScreen() {
                     />
                 )}
             </CollapsibleScaffold>
-        </ScreenGradient>
+        </View>
     );
 }
 
-const styles = StyleSheet.create({
-    filterButton: {
-        flex: 1,
-        alignItems: 'center',
-        paddingVertical: 6,
-        borderRadius: 4, // equivalent to rounded-sm
-    },
-    filterButtonActive: {
-        backgroundColor: '#1e293b',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.3,
-        shadowRadius: 2,
-        elevation: 1,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: '#27272A',
-    },
-    filterText: {
-        fontSize: 12,
-        fontWeight: '600',
-    },
-    filterTextActive: {
-        color: '#ffffff',
-    },
-    filterTextInactive: {
-        color: '#94a3b8',
-    },
-});

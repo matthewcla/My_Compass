@@ -145,12 +145,12 @@
     --color-outline: 142 144 154;
     --color-outline-variant: 68 71 79;
     --color-surface-tint: 174 198 254;
-    --color-primary: 174 198 254;
+    --color-primary: 51 142 247;
     --color-on-primary: 20 47 93;
     --color-primary-container: 0 32 78;
     --color-on-primary-container: 113 137 188;
     --color-inverse-primary: 70 94 143;
-    --color-secondary: 255 230 174;
+    --color-secondary: 245 165 36;
     --color-on-secondary: 62 46 0;
     --color-secondary-container: 253 196 0;
     --color-on-secondary-container: 108 82 0;
@@ -226,12 +226,12 @@
       --color-outline: 142 144 154;
       --color-outline-variant: 68 71 79;
       --color-surface-tint: 174 198 254;
-      --color-primary: 174 198 254;
+      --color-primary: 51 142 247;
       --color-on-primary: 20 47 93;
       --color-primary-container: 0 32 78;
       --color-on-primary-container: 113 137 188;
       --color-inverse-primary: 70 94 143;
-      --color-secondary: 255 230 174;
+      --color-secondary: 245 165 36;
       --color-on-secondary: 62 46 0;
       --color-secondary-container: 253 196 0;
       --color-on-secondary-container: 108 82 0;
@@ -267,9 +267,6 @@
     @apply bg-white dark:bg-slate-900;
   }
 
-  .text-primary {
-    @apply text-slate-900 dark:text-slate-50;
-  }
 
   .border-subtle {
     @apply border-slate-200 dark:border-slate-800;

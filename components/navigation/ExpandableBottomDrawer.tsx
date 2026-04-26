@@ -360,8 +360,8 @@ export default function ExpandableBottomDrawer() {
                                 shadowOpacity: 1,
                                 shadowRadius: 0,
                                 elevation: 8,
-                                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : '#0A1628',
-                                borderWidth: isDark ? 1 : 2,
+                                borderColor: isDark ? '#FFFFFF' : '#0A1628',
+                                borderWidth: 2,
                             }
                         ]}
                     >

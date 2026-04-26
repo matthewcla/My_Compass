@@ -24,7 +24,7 @@ export function AdminActionModal({ request, onClose }: AdminActionModalProps) {
 
     const currentIdx = request.approvalChain.findIndex(s => s.status === 'current');
     const isFinalStep = currentIdx === request.approvalChain.length - 1;
-    const isActionable = request.isUserActionable;
+    const actionable = request.isUserActionable;
 
     const handleApprove = () => {
         if (isFinalStep) {
@@ -89,7 +89,7 @@ export function AdminActionModal({ request, onClose }: AdminActionModalProps) {
                         })}
                     </ScrollView>
 
-                    {isActionable ? (
+                    {actionable ? (
                         <View className="border-t border-outline-variant pt-6">
                             <Text className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-2">Recommendation Notes</Text>
                             <TextInput 

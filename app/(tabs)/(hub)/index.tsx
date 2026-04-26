@@ -34,12 +34,15 @@ const ActionRequiredWidget = () => {
     const topActions = actions;
 
     return (
-        <View className="flex-1 bg-white dark:bg-[#1c1b1b] rounded-sm p-5 border border-slate-200 dark:border-[#ffffff1a] shadow-sm">
+        <View className="flex-1 bg-[#FFFCED] dark:bg-surface-container-low rounded-sm p-5 border border-outline-variant border-l-[4px] border-l-secondary-container shadow-apple-sm">
             <View className="flex-row items-center justify-between mb-4">
-                <Text className="font-headline text-lg font-bold text-on-surface dark:text-white">Action Required</Text>
+                <View className="flex-row items-center gap-2">
+                    <MaterialIcons name="warning" size={20} color={isDark ? '#fdc400' : '#d97706'} />
+                    <Text className="font-headline text-lg text-on-surface">Action Required</Text>
+                </View>
                 {topActions.length > 0 && (
-                    <View className="bg-error/10 dark:bg-[#93000a] px-2 py-1 rounded-sm">
-                        <Text className="text-error dark:text-white font-bold text-xs">{topActions.length}</Text>
+                    <View className="bg-error px-2 py-1 rounded-sm">
+                        <Text className="font-headline text-on-error text-xs">{topActions.length} Pending</Text>
                     </View>
                 )}
             </View>
@@ -47,7 +50,7 @@ const ActionRequiredWidget = () => {
             {topActions.length === 0 ? (
                 <View className="flex-1 items-center justify-center py-4">
                     <MaterialIcons name="check-circle" size={40} color="#10B981" />
-                    <Text className="mt-3 font-medium text-slate-500 dark:text-slate-400 text-center">All Caught Up!</Text>
+                    <Text className="mt-3 font-label text-on-surface-variant text-center">All Caught Up!</Text>
                 </View>
             ) : (
                 <View className="flex-col gap-3">
@@ -55,19 +58,24 @@ const ActionRequiredWidget = () => {
                         <Pressable 
                             key={action.id} 
                             onPress={() => router.push(action.route as any)}
-                            className="bg-slate-50 dark:bg-[#0e0e0e] p-4 rounded-sm flex-row items-start border border-slate-200 dark:border-white/10"
+                            className="bg-surface-container-lowest active:bg-surface-container-high active:scale-[0.99] transition-transform p-4 rounded-sm border border-outline-variant shadow-sm"
                         >
-                            <View className="bg-primary/10 dark:bg-white/5 p-2 rounded-sm mr-3">
-                                <MaterialIcons name={action.icon} size={20} color={isDark ? '#fdc400' : Colors.light.primary} />
+                            {/* Eyebrow Badge Placement */}
+                            {action.dueText && (
+                                <View className="bg-error self-start px-2 py-0.5 rounded-sm mb-2">
+                                    <Text className="font-headline text-white text-[9px] uppercase tracking-wider">{action.dueText}</Text>
+                                </View>
+                            )}
+                            
+                            <View className="mb-2">
+                                <Text className="font-headline text-on-surface mb-1">{action.title}</Text>
+                                <Text className="text-on-surface-variant text-xs leading-relaxed">{action.description}</Text>
                             </View>
-                            <View className="flex-1">
-                                <Text className="font-bold text-on-surface dark:text-white mb-1">{action.title}</Text>
-                                <Text className="text-slate-600 dark:text-slate-400 text-xs mb-2">{action.description}</Text>
-                                <View className="flex-col gap-1 items-start mt-1">
-                                    {action.dueText && (
-                                        <Text className="text-error dark:text-red-400 font-bold text-[10px] uppercase tracking-wider">{action.dueText}</Text>
-                                    )}
-                                    <Text className="text-primary dark:text-[#fdc400] font-semibold text-sm">{action.actionText}</Text>
+                            
+                            <View className="flex-row items-center mt-2">
+                                {/* Explicit text-white for contrast safety */}
+                                <View className="bg-primary dark:bg-primary-container px-4 py-1.5 rounded-sm shadow-sm">
+                                    <Text className="font-headline text-white dark:text-on-primary-container text-xs">{action.actionText}</Text>
                                 </View>
                             </View>
                         </Pressable>
@@ -80,19 +88,35 @@ const ActionRequiredWidget = () => {
 
 const CareerSnapshotWidget = () => {
     return (
-        <View className="flex-1 bg-white dark:bg-[#1c1b1b] rounded-sm p-5 border border-slate-200 dark:border-[#ffffff1a] shadow-sm justify-between">
-            <View>
-                <Text className="font-headline text-lg font-bold text-on-surface dark:text-white mb-4">Career Snapshot</Text>
-                <View className="items-center justify-center mb-4">
-                    <View className="w-16 h-16 bg-slate-50 dark:bg-[#0e0e0e] rounded-sm items-center justify-center mb-2 border border-slate-200 dark:border-white/10">
-                        <Text className="font-black text-2xl text-slate-800 dark:text-white">E5</Text>
+        <View className="flex-1 bg-primary dark:bg-surface-container-low rounded-sm p-5 border border-primary dark:border-outline-variant shadow-apple-sm justify-between overflow-hidden">
+            <View className="absolute right-[-30px] top-[10px] opacity-10">
+                <MaterialIcons name="star" size={180} color="#ffffff" />
+            </View>
+            <View className="z-10">
+                <Text className="font-label text-xs tracking-widest uppercase text-white dark:text-on-surface mb-4">Career Snapshot</Text>
+                <View className="flex-row items-center justify-start mb-4 gap-4">
+                    <View className="w-14 h-14 bg-surface-container-lowest shadow-sm rounded-sm items-center justify-center border border-outline-variant">
+                        <Text className="font-display text-xl text-primary">E5</Text>
                     </View>
-                    <Text className="font-bold text-slate-800 dark:text-slate-200 text-center">Petty Officer 2nd Class</Text>
+                    <View className="flex-1">
+                        {/* Explicit text-white for contrast safety */}
+                        <Text className="font-headline text-lg text-white dark:text-on-surface">Petty Officer 2nd Class</Text>
+                        <Text className="font-label text-xs text-white/80 dark:text-on-surface-variant mt-0.5">Time in Rate: 2y 4m</Text>
+                    </View>
                 </View>
             </View>
-            <View className="bg-slate-50 dark:bg-[#0e0e0e] p-3 rounded-sm border border-slate-200 dark:border-white/10">
-                <Text className="text-slate-500 dark:text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Next Advancement Cycle</Text>
-                <Text className="text-on-surface dark:text-white font-semibold">Mar 2026</Text>
+            <View className="z-10 mt-6">
+                <View className="flex-row justify-between items-end mb-2">
+                    <Text className="font-label text-white/80 dark:text-on-surface-variant text-[10px] uppercase tracking-wider">Next Advancement Cycle</Text>
+                    <Text className="font-headline text-white dark:text-on-surface text-sm">Mar 2026</Text>
+                </View>
+                <View className="h-1.5 w-full bg-white/20 dark:bg-surface-container-highest rounded-full overflow-hidden mb-2">
+                    <View className="h-full bg-inverse-primary dark:bg-primary w-[60%] rounded-full" />
+                </View>
+                <View className="flex-row justify-between">
+                    <Text className="font-label text-white/80 dark:text-on-surface-variant text-[9px]">Evals Complete</Text>
+                    <Text className="font-label text-white/80 dark:text-on-surface-variant text-[9px]">Exam Prep</Text>
+                </View>
             </View>
         </View>
     );
@@ -109,19 +133,19 @@ const QuickLinksWidget = () => {
     ];
 
     return (
-        <View className="flex-1 bg-white dark:bg-[#1c1b1b] rounded-sm p-5 border border-slate-200 dark:border-[#ffffff1a] shadow-sm">
-            <Text className="font-headline text-lg font-bold text-on-surface dark:text-white mb-4">Quick Links</Text>
+        <View className="flex-1 bg-surface-container-low rounded-sm p-5 border border-outline-variant shadow-apple-sm">
+            <Text className="font-headline text-lg text-on-surface mb-4">Quick Links</Text>
             <View className="flex-row flex-wrap justify-between gap-y-4">
                 {links.map((link, i) => (
                     <Pressable 
                         key={i} 
                         onPress={() => router.push(link.route as any)}
-                        className="w-[48%] items-center bg-slate-50 dark:bg-[#0e0e0e] p-3 rounded-sm border border-slate-200 dark:border-white/10"
+                        className="w-[48%] items-center bg-surface-container-lowest active:bg-surface-container-high active:scale-[0.97] transition-transform p-3 rounded-sm border border-outline-variant shadow-sm"
                     >
-                        <View className="bg-primary/10 dark:bg-white/5 p-3 rounded-sm mb-2">
-                            <MaterialIcons name={link.icon as any} size={24} color={isDark ? '#fdc400' : Colors.light.primary} />
+                        <View className="bg-surface-container p-3 rounded-sm mb-2">
+                            <MaterialIcons name={link.icon as any} size={24} color={isDark ? '#fdc400' : '#000a23'} />
                         </View>
-                        <Text className="font-semibold text-xs text-center text-slate-700 dark:text-slate-300">{link.label}</Text>
+                        <Text className="font-label text-xs text-center text-on-surface-variant">{link.label}</Text>
                     </Pressable>
                 ))}
             </View>
@@ -240,7 +264,7 @@ export default function HubDashboard() {
                                         <Menu color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
                                     </Pressable>
                                 )}
-                                <Text className="text-2xl font-black font-headline tracking-tighter text-primary dark:text-primary">
+                                <Text className="text-2xl font-display tracking-tighter text-primary dark:text-primary">
                                     MyCompass
                                 </Text>
                             </View>
@@ -288,26 +312,32 @@ export default function HubDashboard() {
                         className="flex-1"
                     >
                         {/* Header Image Area */}
-                        <View className="relative w-full h-48 md:h-64 bg-[#2a2a2a] overflow-hidden border-b-4 border-secondary-container mb-6">
+                        <View className="relative w-full h-48 md:h-64 bg-black overflow-hidden border-b-4 border-secondary-container mb-6">
                             <LinearGradient
-                                colors={isDark ? ['#131313', 'transparent'] : ['#FAFAFA', 'transparent']}
+                                colors={['rgba(0,0,0,0.8)', 'transparent']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 0.66, y: 0 }}
                                 style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '100%', zIndex: 10 }}
                             />
                             <Image
                                 source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlk0EQB3AeeQZRB_5FtVwpVzBeqCT1W0966Y_uc6miRy4RCqlHyN9u54wBUvBVHYSZRT4jH_YTMJBVtfzeOFakU7hnZeBDqDQc4kr75YMTipBs1Q-HH3H_CLaPpMIHeQAKyvdSp7yqWaR97VxVKNC2goiGrKZUb3eKHO3sYi9P4Bit9Zm5XVJPzd744sVbF4gk13iIY5aFsSs-Yl0VPPeMoJ5IILKO0levwWL_ggbVRUN-lfLGR_OIlDWX1XhwAsFq_JerR59KS3o' }}
-                                style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.4 }}
+                                style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.5 }}
                                 contentFit="cover"
                             />
                             <View className="absolute bottom-6 left-5 z-20">
-                                <Text className="font-label text-secondary-container font-bold tracking-widest text-sm mb-1 uppercase">MyNavy HR</Text>
-                                <Text className="font-display text-4xl md:text-5xl font-extrabold text-white tracking-tighter uppercase leading-none">FEED</Text>
+                                <Text className="font-label text-secondary-container tracking-widest text-sm mb-1 uppercase">MyNavy HR</Text>
+                                <Text className="font-display text-4xl md:text-5xl text-white tracking-tighter uppercase leading-none">FEED</Text>
                             </View>
                         </View>
 
                         {/* Bento Grid Layout */}
                         <View className="px-4 md:px-6 pb-6 flex-col gap-4">
+                            {/* Greeting Section */}
+                            <View className="mb-2 mt-2">
+                                <Text className="font-display text-2xl text-primary dark:text-on-surface mb-1">Good Morning, Petty Officer</Text>
+                                <Text className="font-headline text-on-surface-variant text-sm">Here is your daily briefing and required actions.</Text>
+                            </View>
+
                             {/* Top Row */}
                             <View className="flex-col md:flex-row gap-4 w-full">
                                 <Animated.View entering={FadeInUp.delay(0).duration(350).springify()} className="flex-1 md:flex-[2]">

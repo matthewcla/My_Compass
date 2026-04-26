@@ -51,9 +51,10 @@ const MemoizedTabItem = React.memo(({
     onPress: (route: string) => void;
 }) => {
     // Premium Naval Glass Cockpit palette
-    const activeSolidHex = isDark ? '#131313' : '#131313'; // Surface color
-    const inactiveColor = isDark ? '#e5e2e1' : '#e5e2e1'; // text-on-surface
-    const activeBgRgba = '#fdc400'; // secondary-container
+    // Dark Mode: Gold Pill / Navy Text. Light Mode: Navy Pill / White Text
+    const activeBgRgba = isDark ? '#fdc400' : '#0A1628'; 
+    const activeSolidHex = isDark ? '#0A1628' : '#FFFFFF'; 
+    const inactiveColor = isDark ? '#e5e2e1' : '#64748B'; 
 
     const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
 

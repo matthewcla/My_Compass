@@ -2,7 +2,6 @@ import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { ScalePressable } from '@/components/ScalePressable';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { ScannerModal } from '@/components/ui/ScannerModal';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useCareerEvents } from '@/hooks/useCareerEvents';
 import { CareerEvent } from '@/types/career';
@@ -10,7 +9,7 @@ import { getShadow } from '@/utils/getShadow';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { Stack, useFocusEffect } from 'expo-router';
-import { Clock, MapPin, QrCode } from 'lucide-react-native';
+import { Clock, MapPin } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, SectionList, SectionListProps, Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -163,24 +162,6 @@ export default function CalendarScreen() {
         value: searchQuery
     };
 
-    // Scanner State
-    const [isScannerOpen, setIsScannerOpen] = useState(false);
-
-    // Mock Handler
-    const handleScan = (data: string) => {
-        // 1. Close Scanner
-        setIsScannerOpen(false);
-
-        // 2. Feedback
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-        // 3. Mock Validation Logic (In real app, parse JSON: { eventId, token })
-
-        // Show Success
-        if (data) {
-            Alert.alert("Check-in Complete", "You have successfully mustered for this event.");
-        }
-    };
 
     // PERFORMANCE FIX: Stable keyExtractor and renderItem
     const keyExtractor = useCallback((item: CareerEvent) => item.eventId, []);
@@ -248,26 +229,6 @@ export default function CalendarScreen() {
                     )}
                 </CollapsibleScaffold>
 
-                {/* FAB: Scan QR Code */}
-                <View className="absolute bottom-28 right-6">
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() => setIsScannerOpen(true)}
-                        accessibilityRole="button"
-                        accessibilityLabel="Open Scanner"
-                        className="w-14 h-14 bg-[#fdc400] border-2 border-[#131313] rounded-full items-center justify-center transform active:scale-95"
-                        style={getShadow({ shadowColor: '#fdc400', shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 })}
-                    >
-                        <QrCode size={24} color="#131313" />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Scanner Modal */}
-                <ScannerModal
-                    visible={isScannerOpen}
-                    onClose={() => setIsScannerOpen(false)}
-                    onScan={handleScan}
-                />
             </ScreenGradient>
         </>
     );

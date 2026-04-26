@@ -2,64 +2,136 @@ import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
-import { PCSHeroBanner } from '@/components/pcs/PCSHeroBanner';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { DemoPhase } from '@/constants/DemoData';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useHubPriority } from '@/hooks/useHubPriority';
 import { useSession } from '@/lib/ctx';
-import { useAssignmentStore } from '@/store/useAssignmentStore';
-import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
+import { useDemoStore, useCurrentProfile } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
-import { usePCSPhase, usePCSStore, useSubPhase, useUCTPhaseStatus } from '@/store/usePCSStore';
-import { getShadow } from '@/utils/getShadow';
-import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Bell, Menu } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { Alert, Modal, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, Text, View, ScrollView } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useShallow } from 'zustand/react/shallow';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useShallow } from 'zustand/react/shallow';
 
-const AnimatedFlashList = (Platform.OS === 'web'
-    ? FlashList
-    : Animated.createAnimatedComponent(FlashList)) as React.ComponentType<any>;
+const AnimatedScrollView = (Platform.OS === 'web'
+    ? ScrollView
+    : Animated.createAnimatedComponent(ScrollView)) as React.ComponentType<any>;
 
-// P2 FIX #8/#9: Stable component references prevent FlashList re-render thrashing
-const ItemSeparator = () => <View style={{ height: 24 }} />;
-const ListHeader = () => (
-    <View className="relative w-full h-48 md:h-64 bg-[#2a2a2a] overflow-hidden border-b-4 border-secondary-container mb-6">
-        <LinearGradient
-            colors={['rgba(19,19,19,1)', 'rgba(19,19,19,0)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0.66, y: 0 }}
-            style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '100%', zIndex: 10 }}
-        />
-        <Image
-            source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlk0EQB3AeeQZRB_5FtVwpVzBeqCT1W0966Y_uc6miRy4RCqlHyN9u54wBUvBVHYSZRT4jH_YTMJBVtfzeOFakU7hnZeBDqDQc4kr75YMTipBs1Q-HH3H_CLaPpMIHeQAKyvdSp7yqWaR97VxVKNC2goiGrKZUb3eKHO3sYi9P4Bit9Zm5XVJPzd744sVbF4gk13iIY5aFsSs-Yl0VPPeMoJ5IILKO0levwWL_ggbVRUN-lfLGR_OIlDWX1XhwAsFq_JerR59KS3o' }}
-            style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.4 }}
-            contentFit="cover"
-        />
-        <View className="absolute bottom-6 left-5 z-20">
-            <Text className="font-label text-secondary-container font-bold tracking-widest text-sm mb-1 uppercase">Personnel Status</Text>
-            <Text className="font-display text-4xl md:text-5xl font-extrabold text-white tracking-tighter uppercase leading-none">DASHBOARD</Text>
+// Bento Grid Components
+const ActionRequiredWidget = () => {
+    const actions = useHubPriority();
+    const router = useRouter();
+    const isDark = useColorScheme() === 'dark';
+    const topActions = actions;
+
+    return (
+        <View className="flex-1 bg-white dark:bg-[#1c1b1b] rounded-sm p-5 border border-slate-200 dark:border-[#ffffff1a] shadow-sm">
+            <View className="flex-row items-center justify-between mb-4">
+                <Text className="font-headline text-lg font-bold text-on-surface dark:text-white">Action Required</Text>
+                {topActions.length > 0 && (
+                    <View className="bg-error/10 dark:bg-[#93000a] px-2 py-1 rounded-sm">
+                        <Text className="text-error dark:text-white font-bold text-xs">{topActions.length}</Text>
+                    </View>
+                )}
+            </View>
+            
+            {topActions.length === 0 ? (
+                <View className="flex-1 items-center justify-center py-4">
+                    <MaterialIcons name="check-circle" size={40} color="#10B981" />
+                    <Text className="mt-3 font-medium text-slate-500 dark:text-slate-400 text-center">All Caught Up!</Text>
+                </View>
+            ) : (
+                <View className="flex-col gap-3">
+                    {topActions.map((action, i) => (
+                        <Pressable 
+                            key={action.id} 
+                            onPress={() => router.push(action.route as any)}
+                            className="bg-slate-50 dark:bg-[#0e0e0e] p-4 rounded-sm flex-row items-start border border-slate-200 dark:border-white/10"
+                        >
+                            <View className="bg-primary/10 dark:bg-white/5 p-2 rounded-sm mr-3">
+                                <MaterialIcons name={action.icon} size={20} color={isDark ? '#fdc400' : Colors.light.primary} />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="font-bold text-on-surface dark:text-white mb-1">{action.title}</Text>
+                                <Text className="text-slate-600 dark:text-slate-400 text-xs mb-2">{action.description}</Text>
+                                <View className="flex-col gap-1 items-start mt-1">
+                                    {action.dueText && (
+                                        <Text className="text-error dark:text-red-400 font-bold text-[10px] uppercase tracking-wider">{action.dueText}</Text>
+                                    )}
+                                    <Text className="text-primary dark:text-[#fdc400] font-semibold text-sm">{action.actionText}</Text>
+                                </View>
+                            </View>
+                        </Pressable>
+                    ))}
+                </View>
+            )}
         </View>
-    </View>
-);
-const ListFooter = () => <View style={{ height: 250 }} />;
-const getItemType = (item: string) => item;
+    );
+};
+
+const CareerSnapshotWidget = () => {
+    return (
+        <View className="flex-1 bg-white dark:bg-[#1c1b1b] rounded-sm p-5 border border-slate-200 dark:border-[#ffffff1a] shadow-sm justify-between">
+            <View>
+                <Text className="font-headline text-lg font-bold text-on-surface dark:text-white mb-4">Career Snapshot</Text>
+                <View className="items-center justify-center mb-4">
+                    <View className="w-16 h-16 bg-slate-50 dark:bg-[#0e0e0e] rounded-sm items-center justify-center mb-2 border border-slate-200 dark:border-white/10">
+                        <Text className="font-black text-2xl text-slate-800 dark:text-white">E5</Text>
+                    </View>
+                    <Text className="font-bold text-slate-800 dark:text-slate-200 text-center">Petty Officer 2nd Class</Text>
+                </View>
+            </View>
+            <View className="bg-slate-50 dark:bg-[#0e0e0e] p-3 rounded-sm border border-slate-200 dark:border-white/10">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs uppercase font-bold tracking-wider mb-1">Next Advancement Cycle</Text>
+                <Text className="text-on-surface dark:text-white font-semibold">Mar 2026</Text>
+            </View>
+        </View>
+    );
+};
+
+const QuickLinksWidget = () => {
+    const router = useRouter();
+    const isDark = useColorScheme() === 'dark';
+    const links = [
+        { icon: 'flight-land', label: 'Check-In', route: '/pcs/check-in' },
+        { icon: 'receipt', label: 'Travel Claim', route: '/travel-claim/request' },
+        { icon: 'event', label: 'Leave', route: '/leave/request' },
+        { icon: 'admin-panel-settings', label: 'Admin', route: '/(tabs)/(admin)' }
+    ];
+
+    return (
+        <View className="flex-1 bg-white dark:bg-[#1c1b1b] rounded-sm p-5 border border-slate-200 dark:border-[#ffffff1a] shadow-sm">
+            <Text className="font-headline text-lg font-bold text-on-surface dark:text-white mb-4">Quick Links</Text>
+            <View className="flex-row flex-wrap justify-between gap-y-4">
+                {links.map((link, i) => (
+                    <Pressable 
+                        key={i} 
+                        onPress={() => router.push(link.route as any)}
+                        className="w-[48%] items-center bg-slate-50 dark:bg-[#0e0e0e] p-3 rounded-sm border border-slate-200 dark:border-white/10"
+                    >
+                        <View className="bg-primary/10 dark:bg-white/5 p-3 rounded-sm mb-2">
+                            <MaterialIcons name={link.icon as any} size={24} color={isDark ? '#fdc400' : Colors.light.primary} />
+                        </View>
+                        <Text className="font-semibold text-xs text-center text-slate-700 dark:text-slate-300">{link.label}</Text>
+                    </Pressable>
+                ))}
+            </View>
+        </View>
+    );
+};
 
 const HubLeaveItem = React.memo(({ 
-    listRef, 
     onQuickRequest 
 }: { 
-    listRef: React.RefObject<any>, 
     onQuickRequest: () => void 
 }) => {
     const router = useRouter();
@@ -90,18 +162,10 @@ const HubLeaveItem = React.memo(({
             }}
             onQuickRequest={onQuickRequest}
             onFullRequest={() => router.push('/leave/request' as any)}
-            onExpand={(expanded) => {
-                if (expanded) {
-                    setTimeout(() => {
-                        listRef.current?.scrollToEnd({ animated: true });
-                    }, 300);
-                }
-            }}
+            onExpand={() => {}}
         />
     );
 });
-
-type FilterTab = 'Hub' | 'My Career' | 'My Admin';
 
 export default function HubDashboard() {
     const router = useRouter();
@@ -109,11 +173,7 @@ export default function HubDashboard() {
     const user = useCurrentProfile();
     const generateQuickDraft = useLeaveStore(state => state.generateQuickDraft);
     const fetchUserDefaults = useLeaveStore(state => state.fetchUserDefaults);
-    const insets = useSafeAreaInsets();
     const { data, loading, error } = useDashboardData();
-    const [activeFilter, setActiveFilter] = React.useState<FilterTab>('Hub');
-
-    const listRef = React.useRef<any>(null);
 
     // Quick Leave State
     const [showQuickLeave, setShowQuickLeave] = React.useState(false);
@@ -132,27 +192,6 @@ export default function HubDashboard() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    const isDemoMode = useDemoStore(state => state.isDemoMode);
-    const selectedPhase = useDemoStore(state => state.selectedPhase);
-    const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
-    const demoTimeline = useDemoStore(state => state.demoTimelineOverride);
-    const initializeOrders = usePCSStore(state => state.initializeOrders);
-    const obliserv = usePCSStore(state => state.financials.obliserv);
-    const pcsPhase = usePCSPhase();
-    const subPhase = useSubPhase();
-    const uctPhaseStatus = useUCTPhaseStatus();
-
-    const activeUCTPhase = React.useMemo(() => {
-        const active = Object.entries(uctPhaseStatus).find(([_, status]) => status === 'ACTIVE');
-        return active ? Number(active[0]) : 1;
-    }, [uctPhaseStatus]);
-
-    // QW4: Reactive liquidation state (must be above early returns per Rules of Hooks)
-    const liquidationStatus = usePCSStore((s) => s.financials.liquidation?.currentStatus);
-    const shipments = usePCSStore(state => state.financials.hhg?.shipments ?? []);
-    const hasShipments = shipments.length > 0;
-    const dependentCount = user?.dependents ?? 0;
-
     // Hydrate defaults on mount
     React.useEffect(() => {
         if (user?.id) {
@@ -160,57 +199,10 @@ export default function HubDashboard() {
         }
     }, [user?.id, fetchUserDefaults]);
 
-    // Hydrate billets so DiscoveryStatusCard scoreboard is populated
-    const fetchBillets = useAssignmentStore(state => state.fetchBillets);
-    React.useEffect(() => {
-        fetchBillets();
-    }, [fetchBillets]);
-
-    // Initialize PCS Orders if in PCS Demo Phase
-    React.useEffect(() => {
-        if (isDemoMode && selectedPhase === DemoPhase.MY_PCS) {
-            initializeOrders();
-        }
-    }, [isDemoMode, selectedPhase, initializeOrders]);
-
-
-    // Scroll to top whenever this tab gains focus
-    useFocusEffect(
-        useCallback(() => {
-            listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
-        }, [])
-    );
-
-
-    // QW1: Wrapped in useCallback to prevent FlashList re-creating the callback on every render
-    // QW2: Each widget section gets a FadeInUp stagger for polished entrance
-    // IMPORTANT: Must be above early returns to satisfy Rules of Hooks
-    const renderItem = useCallback(({ item, index }: { item: string; index: number }) => {
-        const delay = index * 60;
-
-        switch (item) {
-            case 'leave':
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <HubLeaveItem listRef={listRef} onQuickRequest={handleQuickRequest} />
-                    </Animated.View>
-                );
-            default:
-                return null;
-        }
-    }, [router, handleQuickRequest]);
-
-    const sections = React.useMemo(() => {
-        const feed: string[] = [];
-        feed.push('leave');
-        return feed;
-    }, [assignmentPhase, pcsPhase, subPhase, liquidationStatus, hasShipments, dependentCount, activeUCTPhase]);
-
     // Loading state
     if (loading && !data) {
         return (
             <ScreenGradient>
-                {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <HubSkeleton />
             </ScreenGradient>
         );
@@ -220,7 +212,6 @@ export default function HubDashboard() {
     if (error && !data) {
         return (
             <ScreenGradient>
-                {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <View className="flex-1 items-center justify-center px-8">
                     <Text className="text-slate-400 text-center">{error}</Text>
                 </View>
@@ -228,16 +219,13 @@ export default function HubDashboard() {
         );
     }
 
-
     return (
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 topBar={
-                    <BlurView intensity={isDark ? 85 : 70} tint={isDark ? "dark" : "light"} className="overflow-hidden">
-                        {/* Inner Glass Top-Glow Highlight */}
-                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)' }} />
-
+                    <View className="overflow-hidden bg-surface-container-lowest dark:bg-[#0A0A0A]">
+                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }} />
                         <View className="flex-row items-center justify-between px-5 pt-3 pb-3">
                             <View className="flex-row items-center gap-3">
                                 {Platform.OS === 'web' && (
@@ -252,13 +240,10 @@ export default function HubDashboard() {
                                         <Menu color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
                                     </Pressable>
                                 )}
-                                <Text
-                                    className="text-xl font-black font-headline uppercase tracking-tighter text-primary dark:text-primary"
-                                >
-                                    HOME HUB
+                                <Text className="text-xl font-black font-headline tracking-tighter text-primary dark:text-primary">
+                                    MyCompass
                                 </Text>
                             </View>
-
                             <View className="flex items-center">
                                 <Pressable
                                     onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
@@ -272,13 +257,13 @@ export default function HubDashboard() {
                         <View
                             className="w-full"
                             style={{
-                                height: 1, // Using integer value instead of StyleSheet.hairlineWidth for consistency
+                                height: 1,
                                 backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
                             }}
                         />
-                    </BlurView>
+                    </View>
                 }
-                contentContainerStyle={{ paddingHorizontal: 16 }}
+                contentContainerStyle={{ paddingHorizontal: 0 }}
             >
                 {({
                     onScroll,
@@ -290,27 +275,62 @@ export default function HubDashboard() {
                     scrollEventThrottle,
                     contentContainerStyle
                 }) => (
-                    <AnimatedFlashList
-                        ref={listRef}
-                        data={sections}
-                        renderItem={renderItem}
-                        getItemType={getItemType}
-                        ItemSeparatorComponent={ItemSeparator}
-                        ListHeaderComponent={ListHeader}
-                        ListFooterComponent={ListFooter}
-
-                        estimatedItemSize={220}
-                        style={{ flex: 1 }}
-                        showsVerticalScrollIndicator={false}
-                        scrollEventThrottle={scrollEventThrottle}
+                    <AnimatedScrollView
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
                         onScrollEndDrag={onScrollEndDrag}
                         onLayout={onLayout}
                         onContentSizeChange={onContentSizeChange}
                         scrollEnabled={scrollEnabled}
-                        contentContainerStyle={contentContainerStyle}
-                    />
+                        scrollEventThrottle={scrollEventThrottle}
+                        contentContainerStyle={[contentContainerStyle, { paddingBottom: 150 }]}
+                        showsVerticalScrollIndicator={false}
+                        className="flex-1"
+                    >
+                        {/* Header Image Area */}
+                        <View className="relative w-full h-48 md:h-64 bg-[#2a2a2a] overflow-hidden border-b-4 border-secondary-container mb-6">
+                            <LinearGradient
+                                colors={['rgba(19,19,19,1)', 'rgba(19,19,19,0)']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 0.66, y: 0 }}
+                                style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '100%', zIndex: 10 }}
+                            />
+                            <Image
+                                source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlk0EQB3AeeQZRB_5FtVwpVzBeqCT1W0966Y_uc6miRy4RCqlHyN9u54wBUvBVHYSZRT4jH_YTMJBVtfzeOFakU7hnZeBDqDQc4kr75YMTipBs1Q-HH3H_CLaPpMIHeQAKyvdSp7yqWaR97VxVKNC2goiGrKZUb3eKHO3sYi9P4Bit9Zm5XVJPzd744sVbF4gk13iIY5aFsSs-Yl0VPPeMoJ5IILKO0levwWL_ggbVRUN-lfLGR_OIlDWX1XhwAsFq_JerR59KS3o' }}
+                                style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.4 }}
+                                contentFit="cover"
+                            />
+                            <View className="absolute bottom-6 left-5 z-20">
+                                <Text className="font-label text-secondary-container font-bold tracking-widest text-sm mb-1 uppercase">MyNavy HR</Text>
+                                <Text className="font-display text-4xl md:text-5xl font-extrabold text-white tracking-tighter uppercase leading-none">FEED</Text>
+                            </View>
+                        </View>
+
+                        {/* Bento Grid Layout */}
+                        <View className="px-4 md:px-6 pb-6 flex-col gap-4">
+                            {/* Top Row */}
+                            <View className="flex-col md:flex-row gap-4 w-full">
+                                <Animated.View entering={FadeInUp.delay(0).duration(350).springify()} className="flex-1 md:flex-[2]">
+                                    <ActionRequiredWidget />
+                                </Animated.View>
+                                <Animated.View entering={FadeInUp.delay(50).duration(350).springify()} className="flex-1 md:flex-[1]">
+                                    <CareerSnapshotWidget />
+                                </Animated.View>
+                            </View>
+                            
+                            {/* Bottom Row */}
+                            <View className="flex-col md:flex-row gap-4 w-full">
+                                <Animated.View entering={FadeInUp.delay(100).duration(350).springify()} className="flex-1 md:flex-[2]">
+                                    <HubLeaveItem onQuickRequest={handleQuickRequest} />
+                                </Animated.View>
+                                <Animated.View entering={FadeInUp.delay(150).duration(350).springify()} className="flex-1 md:flex-[1]">
+                                    <QuickLinksWidget />
+                                </Animated.View>
+                            </View>
+                            {/* Spacer to clear bottom pill */}
+                            <View className="h-24 w-full" />
+                        </View>
+                    </AnimatedScrollView>
                 )}
             </CollapsibleScaffold>
 

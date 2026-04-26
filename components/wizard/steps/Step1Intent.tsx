@@ -109,17 +109,17 @@ export function Step1Intent({
                     let mark: Record<string, any> = { color: rangeColor, textColor: rangeTextColor };
 
                     if (dateStr === startDate) {
-                        mark = { ...mark, startingDay: true, color: themeColors.primary, textColor: themeColors.onPrimary };
+                        mark = { ...mark, startingDay: true, color: themeColors.primary, textColor: isDark ? '#003258' : '#FFFFFF' };
                     }
                     if (dateStr === endDate) {
-                        mark = { ...mark, endingDay: true, color: themeColors.primary, textColor: themeColors.onPrimary };
+                        mark = { ...mark, endingDay: true, color: themeColors.primary, textColor: isDark ? '#003258' : '#FFFFFF' };
                     }
                     marks[dateStr] = mark;
                 });
             }
         } else {
             if (startDate) {
-                marks[startDate] = { startingDay: true, color: themeColors.primary, textColor: themeColors.onPrimary, endingDay: true };
+                marks[startDate] = { startingDay: true, color: themeColors.primary, textColor: isDark ? '#003258' : '#FFFFFF', endingDay: true };
             }
         }
 
@@ -316,14 +316,14 @@ export function Step1Intent({
                                 onUpdate('endDate', '');
                                 Haptics.selectionAsync();
                             }}>
-                                <Text className="text-xs text-on-surface-variant mb-1">Start Date</Text>
-                                <Text className={`font-bold ${startDate ? 'text-on-surface' : 'text-outline-variant'}`}>
+                                <Text className="text-xs text-on-surface-variant dark:text-slate-400 mb-1">Start Date</Text>
+                                <Text className={`font-bold ${startDate ? 'text-on-surface dark:text-white' : 'text-outline-variant dark:text-slate-500'}`}>
                                     {startDate || 'Select'}
                                 </Text>
                             </Pressable>
                             <View className="items-end">
-                                <Text className="text-xs text-on-surface-variant mb-1">End Date</Text>
-                                <Text className={`font-bold ${endDate ? 'text-on-surface' : 'text-outline-variant'}`}>
+                                <Text className="text-xs text-on-surface-variant dark:text-slate-400 mb-1">End Date</Text>
+                                <Text className={`font-bold ${endDate ? 'text-on-surface dark:text-white' : 'text-outline-variant dark:text-slate-500'}`}>
                                     {endDate || 'Select'}
                                 </Text>
                             </View>
@@ -343,7 +343,7 @@ export function Step1Intent({
                             <View className="flex-row items-center justify-between mb-3">
                                 <View className="flex-row items-center">
                                     <View className="bg-primary-container p-1.5 rounded-none mr-2">
-                                        <Clock size={16} className="text-primary" />
+                                        <Clock size={16} color={isDark ? '#338EF7' : '#000A23'} className="text-primary" />
                                     </View>
                                     <View>
                                         <Text className="font-bold text-on-surface">Departure</Text>
@@ -393,7 +393,7 @@ export function Step1Intent({
                                 <Text className="text-xs text-on-surface-variant font-medium">Locked to End of Working Day</Text>
                                 <View className="flex-row items-center gap-1.5">
                                     <Text className="font-bold text-on-surface-variant">{startTime}</Text>
-                                    <Lock size={12} className="text-on-surface-variant" />
+                                    <Lock size={12} color={isDark ? '#C4C6D0' : '#44474F'} className="text-on-surface-variant" />
                                 </View>
                             </View>
                         </View>
@@ -403,7 +403,7 @@ export function Step1Intent({
                             <View className="flex-row items-center justify-between mb-3">
                                 <View className="flex-row items-center">
                                     <View className="bg-secondary-container p-1.5 rounded-none mr-2">
-                                        <Clock size={16} className="text-on-secondary-container" />
+                                        <Clock size={16} color={isDark ? '#6C5200' : '#6D5200'} className="text-on-secondary-container" />
                                     </View>
                                     <View>
                                         <Text className="font-bold text-on-surface">Return</Text>
@@ -453,7 +453,7 @@ export function Step1Intent({
                                 <Text className="text-xs text-on-surface-variant font-medium">Locked to Start of Working Day</Text>
                                 <View className="flex-row items-center gap-1.5">
                                     <Text className="font-bold text-on-surface-variant">{endTime}</Text>
-                                    <Lock size={12} className="text-on-surface-variant" />
+                                    <Lock size={12} color={isDark ? '#C4C6D0' : '#44474F'} className="text-on-surface-variant" />
                                 </View>
                             </View>
                         </View>
@@ -463,7 +463,7 @@ export function Step1Intent({
                 {/* Errors / Warnings */}
                 {errors.length > 0 && (
                     <Animated.View entering={FadeIn} className="bg-error-container p-3 rounded-none flex-row items-start">
-                        <AlertCircle size={16} className="text-on-error-container mt-0.5 mr-2" />
+                        <AlertCircle size={16} color={isDark ? '#FFDAD6' : '#93000A'} className="text-on-error-container mt-0.5 mr-2" />
                         <View>
                             {errors.map((err, i) => (
                                 <Text key={i} className="text-on-error-container text-xs font-medium mb-1">

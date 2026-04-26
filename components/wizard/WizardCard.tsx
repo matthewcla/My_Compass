@@ -1,6 +1,7 @@
 import { SolidView } from '@/components/ui/SolidView';
 import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View, useColorScheme } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 
 interface WizardCardProps {
@@ -31,7 +32,7 @@ export function WizardCard({
             <SolidView
                 intensity={isDark ? 30 : 90}
                 tint={isDark ? 'dark' : 'light'}
-                className="flex-1 mx-4 my-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 md:mx-auto md:w-full md:max-w-2xl bg-wizardCardBackground/50 dark:bg-wizardCardBackground"
+                className="flex-1 w-full rounded-none overflow-hidden border border-slate-200 dark:border-white/10 md:mx-auto md:max-w-2xl bg-surface dark:bg-transparent"
             >
                 <View style={{ flex: 1 }}>
                     {/* Header Removed */

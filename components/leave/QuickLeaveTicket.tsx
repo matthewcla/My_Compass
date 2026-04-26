@@ -8,7 +8,7 @@ import { projectLeaveBalance } from '@/utils/leaveProjection';
 import { format } from 'date-fns';
 import { MapPin, Phone, Triangle, X } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Pressable, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 interface QuickLeaveTicketProps {
     draft: LeaveRequest;
@@ -19,6 +19,7 @@ interface QuickLeaveTicketProps {
 
 export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeaveTicketProps) {
     const submitRequest = useLeaveStore((state) => state.submitRequest);
+    const isDark = (useColorScheme() ?? 'light') === 'dark';
     const leaveBalance = useLeaveStore((state) => state.leaveBalance);
     const leaveRequests = useLeaveStore((state) => state.leaveRequests);
 
@@ -114,7 +115,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                     className="w-8 h-8 rounded-full items-center justify-center bg-surface-container active:opacity-70"
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                    <X size={16} className="text-on-surface-variant" />
+                    <X size={16} color={isDark ? '#C4C6D0' : '#44474F'} className="text-on-surface-variant" />
                 </Pressable>
             </View>
 
@@ -134,7 +135,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                             </Text>
                         </TouchableOpacity>
 
-                        <Triangle size={10} className="text-on-surface-variant" rotation={90} />
+                        <Triangle size={10} color={isDark ? '#C4C6D0' : '#44474F'} className="text-on-surface-variant" rotation={90} />
 
                         <TouchableOpacity
                             onPress={() => setShowEndPicker(true)}
@@ -212,7 +213,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                     {/* Location */}
                     <View className="flex-row items-center gap-4">
                         <View className={`w-10 h-10 rounded-full items-center justify-center border ${!draft.leaveAddress ? 'border-error bg-error-container' : 'border-primary bg-primary-container'}`}>
-                            <MapPin size={18} className={!draft.leaveAddress ? "text-error" : "text-primary"} />
+                            <MapPin size={18} color={!draft.leaveAddress ? (isDark ? '#FFB4AB' : '#BA1A1A') : (isDark ? '#338EF7' : '#000A23')} className={!draft.leaveAddress ? "text-error" : "text-primary"} />
                         </View>
                         <View className="flex-1">
                             <View className="flex-row justify-between items-center mb-0.5">
@@ -230,7 +231,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                     {/* Emergency Contact */}
                     <View className="flex-row items-center gap-4">
                         <View className={`w-10 h-10 rounded-full items-center justify-center border ${!draft.emergencyContact ? 'border-error bg-error-container' : 'border-outline-variant bg-surface-container'}`}>
-                            <Phone size={18} className={!draft.emergencyContact ? "text-error" : "text-on-surface-variant"} />
+                            <Phone size={18} color={!draft.emergencyContact ? (isDark ? '#FFB4AB' : '#BA1A1A') : (isDark ? '#C4C6D0' : '#44474F')} className={!draft.emergencyContact ? "text-error" : "text-on-surface-variant"} />
                         </View>
                         <View className="flex-1">
                             <View className="flex-row justify-between items-center mb-0.5">

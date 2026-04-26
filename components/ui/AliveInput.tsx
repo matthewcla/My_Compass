@@ -1,7 +1,8 @@
 import Colors from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { TextInput, TextInputProps, useColorScheme, View } from 'react-native';
+import { TextInput, TextInputProps, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 import Animated, { FadeInDown, FadeOutUp, useAnimatedStyle, useSharedValue, withSpring, withTiming, ZoomIn, ZoomOut } from 'react-native-reanimated';
 
 interface AliveInputProps extends TextInputProps {
@@ -64,13 +65,13 @@ export function AliveInput({ icon, containerClassName, style, isValid, hasError,
         <View className="mb-2">
             <Animated.View
                 className={`flex-row items-center bg-inputBackground rounded-none px-5 shadow-none ${containerClassName}`}
-                style={[{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? '#18181B' : '#FFFFFF' }, animatedStyle]}
+                style={[{ flexDirection: 'row', alignItems: 'center' }, animatedStyle]}
             >
                 {icon && <View className="mr-3">{icon}</View>}
                 <TextInput
                     {...props}
                     className="flex-1 text-base text-labelPrimary dark:text-white py-4"
-                    placeholderTextColor={Colors.gray[500]}
+                    placeholderTextColor={isDark ? '#C4C6D0' : '#44474F'}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                 />

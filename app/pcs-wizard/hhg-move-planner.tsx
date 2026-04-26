@@ -422,7 +422,7 @@ export default function HHGMovePlannerScreen() {
                         <View className="flex-row items-center gap-3 mb-1 mt-2">
                             <Pressable
                                 onPress={handleExit}
-                                className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                                className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
                             >
                                 <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                             </Pressable>
@@ -828,7 +828,7 @@ export default function HHGMovePlannerScreen() {
                     </Animated.View>
 
                     {/* Content */}
-                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border-2 border-slate-300 dark:border-slate-600 shadow-2xl">
                         <View className="p-6 items-center">
                             <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
                                 Save Progress?

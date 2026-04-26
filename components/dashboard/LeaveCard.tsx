@@ -5,6 +5,7 @@ import { differenceInDays, format, parseISO } from 'date-fns';
 import { ChevronRight, Clock, Plus, Umbrella, Zap } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 
 interface LeaveCardProps {
     balance: number;
@@ -28,6 +29,8 @@ export function LeaveCard({
     onExpand,
 }: LeaveCardProps) {
     const [expanded, setExpanded] = useState(false);
+    const colorScheme = useColorScheme() ?? 'light';
+    const isDark = colorScheme === 'dark';
 
     const hasRequests = requests.length > 0;
     const activeRequests = requests.slice(0, 3); // Limit to top 3 for stack preview
@@ -88,7 +91,7 @@ export function LeaveCard({
                     <View className="flex-row items-center justify-between mb-5">
                         <View className="flex-row items-center gap-4 flex-1">
                             <View className="w-[52px] h-[52px] bg-secondary-container items-center justify-center">
-                                <Umbrella size={26} className="text-on-secondary-container" />
+                                <Umbrella size={26} color={isDark ? '#6C5200' : '#6D5200'} className="text-on-secondary-container" />
                             </View>
                             <View className="flex-1 mr-2">
                                 <Text className="text-on-surface text-[20px] font-display uppercase tracking-wide leading-tight mb-0.5" numberOfLines={2}>
@@ -108,7 +111,7 @@ export function LeaveCard({
                                 onPress={onQuickRequest}
                                 className="w-10 h-10 bg-secondary-container items-center justify-center"
                             >
-                                <Zap size={18} className="text-on-secondary-container" strokeWidth={2.5} />
+                                <Zap size={18} color={isDark ? '#6C5200' : '#6D5200'} className="text-on-secondary-container" strokeWidth={2.5} />
                             </TouchableOpacity>
 
                             {/* Full Request */}
@@ -117,7 +120,7 @@ export function LeaveCard({
                                 onPress={onFullRequest}
                                 className="w-10 h-10 bg-transparent border-2 border-outline-variant items-center justify-center"
                             >
-                                <Plus size={18} className="text-on-surface" strokeWidth={2.5} />
+                                <Plus size={18} color={isDark ? '#E5E2E1' : '#1A1B1F'} className="text-on-surface" strokeWidth={2.5} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -198,13 +201,19 @@ export function LeaveCard({
                                                         <Text className={`text-[10px] font-headline uppercase ${colors.label}`}>
                                                             {req.status}
                                                         </Text>
-                                                        {(req.status === 'draft' || req.status === 'pending') && <Clock size={10} className={colors.iconClass} />}
+                                                        {(req.status === 'draft' || req.status === 'pending') && (
+                                                            <Clock size={10} color={
+                                                                req.status === 'draft' || req.status === 'pending'
+                                                                    ? (isDark ? '#E5E2E1' : '#1A1B1F')
+                                                                    : undefined
+                                                            } className={colors.iconClass} />
+                                                        )}
                                                     </View>
                                                     <Text className={`text-xs font-headline ${colors.text}`}>
                                                         {formatDateRange(req.startDate, req.endDate)}
                                                     </Text>
                                                 </View>
-                                                <ChevronRight size={14} className="text-outline-variant" />
+                                                <ChevronRight size={14} color={isDark ? '#44474F' : '#C4C6D0'} className="text-outline-variant" />
                                             </View>
 
                                             {/* Bottom Row: Projection Data */}

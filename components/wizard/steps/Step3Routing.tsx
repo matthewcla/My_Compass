@@ -4,7 +4,8 @@ import { CreateLeaveRequestPayload } from '@/types/api';
 import * as Haptics from 'expo-haptics';
 import { Briefcase, Building2, Phone } from 'lucide-react-native';
 import React from 'react';
-import { Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 
 interface Step3RoutingProps {
     formData: Partial<CreateLeaveRequestPayload>;
@@ -40,11 +41,11 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
 
                         {/* Duty Section */}
                         <View className="flex-row items-center border-b border-outline-variant py-2 gap-3">
-                            <Briefcase size={20} className="text-primary" strokeWidth={2} />
+                            <Briefcase size={20} color={isDark ? '#338EF7' : '#000A23'} className="text-primary" strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-on-surface"
                                 placeholder="Duty Section (e.g. N1 Admin)"
-                                placeholderTextColor={themeColors.outlineVariant}
+                                placeholderTextColor={isDark ? '#C4C6D0' : '#44474F'}
                                 value={formData.dutySection}
                                 onChangeText={(text) => handleTextChange('dutySection', text)}
                             />
@@ -52,11 +53,11 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
 
                         {/* Dept/Div */}
                         <View className="flex-row items-center border-b border-outline-variant py-2 gap-3">
-                            <Building2 size={20} className="text-primary" strokeWidth={2} />
+                            <Building2 size={20} color={isDark ? '#338EF7' : '#000A23'} className="text-primary" strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-on-surface"
                                 placeholder="Dept / Div"
-                                placeholderTextColor={themeColors.outlineVariant}
+                                placeholderTextColor={isDark ? '#C4C6D0' : '#44474F'}
                                 value={formData.deptDiv}
                                 onChangeText={(text) => handleTextChange('deptDiv', text)}
                             />
@@ -64,11 +65,11 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
 
                         {/* Duty Phone */}
                         <View className="flex-row items-center py-2 gap-3">
-                            <Phone size={20} className="text-primary" strokeWidth={2} />
+                            <Phone size={20} color={isDark ? '#338EF7' : '#000A23'} className="text-primary" strokeWidth={2} />
                             <TextInput
                                 className="flex-1 text-base text-on-surface"
                                 placeholder="Duty Phone"
-                                placeholderTextColor={themeColors.outlineVariant}
+                                placeholderTextColor={isDark ? '#C4C6D0' : '#44474F'}
                                 value={formData.dutyPhone}
                                 onChangeText={(text) => handleTextChange('dutyPhone', text)}
                                 keyboardType="phone-pad"

@@ -713,7 +713,7 @@ export default function ProfileConfirmationScreen() {
                         <View style={{ paddingHorizontal: 16, paddingTop: 8, marginBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                             <Pressable
                                 onPress={() => router.back()}
-                                className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                                className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
                             >
                                 <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                             </Pressable>

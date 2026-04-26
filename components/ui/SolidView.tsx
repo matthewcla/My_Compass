@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, ViewProps, useColorScheme } from 'react-native';
+import { View, ViewProps } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 
 export interface SolidViewProps extends ViewProps {
     intensity?: number; // Kept for interface compatibility but ignored
@@ -18,14 +19,11 @@ export function SolidView({
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    // Completely opaque backgrounds as per Anchor Point guidelines
-    const backgroundColor = isDark ? '#18181B' : '#FFFFFF';
-
     return (
         <View
-            className={className}
+            className={`bg-white dark:bg-[#18181B] ${className || ''}`}
             style={[
-                { backgroundColor, overflow: 'hidden' },
+                { overflow: 'hidden' },
                 style,
             ]}
             {...props}

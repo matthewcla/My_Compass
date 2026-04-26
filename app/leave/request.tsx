@@ -376,14 +376,20 @@ export default function LeaveRequestScreen() {
         // Offset to trigger "active" state a bit earlier than top-edge
         const triggerPoint = scrollY + (layoutHeight * 0.3);
 
-        let newActive = 0;
+        let newActive = activeStep;
+        let foundValidCoord = false;
+        
         for (let i = 0; i < TOTAL_STEPS; i++) {
-            const sectionTop = sectionCoords.current[i] || 0;
-            if (triggerPoint >= sectionTop) {
-                newActive = i;
+            const sectionTop = sectionCoords.current[i];
+            if (sectionTop !== undefined) {
+                foundValidCoord = true;
+                if (triggerPoint >= sectionTop) {
+                    newActive = i;
+                }
             }
         }
-        if (newActive !== activeStep) {
+        
+        if (foundValidCoord && newActive !== activeStep) {
             setActiveStep(newActive);
         }
     };
@@ -421,7 +427,7 @@ export default function LeaveRequestScreen() {
                         <View className="flex-row items-center gap-3 mb-1 mt-2">
                             <Pressable
                                 onPress={handleExit}
-                                className="p-2 -ml-2 rounded-none active:bg-surface-variant"
+                                className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
                             >
                                 <ChevronLeft size={24} color={themeColors.text} />
                             </Pressable>
@@ -546,7 +552,11 @@ export default function LeaveRequestScreen() {
                         </Animated.View>
 
                         {/* Content */}
-                        <Animated.View entering={ZoomIn.duration(200)} className="bg-surface w-full max-w-sm rounded-none overflow-hidden border-2 border-outline">
+                        <Animated.View 
+                            entering={ZoomIn.duration(200)} 
+                            className="w-full max-w-sm rounded-none overflow-hidden border-2 shadow-apple-lg"
+                            style={{ backgroundColor: themeColors.surface, borderColor: themeColors.surfaceBorder }}
+                        >
                             <View className="p-6 items-center">
                                 <Text className="text-xl font-bold text-on-surface mb-2 text-center">
                                     Save Draft?

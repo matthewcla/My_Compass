@@ -310,7 +310,7 @@ export default function TravelClaimRequestScreen() {
                         className="bg-white/95 dark:bg-slate-900/95 sticky top-0 z-10 px-4 py-2"
                     >
                         <View className="flex-row items-center gap-3 mb-1 mt-2 pr-2">
-                            <Pressable onPress={() => setShowExitModal(true)} className="p-2 -ml-1 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+                            <Pressable onPress={() => setShowExitModal(true)} className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
                                 <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                             </Pressable>
                             <View className="flex-1">
@@ -606,7 +606,7 @@ export default function TravelClaimRequestScreen() {
                     <Animated.View entering={FadeIn} className="absolute inset-0 bg-black/60">
                         <Pressable className="flex-1" onPress={() => setShowExitModal(false)} />
                     </Animated.View>
-                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden p-6">
+                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border-2 border-slate-300 dark:border-slate-600 p-6 shadow-2xl">
                         <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">Save Draft?</Text>
                         <Text className="text-sm text-slate-500 dark:text-slate-400 text-center mb-4">
                             Your settlement progress is auto-saved.

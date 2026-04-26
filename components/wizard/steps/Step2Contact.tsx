@@ -5,7 +5,8 @@ import { CreateLeaveRequestPayload } from '@/types/api';
 import * as Haptics from 'expo-haptics';
 import { Bus, Car, Globe2, MapPin, Phone, Plane, Train } from 'lucide-react-native';
 import React from 'react';
-import { ScrollView, Switch, Text, TouchableOpacity, View, useColorScheme } from 'react-native';
+import { ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 import Animated, { FadeIn, FadeOut, LinearTransition, ZoomIn } from 'react-native-reanimated';
 
 interface Step2ContactProps {
@@ -45,7 +46,7 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                         <View className="flex-row items-center justify-between p-4 border-b border-outline-variant">
                             <View className="flex-row items-center flex-1 mr-4">
                                 <View className="w-10 h-10 rounded-none bg-primary-container items-center justify-center mr-3">
-                                    <MapPin size={20} className="text-primary" />
+                                    <MapPin size={20} color={isDark ? '#338EF7' : '#000A23'} className="text-primary" />
                                 </View>
                                 <View>
                                     <Text className="text-base font-bold text-on-surface">Leave inside CONUS?</Text>
@@ -71,7 +72,7 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                                         value={formData.destinationCountry}
                                         onChangeText={(text) => onUpdate('destinationCountry', text)}
                                         placeholder="e.g. Japan, Germany, Italy"
-                                        icon={<Globe2 size={20} className="text-on-secondary-container" />}
+                                        icon={<Globe2 size={20} color={isDark ? '#6C5200' : '#6D5200'} className="text-on-secondary-container" />}
                                         containerClassName="border-outline-variant bg-secondary-container"
                                     />
                                 </View>
@@ -143,7 +144,7 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                                             }`}>
                                             <Icon
                                                 size={20}
-                                                color={isSelected ? themeColors.onPrimary : themeColors.onSurfaceVariant}
+                                                color={isSelected ? (isDark ? '#003258' : '#FFFFFF') : (isDark ? '#C4C6D0' : '#44474F')}
                                                 strokeWidth={2.5}
                                             />
                                         </View>

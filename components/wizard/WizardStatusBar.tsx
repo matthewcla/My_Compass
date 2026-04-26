@@ -2,7 +2,8 @@
 import Colors from '@/constants/Colors';
 import { Calendar, CheckCircle2, MapPin, Ship } from 'lucide-react-native';
 import React, { useEffect } from 'react';
-import { Pressable, Text, View, useColorScheme } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -33,21 +34,19 @@ function AnimatedProgressLine({ filled }: { filled: boolean }) {
         progress.value = withTiming(filled ? 1 : 0, { duration: 300 });
     }, [filled]);
 
-    const filledColor = isDark ? Colors.green[500] : Colors.green[600];
-    const emptyColor = isDark ? '#1f2937' : '#e5e7eb'; // gray-800 / gray-200
-
     const animatedStyle = useAnimatedStyle(() => ({
         position: 'absolute' as const,
         left: 0,
         top: 0,
         bottom: 0,
         width: `${progress.value * 100}%`,
-        backgroundColor: filledColor,
     }));
 
     return (
-        <View className="flex-1 h-[2px] mx-2" style={{ backgroundColor: emptyColor }}>
-            <Animated.View style={animatedStyle} />
+        <View className="flex-1 h-[2px] mx-2 bg-outline-variant dark:bg-slate-700 overflow-hidden">
+            <Animated.View style={[animatedStyle, { height: '100%' }]}>
+                <View className="w-full h-full bg-primary" />
+            </Animated.View>
         </View>
     );
 }
@@ -70,8 +69,10 @@ function AnimatedStepCircle({ isActive, children, className: cn }: { isActive: b
     }));
 
     return (
-        <Animated.View style={animatedStyle} className={cn}>
-            {children}
+        <Animated.View style={animatedStyle}>
+            <View className={cn}>
+                {children}
+            </View>
         </Animated.View>
     );
 }
@@ -91,12 +92,22 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
 
                 // Determine Icon Color based on state and theme (Semantic Colors)
                 const getIconColor = () => {
-                    if (isError) return isDark ? Colors.dark.status.error : Colors.light.status.error;
-                    // If it's the last step and active, we want it to look "Completed" (Green)
-                    if (isActive && isLast) return isDark ? Colors.green[500] : Colors.green[600];
-                    if (isActive) return isDark ? Colors.blue[500] : Colors.blue[600];
-                    if (isCompleted) return isDark ? Colors.green[500] : Colors.green[600];
-                    return isDark ? Colors.gray[500] : Colors.gray[400];
+                    if (isError) return isDark ? '#FFB4AB' : '#BA1A1A'; // error
+                    if (isActive || isCompleted) return isDark ? '#001A41' : '#FFFFFF'; // on-primary
+                    return isDark ? '#94A3B8' : '#44474F'; // slate-400 for dark mode, outline-variant for light
+                };
+
+                const getStepContainerClass = () => {
+                    if (isError) return 'border-error bg-error-container';
+                    if (isActive || isCompleted) return 'border-primary bg-primary';
+                    return 'border-outline-variant dark:border-slate-700 bg-surface-container dark:bg-slate-800';
+                };
+
+                const getTextColorClass = () => {
+                    if (isError) return 'text-error';
+                    if ((isActive && isLast) || isCompleted) return 'text-primary';
+                    if (isActive) return 'text-primary';
+                    return 'text-on-surface-variant dark:text-slate-400';
                 };
 
                 return (
@@ -108,14 +119,7 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
                         >
                             <AnimatedStepCircle
                                 isActive={isActive}
-                                className={`w-10 h-10 rounded-full items-center justify-center border-2 ${isError
-                                    ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20'
-                                    : (isActive && isLast) || isCompleted
-                                        ? 'bg-green-50 dark:bg-green-900/20'
-                                        : isActive
-                                            ? 'bg-[#E4EAF4] dark:bg-[rgba(26,78,138,0.2)]'
-                                            : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-slate-950'
-                                    }`}
+                                className={`w-10 h-10 rounded-full items-center justify-center border-2 ${getStepContainerClass()}`}
                             >
                                 <Icon
                                     size={18}
@@ -124,11 +128,7 @@ export function WizardStatusBar({ currentStep, onStepPress, errorSteps = [] }: W
                                 />
                             </AnimatedStepCircle>
                             <Text
-                                className={`text-[10px] font-bold mt-1 ${isError ? 'text-red-600 dark:text-red-400' :
-                                    (isActive && isLast) || isCompleted ? 'text-green-700 dark:text-green-400' :
-                                        isActive ? 'text-[#1A4E8A] dark:text-[#5B8FCF]' :
-                                            'text-slate-400 dark:text-gray-500'
-                                    }`}
+                                className={`text-[10px] font-bold mt-1 ${getTextColorClass()}`}
                             >{step.label}</Text>
                         </Pressable>
 

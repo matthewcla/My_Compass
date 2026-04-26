@@ -63,10 +63,10 @@ export default function AdminDashboard() {
     return (
         <ScreenGradient>
             <CollapsibleScaffold
-                statusBarShimBackgroundColor={colorScheme === 'dark' ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
+                statusBarShimBackgroundColor={colorScheme === 'dark' ? Colors.dark.background : Colors.light.background}
                 minTopBarHeight={0}
                 topBar={
-                    <View className="bg-transparent dark:bg-background">
+                    <View className="bg-background">
                         <ScreenHeader
                             title="Admin"
                             subtitle="Command Center"

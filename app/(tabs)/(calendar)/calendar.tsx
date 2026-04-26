@@ -179,13 +179,15 @@ export default function CalendarScreen() {
                 <CollapsibleScaffold
                     statusBarShimBackgroundColor={isDark ? "#131313" : "#ffffff"}
                     topBar={
-                        <ScreenHeader
-                            title="Events"
-                            subtitle=""
-                            withSafeArea={false}
-                            searchConfig={searchConfig}
-                            showWebMenu={true}
-                        />
+                        <View className="bg-background">
+                            <ScreenHeader
+                                title="Events"
+                                subtitle=""
+                                withSafeArea={false}
+                                searchConfig={searchConfig}
+                                showWebMenu={true}
+                            />
+                        </View>
                     }
                 >
                     {({

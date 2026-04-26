@@ -240,7 +240,7 @@ export default function HubDashboard() {
                                         <Menu color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
                                     </Pressable>
                                 )}
-                                <Text className="text-xl font-black font-headline tracking-tighter text-primary dark:text-primary">
+                                <Text className="text-2xl font-black font-headline tracking-tighter text-primary dark:text-primary">
                                     MyCompass
                                 </Text>
                             </View>

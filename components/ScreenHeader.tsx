@@ -50,12 +50,12 @@ export function ScreenHeader({
                     }}
                     className={`flex-row justify-between items-center relative z-50`}
                 >
-                    <View className="flex-row items-center flex-1 mr-4">
+                    <View className="flex-row items-center gap-3 flex-1 mr-4">
                         {actualLeftAction && (
                             <Pressable
                                 onPress={actualLeftAction.onPress}
                                 hitSlop={12}
-                                className="mr-2"
+                                className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
                             >
                                 {({ pressed }) => {
                                     const LeftIcon = actualLeftAction.icon;
@@ -64,7 +64,7 @@ export function ScreenHeader({
                                             color="#ffffff"
                                             size={isInline ? 20 : 24}
                                             strokeWidth={2.5}
-                                            style={{ opacity: pressed ? 0.7 : 1, marginLeft: -2 }}
+                                            style={{ opacity: pressed ? 0.7 : 1 }}
                                         />
                                     );
                                 }}

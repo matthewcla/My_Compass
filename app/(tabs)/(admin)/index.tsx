@@ -1,6 +1,7 @@
 
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { ScreenGradient } from '@/components/ScreenGradient';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import Colors from '@/constants/Colors';
 import { FlashList } from '@shopify/flash-list';
 import React, { useCallback, useRef, useState } from 'react';
@@ -63,7 +64,15 @@ export default function AdminDashboard() {
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={Colors.gradient.dark[0]}
                 minTopBarHeight={0}
-                topBar={null}
+                topBar={
+                    <View className="bg-black">
+                        <ScreenHeader
+                            title="Admin"
+                            subtitle="Command Center"
+                            withSafeArea={false}
+                        />
+                    </View>
+                }
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             >
                 {({

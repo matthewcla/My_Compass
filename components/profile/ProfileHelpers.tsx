@@ -7,21 +7,20 @@ interface SectionCardProps {
     title: string;
     icon: React.ReactNode;
     children: React.ReactNode;
-    isDark: boolean;
 }
 
-export const SectionCard = memo(function SectionCard({ title, icon, children, isDark }: SectionCardProps) {
+export const SectionCard = memo(function SectionCard({ title, icon, children }: SectionCardProps) {
     return (
         <View style={{
-            backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-            borderColor: isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)',
+            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+            borderColor: 'rgba(51, 65, 85, 0.5)',
             borderWidth: 1,
-            borderRadius: 16, padding: 20, marginBottom: 12,
-            shadowColor: isDark ? '#000' : '#64748b', shadowOpacity: isDark ? 0.3 : 0.05, shadowRadius: 8, elevation: 2,
+            borderRadius: 0, padding: 20, marginBottom: 12,
+            shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, elevation: 2,
         }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
                 {icon}
-                <Text style={{ color: isDark ? '#F1F5F9' : '#0F172A', fontWeight: '700', fontSize: 17, marginLeft: 10 }}>
+                <Text style={{ color: '#F1F5F9', fontWeight: '700', fontSize: 17, marginLeft: 10 }}>
                     {title}
                 </Text>
             </View>
@@ -35,16 +34,15 @@ interface InfoRowProps {
     icon: React.ReactNode;
     label: string;
     value: string;
-    isDark: boolean;
 }
 
-export const InfoRow = memo(function InfoRow({ icon, label, value, isDark }: InfoRowProps) {
+export const InfoRow = memo(function InfoRow({ icon, label, value }: InfoRowProps) {
     return (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
             <View style={{ width: 28, alignItems: 'center', marginTop: 1 }}>{icon}</View>
             <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 12, fontWeight: '500', marginBottom: 1 }}>{label}</Text>
-                <Text style={{ color: isDark ? '#E2E8F0' : '#1E293B', fontSize: 15, fontWeight: '500' }}>{value}</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '500', marginBottom: 1 }}>{label}</Text>
+                <Text style={{ color: '#E2E8F0', fontSize: 15, fontWeight: '500' }}>{value}</Text>
             </View>
         </View>
     );
@@ -55,25 +53,24 @@ interface MilestoneRowProps {
     label: string;
     date: string;
     daysLeft: number | null;
-    isDark: boolean;
     accentColor: string;
     isLast?: boolean;
 }
 
-export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, isDark, accentColor, isLast }: MilestoneRowProps) {
+export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, accentColor, isLast }: MilestoneRowProps) {
     return (
         <View style={{
             flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-            paddingVertical: 12, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9',
+            paddingVertical: 12, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: '#334155',
         }}>
             <View style={{ flex: 1 }}>
-                <Text style={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 12, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                     {label}
                 </Text>
-                <Text style={{ color: isDark ? '#E2E8F0' : '#1E293B', fontSize: 16, fontWeight: '600', marginTop: 2 }}>{date}</Text>
+                <Text style={{ color: '#E2E8F0', fontSize: 16, fontWeight: '600', marginTop: 2 }}>{date}</Text>
             </View>
             {daysLeft !== null && daysLeft > 0 && (
-                <View style={{ backgroundColor: accentColor + '18', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                <View style={{ backgroundColor: accentColor + '18', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 0 }}>
                     <Text style={{ color: accentColor, fontSize: 12, fontWeight: '700' }}>{daysLeft}d</Text>
                 </View>
             )}
@@ -96,39 +93,38 @@ interface TimelineEntryProps {
     subtitle: string;
     dates: string;
     type: 'AFLOAT' | 'CONUS' | 'OCONUS';
-    isDark: boolean;
     isLast?: boolean;
     isCurrent?: boolean;
 }
 
-export const TimelineEntry = memo(function TimelineEntry({ title, subtitle, dates, type, isDark, isLast, isCurrent }: TimelineEntryProps) {
+export const TimelineEntry = memo(function TimelineEntry({ title, subtitle, dates, type, isLast, isCurrent }: TimelineEntryProps) {
     const badge = getStationTypeBadge(type);
     return (
         <View style={{ flexDirection: 'row', marginBottom: isLast ? 0 : 4 }}>
             <View style={{ width: 28, alignItems: 'center' }}>
                 <View style={{
-                    width: isCurrent ? 12 : 10, height: isCurrent ? 12 : 10, borderRadius: 6,
-                    backgroundColor: isCurrent ? '#C9A227' : (isDark ? '#60A5FA' : '#2563EB'),
+                    width: isCurrent ? 12 : 10, height: isCurrent ? 12 : 10, borderRadius: 0,
+                    backgroundColor: isCurrent ? '#C9A227' : '#60A5FA',
                     marginTop: 4,
                     ...(isCurrent ? { borderWidth: 2, borderColor: '#C9A22740' } : {}),
                 }} />
                 {!isLast && (
-                    <View style={{ width: 2, flex: 1, backgroundColor: isDark ? '#334155' : '#E2E8F0', marginTop: 2 }} />
+                    <View style={{ width: 2, flex: 1, backgroundColor: '#334155', marginTop: 2 }} />
                 )}
             </View>
             <View style={{ flex: 1, paddingBottom: isLast ? 0 : 16, marginLeft: 8 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ color: isDark ? '#F1F5F9' : '#0F172A', fontSize: 15, fontWeight: isCurrent ? '700' : '600', flex: 1 }}>
+                    <Text style={{ color: '#F1F5F9', fontSize: 15, fontWeight: isCurrent ? '700' : '600', flex: 1 }}>
                         {title}
                     </Text>
                     {badge && (
-                        <View style={{ backgroundColor: badge.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                        <View style={{ backgroundColor: badge.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 0 }}>
                             <Text style={{ color: badge.text, fontSize: 9, fontWeight: '800', letterSpacing: 0.3 }}>{badge.label}</Text>
                         </View>
                     )}
                 </View>
-                <Text style={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 13, marginTop: 1 }}>{subtitle}</Text>
-                <Text style={{ color: isDark ? '#64748B' : '#94A3B8', fontSize: 12, marginTop: 2 }}>{dates}</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 1 }}>{subtitle}</Text>
+                <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>{dates}</Text>
             </View>
         </View>
     );
@@ -139,35 +135,34 @@ interface ControlPillProps {
     label: string;
     isActive: boolean;
     onPress: () => void;
-    isDark: boolean;
     disabled?: boolean;
 }
 
-export const ControlPill = memo(function ControlPill({ label, isActive, onPress, isDark, disabled }: ControlPillProps) {
+export const ControlPill = memo(function ControlPill({ label, isActive, onPress, disabled }: ControlPillProps) {
     return (
         <Pressable
             onPress={disabled ? undefined : onPress}
             style={{
-                paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20, marginRight: 8,
+                paddingHorizontal: 18, paddingVertical: 9, borderRadius: 0, marginRight: 8,
                 flexDirection: 'row', alignItems: 'center', gap: 5,
                 backgroundColor: isActive
-                    ? (isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.05)')
+                    ? 'rgba(255, 255, 255, 0.08)'
                     : 'transparent',
                 borderWidth: 1.5,
-                borderColor: isActive ? '#C9A227' : (isDark ? '#334155' : '#E2E8F0'),
+                borderColor: isActive ? '#C9A227' : '#334155',
                 ...(isActive ? {
                     shadowColor: '#C9A227', shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: isDark ? 0.2 : 0.1, shadowRadius: 4, elevation: 2,
+                    shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
                 } : {}),
             }}
         >
             <Text style={{
-                color: isActive ? '#C9A227' : (isDark ? '#94A3B8' : '#64748B'),
+                color: isActive ? '#C9A227' : '#94A3B8',
                 fontSize: 13, fontWeight: isActive ? '700' : '600',
             }}>
                 {label}
             </Text>
-            {disabled && <LockKeyhole size={12} color={isDark ? '#64748B' : '#94A3B8'} />}
+            {disabled && <LockKeyhole size={12} color="#64748B" />}
         </Pressable>
     );
 });

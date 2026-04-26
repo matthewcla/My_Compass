@@ -1,5 +1,4 @@
-import { useColorScheme } from '@/components/useColorScheme';
-import Colors from '@/constants/Colors';
+
 import { SearchConfig } from '@/store/useHeaderStore';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -27,8 +26,6 @@ export function ScreenHeader({
     const GLOBAL_SEARCH_RADIUS = 24;
 
     const insets = useSafeAreaInsets();
-    const colorScheme = useColorScheme();
-    const colors = Colors[colorScheme ?? 'light'];
 
     const isInline = variant === 'inline';
     const hasHeaderContent = Boolean(title || subtitle || rightAction);
@@ -54,7 +51,7 @@ export function ScreenHeader({
                                     const LeftIcon = leftAction.icon;
                                     return (
                                         <LeftIcon
-                                            color={colors.text}
+                                            color="#ffffff"
                                             size={isInline ? 20 : 24}
                                             strokeWidth={2.5}
                                             style={{ opacity: pressed ? 0.7 : 1, marginLeft: -2 }}
@@ -65,12 +62,12 @@ export function ScreenHeader({
                         )}
                         <View className={isInline ? "flex-row items-baseline gap-2" : ""}>
                             {title ? (
-                                <Text className={`${isInline ? 'text-lg' : 'text-2xl'} font-bold text-slate-900 dark:text-white tracking-tight`}>
+                                <Text className={`${isInline ? 'text-lg' : 'text-2xl'} font-bold text-white tracking-tight`}>
                                     {title}
                                 </Text>
                             ) : null}
                             {subtitle ? (
-                                <Text className={`text-blue-700 dark:text-blue-100 font-bold uppercase tracking-widest ${isInline ? 'text-[10px]' : 'text-sm mt-1'}`}>
+                                <Text className={`text-blue-100 font-bold uppercase tracking-widest ${isInline ? 'text-[10px]' : 'text-sm mt-1'}`}>
                                     {subtitle}
                                 </Text>
                             ) : null}
@@ -87,7 +84,7 @@ export function ScreenHeader({
                                     const Icon = rightAction.icon;
                                     return (
                                         <Icon
-                                            color={colors.text}
+                                            color="#ffffff"
                                             size={isInline ? 20 : 24}
                                             strokeWidth={2}
                                             style={{ opacity: pressed ? 0.7 : 1 }}

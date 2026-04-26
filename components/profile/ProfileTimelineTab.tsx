@@ -80,13 +80,12 @@ interface TimelineEventRowProps {
         accentColor: string;
         isFuture?: boolean;
     };
-    isDark: boolean;
     isLast: boolean;
     index: number;
 }
 
 const TimelineEventRow = memo(function TimelineEventRow({
-    event, isDark, isLast, index,
+    event, isLast, index,
 }: TimelineEventRowProps) {
     const formattedDate = useMemo(() => {
         try {
@@ -120,7 +119,7 @@ const TimelineEventRow = memo(function TimelineEventRow({
                         backgroundColor: event.accentColor,
                         marginTop: 5,
                         borderWidth: event.isFuture ? 2 : 0,
-                        borderColor: event.isFuture ? (isDark ? '#475569' : '#CBD5E1') : 'transparent',
+                        borderColor: event.isFuture ? '#475569' : 'transparent',
                         borderStyle: 'solid',
                     }} />
                     {/* Connecting line */}
@@ -128,7 +127,7 @@ const TimelineEventRow = memo(function TimelineEventRow({
                         <View style={{
                             width: 2,
                             flex: 1,
-                            backgroundColor: isDark ? '#334155' : '#E2E8F0',
+                            backgroundColor: '#334155',
                             marginTop: 4,
                             ...(event.isFuture ? { borderStyle: 'dashed' as any } : {}),
                         }} />
@@ -147,7 +146,7 @@ const TimelineEventRow = memo(function TimelineEventRow({
                             backgroundColor: event.accentColor + '1A',
                             paddingHorizontal: 6,
                             paddingVertical: 2,
-                            borderRadius: 4,
+                            borderRadius: 0,
                         }}>
                             <Text style={{
                                 color: event.accentColor,
@@ -160,7 +159,7 @@ const TimelineEventRow = memo(function TimelineEventRow({
                             </Text>
                         </View>
                         <Text style={{
-                            color: isDark ? '#64748B' : '#94A3B8',
+                            color: '#94A3B8',
                             fontSize: 11,
                             fontWeight: '500',
                         }}>
@@ -168,10 +167,10 @@ const TimelineEventRow = memo(function TimelineEventRow({
                         </Text>
                         {event.isFuture && (
                             <View style={{
-                                backgroundColor: isDark ? '#7C3AED20' : '#7C3AED15',
+                                backgroundColor: '#7C3AED20',
                                 paddingHorizontal: 5,
                                 paddingVertical: 1,
-                                borderRadius: 4,
+                                borderRadius: 0,
                             }}>
                                 <Text style={{ color: '#7C3AED', fontSize: 9, fontWeight: '700' }}>
                                     UPCOMING
@@ -182,7 +181,7 @@ const TimelineEventRow = memo(function TimelineEventRow({
 
                     {/* Title */}
                     <Text style={{
-                        color: isDark ? '#F1F5F9' : '#0F172A',
+                        color: '#F1F5F9',
                         fontSize: 15,
                         fontWeight: '600',
                     }}>
@@ -191,7 +190,7 @@ const TimelineEventRow = memo(function TimelineEventRow({
 
                     {/* Subtitle */}
                     <Text style={{
-                        color: isDark ? '#94A3B8' : '#64748B',
+                        color: '#94A3B8',
                         fontSize: 13,
                         marginTop: 1,
                     }} numberOfLines={2}>
@@ -201,7 +200,7 @@ const TimelineEventRow = memo(function TimelineEventRow({
                     {/* Detail (if present) */}
                     {event.detail && (
                         <Text style={{
-                            color: isDark ? '#64748B' : '#94A3B8',
+                            color: '#64748B',
                             fontSize: 12,
                             marginTop: 2,
                         }}>
@@ -217,11 +216,9 @@ const TimelineEventRow = memo(function TimelineEventRow({
 // ─── Main Component ──────────────────────────────────────────
 
 interface ProfileTimelineTabProps {
-    isDark: boolean;
 }
 
 export const ProfileTimelineTab = memo(function ProfileTimelineTab({
-    isDark,
 }: ProfileTimelineTabProps) {
     const events = useFilteredTimelineEvents();
     const activeFilter = useProfileTimelineStore((s) => s.activeFilter);
@@ -256,7 +253,6 @@ export const ProfileTimelineTab = memo(function ProfileTimelineTab({
                                 label={`${opt.label}${count > 0 ? ` (${count})` : ''}`}
                                 isActive={isActive}
                                 onPress={() => handleFilterPress(opt.key)}
-                                isDark={isDark}
                             />
                         );
                     })}
@@ -268,14 +264,10 @@ export const ProfileTimelineTab = memo(function ProfileTimelineTab({
 
             {/* ── Timeline Body ─────────────────────────────── */}
             <View style={{
-                backgroundColor: isDark
-                    ? 'rgba(30, 41, 59, 0.95)'   // bg-slate-800/95
-                    : 'rgba(255, 255, 255, 0.95)', // bg-white/95
+                backgroundColor: 'rgba(30, 41, 59, 0.95)',
                 borderWidth: 1,
-                borderColor: isDark
-                    ? 'rgba(51, 65, 85, 0.5)'     // border-slate-700/50
-                    : 'rgba(226, 232, 240, 0.5)',  // border-slate-200/50
-                borderRadius: 16,
+                borderColor: 'rgba(51, 65, 85, 0.5)',
+                borderRadius: 0,
                 padding: 20,
                 marginBottom: 12,
             }}>
@@ -286,7 +278,7 @@ export const ProfileTimelineTab = memo(function ProfileTimelineTab({
                         paddingVertical: 32,
                     }}>
                         <Text style={{
-                            color: isDark ? '#64748B' : '#94A3B8',
+                            color: '#94A3B8',
                             fontSize: 15,
                             fontWeight: '500',
                             textAlign: 'center',
@@ -300,7 +292,6 @@ export const ProfileTimelineTab = memo(function ProfileTimelineTab({
                         <TimelineEventRow
                             key={event.id}
                             event={event}
-                            isDark={isDark}
                             isLast={index === events.length - 1}
                             index={index}
                         />

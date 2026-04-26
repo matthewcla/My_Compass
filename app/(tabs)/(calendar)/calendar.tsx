@@ -199,7 +199,7 @@ export default function CalendarScreen() {
                     statusBarShimBackgroundColor="#131313"
                     topBar={
                         <ScreenHeader
-                            title=""
+                            title="Events"
                             subtitle=""
                             withSafeArea={false}
                             searchConfig={searchConfig}

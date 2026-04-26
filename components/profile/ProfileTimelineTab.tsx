@@ -104,75 +104,34 @@ const TimelineEventRow = memo(function TimelineEventRow({
         <Animated.View
             entering={FadeIn.delay(Math.min(index * 40, 400)).duration(300)}
         >
-            <View style={{
-                flexDirection: 'row',
-                opacity: event.isFuture ? 0.55 : 1,
-                minHeight: 56,
-            }}>
+            <View className={`flex-row min-h-[56px] ${event.isFuture ? 'opacity-55' : 'opacity-100'}`}>
                 {/* ── Left column: dot + line ── */}
-                <View style={{ width: 32, alignItems: 'center' }}>
+                <View className="w-8 items-center">
                     {/* Dot */}
-                    <View style={{
-                        width: event.isFuture ? 10 : 12,
-                        height: event.isFuture ? 10 : 12,
-                        borderRadius: 6,
-                        backgroundColor: event.accentColor,
-                        marginTop: 5,
-                        borderWidth: event.isFuture ? 2 : 0,
-                        borderColor: event.isFuture ? '#475569' : 'transparent',
-                        borderStyle: 'solid',
-                    }} />
+                    <View className={`rounded-full mt-1.5 ${event.isFuture ? 'w-2.5 h-2.5 border-2 border-slate-400 dark:border-slate-500' : 'w-3 h-3 border-0'}`}
+                        style={{ backgroundColor: event.accentColor }}
+                    />
                     {/* Connecting line */}
                     {!isLast && (
-                        <View style={{
-                            width: 2,
-                            flex: 1,
-                            backgroundColor: '#334155',
-                            marginTop: 4,
-                            ...(event.isFuture ? { borderStyle: 'dashed' as any } : {}),
-                        }} />
+                        <View className={`w-[2px] flex-1 bg-slate-200 dark:bg-slate-700 mt-1 ${event.isFuture ? 'border-dashed' : ''}`} />
                     )}
                 </View>
 
                 {/* ── Right column: content ── */}
-                <View style={{
-                    flex: 1,
-                    paddingBottom: isLast ? 0 : 16,
-                    marginLeft: 10,
-                }}>
+                <View className={`flex-1 ml-2.5 ${isLast ? 'pb-0' : 'pb-4'}`}>
                     {/* Category badge + date */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                        <View style={{
-                            backgroundColor: event.accentColor + '1A',
-                            paddingHorizontal: 6,
-                            paddingVertical: 2,
-                            borderRadius: 0,
-                        }}>
-                            <Text style={{
-                                color: event.accentColor,
-                                fontSize: 10,
-                                fontWeight: '800',
-                                letterSpacing: 0.5,
-                                textTransform: 'uppercase',
-                            }}>
+                    <View className="flex-row items-center gap-2 mb-[3px]">
+                        <View className="px-1.5 py-0.5" style={{ backgroundColor: event.accentColor + '1A' }}>
+                            <Text className="text-[10px] font-extrabold tracking-widest uppercase" style={{ color: event.accentColor }}>
                                 {categoryLabel}
                             </Text>
                         </View>
-                        <Text style={{
-                            color: '#94A3B8',
-                            fontSize: 11,
-                            fontWeight: '500',
-                        }}>
+                        <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-medium">
                             {formattedDate}
                         </Text>
                         {event.isFuture && (
-                            <View style={{
-                                backgroundColor: '#7C3AED20',
-                                paddingHorizontal: 5,
-                                paddingVertical: 1,
-                                borderRadius: 0,
-                            }}>
-                                <Text style={{ color: '#7C3AED', fontSize: 9, fontWeight: '700' }}>
+                            <View className="bg-purple-100 dark:bg-purple-500/20 px-1.5 py-[1px]">
+                                <Text className="text-purple-600 dark:text-purple-400 text-[9px] font-bold">
                                     UPCOMING
                                 </Text>
                             </View>
@@ -180,30 +139,18 @@ const TimelineEventRow = memo(function TimelineEventRow({
                     </View>
 
                     {/* Title */}
-                    <Text style={{
-                        color: '#F1F5F9',
-                        fontSize: 15,
-                        fontWeight: '600',
-                    }}>
+                    <Text className="text-slate-900 dark:text-slate-100 text-[15px] font-semibold">
                         {event.title}
                     </Text>
 
                     {/* Subtitle */}
-                    <Text style={{
-                        color: '#94A3B8',
-                        fontSize: 13,
-                        marginTop: 1,
-                    }} numberOfLines={2}>
+                    <Text className="text-slate-500 dark:text-slate-400 text-[13px] mt-[1px]" numberOfLines={2}>
                         {event.subtitle}
                     </Text>
 
                     {/* Detail (if present) */}
                     {event.detail && (
-                        <Text style={{
-                            color: '#64748B',
-                            fontSize: 12,
-                            marginTop: 2,
-                        }}>
+                        <Text className="text-slate-600 dark:text-slate-500 text-xs mt-0.5">
                             {event.detail}
                         </Text>
                     )}
@@ -233,9 +180,9 @@ export const ProfileTimelineTab = memo(function ProfileTimelineTab({
     }, [setFilter]);
 
     return (
-        <View style={{ paddingHorizontal: 16 }}>
+        <View className="px-4">
             {/* ── Filter Chips ──────────────────────────────── */}
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View className="flex-row items-center">
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -260,29 +207,14 @@ export const ProfileTimelineTab = memo(function ProfileTimelineTab({
             </View>
 
             {/* spacer between filter chips and timeline body */}
-            <View style={{ height: 12 }} />
+            <View className="h-3" />
 
             {/* ── Timeline Body ─────────────────────────────── */}
-            <View style={{
-                backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                borderWidth: 1,
-                borderColor: 'rgba(51, 65, 85, 0.5)',
-                borderRadius: 0,
-                padding: 20,
-                marginBottom: 12,
-            }}>
+            <View className="bg-white/95 dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700/50 p-5 mb-3">
                 {events.length === 0 ? (
                     /* ── Empty State ── */
-                    <View style={{
-                        alignItems: 'center',
-                        paddingVertical: 32,
-                    }}>
-                        <Text style={{
-                            color: '#94A3B8',
-                            fontSize: 15,
-                            fontWeight: '500',
-                            textAlign: 'center',
-                        }}>
+                    <View className="items-center py-8">
+                        <Text className="text-slate-500 dark:text-slate-400 text-[15px] font-medium text-center">
                             No profile changes match this filter.
                         </Text>
                     </View>

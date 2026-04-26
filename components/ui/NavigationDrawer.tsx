@@ -113,27 +113,27 @@ export function NavigationDrawer() {
                     <DrawerItem
                         icon={<Home size={20} color="#e5e2e1" />}
                         label="HOME HUB"
-                        onPress={() => handleNavigate('/')}
+                        onPress={() => handleNavigate('/(tabs)/(hub)')}
                     />
                     <DrawerItem
                         icon={<Briefcase size={20} color="#e5e2e1" />}
                         label="ADMIN"
-                        onPress={() => handleNavigate('/(admin)')}
+                        onPress={() => handleNavigate('/(tabs)/(admin)')}
                     />
                     <DrawerItem
                         icon={<CalendarDays size={20} color="#e5e2e1" />}
                         label="EVENTS"
-                        onPress={() => handleNavigate('/(calendar)/calendar')}
+                        onPress={() => handleNavigate('/(tabs)/(calendar)/calendar')}
                     />
                     <DrawerItem
                         icon={<Mail size={20} color="#e5e2e1" />}
                         label="INBOX"
-                        onPress={() => handleNavigate('/inbox')}
+                        onPress={() => handleNavigate('/(tabs)/inbox')}
                     />
                     <DrawerItem
                         icon={<UserCircle size={20} color="#e5e2e1" />}
                         label="PROFILE"
-                        onPress={() => handleNavigate('/(profile)')}
+                        onPress={() => handleNavigate('/(tabs)/(profile)')}
                     />
 
                     {/* Divider */}
@@ -142,7 +142,7 @@ export function NavigationDrawer() {
                     <DrawerItem
                         icon={<Settings size={20} color="#e5e2e1" />}
                         label="SETTINGS"
-                        onPress={() => handleNavigate('/(profile)/preferences')}
+                        onPress={() => handleNavigate('/(tabs)/(profile)/preferences')}
                     />
                 </ScrollView>
 

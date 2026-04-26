@@ -11,16 +11,12 @@ interface SectionCardProps {
 
 export const SectionCard = memo(function SectionCard({ title, icon, children }: SectionCardProps) {
     return (
-        <View style={{
-            backgroundColor: '#1E293B',
-            borderTopColor: '#C9A227',
-            borderTopWidth: 1,
-            borderRadius: 0, padding: 20, marginBottom: 12,
+        <View className="bg-white dark:bg-slate-800 border-t border-navyGold p-5 mb-3" style={{
             shadowColor: '#C9A227', shadowOpacity: 0.1, shadowRadius: 8, elevation: 2,
         }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+            <View className="flex-row items-center mb-3.5">
                 {icon}
-                <Text style={{ color: '#F1F5F9', fontWeight: '700', fontSize: 17, marginLeft: 10 }}>
+                <Text className="text-slate-900 dark:text-slate-100 font-bold text-[17px] ml-2.5">
                     {title}
                 </Text>
             </View>
@@ -38,11 +34,11 @@ interface InfoRowProps {
 
 export const InfoRow = memo(function InfoRow({ icon, label, value }: InfoRowProps) {
     return (
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
-            <View style={{ width: 28, alignItems: 'center', marginTop: 1 }}>{icon}</View>
-            <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '500', marginBottom: 1 }}>{label}</Text>
-                <Text style={{ color: '#E2E8F0', fontSize: 15, fontWeight: '500' }}>{value}</Text>
+        <View className="flex-row items-start mb-2.5">
+            <View className="w-7 items-center mt-[1px]">{icon}</View>
+            <View className="flex-1 ml-2">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-[1px]">{label}</Text>
+                <Text className="text-slate-800 dark:text-slate-200 text-[15px] font-medium">{value}</Text>
             </View>
         </View>
     );
@@ -59,19 +55,16 @@ interface MilestoneRowProps {
 
 export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, accentColor, isLast }: MilestoneRowProps) {
     return (
-        <View style={{
-            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-            paddingVertical: 12, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: '#334155',
-        }}>
-            <View style={{ flex: 1 }}>
-                <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+        <View className={`flex-row items-center justify-between py-3 ${isLast ? '' : 'border-b border-slate-200 dark:border-slate-700'}`}>
+            <View className="flex-1">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                     {label}
                 </Text>
-                <Text style={{ color: '#E2E8F0', fontSize: 16, fontWeight: '600', marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{date}</Text>
+                <Text className="text-slate-800 dark:text-slate-200 text-base font-semibold mt-0.5" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{date}</Text>
             </View>
             {daysLeft !== null && daysLeft > 0 && (
-                <View style={{ backgroundColor: accentColor + '18', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 0 }}>
-                    <Text style={{ color: accentColor, fontSize: 12, fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{daysLeft}d</Text>
+                <View className="px-2.5 py-1" style={{ backgroundColor: accentColor + '18' }}>
+                    <Text className="text-xs font-bold" style={{ color: accentColor, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{daysLeft}d</Text>
                 </View>
             )}
         </View>
@@ -81,9 +74,9 @@ export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, 
 // ─── Timeline Entry ──────────────────────────────────────
 function getStationTypeBadge(type?: string) {
     switch (type) {
-        case 'AFLOAT': return { label: 'AFLOAT', bg: '#0F172A', text: '#F8FAFC' }; // Slate 900 / Slate 50
-        case 'OCONUS': return { label: 'OCONUS', bg: '#334155', text: '#F1F5F9' }; // Slate 700 / Slate 100
-        case 'CONUS': return { label: 'CONUS', bg: '#64748B', text: '#F8FAFC' }; // Slate 500 / Slate 50
+        case 'AFLOAT': return { label: 'AFLOAT', bgClass: 'bg-slate-800 dark:bg-slate-700', textClass: 'text-slate-50' };
+        case 'OCONUS': return { label: 'OCONUS', bgClass: 'bg-slate-600 dark:bg-slate-500', textClass: 'text-slate-100' };
+        case 'CONUS': return { label: 'CONUS', bgClass: 'bg-slate-400 dark:bg-slate-300', textClass: 'text-slate-900' };
         default: return null;
     }
 }
@@ -100,31 +93,26 @@ interface TimelineEntryProps {
 export const TimelineEntry = memo(function TimelineEntry({ title, subtitle, dates, type, isLast, isCurrent }: TimelineEntryProps) {
     const badge = getStationTypeBadge(type);
     return (
-        <View style={{ flexDirection: 'row', marginBottom: isLast ? 0 : 4 }}>
-            <View style={{ width: 28, alignItems: 'center' }}>
-                <View style={{
-                    width: isCurrent ? 12 : 10, height: isCurrent ? 12 : 10, borderRadius: 0,
-                    backgroundColor: isCurrent ? '#C9A227' : '#60A5FA',
-                    marginTop: 4,
-                    ...(isCurrent ? { borderWidth: 2, borderColor: '#C9A22740' } : {}),
-                }} />
+        <View className={`flex-row ${isLast ? 'mb-0' : 'mb-1'}`}>
+            <View className="w-7 items-center">
+                <View className={`mt-1 ${isCurrent ? 'w-3 h-3 bg-navyGold border-2 border-navyGold/25' : 'w-2.5 h-2.5 bg-blue-500 dark:bg-blue-400'}`} />
                 {!isLast && (
-                    <View style={{ width: 2, flex: 1, backgroundColor: '#334155', marginTop: 2 }} />
+                    <View className="w-[2px] flex-1 bg-slate-200 dark:bg-slate-700 mt-0.5" />
                 )}
             </View>
-            <View style={{ flex: 1, paddingBottom: isLast ? 0 : 16, marginLeft: 8 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ color: '#F1F5F9', fontSize: 15, fontWeight: isCurrent ? '700' : '600', flex: 1 }}>
+            <View className={`flex-1 ml-2 ${isLast ? 'pb-0' : 'pb-4'}`}>
+                <View className="flex-row items-center gap-2">
+                    <Text className={`text-slate-900 dark:text-slate-100 text-[15px] flex-1 ${isCurrent ? 'font-bold' : 'font-semibold'}`}>
                         {title}
                     </Text>
                     {badge && (
-                        <View style={{ backgroundColor: badge.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 0 }}>
-                            <Text style={{ color: badge.text, fontSize: 9, fontWeight: '800', letterSpacing: 0.3 }}>{badge.label}</Text>
+                        <View className={`px-1.5 py-0.5 ${badge.bgClass}`}>
+                            <Text className={`text-[9px] font-extrabold tracking-widest ${badge.textClass}`}>{badge.label}</Text>
                         </View>
                     )}
                 </View>
-                <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 1 }}>{subtitle}</Text>
-                <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{dates}</Text>
+                <Text className="text-slate-500 dark:text-slate-400 text-[13px] mt-[1px]">{subtitle}</Text>
+                <Text className="text-slate-600 dark:text-slate-500 text-xs mt-0.5" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{dates}</Text>
             </View>
         </View>
     );
@@ -142,24 +130,17 @@ export const ControlPill = memo(function ControlPill({ label, isActive, onPress,
     return (
         <Pressable
             onPress={disabled ? undefined : onPress}
-            style={{
-                paddingHorizontal: 20, paddingVertical: 12, borderRadius: 0, marginRight: 8,
-                flexDirection: 'row', alignItems: 'center', gap: 5,
-                backgroundColor: isActive
-                    ? 'rgba(255, 255, 255, 0.08)'
-                    : 'transparent',
-                borderWidth: 1.5,
-                borderColor: isActive ? '#C9A227' : '#334155',
-                ...(isActive ? {
-                    shadowColor: '#C9A227', shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
-                } : {}),
-            }}
+            className={`px-5 py-3 mr-2 flex-row items-center gap-1.5 border-[1.5px] ${
+                isActive 
+                    ? 'bg-slate-100 dark:bg-white/10 border-navyGold' 
+                    : 'bg-transparent border-slate-200 dark:border-slate-700'
+            }`}
+            style={isActive ? {
+                shadowColor: '#C9A227', shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
+            } : {}}
         >
-            <Text style={{
-                color: isActive ? '#C9A227' : '#94A3B8',
-                fontSize: 13, fontWeight: isActive ? '700' : '600',
-            }}>
+            <Text className={`text-[13px] ${isActive ? 'text-navyGold font-bold' : 'text-slate-500 dark:text-slate-400 font-semibold'}`}>
                 {label}
             </Text>
             {disabled && <LockKeyhole size={12} color="#64748B" />}

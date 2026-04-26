@@ -8,6 +8,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { DemoUser } from '@/constants/DemoData';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useProfileTimelineStore } from '@/store/useProfileTimelineStore';
+import Colors from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
 import {
@@ -75,9 +76,9 @@ function getRatingFullName(rating?: string): string {
 
 function getStationTypeBadge(type?: string) {
     switch (type) {
-        case 'AFLOAT': return { label: 'AFLOAT', bg: '#1E40AF', text: '#DBEAFE' };
-        case 'OCONUS': return { label: 'OCONUS', bg: '#065F46', text: '#D1FAE5' };
-        case 'CONUS': return { label: 'CONUS', bg: '#92400E', text: '#FEF3C7' };
+        case 'AFLOAT': return { label: 'AFLOAT', containerClass: 'bg-blue-100 dark:bg-blue-900/60', textClass: 'text-blue-700 dark:text-blue-100' };
+        case 'OCONUS': return { label: 'OCONUS', containerClass: 'bg-emerald-100 dark:bg-emerald-900/60', textClass: 'text-emerald-700 dark:text-emerald-100' };
+        case 'CONUS': return { label: 'CONUS', containerClass: 'bg-amber-100 dark:bg-amber-900/60', textClass: 'text-amber-700 dark:text-amber-100' };
         default: return null;
     }
 }
@@ -93,6 +94,7 @@ export default function ProfileScreen() {
     const [activeTab, setActiveTab] = useState<'professional' | 'personal' | 'timeline'>('professional');
     const loadTimeline = useProfileTimelineStore((s) => s.loadTimeline);
     const scrollRef = useRef<any>(null);
+    const colorScheme = useColorScheme() ?? 'light';
 
     // Scroll to top whenever this tab gains focus
     useFocusEffect(
@@ -135,8 +137,8 @@ export default function ProfileScreen() {
     if (!user) {
         return (
             <ScreenGradient>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ color: '#94A3B8', fontSize: 16 }}>
+                <View className="flex-1 justify-center items-center">
+                    <Text className="text-slate-500 dark:text-slate-400 text-base">
                         Please sign in to view your profile.
                     </Text>
                 </View>
@@ -161,7 +163,7 @@ export default function ProfileScreen() {
         const serviceAwards = awards.filter(a => a.type === 'Service').sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         return (
-        <View style={{ paddingHorizontal: 16 }}>
+        <View className="px-4">
             {/* Assignment History (current billet merged as first entry) */}
             <Animated.View entering={FadeInUp.delay(100).duration(300)}>
                 <SectionCard
@@ -189,22 +191,22 @@ export default function ProfileScreen() {
                     icon={<Award size={20} color="#F5A524" />}
                 >
                     {personalAwards.length > 0 && (
-                        <View style={{ marginBottom: 12 }}>
-                            <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+                        <View className="mb-3">
+                            <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-widest uppercase mb-2">
                                 Personal Awards
                             </Text>
-                            <View style={{ backgroundColor: '#000000', borderWidth: 1, borderColor: '#334155', borderRadius: 0 }}>
+                            <View className="bg-white dark:bg-black border border-slate-200 dark:border-slate-700">
                                 {personalAwards.map((award, idx) => (
-                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: idx < personalAwards.length - 1 ? 1 : 0, borderBottomColor: '#334155' }}>
-                                        <Award size={16} color="#C9A227" style={{ marginRight: 12 }} />
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{award.name}</Text>
+                                    <View key={idx} className={`flex-row items-center p-3 ${idx < personalAwards.length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''}`}>
+                                        <Award size={16} color="#C9A227" className="mr-3" />
+                                        <View className="flex-1">
+                                            <Text className="text-slate-900 dark:text-slate-200 text-[14px] font-semibold">{award.name}</Text>
                                         </View>
-                                        <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+                                        <View className="items-end ml-3">
                                             {award.count && award.count > 1 ? (
-                                                <Text style={{ color: '#F59E0B', fontSize: 14, fontWeight: '800', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
+                                                <Text className="text-amber-600 dark:text-amber-500 text-[14px] font-extrabold" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
                                             ) : null}
-                                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
+                                            <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
                                         </View>
                                     </View>
                                 ))}
@@ -213,22 +215,22 @@ export default function ProfileScreen() {
                     )}
 
                     {unitAwards.length > 0 && (
-                        <View style={{ marginBottom: 12 }}>
-                            <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+                        <View className="mb-3">
+                            <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-widest uppercase mb-2">
                                 Unit Awards
                             </Text>
-                            <View style={{ backgroundColor: '#000000', borderWidth: 1, borderColor: '#334155', borderRadius: 0 }}>
+                            <View className="bg-white dark:bg-black border border-slate-200 dark:border-slate-700">
                                 {unitAwards.map((award, idx) => (
-                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: idx < unitAwards.length - 1 ? 1 : 0, borderBottomColor: '#334155' }}>
-                                        <Flag size={16} color="#60A5FA" style={{ marginRight: 12 }} />
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{award.name}</Text>
+                                    <View key={idx} className={`flex-row items-center p-3 ${idx < unitAwards.length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''}`}>
+                                        <Flag size={16} color="#60A5FA" className="mr-3" />
+                                        <View className="flex-1">
+                                            <Text className="text-slate-900 dark:text-slate-200 text-[14px] font-semibold">{award.name}</Text>
                                         </View>
-                                        <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+                                        <View className="items-end ml-3">
                                             {award.count && award.count > 1 ? (
-                                                <Text style={{ color: '#60A5FA', fontSize: 14, fontWeight: '800', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
+                                                <Text className="text-blue-600 dark:text-blue-400 text-[14px] font-extrabold" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
                                             ) : null}
-                                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
+                                            <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
                                         </View>
                                     </View>
                                 ))}
@@ -237,22 +239,22 @@ export default function ProfileScreen() {
                     )}
 
                     {campaignAwards.length > 0 && (
-                        <View style={{ marginBottom: 12 }}>
-                            <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+                        <View className="mb-3">
+                            <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-widest uppercase mb-2">
                                 Campaign Medals
                             </Text>
-                            <View style={{ backgroundColor: '#000000', borderWidth: 1, borderColor: '#334155', borderRadius: 0 }}>
+                            <View className="bg-white dark:bg-black border border-slate-200 dark:border-slate-700">
                                 {campaignAwards.map((award, idx) => (
-                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: idx < campaignAwards.length - 1 ? 1 : 0, borderBottomColor: '#334155' }}>
-                                        <Shield size={16} color="#EF4444" style={{ marginRight: 12 }} />
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{award.name}</Text>
+                                    <View key={idx} className={`flex-row items-center p-3 ${idx < campaignAwards.length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''}`}>
+                                        <Shield size={16} color="#EF4444" className="mr-3" />
+                                        <View className="flex-1">
+                                            <Text className="text-slate-900 dark:text-slate-200 text-[14px] font-semibold">{award.name}</Text>
                                         </View>
-                                        <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+                                        <View className="items-end ml-3">
                                             {award.count && award.count > 1 ? (
-                                                <Text style={{ color: '#EF4444', fontSize: 14, fontWeight: '800', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
+                                                <Text className="text-red-600 dark:text-red-500 text-[14px] font-extrabold" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
                                             ) : null}
-                                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
+                                            <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
                                         </View>
                                     </View>
                                 ))}
@@ -262,21 +264,21 @@ export default function ProfileScreen() {
 
                     {serviceAwards.length > 0 && (
                         <View>
-                            <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+                            <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-widest uppercase mb-2">
                                 Service Awards
                             </Text>
-                            <View style={{ backgroundColor: '#000000', borderWidth: 1, borderColor: '#334155', borderRadius: 0 }}>
+                            <View className="bg-white dark:bg-black border border-slate-200 dark:border-slate-700">
                                 {serviceAwards.map((award, idx) => (
-                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: idx < serviceAwards.length - 1 ? 1 : 0, borderBottomColor: '#334155' }}>
-                                        <Star size={16} color="#6EE7B7" style={{ marginRight: 12 }} />
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{award.name}</Text>
+                                    <View key={idx} className={`flex-row items-center p-3 ${idx < serviceAwards.length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''}`}>
+                                        <Star size={16} color="#6EE7B7" className="mr-3" />
+                                        <View className="flex-1">
+                                            <Text className="text-slate-900 dark:text-slate-200 text-[14px] font-semibold">{award.name}</Text>
                                         </View>
-                                        <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+                                        <View className="items-end ml-3">
                                             {award.count && award.count > 1 ? (
-                                                <Text style={{ color: '#6EE7B7', fontSize: 14, fontWeight: '800', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
+                                                <Text className="text-emerald-600 dark:text-emerald-400 text-[14px] font-extrabold" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
                                             ) : null}
-                                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
+                                            <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
                                         </View>
                                     </View>
                                 ))}
@@ -293,68 +295,49 @@ export default function ProfileScreen() {
                     icon={<Award size={20} color="#6EE7B7" />}
                 >
                     {/* NECs */}
-                    <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+                    <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-widest uppercase mb-2">
                         Navy Enlisted Classifications
                     </Text>
                     {necs.map((nec) => (
-                        <View key={nec.code} style={{
-                            flexDirection: 'row', alignItems: 'center', marginBottom: 8,
-                            backgroundColor: '#1E293B', padding: 10, borderRadius: 0,
-                        }}>
-                            <View style={{
-                                backgroundColor: '#334155',
-                                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 0, marginRight: 10,
-                            }}>
-                                <Text style={{ color: '#F1F5F9', fontSize: 12, fontWeight: '800' }}>{nec.code}</Text>
+                        <View key={nec.code} className="flex-row items-center mb-2 bg-slate-50 dark:bg-slate-800 p-2.5">
+                            <View className="bg-slate-200 dark:bg-slate-700 px-2 py-1 mr-2.5">
+                                <Text className="text-slate-900 dark:text-slate-100 text-xs font-extrabold">{nec.code}</Text>
                             </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: '#CBD5E1', fontSize: 13, fontWeight: '500' }}>{nec.name}</Text>
+                            <View className="flex-1">
+                                <Text className="text-slate-700 dark:text-slate-300 text-[13px] font-medium">{nec.name}</Text>
                             </View>
-                            <Text style={{ color: '#64748B', fontSize: 11 }}>{nec.earned}</Text>
+                            <Text className="text-slate-500 dark:text-slate-400 text-[11px]">{nec.earned}</Text>
                         </View>
                     ))}
 
                     {/* Qualifications */}
-                    <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginTop: 14, marginBottom: 8 }}>
+                    <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-widest uppercase mt-3.5 mb-2">
                         Warfare & Watch Qualifications
                     </Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                    <View className="flex-row flex-wrap gap-1.5">
                         {qualifications.map((qual) => (
-                            <View key={qual} style={{
-                                backgroundColor: '#1E293B',
-                                borderWidth: 1, borderColor: '#334155',
-                                paddingHorizontal: 10, paddingVertical: 5, borderRadius: 0,
-                            }}>
-                                <Text style={{ color: '#F1F5F9', fontSize: 12, fontWeight: '600' }}>{qual}</Text>
+                            <View key={qual} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1">
+                                <Text className="text-slate-900 dark:text-slate-100 text-xs font-semibold">{qual}</Text>
                             </View>
                         ))}
                     </View>
 
                     {/* COOL Credentials */}
-                    <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginTop: 14, marginBottom: 8 }}>
+                    <Text className="text-slate-500 dark:text-slate-400 text-[11px] font-bold tracking-widest uppercase mt-3.5 mb-2">
                         COOL Civilian Credentials
                     </Text>
                     {coolCredentials.map((cred) => (
-                        <View key={cred.name} style={{
-                            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                            paddingVertical: 8,
-                        }}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{cred.name}</Text>
+                        <View key={cred.name} className="flex-row items-center justify-between py-2">
+                            <View className="flex-1">
+                                <Text className="text-slate-900 dark:text-slate-200 text-[14px] font-semibold">{cred.name}</Text>
                                 {cred.date && (
-                                    <Text style={{ color: '#64748B', fontSize: 12, marginTop: 1 }}>Earned {cred.date}</Text>
+                                    <Text className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Earned {cred.date}</Text>
                                 )}
                             </View>
-                            <View style={{
-                                backgroundColor: cred.status === 'Earned' ? '#18181B' : 'transparent',
-                                borderWidth: cred.status === 'Earned' ? 0 : 1,
-                                borderColor: cred.status === 'Earned' ? 'transparent' : '#334155',
-                                paddingHorizontal: 8, paddingVertical: 3, borderRadius: 0,
-                            }}>
-                                <Text style={{
-                                    color: cred.status === 'Earned' ? '#F8FAFC' : '#94A3B8',
-                                    fontSize: 11, fontWeight: '700',
-                                }}>{cred.status}</Text>
+                            <View className={`px-2 py-1 ${cred.status === 'Earned' ? 'bg-slate-900 dark:bg-zinc-900 border-0' : 'bg-transparent border border-slate-300 dark:border-slate-700'}`}>
+                                <Text className={`text-[11px] font-bold ${cred.status === 'Earned' ? 'text-white dark:text-slate-50' : 'text-slate-500 dark:text-slate-400'}`}>
+                                    {cred.status}
+                                </Text>
                             </View>
                         </View>
                     ))}
@@ -368,27 +351,15 @@ export default function ProfileScreen() {
                     icon={<Ship size={20} color="#94A3B8" />}
                 >
                     {seaShoreRotation.map((rot, idx) => (
-                        <View key={idx} style={{
-                            flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
-                            borderBottomWidth: idx < seaShoreRotation.length - 1 ? 1 : 0,
-                            borderBottomColor: '#334155',
-                        }}>
-                            <View style={{
-                                width: 54,
-                                backgroundColor: '#1E293B',
-                                borderWidth: 1, borderColor: '#334155',
-                                paddingVertical: 4, borderRadius: 0, alignItems: 'center', marginRight: 12,
-                            }}>
-                                <Text style={{
-                                    color: '#E2E8F0',
-                                    fontSize: 11, fontWeight: '800',
-                                }}>{rot.period.toUpperCase()}</Text>
+                        <View key={idx} className={`flex-row items-center py-2.5 ${idx < seaShoreRotation.length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''}`}>
+                            <View className="w-[54px] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-1 items-center mr-3">
+                                <Text className="text-slate-900 dark:text-slate-200 text-[11px] font-extrabold">{rot.period.toUpperCase()}</Text>
                             </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '500' }}>{rot.station}</Text>
-                                <Text style={{ color: '#64748B', fontSize: 12 }}>{rot.dates}</Text>
+                            <View className="flex-1">
+                                <Text className="text-slate-900 dark:text-slate-200 text-[14px] font-medium">{rot.station}</Text>
+                                <Text className="text-slate-500 dark:text-slate-400 text-xs">{rot.dates}</Text>
                             </View>
-                            <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600' }}>{rot.months}mo</Text>
+                            <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">{rot.months}mo</Text>
                         </View>
                     ))}
                 </SectionCard>
@@ -401,23 +372,13 @@ export default function ProfileScreen() {
                     icon={<BookOpen size={20} color="#94A3B8" />}
                 >
                     {trainingRecord.map((t, idx) => (
-                        <View key={idx} style={{
-                            flexDirection: 'row', alignItems: 'flex-start', marginBottom: idx < trainingRecord.length - 1 ? 12 : 0,
-                        }}>
-                            <View style={{
-                                width: 60,
-                                backgroundColor: '#1E293B',
-                                borderWidth: 1, borderColor: '#334155',
-                                paddingVertical: 3, borderRadius: 0, alignItems: 'center', marginRight: 10, marginTop: 2,
-                            }}>
-                                <Text style={{
-                                    color: '#CBD5E1',
-                                    fontSize: 10, fontWeight: '800',
-                                }}>{t.type.toUpperCase()}</Text>
+                        <View key={idx} className={`flex-row items-start ${idx < trainingRecord.length - 1 ? 'mb-3' : ''}`}>
+                            <View className="w-[60px] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 py-[3px] items-center mr-2.5 mt-0.5">
+                                <Text className="text-slate-700 dark:text-slate-300 text-[10px] font-extrabold">{t.type.toUpperCase()}</Text>
                             </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '500' }}>{t.school}</Text>
-                                <Text style={{ color: '#64748B', fontSize: 12 }}>{t.location} · {t.date}</Text>
+                            <View className="flex-1">
+                                <Text className="text-slate-900 dark:text-slate-200 text-[14px] font-medium">{t.school}</Text>
+                                <Text className="text-slate-500 dark:text-slate-400 text-xs">{t.location} · {t.date}</Text>
                             </View>
                         </View>
                     ))}
@@ -435,21 +396,14 @@ export default function ProfileScreen() {
                     <MilestoneRow label="End of Active Obligated Service" date={formatDate(user.eaos)} daysLeft={eaosDays} accentColor="#EF4444" isLast />
 
                     {/* Validation status inline */}
-                    <View style={{
-                        flexDirection: 'row', alignItems: 'center', gap: 10,
-                        marginTop: 14, paddingTop: 12,
-                        borderTopWidth: 1, borderTopColor: '#334155',
-                    }}>
-                        <CheckCircle size={14} color="#6EE7B7" />
-                        <View style={{
-                            backgroundColor: '#064E3B',
-                            paddingHorizontal: 8, paddingVertical: 3, borderRadius: 0,
-                        }}>
-                            <Text style={{ color: '#6EE7B7', fontSize: 11, fontWeight: '700' }}>
+                    <View className="flex-row items-center gap-2.5 mt-3.5 pt-3 border-t border-slate-200 dark:border-slate-700">
+                        <CheckCircle size={14} color="#10B981" />
+                        <View className="bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1">
+                            <Text className="text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
                                 {(user.syncStatus ?? 'unknown').toUpperCase()}
                             </Text>
                         </View>
-                        <Text style={{ color: '#64748B', fontSize: 12 }}>
+                        <Text className="text-slate-500 dark:text-slate-400 text-xs">
                             Last sync {formatDate(user.lastSyncTimestamp)}
                         </Text>
                     </View>
@@ -460,27 +414,20 @@ export default function ProfileScreen() {
             <Animated.View entering={FadeInUp.delay(600).duration(300)}>
                 <Pressable
                     onPress={() => router.push('/(profile)/preferences' as any)}
-                    style={{
-                        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                        backgroundColor: '#1E293B',
-                        borderColor: '#334155',
-                        borderWidth: 1,
-                        borderRadius: 0, padding: 16, marginBottom: 12,
-                        shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, elevation: 2,
-                    }}
+                    className="flex-row items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 mb-3 shadow-apple-sm dark:shadow-none"
                 >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View className="flex-row items-center gap-2.5">
                         <Star size={18} color="#C9A227" />
                         <View>
-                            <Text style={{ color: '#F1F5F9', fontSize: 15, fontWeight: '600' }}>
+                            <Text className="text-slate-900 dark:text-slate-100 text-[15px] font-semibold">
                                 Assignment Preferences
                             </Text>
-                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 1 }}>
+                            <Text className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
                                 {user.preferences?.regions?.join(', ') || 'None set'} · {user.preferences?.dutyTypes?.join(', ') || 'None'}
                             </Text>
                         </View>
                     </View>
-                    <ChevronRight size={18} color="#475569" />
+                    <ChevronRight size={18} color="#94A3B8" />
                 </Pressable>
             </Animated.View>
         </View>
@@ -489,7 +436,7 @@ export default function ProfileScreen() {
 
     // ─── Personal Tab ────────────────────────────────────
     const renderPersonalTab = useMemo(() => (
-        <View style={{ paddingHorizontal: 16 }}>
+        <View className="px-4">
             {/* About */}
             <Animated.View entering={FadeInUp.delay(100).duration(300)}>
                 <SectionCard title="About" icon={<User size={20} color="#60A5FA" />}>
@@ -523,18 +470,14 @@ export default function ProfileScreen() {
             {user.dutyStation && (
                 <Animated.View entering={FadeInUp.delay(300).duration(300)}>
                     <SectionCard title="Current Assignment" icon={<Briefcase size={20} color="#60A5FA" />}>
-                        <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                            <View style={{
-                                width: 44, height: 44, borderRadius: 0,
-                                backgroundColor: '#0F2847',
-                                justifyContent: 'center', alignItems: 'center', marginRight: 12,
-                            }}>
-                                <Ship size={22} color="#60A5FA" />
+                        <View className="flex-row items-start">
+                            <View className="w-11 h-11 bg-blue-50 dark:bg-[#0F2847] justify-center items-center mr-3">
+                                <Ship size={22} className="text-blue-600 dark:text-blue-400" />
                             </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{ color: '#F1F5F9', fontSize: 16, fontWeight: '700' }}>{user.dutyStation.name}</Text>
-                                <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 2 }}>{user.dutyStation.address}</Text>
-                                {user.uic && <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4 }}>UIC: {user.uic}</Text>}
+                            <View className="flex-1">
+                                <Text className="text-slate-900 dark:text-slate-100 text-base font-bold">{user.dutyStation.name}</Text>
+                                <Text className="text-slate-500 dark:text-slate-400 text-[13px] mt-0.5">{user.dutyStation.address}</Text>
+                                {user.uic && <Text className="text-slate-500 dark:text-slate-400 text-xs mt-1">UIC: {user.uic}</Text>}
                             </View>
                         </View>
                     </SectionCard>
@@ -546,32 +489,21 @@ export default function ProfileScreen() {
                 <Animated.View entering={FadeInUp.delay(400).duration(300)}>
                     <SectionCard title="Dependents" icon={<Users size={20} color="#60A5FA" />}>
                         {user.dependentDetails.map((dep, idx) => (
-                            <View key={dep.id} style={{
-                                flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
-                                borderBottomWidth: idx < user.dependentDetails!.length - 1 ? 1 : 0,
-                                borderBottomColor: '#334155',
-                            }}>
-                                <View style={{
-                                    width: 36, height: 36, borderRadius: 0,
-                                    backgroundColor: '#0F2847',
-                                    justifyContent: 'center', alignItems: 'center', marginRight: 12,
-                                }}>
-                                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#60A5FA' }}>
+                            <View key={dep.id} className={`flex-row items-center py-2.5 ${idx < user.dependentDetails!.length - 1 ? 'border-b border-slate-200 dark:border-slate-700' : ''}`}>
+                                <View className="w-9 h-9 bg-blue-50 dark:bg-[#0F2847] justify-center items-center mr-3">
+                                    <Text className="text-[14px] font-bold text-blue-600 dark:text-blue-400">
                                         {getInitials(dep.name)}
                                     </Text>
                                 </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ color: '#F1F5F9', fontSize: 15, fontWeight: '600' }}>{dep.name}</Text>
-                                    <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 1 }}>
+                                <View className="flex-1">
+                                    <Text className="text-slate-900 dark:text-slate-100 text-[15px] font-semibold">{dep.name}</Text>
+                                    <Text className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">
                                         {dep.relationship.charAt(0).toUpperCase() + dep.relationship.slice(1)} · DOB: {formatDate(dep.dob)}
                                     </Text>
                                 </View>
                                 {dep.efmpEnrolled && (
-                                    <View style={{
-                                        backgroundColor: '#FEF08A',
-                                        paddingHorizontal: 6, paddingVertical: 2, borderRadius: 0,
-                                    }}>
-                                        <Text style={{ color: '#D97706', fontSize: 10, fontWeight: '700' }}>EFMP</Text>
+                                    <View className="bg-yellow-100 dark:bg-yellow-900/30 px-1.5 py-0.5">
+                                        <Text className="text-amber-600 dark:text-amber-500 text-[10px] font-bold">EFMP</Text>
                                     </View>
                                 )}
                             </View>
@@ -585,7 +517,7 @@ export default function ProfileScreen() {
     return (
         <ScreenGradient>
             <CollapsibleScaffold
-                statusBarShimBackgroundColor={'#0f172a'}
+                statusBarShimBackgroundColor={colorScheme === 'dark' ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 topBar={<ScreenHeader title="" subtitle="" showWebMenu={true} />}
                 contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
             >
@@ -607,66 +539,59 @@ export default function ProfileScreen() {
                         showsVerticalScrollIndicator={false}
                     >
                         {/* ── Cover Banner ─────────────────────────────────── */}
-                        <View style={{ height: 140, position: 'relative', backgroundColor: '#000000' }}>
-                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, backgroundColor: '#0F172A' }} />
-                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, backgroundColor: '#C9A227' }} />
+                        <View className="h-[140px] relative bg-slate-100 dark:bg-black">
+                            <View className="absolute bottom-0 left-0 right-0 h-10 bg-white dark:bg-slate-900" />
+                            <View className="absolute bottom-0 left-0 right-0 h-[3px] bg-navyGold" />
                         </View>
 
                         {/* ── Avatar ───────────────────────────────────────── */}
-                        <Animated.View entering={FadeIn.duration(300)} style={{ alignItems: 'flex-start', paddingHorizontal: 20, marginTop: -50 }}>
-                            <View style={{
-                                width: 100, height: 100, borderRadius: 50,
-                                backgroundColor: '#1E3A5F',
-                                justifyContent: 'center', alignItems: 'center',
-                                borderWidth: 4, borderColor: '#0F172A',
-                                shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: 0.3, shadowRadius: 8, elevation: 8,
-                            }}>
-                                <Text style={{ color: '#C9A227', fontSize: 32, fontWeight: '800', letterSpacing: 1 }}>
+                        <Animated.View entering={FadeIn.duration(300)} className="items-start px-5 -mt-[50px]">
+                            <View className="w-[100px] h-[100px] rounded-full justify-center items-center bg-navyBlue border-4 border-white dark:border-slate-900 shadow-apple-md">
+                                <Text className="text-navyGold text-[32px] font-extrabold tracking-widest">
                                     {initials}
                                 </Text>
                             </View>
                         </Animated.View>
 
                         {/* ── Identity Header ──────────────────────────────── */}
-                        <View style={{ paddingHorizontal: 20, marginTop: 12 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <Text style={{ color: '#FFFFFF', fontSize: 24, fontWeight: '800', letterSpacing: -0.3 }}>
+                        <View className="px-5 mt-3">
+                            <View className="flex-row items-center gap-1.5">
+                                <Text className="text-slate-900 dark:text-white text-[24px] font-extrabold tracking-tight">
                                     {user.displayName}
                                 </Text>
                                 <VerifiedBadge size={22} />
                             </View>
-                            <Text style={{ color: '#CBD5E1', fontSize: 15, fontWeight: '500', marginTop: 3 }}>
+                            <Text className="text-slate-600 dark:text-slate-300 text-[15px] font-medium mt-[3px]">
                                 {user.rank} · {ratingFull || user.rating}
                             </Text>
                             {user.dutyStation && (
-                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                                <View className="flex-row items-center mt-1.5">
                                     <MapPin size={14} color="#64748B" />
-                                    <Text style={{ color: '#94A3B8', fontSize: 14, marginLeft: 4, flex: 1 }} numberOfLines={1}>
+                                    <Text className="text-slate-500 dark:text-slate-400 text-[14px] ml-1 flex-1" numberOfLines={1}>
                                         {user.dutyStation.name}
                                     </Text>
                                     {stationBadge && (
-                                        <View style={{ backgroundColor: stationBadge.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 0, marginLeft: 8 }}>
-                                            <Text style={{ color: stationBadge.text, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>
+                                        <View className={`px-2 py-0.5 ml-2 ${stationBadge.containerClass}`}>
+                                            <Text className={`text-[10px] font-extrabold tracking-wider ${stationBadge.textClass}`}>
                                                 {stationBadge.label}
                                             </Text>
                                         </View>
                                     )}
                                 </View>
                             )}
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                                <Text style={{ color: '#60A5FA', fontSize: 13, fontWeight: '600' }}>
+                            <View className="flex-row items-center mt-2">
+                                <Text className="text-blue-600 dark:text-blue-300 text-[13px] font-semibold">
                                     {user.dependents ?? 0} dependents
                                 </Text>
-                                <Text style={{ color: '#475569', marginHorizontal: 8 }}>·</Text>
-                                <Text style={{ color: '#60A5FA', fontSize: 13, fontWeight: '600' }}>
+                                <Text className="text-slate-400 dark:text-slate-500 mx-2">·</Text>
+                                <Text className="text-blue-600 dark:text-blue-300 text-[13px] font-semibold">
                                     {user.housing?.type?.replace('_', ' ') ?? 'N/A'} housing
                                 </Text>
                             </View>
                         </View>
 
                         {/* ── Horizontal Scrollable Controls ────────────────── */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View className="flex-row items-center">
                             <ScrollView
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
@@ -681,7 +606,7 @@ export default function ProfileScreen() {
                         </View>
 
                         {/* ── Divider ─────────────────────────────────────── */}
-                        <View style={{ height: 1, backgroundColor: '#1E293B', marginHorizontal: 20, marginBottom: 16 }} />
+                        <View className="h-[1px] bg-slate-200 dark:bg-slate-800 mx-5 mb-4" />
 
                         {/* ── Tab Content ──────────────────────────────────── */}
                         {activeTab === 'timeline'

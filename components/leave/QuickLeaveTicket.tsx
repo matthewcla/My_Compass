@@ -165,7 +165,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                 <View className={`flex-row items-center justify-between rounded-xl px-3 py-3 border ${projection.isUnchargeable
                         ? 'bg-slate-800/40 border-slate-700/50'
                         : projection.isOverdraft
-                            ? 'bg-rose-950/20 border-rose-900/50'
+                            ? 'bg-error-container/20 border-error/50'
                             : 'bg-emerald-950/20 border-emerald-900/50'
                     }`}>
                     {projection.isUnchargeable ? (
@@ -207,7 +207,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                                 <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
                                     Remain
                                 </Text>
-                                <Text className={`text-xl font-mono font-bold ${projection.isOverdraft ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                <Text className={`text-xl font-mono font-bold ${projection.isOverdraft ? 'text-error' : 'text-emerald-400'}`}>
                                     {formatDays(projection.remainingOnReturn)}
                                 </Text>
                             </View>
@@ -220,7 +220,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                     {/* Location */}
                     <View className="flex-row items-center gap-4">
                         <View className="w-10 h-10 rounded-full items-center justify-center border border-blue-900/60 bg-blue-900/40">
-                            <MapPin size={18} color={!draft.leaveAddress ? '#ef4444' : '#60a5fa'} />
+                            <MapPin size={18} color={!draft.leaveAddress ? '#fb7185' : '#60a5fa'} />
                         </View>
                         <View className="flex-1">
                             <View className="flex-row justify-between items-center mb-0.5">
@@ -229,7 +229,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                                     <Text className="text-slate-300 text-[11px] font-bold">CHANGE</Text>
                                 </Pressable>
                             </View>
-                            <Text className={`text-[15px] font-[500] leading-tight mt-0.5 ${!draft.leaveAddress ? 'text-red-500 italic' : 'text-slate-200'}`} numberOfLines={1}>
+                            <Text className={`text-[15px] font-[500] leading-tight mt-0.5 ${!draft.leaveAddress ? 'text-error italic' : 'text-slate-200'}`} numberOfLines={1}>
                                 {displayAddress}
                             </Text>
                         </View>

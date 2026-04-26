@@ -72,15 +72,15 @@ export function AdminActionModal({ request, onClose }: AdminActionModalProps) {
                                 <View key={step.id} className="flex-row items-center mb-4">
                                     <View className={`w-10 h-10 rounded-sm items-center justify-center mr-4 ${
                                         step.status === 'approved' ? 'bg-green-100 dark:bg-green-500/20 border border-green-200 dark:border-green-500/50' :
-                                        step.status === 'current' ? 'bg-amber-100 dark:bg-amber-400/20 border border-amber-200 dark:border-amber-400/50' :
-                                        step.status === 'denied' ? 'bg-red-100 dark:bg-red-500/20 border border-red-200 dark:border-red-500/50' :
+                                        step.status === 'current' ? 'bg-secondary/10 border border-secondary/30' :
+                                        step.status === 'denied' ? 'bg-error/10 border border-error/30' :
                                         'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800'
                                     }`}>
                                         {step.status === 'approved' && <CheckCircle size={20} color={themeColors.status.success} />}
                                         {step.status === 'denied' && <XCircle size={20} color={themeColors.status.error} />}
                                     </View>
                                     <View>
-                                        <Text className={`font-bold ${isCurrent ? 'text-amber-600 dark:text-amber-400' : isPast ? 'text-slate-500 dark:text-slate-300' : 'text-slate-900 dark:text-slate-600'}`}>{step.label}</Text>
+                                        <Text className={`font-bold ${isCurrent ? 'text-secondary' : isPast ? 'text-slate-500 dark:text-slate-300' : 'text-slate-900 dark:text-slate-600'}`}>{step.label}</Text>
                                         <Text className="text-slate-500 text-xs">{step.role}</Text>
                                     </View>
                                 </View>
@@ -105,16 +105,16 @@ export function AdminActionModal({ request, onClose }: AdminActionModalProps) {
                                 <TouchableOpacity 
                                     onPress={handleDisapprove}
                                     activeOpacity={0.8}
-                                    className="flex-1 bg-red-100 dark:bg-red-950 border border-red-200 dark:border-red-900 py-4 rounded-sm items-center"
+                                    className="flex-1 bg-error-container border border-error/20 py-4 rounded-sm items-center"
                                 >
-                                    <Text className="text-red-700 dark:text-red-500 font-bold tracking-widest uppercase">Disapprove</Text>
+                                    <Text className="text-on-error-container font-bold tracking-widest uppercase">Disapprove</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity 
                                     onPress={handleApprove}
                                     activeOpacity={0.8}
-                                    className="flex-1 bg-amber-400 dark:bg-[#fbbf24] py-4 rounded-sm items-center"
+                                    className="flex-1 bg-secondary-container border border-secondary-container py-4 rounded-sm items-center"
                                 >
-                                    <Text className="text-black font-black tracking-widest uppercase">
+                                    <Text className="text-on-secondary-container font-black tracking-widest uppercase">
                                         {isFinalStep ? 'Final Approve' : 'Approve'}
                                     </Text>
                                 </TouchableOpacity>

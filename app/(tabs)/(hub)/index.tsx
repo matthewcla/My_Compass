@@ -34,10 +34,10 @@ const ActionRequiredWidget = () => {
     const topActions = actions;
 
     return (
-        <View className="flex-1 bg-[#FFFCED] dark:bg-surface-container-low rounded-sm p-5 border border-outline-variant border-l-[4px] border-l-secondary-container shadow-apple-sm">
+        <View className="flex-1 bg-surface-container-low rounded-sm p-5 border border-outline-variant border-l-[4px] border-l-secondary-container shadow-apple-sm">
             <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-row items-center gap-2">
-                    <MaterialIcons name="warning" size={20} color={isDark ? '#fdc400' : '#d97706'} />
+                    <MaterialIcons name="warning" size={20} color={isDark ? Colors.dark.status.warning : Colors.light.status.warning} />
                     <Text className="font-headline text-lg text-on-surface">Action Required</Text>
                 </View>
                 {topActions.length > 0 && (
@@ -49,7 +49,7 @@ const ActionRequiredWidget = () => {
             
             {topActions.length === 0 ? (
                 <View className="flex-1 items-center justify-center py-4">
-                    <MaterialIcons name="check-circle" size={40} color="#10B981" />
+                    <MaterialIcons name="check-circle" size={40} color={isDark ? Colors.dark.status.success : Colors.light.status.success} />
                     <Text className="mt-3 font-label text-on-surface-variant text-center">All Caught Up!</Text>
                 </View>
             ) : (
@@ -63,7 +63,7 @@ const ActionRequiredWidget = () => {
                             {/* Eyebrow Badge Placement */}
                             {action.dueText && (
                                 <View className="bg-error self-start px-2 py-0.5 rounded-sm mb-2">
-                                    <Text className="font-headline text-white text-[9px] uppercase tracking-wider">{action.dueText}</Text>
+                                    <Text className="font-headline text-on-error text-[9px] uppercase tracking-wider">{action.dueText}</Text>
                                 </View>
                             )}
                             
@@ -90,7 +90,7 @@ const CareerSnapshotWidget = () => {
     return (
         <View className="flex-1 bg-primary dark:bg-surface-container-low rounded-sm p-5 border border-primary dark:border-outline-variant shadow-apple-sm justify-between overflow-hidden">
             <View className="absolute right-[-30px] top-[10px] opacity-10">
-                <MaterialIcons name="star" size={180} color="#ffffff" />
+                <MaterialIcons name="star" size={180} color={Colors.dark.labelPrimary} />
             </View>
             <View className="z-10">
                 <Text className="font-label text-xs tracking-widest uppercase text-white dark:text-on-surface mb-4">Career Snapshot</Text>
@@ -143,7 +143,7 @@ const QuickLinksWidget = () => {
                         className="w-[48%] items-center bg-surface-container-lowest active:bg-surface-container-high active:scale-[0.97] transition-transform p-3 rounded-sm border border-outline-variant shadow-sm"
                     >
                         <View className="bg-surface-container p-3 rounded-sm mb-2">
-                            <MaterialIcons name={link.icon as any} size={24} color={isDark ? '#fdc400' : '#000a23'} />
+                            <MaterialIcons name={link.icon as any} size={24} color={isDark ? Colors.dark.secondaryContainer : Colors.light.primary} />
                         </View>
                         <Text className="font-label text-xs text-center text-on-surface-variant">{link.label}</Text>
                     </Pressable>
@@ -248,8 +248,8 @@ export default function HubDashboard() {
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 topBar={
-                    <View className="overflow-hidden bg-surface-container-lowest dark:bg-[#0A0A0A]">
-                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? '#27272A' : '#E2E8F0' }} />
+                    <View className="overflow-hidden bg-surface-container-lowest">
+                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? Colors.dark.surfaceBorder : Colors.light.surfaceBorder }} />
                         <View className="flex-row items-center justify-between px-5 pt-3 pb-3">
                             <View className="flex-row items-center gap-3">
                                 {Platform.OS === 'web' && (
@@ -261,7 +261,7 @@ export default function HubDashboard() {
                                         hitSlop={12}
                                         className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
                                     >
-                                        <Menu color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
+                                        <Menu color={isDark ? Colors.dark.primary : Colors.light.text} size={24} />
                                     </Pressable>
                                 )}
                                 <Text className="text-2xl font-display tracking-tighter text-primary dark:text-primary">
@@ -274,7 +274,7 @@ export default function HubDashboard() {
                                     hitSlop={12}
                                     className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
                                 >
-                                    <Bell color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
+                                    <Bell color={isDark ? Colors.dark.primary : Colors.light.text} size={24} />
                                 </Pressable>
                             </View>
                         </View>
@@ -282,7 +282,7 @@ export default function HubDashboard() {
                             className="w-full"
                             style={{
                                 height: 1,
-                                backgroundColor: isDark ? '#18181B' : '#F1F5F9'
+                                backgroundColor: isDark ? Colors.dark.surfaceBorder : Colors.light.surfaceBorder
                             }}
                         />
                     </View>

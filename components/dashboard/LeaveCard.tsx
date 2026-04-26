@@ -185,8 +185,8 @@ export function LeaveCard({
                                                     border: 'border-transparent',
                                                     text: 'text-on-error',
                                                     label: 'text-on-error',
-                                                    icon: "#ffffff",
-                                                    projText: '#ffffff'
+                                                    icon: isDark ? "#690005" : "#ffffff",
+                                                    projText: isDark ? '#690005' : '#ffffff'
                                                 };
                                             default: // draft, pending
                                                 return {

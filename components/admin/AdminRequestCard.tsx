@@ -49,8 +49,8 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
                     <View className="flex-row items-center px-4 py-4 gap-4">
                         {/* Days counter */}
                         <View className="items-center" style={{ minWidth: 40 }}>
-                            <Text className={`text-[20px] font-black tracking-tight ${request.slaStatus === 'red' ? 'text-red-600 dark:text-red-500' :
-                                request.slaStatus === 'amber' ? 'text-amber-600 dark:text-amber-500' :
+                            <Text className={`text-[20px] font-black tracking-tight ${request.slaStatus === 'red' ? 'text-error' :
+                                request.slaStatus === 'amber' ? 'text-secondary' :
                                     'text-slate-900 dark:text-slate-300'
                                 }`} numberOfLines={1}>
                                 {request.daysSinceLastAction}
@@ -75,11 +75,11 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
                         </View>
 
                         {isActionable ? (
-                            <TouchableOpacity onPress={onAction} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="w-8 h-8 rounded-none bg-amber-100 dark:bg-amber-400/20 items-center justify-center border-2 border-amber-300 dark:border-amber-400/40">
+                            <TouchableOpacity onPress={onAction} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="w-8 h-8 rounded-none bg-secondary/10 items-center justify-center border-2 border-secondary/30">
                                 <PenTool size={16} color={isDark ? Colors.dark.status.warning : '#B45309'} strokeWidth={2.5} />
                             </TouchableOpacity>
                         ) : hasIssue ? (
-                            <TouchableOpacity onPress={onAction} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="w-8 h-8 rounded-none bg-red-100 dark:bg-red-500/10 items-center justify-center border-2 border-red-500 dark:border-red-500/20">
+                            <TouchableOpacity onPress={onAction} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} className="w-8 h-8 rounded-none bg-error/10 items-center justify-center border-2 border-error/30">
                                 <AlertCircle size={18} color={Colors[colorScheme].status.error} strokeWidth={2.5} />
                             </TouchableOpacity>
                         ) : (

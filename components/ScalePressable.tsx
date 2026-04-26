@@ -28,7 +28,7 @@ export function ScalePressable({
         <TouchableOpacity
             {...props}
             style={style}
-            activeOpacity={0.9} // Simulate the scale effect roughly with opacity
+            activeOpacity={0.8} // Opaque feedback for tap states in light mode
             onPressIn={handlePressIn}
             onPressOut={onPressOut}
         >

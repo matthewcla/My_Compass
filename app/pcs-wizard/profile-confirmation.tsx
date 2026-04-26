@@ -224,22 +224,22 @@ function SectionConfirmButton({
             icon: null,
         },
         skipped: {
-            bg: isDark ? 'rgba(239,68,68,0.1)' : '#FEF2F2',
-            border: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA',
+            bg: isDark ? '#450A0A' : '#FEF2F2',
+            border: isDark ? '#7F1D1D' : '#FECACA',
             text: '#EF4444',
             label: 'Not Confirmed — Tap to Confirm',
             icon: AlertTriangle,
         },
         confirmed_partial: {
-            bg: isDark ? 'rgba(245,158,11,0.1)' : '#FFFBEB',
-            border: isDark ? 'rgba(245,158,11,0.3)' : '#FCD34D',
+            bg: isDark ? '#451A03' : '#FFFBEB',
+            border: isDark ? '#78350F' : '#FCD34D',
             text: '#F59E0B',
             label: 'Confirmed (Incomplete)',
             icon: AlertTriangle,
         },
         confirmed_complete: {
-            bg: isDark ? 'rgba(34,197,94,0.1)' : '#F0FDF4',
-            border: isDark ? 'rgba(34,197,94,0.3)' : '#BBF7D0',
+            bg: isDark ? '#022C22' : '#F0FDF4',
+            border: isDark ? '#064E3B' : '#BBF7D0',
             text: '#22C55E',
             label: 'Confirmed ✓',
             icon: CheckCircle2,
@@ -708,12 +708,12 @@ export default function ProfileConfirmationScreen() {
                     {/* ── Header ──────────────────────────────── */}
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
-                        style={{ backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)', paddingBottom: 8 }}
+                        style={{ backgroundColor: isDark ? '#0F172A' : '#FFFFFF', paddingBottom: 8 }}
                     >
                         <View style={{ paddingHorizontal: 16, paddingTop: 8, marginBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                             <Pressable
                                 onPress={() => router.back()}
-                                className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                                className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
                             >
                                 <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                             </Pressable>
@@ -1314,7 +1314,7 @@ export default function ProfileConfirmationScreen() {
                     <View
                         style={{
                             position: 'absolute', bottom: 0, left: 0, right: 0,
-                            backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)',
+                            backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                             borderTopWidth: 1, borderTopColor: isDark ? '#1E293B' : '#E2E8F0',
                             paddingTop: 16, paddingHorizontal: 16,
                             paddingBottom: Math.max(insets.bottom, 20),

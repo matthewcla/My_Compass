@@ -1,4 +1,12 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import {
+  Lexend_400Regular,
+  Lexend_500Medium,
+  Lexend_600SemiBold,
+  Lexend_700Bold,
+  Lexend_800ExtraBold,
+  Lexend_900Black,
+} from '@expo-google-fonts/lexend';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -19,6 +27,7 @@ import { AuthGuard } from '@/components/navigation/AuthGuard';
 import { SessionTimeoutOverlay } from '@/components/SessionTimeoutOverlay';
 import { ThemeTransitionOverlay } from '@/components/ThemeTransitionOverlay';
 import { KeyboardActionToolbar } from '@/components/ui/KeyboardActionToolbar';
+import { NavigationDrawer } from '@/components/ui/NavigationDrawer';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { SessionProvider, useSession } from '@/lib/ctx';
@@ -55,6 +64,12 @@ function InnerLayout() {
   const [fontsLoaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
+    Lexend_400Regular,
+    Lexend_500Medium,
+    Lexend_600SemiBold,
+    Lexend_700Bold,
+    Lexend_800ExtraBold,
+    Lexend_900Black,
   });
   const [dbInitialized, setDbInitialized] = useState(false);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
@@ -159,6 +174,7 @@ function InnerLayout() {
           onExtend={resetTimer}
         />
         <KeyboardActionToolbar />
+        <NavigationDrawer />
       </View>
     </>
   );

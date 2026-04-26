@@ -217,7 +217,7 @@ export default function HHGEstimatorScreen() {
     <View className="flex-1 bg-slate-50 dark:bg-slate-950">
       <View style={{ paddingTop: insets.top }} className="bg-slate-50 dark:bg-slate-950 px-4 pb-2 pt-2">
         <View className="flex-row items-center gap-3 mt-2 mb-1">
-          <Pressable onPress={handleBack} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+          <Pressable onPress={handleBack} className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
             <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
           </Pressable>
           <View className="flex-1">

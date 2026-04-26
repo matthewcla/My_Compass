@@ -1,4 +1,4 @@
-import { AdvancePayVisualizer } from '@/components/pcs/financials/AdvancePayVisualizer';
+
 import { useCurrentProfile } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
 import { useRouter } from 'expo-router';
@@ -67,7 +67,7 @@ export default function AdvancePayScreen() {
         className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pb-2 px-4 shadow-sm z-10"
       >
         <View className="flex-row items-center gap-3 mb-1 mt-2">
-          <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+          <Pressable onPress={() => router.back()} className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
             <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
           </Pressable>
           <View className="flex-1">
@@ -219,12 +219,7 @@ export default function AdvancePayScreen() {
           </View>
 
           <View className="mb-8">
-            <AdvancePayVisualizer
-              monthsRequested={amountMonths}
-              onMonthsRequestedChange={setAmountMonths}
-              repaymentTerm={repaymentMonths}
-              onRepaymentTermChange={setRepaymentMonths}
-            />
+            <View className="p-4 bg-slate-800 rounded-xl"><Text className="text-white text-center">Advance Pay Visualizer (Unimplemented)</Text></View>
           </View>
 
         </ScrollView>

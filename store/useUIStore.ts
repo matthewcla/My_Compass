@@ -9,10 +9,13 @@ interface UIState {
     themeMode: ThemeMode;
     themeTransitionImage: string | null;
     themeTransitionColor: string | null;
+    isDrawerOpen: boolean;
     setActiveSpoke: (spoke: string | null) => void;
     setThemeMode: (mode: ThemeMode) => void;
     setThemeTransitionImage: (uri: string | null) => void;
     setThemeTransitionColor: (color: string | null) => void;
+    toggleDrawer: () => void;
+    closeDrawer: () => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -22,10 +25,13 @@ export const useUIStore = create<UIState>()(
             themeMode: 'system',
             themeTransitionImage: null,
             themeTransitionColor: null,
+            isDrawerOpen: false,
             setActiveSpoke: (spoke) => set({ activeSpoke: spoke }),
             setThemeMode: (mode) => set({ themeMode: mode }),
             setThemeTransitionImage: (uri) => set({ themeTransitionImage: uri }),
             setThemeTransitionColor: (color) => set({ themeTransitionColor: color }),
+            toggleDrawer: () => set((state) => ({ isDrawerOpen: !state.isDrawerOpen })),
+            closeDrawer: () => set({ isDrawerOpen: false }),
         }),
         {
             name: 'ui-storage',

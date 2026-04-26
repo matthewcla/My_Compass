@@ -54,7 +54,7 @@ components/           # Reusable UI components
 ├── assignment/       #   Billet discovery & slating widgets
 ├── travel-claim/     #   Expense cards, receipt uploader
 ├── wizard/           #   Leave wizard HUD & cards
-├── ui/               #   Shared primitives (GlassView, FAB, etc.)
+├── ui/               #   Shared primitives (SolidView, FAB, etc.)
 └── ...
 
 store/                # Zustand stores
@@ -76,7 +76,7 @@ scripts/              # Build & dev scripts
 |----------|-------------|
 | [docs/README.md](docs/README.md) | **Full documentation index** — design standards, security, debt register, feature inventory |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Coding constitution — tech stack rules, anti-hallucination list, Navy conventions |
-| [CLAUDE.md](CLAUDE.md) | AI agent instructions — conventions and constraints |
+| [GEMINI.md](GEMINI.md) | AI agent instructions — conventions and constraints |
 | [_AI_CONTEXT.xml](_AI_CONTEXT.xml) | System kernel — Zero Trust, PII protection, platform strategy |
 | [TIMELINE.md](TIMELINE.md) | UCT implementation plan with agent prompts |
 

@@ -34,7 +34,7 @@ const SPRING_CONFIG = {
 const TAB_CONFIG = [
     { route: '/(hub)', iconUnselected: 'home-outline', iconSelected: 'home', label: 'Home' },
     { route: '/(admin)', iconUnselected: 'briefcase-outline', iconSelected: 'briefcase', label: 'Admin' },
-    { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Calendar' },
+    { route: '/calendar', iconUnselected: 'calendar-clear-outline', iconSelected: 'calendar-clear', label: 'Events' },
     { route: '/inbox', iconUnselected: 'mail-outline', iconSelected: 'mail', label: 'Inbox' },
     { route: '/(tabs)/(profile)', iconUnselected: 'person-circle-outline', iconSelected: 'person-circle', label: 'Me' },
 ] as const;
@@ -51,13 +51,10 @@ const MemoizedTabItem = React.memo(({
     onPress: (route: string) => void;
 }) => {
     // Premium Naval Glass Cockpit palette
-    const inactiveColor = isDark ? '#64748B' : '#64748B'; // Deepen inactive dark mode contrast
-    const activeSolidHex = isDark ? '#FFFFFF' : '#0F172A';
-
-    // In light mode, a solid bright white background prevents shadow bleed and pops.
-    // In dark mode, we use a stronger translucent white to ensure it doesn't look dark against the blur map.
-    const activeBgRgba = isDark ? 'rgba(255, 255, 255, 0.35)' : '#FFFFFF';
-    const activeBorderRgba = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.05)';
+    // Dark Mode: Gold Pill / Navy Text. Light Mode: Navy Pill / White Text
+    const activeBgRgba = isDark ? '#fdc400' : '#0A1628'; 
+    const activeSolidHex = isDark ? '#0A1628' : '#FFFFFF'; 
+    const inactiveColor = isDark ? '#e5e2e1' : '#64748B'; 
 
     const iconName = isActive ? tab.iconSelected : tab.iconUnselected;
 
@@ -67,39 +64,36 @@ const MemoizedTabItem = React.memo(({
                 {
                     alignItems: 'center',
                     justifyContent: 'center',
-                    height: 54,
-                    borderRadius: 16,
+                    height: 44,
+                    borderRadius: 22,
                 },
                 isActive ? {
                     flexDirection: 'row',
-                    flex: 1.8,
+                    flex: 1.45,
                     backgroundColor: activeBgRgba,
-                    borderColor: activeBorderRgba,
-                    borderWidth: 1,
-                    borderRadius: 14,
-                    height: 44,
-                    marginHorizontal: 4,
-                    // Note: No shadow/elevation on translucent backgrounds to prevent dark bleed-through underneath
-                    ...(isDark ? {} : {
-                        shadowColor: '#000000',
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.1,
-                        shadowRadius: 4,
-                        elevation: 2
-                    })
+                    borderWidth: 0,
+                    marginHorizontal: 6,
                 } : {
                     flex: 1
                 }
             ]}
             onPress={() => onPress(tab.route)}
         >
-            <Ionicons name={iconName as any} size={isActive ? 22 : 24} color={isActive ? activeSolidHex : inactiveColor} />
+            <Ionicons name={iconName as any} size={20} color={isActive ? activeSolidHex : inactiveColor} />
             {isActive ? (
-                <Text style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '800', marginLeft: 6, marginTop: 0 }]}>
+                <Text 
+                    numberOfLines={1} 
+                    adjustsFontSizeToFit 
+                    style={[styles.tabLabel, { color: activeSolidHex, fontWeight: '700', marginLeft: 6, marginTop: 0, textTransform: 'uppercase', fontSize: 11, letterSpacing: 0.5 }]}
+                >
                     {tab.label}
                 </Text>
             ) : (
-                <Text style={[styles.tabLabel, { color: inactiveColor, fontWeight: '600', opacity: 0.8, textAlign: 'center' }]}>
+                <Text 
+                    numberOfLines={1} 
+                    adjustsFontSizeToFit 
+                    style={[styles.tabLabel, { color: inactiveColor, fontWeight: '500', opacity: 0.7, textAlign: 'center', textTransform: 'uppercase', fontSize: 10, letterSpacing: 0 }]}
+                >
                     {tab.label}
                 </Text>
             )}
@@ -150,7 +144,7 @@ export default function ExpandableBottomDrawer() {
     // Base floating margin dynamically scaled if standard insets (like Home Indicator) are present
     const COLLAPSED_BOTTOM_MARGIN = insets.bottom > 0 ? insets.bottom : 16;
     const RESTING_TOP_OFFSET_FROM_BOTTOM = HEIGHT_COLLAPSED + COLLAPSED_BOTTOM_MARGIN;
-    const isHidden = pathname?.includes('/discovery') || pathname?.includes('/manifest') || pathname?.includes('/cycle');
+    const isHidden = Platform.OS === 'web' || pathname?.includes('/discovery') || pathname?.includes('/manifest') || pathname?.includes('/cycle');
 
     // Report global space used so the scaffold clears the resting pill correctly
     useEffect(() => {
@@ -280,10 +274,9 @@ export default function ExpandableBottomDrawer() {
         // Transition fully within the first 65px of drag
         const morphProgress = interpolate(translateY.value, [0, -65], [0, 1], Extrapolation.CLAMP);
 
-        // Floating Island Metaphor: Maintain margins and bottom inset so it never gets clipped by device bezels
-        const marginH = 16;
-        const bottomRadius = 40;
-        const topRadius = 40;
+        // Anchor Point bottom bar exception: pill margins and rounded corners when floating/expanded
+        const marginH = interpolate(morphProgress, [0, 1], [20, 0]);
+        const radius = 40;
 
         // Keep the bottom edge precisely hovering above the home indicator safe area
         const stretchDownHeight = HEIGHT_COLLAPSED - translateY.value;
@@ -293,10 +286,10 @@ export default function ExpandableBottomDrawer() {
             left: marginH,
             right: marginH,
             height: mappedHeight,
-            borderTopLeftRadius: topRadius,
-            borderTopRightRadius: topRadius,
-            borderBottomLeftRadius: bottomRadius,
-            borderBottomRightRadius: bottomRadius,
+            borderTopLeftRadius: radius,
+            borderTopRightRadius: radius,
+            borderBottomLeftRadius: radius,
+            borderBottomRightRadius: radius,
         };
     });
 
@@ -348,8 +341,8 @@ export default function ExpandableBottomDrawer() {
                     <LinearGradient
                         colors={[
                             'transparent',
-                            isDark ? 'rgba(2, 6, 23, 0.8)' : 'rgba(248, 250, 252, 0.8)',
-                            isDark ? 'rgba(2, 6, 23, 1)' : 'rgba(248, 250, 252, 1)'
+                            isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(250, 250, 250, 0.8)',
+                            isDark ? 'rgba(0, 0, 0, 1)' : 'rgba(250, 250, 250, 1)'
                         ]}
                         locations={[0, 0.6, 1]}
                         style={StyleSheet.absoluteFill}
@@ -362,23 +355,21 @@ export default function ExpandableBottomDrawer() {
                             styles.glassShape,
                             glassStyle,
                             {
-                                shadowColor: isDark ? '#000000' : '#1e293b',
-                                borderColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.1)',
+                                shadowColor: '#000000',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 1,
+                                shadowRadius: 0,
+                                elevation: 8,
+                                borderColor: isDark ? '#FFFFFF' : '#0A1628',
+                                borderWidth: 2,
                             }
                         ]}
                     >
-                        <BlurView
-                            tint={isDark ? 'dark' : 'light'}
-                            intensity={Platform.OS === 'android'
-                                ? (isDark ? 30 : 35)
-                                : (isDark ? 80 : 80)
-                            }
+                        <View
                             style={[
                                 StyleSheet.absoluteFill,
                                 {
-                                    backgroundColor: isDark
-                                        ? (Platform.OS === 'android' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(15, 23, 42, 0.45)')
-                                        : (Platform.OS === 'android' ? 'rgba(255, 255, 255, 0.82)' : 'rgba(255, 255, 255, 0.5)')
+                                    backgroundColor: isDark ? '#131313' : '#FFFFFF', // Anchor Point surface solid
                                 }
                             ]}
                         />
@@ -390,11 +381,8 @@ export default function ExpandableBottomDrawer() {
                                 StyleSheet.absoluteFill,
                                 {
                                     top: 1, left: 1, right: 1, bottom: 1,
-                                    borderWidth: 1,
-                                    borderColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.6)',
-                                },
-                                // Replicate radii internally so the stroke honors the corners
-                                styles.innerBorder
+                                    borderWidth: 0,
+                                }
                             ]}
                         />
 
@@ -410,7 +398,7 @@ export default function ExpandableBottomDrawer() {
                                 <View style={[
                                     styles.grabber,
                                     {
-                                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)',
+                                        backgroundColor: isDark ? '#475569' : '#CBD5E1',
                                         width: 36,
                                         height: 4,
                                         marginTop: 10
@@ -490,13 +478,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0, // Anchored to the top of translateContainer, expands downwards
         overflow: 'hidden',
-        borderWidth: 1,
-
-        // Deep shadow for isolation
-        elevation: 20,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.35,
-        shadowRadius: 24,
+        borderWidth: 0,
+        borderRadius: 0,
     },
     pillContents: {
         width: '100%',
@@ -511,8 +494,8 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-evenly',
-        paddingHorizontal: 8,
+        justifyContent: 'space-between',
+        paddingHorizontal: 12,
     },
     tabItem: {
         // Obsolete (absorbed dynamically in component logic)
@@ -524,7 +507,7 @@ const styles = StyleSheet.create({
     },
     innerBorder: {
         borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: 'rgba(255,255,255,0.1)',
+        borderTopColor: '#475569',
         borderTopLeftRadius: 40,
         borderTopRightRadius: 40,
         borderBottomLeftRadius: 40,

@@ -1,25 +1,22 @@
 import { useUIStore } from '@/store/useUIStore';
-import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
+import { colorScheme as nativewindColorScheme } from 'nativewind';
 import { useEffect } from 'react';
 import { useColorScheme as useNativeColorScheme } from 'react-native';
 
 export function useColorScheme(): 'light' | 'dark' {
     const systemColorScheme = useNativeColorScheme();
     const themeMode = useUIStore((state) => state.themeMode);
-    const { setColorScheme } = useNativeWindColorScheme();
 
     const effectiveScheme = themeMode === 'system' ? (systemColorScheme ?? 'light') : themeMode;
 
     useEffect(() => {
-        // Sync our derived effective scheme with NativeWind so tailwind updates.
-        // Guard against race condition: the NativeWind CSS (with darkMode flag)
-        // may not have been injected into the runtime yet on first render.
         try {
-            setColorScheme(effectiveScheme);
-        } catch {
-            // darkMode flag not yet available — will succeed on next render cycle
+            // NativeWind v4: Use the global colorScheme object rather than the hook for reliable Web execution
+            nativewindColorScheme.set(effectiveScheme);
+        } catch (e) {
+            console.warn('[Theme] nativewindColorScheme.set error:', e);
         }
-    }, [effectiveScheme, setColorScheme]);
+    }, [effectiveScheme]);
 
     return effectiveScheme;
 }

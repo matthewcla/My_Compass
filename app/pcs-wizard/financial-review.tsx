@@ -1,6 +1,5 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { AdvancePayVisualizer } from '@/components/pcs/financials/AdvancePayVisualizer';
-import { MovingCostProjection } from '@/components/pcs/financials/MovingCostProjection';
+
 import { FinancialWizardStatusBar } from '@/components/pcs/wizard/FinancialWizardStatusBar';
 import { useCurrentProfile } from '@/store/useDemoStore';
 import { usePCSStore } from '@/store/usePCSStore';
@@ -186,7 +185,7 @@ export default function FinancialReviewScreen() {
             {/* ── Header ───────────────────────────────────────── */}
             <View style={{ paddingTop: insets.top }} className="bg-slate-50 dark:bg-slate-950 px-4 pb-0 pt-2">
                 <View className="flex-row items-center gap-3 mt-2 mb-1">
-                    <Pressable onPress={handleExit} className="p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+                    <Pressable onPress={handleExit} className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
                         <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                     </Pressable>
                     <View className="flex-1">
@@ -223,7 +222,7 @@ export default function FinancialReviewScreen() {
                     <Animated.View entering={FadeIn} className="px-4 mb-6">
                         <Text className="text-lg font-bold text-slate-900 dark:text-white mb-1">Your Estimated Costs</Text>
                         <Text className="text-slate-500 dark:text-zinc-500 text-xs mb-3">Enter your expected out-of-pocket expenses</Text>
-                        <MovingCostProjection hideGapAnalysis />
+                        <View className="p-4 bg-slate-800 rounded-xl"><Text className="text-white text-center">Moving Cost Projection (Unimplemented)</Text></View>
                     </Animated.View>
                 </View>
 
@@ -401,12 +400,7 @@ export default function FinancialReviewScreen() {
                             {/* Visualizer + summary — only when opted in */}
                             {requestAdvancePay && (
                                 <Animated.View entering={FadeInDown.duration(300)}>
-                                    <AdvancePayVisualizer
-                                        monthsRequested={advanceMonths}
-                                        onMonthsRequestedChange={setAdvanceMonths}
-                                        repaymentTerm={advanceRepaymentTerm}
-                                        onRepaymentTermChange={setAdvanceRepaymentTerm}
-                                    />
+                                    <View className="p-4 bg-slate-800 rounded-xl"><Text className="text-white text-center">Advance Pay Visualizer (Unimplemented)</Text></View>
 
                                     {/* Confirm summary */}
                                     <View className="mt-3 bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-700/20 rounded-xl px-4 py-3">
@@ -448,7 +442,7 @@ export default function FinancialReviewScreen() {
                     </Animated.View>
 
                     {/* Content */}
-                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl">
+                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border-2 border-slate-300 dark:border-slate-600 shadow-2xl">
                         <View className="p-6 items-center">
                             <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
                                 Save Progress?

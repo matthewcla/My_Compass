@@ -10,6 +10,17 @@ if (!Array.prototype.toReversed) {
 const config = getDefaultConfig(__dirname);
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
+    // Force zustand to use the CommonJS build on web to avoid 'import.meta' syntax errors
+    if (platform === 'web' && moduleName.startsWith('zustand')) {
+        const path = require('path');
+        const zustandRoot = require.resolve('zustand/package.json').replace('package.json', '');
+        const subPath = moduleName === 'zustand' ? 'index.js' : moduleName.replace('zustand/', '') + '.js';
+        return {
+            filePath: path.join(zustandRoot, subPath),
+            type: 'sourceFile',
+        };
+    }
+
     if (platform === 'web' && moduleName === 'tslib') {
         return {
             filePath: require.resolve('tslib/tslib.js'),

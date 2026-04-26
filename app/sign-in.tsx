@@ -64,8 +64,8 @@ export default function SignInScreen() {
     const backgroundColor = isDark ? '#0A1628' : '#EEF1F7';
 
     // UI Constants - High Contrast for "Wow" Factor
-    const buttonBaseColor = isDark ? 'rgba(255,255,255,0.1)' : '#1e3a8a'; // Navy Blue (Blue 900) for Day Mode
-    const buttonPressedColor = isDark ? 'rgba(255,255,255,0.2)' : '#172554'; // Blue 950 for pressed
+    const buttonBaseColor = isDark ? '#18181B' : '#0A1628'; // Navy Blue (Blue 900) for Day Mode
+    const buttonPressedColor = isDark ? '#27272A' : '#1E3A5F'; // Blue 950 for pressed
 
     // Strict Layout Constants
     const BUTTON_HEIGHT = 60;
@@ -137,7 +137,7 @@ export default function SignInScreen() {
                                         overflow: 'hidden',
 
                                         borderWidth: BORDER_WIDTH,
-                                        borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                        borderColor: isDark ? '#27272A' : 'transparent',
 
                                         backgroundColor: pressed ? buttonPressedColor : buttonBaseColor,
                                     }}

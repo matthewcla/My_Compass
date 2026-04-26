@@ -8,7 +8,8 @@ import { addDays, eachDayOfInterval, format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { AlertCircle, Clock, Lock } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 import { Calendar, DateData } from 'react-native-calendars';
 import Animated, { FadeIn, useAnimatedStyle, withSequence, withTiming } from 'react-native-reanimated';
 
@@ -90,11 +91,8 @@ export function Step1Intent({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let marks: Record<string, any> = {};
 
-        // Premium Range Colors
-        // Light Mode: Use a solid light blue (Tailwind blue-100 equivalent) for a distinct "connected" strip
-        // Dark Mode: Use the app's Navy Light (#1E3A5F) for consistency and premium feel
-        const rangeColor = isDark ? Colors.dark.navyLight : '#DBEAFE';
-        const rangeTextColor = isDark ? '#FFFFFF' : themeColors.tint;
+        const rangeColor = isDark ? '#00204E' : '#AEC6FE';
+        const rangeTextColor = isDark ? '#7189BC' : '#001A42';
 
         if (startDate && endDate) {
             // Force Noon to avoid timezone boundary issues with midnight dates
@@ -111,22 +109,22 @@ export function Step1Intent({
                     let mark: Record<string, any> = { color: rangeColor, textColor: rangeTextColor };
 
                     if (dateStr === startDate) {
-                        mark = { ...mark, startingDay: true, color: themeColors.tint, textColor: 'white' };
+                        mark = { ...mark, startingDay: true, color: themeColors.primary, textColor: isDark ? '#003258' : '#FFFFFF' };
                     }
                     if (dateStr === endDate) {
-                        mark = { ...mark, endingDay: true, color: themeColors.tint, textColor: 'white' };
+                        mark = { ...mark, endingDay: true, color: themeColors.primary, textColor: isDark ? '#003258' : '#FFFFFF' };
                     }
                     marks[dateStr] = mark;
                 });
             }
         } else {
             if (startDate) {
-                marks[startDate] = { startingDay: true, color: themeColors.tint, textColor: 'white', endingDay: true };
+                marks[startDate] = { startingDay: true, color: themeColors.primary, textColor: isDark ? '#003258' : '#FFFFFF', endingDay: true };
             }
         }
 
         return marks;
-    }, [startDate, endDate, themeColors.tint, isDark]);
+    }, [startDate, endDate, themeColors.primary, themeColors.onPrimary, isDark]);
 
     // Handle Day Press (Range Selection)
     const handleDayPress = (day: DateData) => {
@@ -233,33 +231,62 @@ export function Step1Intent({
             <View className="gap-6 pt-6 pb-6 px-4 md:px-6">
                 {/* 1. Leave Type */}
                 <View>
-                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Leave Category</Text>
+                    <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Leave Category</Text>
                     <Pressable
                         onPress={() => {
-                            setShowLeaveTypePicker(true);
+                            setShowLeaveTypePicker(!showLeaveTypePicker);
                             Haptics.selectionAsync();
                         }}
-                        className="bg-inputBackground p-4 rounded-xl border border-slate-200 dark:border-slate-700 active:scale-[0.98] transition-transform"
+                        className="bg-surface-container p-4 rounded-none border border-outline-variant active:scale-[0.98] transition-transform"
                     >
                         <View className="flex-row justify-between items-center">
                             <View>
-                                <Text className="text-base font-bold text-slate-900 dark:text-white capitalize">
+                                <Text className="text-base font-bold text-on-surface capitalize">
                                     {LEAVE_TYPE_OPTIONS.find(o => o.value === leaveType)?.label || 'Select Category...'}
                                 </Text>
-                                <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                <Text className="text-xs text-on-surface-variant mt-0.5">
                                     {leaveType ? 'Category selected' : 'Tap to choose leave type'}
                                 </Text>
                             </View>
-                            <Text className="text-blue-500 font-medium">Change</Text>
+                            <Text className="text-primary font-medium">{showLeaveTypePicker ? 'Close' : 'Change'}</Text>
                         </View>
                     </Pressable>
+
+                    {/* Inline Leave Type Picker */}
+                    {showLeaveTypePicker && (
+                        <Animated.View entering={FadeIn.duration(200)} className="mt-2 border border-outline-variant bg-surface rounded-none overflow-hidden">
+                            {LEAVE_TYPE_OPTIONS.map((option) => {
+                                const isSelected = (leaveType || 'annual') === option.value;
+                                return (
+                                    <Pressable
+                                        key={option.value}
+                                        onPress={() => {
+                                            onUpdate('leaveType', option.value);
+                                            setShowLeaveTypePicker(false);
+                                            Haptics.selectionAsync();
+                                        }}
+                                        className={`flex-row items-center justify-between p-4 border-b border-outline-variant ${isSelected ? 'bg-primary-container' : 'bg-surface'}`}
+                                    >
+                                        <Text className={`font-bold ${isSelected ? 'text-primary' : 'text-on-surface'}`}>
+                                            {option.label}
+                                        </Text>
+                                        {isSelected && (
+                                            <View className="w-5 h-5 rounded-none bg-primary items-center justify-center">
+                                                <View className="w-2 h-2 rounded-none bg-on-primary" />
+                                            </View>
+                                        )}
+                                    </Pressable>
+                                );
+                            })}
+                        </Animated.View>
+                    )}
                 </View>
 
                 {/* 2. Premium Calendar (Progressive Reveal) */}
                 {showCalendar && (
                     <Animated.View entering={FadeIn.delay(100).springify()}>
-                        <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Select Dates</Text>
-                        <View className="bg-cardBackground dark:bg-black rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Select Dates</Text>
+                        <View className="bg-surface rounded-none overflow-hidden border border-outline-variant">
                             <Calendar
                                 key={colorScheme}
                                 current={startDate || undefined}
@@ -267,15 +294,15 @@ export function Step1Intent({
                                 markingType={'period'}
                                 markedDates={markedDates}
                                 theme={{
-                                    calendarBackground: isDark ? themeColors.background : '#ffffff',
-                                    textSectionTitleColor: isDark ? '#94a3b8' : '#b6c1cd',
-                                    selectedDayBackgroundColor: themeColors.tint,
-                                    selectedDayTextColor: '#ffffff',
-                                    todayTextColor: themeColors.tint,
-                                    dayTextColor: isDark ? '#e2e8f0' : '#2d4150',
-                                    textDisabledColor: isDark ? '#334155' : '#d9e1e8',
-                                    arrowColor: themeColors.tint,
-                                    monthTextColor: isDark ? '#f8fafc' : '#1e293b',
+                                    calendarBackground: themeColors.surface,
+                                    textSectionTitleColor: isDark ? '#C4C6D0' : '#44474F',
+                                    selectedDayBackgroundColor: themeColors.primary,
+                                    selectedDayTextColor: isDark ? '#003258' : '#FFFFFF',
+                                    todayTextColor: themeColors.primary,
+                                    dayTextColor: isDark ? '#E5E2E1' : '#1A1B1F',
+                                    textDisabledColor: isDark ? '#44474F' : '#C4C6D0',
+                                    arrowColor: themeColors.primary,
+                                    monthTextColor: isDark ? '#E5E2E1' : '#1A1B1F',
                                     textDayFontWeight: '600',
                                     textMonthFontWeight: 'bold',
                                     textDayHeaderFontWeight: '500',
@@ -289,14 +316,14 @@ export function Step1Intent({
                                 onUpdate('endDate', '');
                                 Haptics.selectionAsync();
                             }}>
-                                <Text className="text-xs text-slate-500 mb-1">Start Date</Text>
-                                <Text className={`font-bold ${startDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                                <Text className="text-xs text-on-surface-variant dark:text-slate-400 mb-1">Start Date</Text>
+                                <Text className={`font-bold ${startDate ? 'text-on-surface dark:text-white' : 'text-outline-variant dark:text-slate-500'}`}>
                                     {startDate || 'Select'}
                                 </Text>
                             </Pressable>
                             <View className="items-end">
-                                <Text className="text-xs text-slate-500 mb-1">End Date</Text>
-                                <Text className={`font-bold ${endDate ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
+                                <Text className="text-xs text-on-surface-variant dark:text-slate-400 mb-1">End Date</Text>
+                                <Text className={`font-bold ${endDate ? 'text-on-surface dark:text-white' : 'text-outline-variant dark:text-slate-500'}`}>
                                     {endDate || 'Select'}
                                 </Text>
                             </View>
@@ -308,67 +335,125 @@ export function Step1Intent({
                 {showTimeSection && (
                     <Animated.View entering={FadeIn.delay(200).springify()} className="gap-4">
                         <View className="flex-row items-center justify-between">
-                            <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest">Time & Schedule</Text>
+                            <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Time & Schedule</Text>
                         </View>
 
                         {/* Start Block */}
-                        <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <View className="bg-surface-container p-3 rounded-none border border-outline-variant">
                             <View className="flex-row items-center justify-between mb-3">
                                 <View className="flex-row items-center">
-                                    <View className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-md mr-2">
-                                        <Clock size={16} className="text-blue-600 dark:text-blue-400" />
+                                    <View className="bg-primary-container p-1.5 rounded-none mr-2">
+                                        <Clock size={16} color={isDark ? '#338EF7' : '#000A23'} className="text-primary" />
                                     </View>
                                     <View>
-                                        <Text className="font-bold text-slate-700 dark:text-slate-300">Departure</Text>
-                                        <Text className="text-[10px] text-slate-400 font-medium">
+                                        <Text className="font-bold text-on-surface">Departure</Text>
+                                        <Text className="text-[10px] text-on-surface-variant font-medium">
                                             {WORKING_HOURS_OPTIONS.find(o => o.value === departureWorkingHours)?.label || 'Custom'}
                                         </Text>
                                     </View>
                                 </View>
                                 <Pressable
-                                    onPress={() => setHoursField('departure')}
-                                    className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600"
+                                    onPress={() => setHoursField(hoursField === 'departure' ? null : 'departure')}
+                                    className="bg-surface px-3 py-1.5 rounded-none border border-outline-variant"
                                 >
-                                    <Text className="text-xs font-bold text-slate-600 dark:text-slate-300">Edit Hours</Text>
+                                    <Text className="text-xs font-bold text-on-surface-variant">Edit Hours</Text>
                                 </Pressable>
                             </View>
 
-                            <View className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 flex-row justify-between items-center opacity-80">
-                                <Text className="text-xs text-slate-400 font-medium">Locked to End of Working Day</Text>
+                            {/* Inline Departure Hours Picker */}
+                            {hoursField === 'departure' && (
+                                <Animated.View entering={FadeIn.duration(200)} className="mb-3 border border-outline-variant bg-surface rounded-none overflow-hidden">
+                                    {WORKING_HOURS_OPTIONS.map((option) => {
+                                        const isSelected = departureWorkingHours === option.value;
+                                        return (
+                                            <Pressable
+                                                key={option.value}
+                                                onPress={() => {
+                                                    onUpdate('departureWorkingHours', option.value);
+                                                    setHoursField(null);
+                                                    Haptics.selectionAsync();
+                                                }}
+                                                className={`flex-row items-center justify-between p-3 border-b border-outline-variant ${isSelected ? 'bg-primary-container' : 'bg-surface'}`}
+                                            >
+                                                <Text className={`font-bold ${isSelected ? 'text-primary' : 'text-on-surface'}`}>
+                                                    {option.label}
+                                                </Text>
+                                                {isSelected && (
+                                                    <View className="w-4 h-4 rounded-none bg-primary items-center justify-center">
+                                                        <View className="w-1.5 h-1.5 rounded-none bg-on-primary" />
+                                                    </View>
+                                                )}
+                                            </Pressable>
+                                        );
+                                    })}
+                                </Animated.View>
+                            )}
+
+                            <View className="bg-surface-variant p-3 rounded-none border border-outline-variant flex-row justify-between items-center opacity-80">
+                                <Text className="text-xs text-on-surface-variant font-medium">Locked to End of Working Day</Text>
                                 <View className="flex-row items-center gap-1.5">
-                                    <Text className="font-bold text-slate-500 dark:text-slate-400">{startTime}</Text>
-                                    <Lock size={12} className="text-slate-400" />
+                                    <Text className="font-bold text-on-surface-variant">{startTime}</Text>
+                                    <Lock size={12} color={isDark ? '#C4C6D0' : '#44474F'} className="text-on-surface-variant" />
                                 </View>
                             </View>
                         </View>
 
                         {/* End Block */}
-                        <View className="bg-inputBackground p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <View className="bg-surface-container p-3 rounded-none border border-outline-variant">
                             <View className="flex-row items-center justify-between mb-3">
                                 <View className="flex-row items-center">
-                                    <View className="bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-md mr-2">
-                                        <Clock size={16} className="text-orange-600 dark:text-orange-400" />
+                                    <View className="bg-secondary-container p-1.5 rounded-none mr-2">
+                                        <Clock size={16} color={isDark ? '#6C5200' : '#6D5200'} className="text-on-secondary-container" />
                                     </View>
                                     <View>
-                                        <Text className="font-bold text-slate-700 dark:text-slate-300">Return</Text>
-                                        <Text className="text-[10px] text-slate-400 font-medium">
+                                        <Text className="font-bold text-on-surface">Return</Text>
+                                        <Text className="text-[10px] text-on-surface-variant font-medium">
                                             {WORKING_HOURS_OPTIONS.find(o => o.value === returnWorkingHours)?.label || 'Custom'}
                                         </Text>
                                     </View>
                                 </View>
                                 <Pressable
-                                    onPress={() => setHoursField('return')}
-                                    className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600"
+                                    onPress={() => setHoursField(hoursField === 'return' ? null : 'return')}
+                                    className="bg-surface px-3 py-1.5 rounded-none border border-outline-variant"
                                 >
-                                    <Text className="text-xs font-bold text-slate-600 dark:text-slate-300">Edit Hours</Text>
+                                    <Text className="text-xs font-bold text-on-surface-variant">Edit Hours</Text>
                                 </Pressable>
                             </View>
 
-                            <View className="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-600 flex-row justify-between items-center opacity-80">
-                                <Text className="text-xs text-slate-400 font-medium">Locked to Start of Working Day</Text>
+                            {/* Inline Return Hours Picker */}
+                            {hoursField === 'return' && (
+                                <Animated.View entering={FadeIn.duration(200)} className="mb-3 border border-outline-variant bg-surface rounded-none overflow-hidden">
+                                    {WORKING_HOURS_OPTIONS.map((option) => {
+                                        const isSelected = returnWorkingHours === option.value;
+                                        return (
+                                            <Pressable
+                                                key={option.value}
+                                                onPress={() => {
+                                                    onUpdate('returnWorkingHours', option.value);
+                                                    setHoursField(null);
+                                                    Haptics.selectionAsync();
+                                                }}
+                                                className={`flex-row items-center justify-between p-3 border-b border-outline-variant ${isSelected ? 'bg-primary-container' : 'bg-surface'}`}
+                                            >
+                                                <Text className={`font-bold ${isSelected ? 'text-primary' : 'text-on-surface'}`}>
+                                                    {option.label}
+                                                </Text>
+                                                {isSelected && (
+                                                    <View className="w-4 h-4 rounded-none bg-primary items-center justify-center">
+                                                        <View className="w-1.5 h-1.5 rounded-none bg-on-primary" />
+                                                    </View>
+                                                )}
+                                            </Pressable>
+                                        );
+                                    })}
+                                </Animated.View>
+                            )}
+
+                            <View className="bg-surface-variant p-3 rounded-none border border-outline-variant flex-row justify-between items-center opacity-80">
+                                <Text className="text-xs text-on-surface-variant font-medium">Locked to Start of Working Day</Text>
                                 <View className="flex-row items-center gap-1.5">
-                                    <Text className="font-bold text-slate-500 dark:text-slate-400">{endTime}</Text>
-                                    <Lock size={12} className="text-slate-400" />
+                                    <Text className="font-bold text-on-surface-variant">{endTime}</Text>
+                                    <Lock size={12} color={isDark ? '#C4C6D0' : '#44474F'} className="text-on-surface-variant" />
                                 </View>
                             </View>
                         </View>
@@ -377,174 +462,38 @@ export function Step1Intent({
 
                 {/* Errors / Warnings */}
                 {errors.length > 0 && (
-                    <Animated.View entering={FadeIn} className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg flex-row items-start">
-                        <AlertCircle size={16} className="text-red-500 mt-0.5 mr-2" />
+                    <Animated.View entering={FadeIn} className="bg-error-container p-3 rounded-none flex-row items-start">
+                        <AlertCircle size={16} color={isDark ? '#FFDAD6' : '#93000A'} className="text-on-error-container mt-0.5 mr-2" />
                         <View>
                             {errors.map((err, i) => (
-                                <Text key={i} className="text-red-600 dark:text-red-400 text-xs font-medium mb-1">
+                                <Text key={i} className="text-on-error-container text-xs font-medium mb-1">
                                     • {err}
                                 </Text>
                             ))}
                         </View>
                     </Animated.View>
                 )}
-
-
-
-
             </View>
 
-            {/* iOS Time Picker Overlay */}
+            {/* iOS Time Picker Overlay (Inline) */}
             {Platform.OS === 'ios' && showTimePicker && (
-                <Modal
-                    transparent
-                    animationType="fade"
-                    visible={showTimePicker}
-                    onRequestClose={() => setShowTimePicker(false)}
-                >
-                    <View
-                        className="flex-1 bg-black/80"
-                    >
-                        <Pressable className="absolute inset-0" onPress={() => setShowTimePicker(false)} />
-                        <Animated.View entering={FadeIn.duration(200)} className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 pb-8 pt-4 rounded-t-3xl">
-                            <View className="flex-row justify-between px-4 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2">
-                                <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                                    Select Time
-                                </Text>
-                                <Pressable onPress={() => setShowTimePicker(false)}>
-                                    <Text className="text-blue-600 font-bold text-lg">Done</Text>
-                                </Pressable>
-                            </View>
-                            <DateTimePicker
-                                value={new Date()}
-                                mode="time"
-                                display="spinner"
-                                onChange={handleTimeChange}
-                                themeVariant={colorScheme}
-                            />
-                        </Animated.View>
+                <Animated.View entering={FadeIn.duration(200)} className="mx-4 mb-4 bg-surface rounded-none border border-outline-variant p-4">
+                    <View className="flex-row justify-between mb-4 border-b border-outline-variant pb-2">
+                        <Text className="text-lg font-bold text-on-surface">Select Time</Text>
+                        <Pressable onPress={() => setShowTimePicker(false)}>
+                            <Text className="text-primary font-bold text-lg">Done</Text>
+                        </Pressable>
                     </View>
-                </Modal>
+                    <DateTimePicker
+                        value={new Date()}
+                        mode="time"
+                        display="spinner"
+                        onChange={handleTimeChange}
+                        themeVariant={colorScheme}
+                    />
+                </Animated.View>
             )}
 
-            {/* Working Hours Picker Overlay */}
-            {!!hoursField && (
-                <Modal
-                    transparent
-                    animationType="fade"
-                    visible={!!hoursField}
-                    onRequestClose={() => setHoursField(null)}
-                >
-                    <View
-                        className="flex-1 bg-black/80"
-                    >
-                        <Pressable className="absolute inset-0" onPress={() => setHoursField(null)} />
-                        <Animated.View entering={FadeIn.duration(200)} className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
-                            <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
-                                <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                                    Select Schedule
-                                </Text>
-                                <Pressable onPress={() => setHoursField(null)}>
-                                    <View className="bg-slate-200 dark:bg-slate-700 rounded-full p-1">
-                                        <Text className="text-slate-500 dark:text-slate-400 font-bold px-2">Close</Text>
-                                    </View>
-                                </Pressable>
-                            </View>
-
-                            <View className="p-4 pb-10 gap-2">
-                                {WORKING_HOURS_OPTIONS.map((option) => {
-                                    const currentVal = hoursField === 'departure' ? departureWorkingHours : returnWorkingHours;
-                                    const isSelected = currentVal === option.value;
-
-                                    return (
-                                        <Pressable
-                                            key={option.value}
-                                            onPress={() => {
-                                                if (hoursField) {
-                                                    onUpdate(hoursField === 'departure' ? 'departureWorkingHours' : 'returnWorkingHours', option.value);
-                                                    setHoursField(null);
-                                                    Haptics.selectionAsync();
-                                                }
-                                            }}
-                                            className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
-                                                ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
-                                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
-                                                }`}
-                                        >
-                                            <Text className={`font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                                                {option.label}
-                                            </Text>
-                                            {isSelected && (
-                                                <View className="w-5 h-5 rounded-full bg-blue-500 items-center justify-center">
-                                                    <View className="w-2 h-2 rounded-full bg-white" />
-                                                </View>
-                                            )}
-                                        </Pressable>
-                                    );
-                                })}
-                            </View>
-                        </Animated.View>
-                    </View>
-                </Modal>
-            )}
-
-            {/* Leave Type Picker Overlay */}
-            {showLeaveTypePicker && (
-                <Modal
-                    transparent
-                    animationType="fade"
-                    visible={showLeaveTypePicker}
-                    onRequestClose={() => setShowLeaveTypePicker(false)}
-                >
-                    <View
-                        className="flex-1 bg-black/80"
-                    >
-                        <Pressable className="absolute inset-0" onPress={() => setShowLeaveTypePicker(false)} />
-                        <Animated.View entering={FadeIn.duration(200)} className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl overflow-hidden max-h-[70%]">
-                            <View className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 flex-row justify-between items-center">
-                                <Text className="text-lg font-bold text-slate-900 dark:text-white">
-                                    Select Leave Category
-                                </Text>
-                                <Pressable onPress={() => setShowLeaveTypePicker(false)}>
-                                    <View className="bg-slate-200 dark:bg-slate-700 rounded-full p-1">
-                                        <Text className="text-slate-500 dark:text-slate-400 font-bold px-2">Close</Text>
-                                    </View>
-                                </Pressable>
-                            </View>
-
-                            <ScrollView className="p-4 flex-1" contentContainerStyle={{ paddingBottom: 40, gap: 8 }} showsVerticalScrollIndicator={false}>
-                                {LEAVE_TYPE_OPTIONS.map((option) => {
-                                    const isSelected = (leaveType || 'annual') === option.value;
-
-                                    return (
-                                        <Pressable
-                                            key={option.value}
-                                            onPress={() => {
-                                                onUpdate('leaveType', option.value);
-                                                setShowLeaveTypePicker(false);
-                                                Haptics.selectionAsync();
-                                            }}
-                                            className={`flex-row items-center justify-between p-4 rounded-xl border ${isSelected
-                                                ? 'bg-blue-50 dark:bg-slate-800 border-blue-500 dark:border-blue-500'
-                                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700'
-                                                }`}
-                                        >
-                                            <Text className={`font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                                                {option.label}
-                                            </Text>
-                                            {isSelected && (
-                                                <View className="w-5 h-5 rounded-full bg-blue-500 items-center justify-center">
-                                                    <View className="w-2 h-2 rounded-full bg-white" />
-                                                </View>
-                                            )}
-                                        </Pressable>
-                                    );
-                                })}
-                            </ScrollView>
-                        </Animated.View>
-                    </View>
-                </Modal>
-            )}
         </WizardCard>
     );
 }

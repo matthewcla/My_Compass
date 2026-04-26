@@ -404,7 +404,7 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
                                 <TouchableOpacity
                                     activeOpacity={1}
                                     onPress={closeDrawer}
-                                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' }}
+                                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                                 />
 
                                 {/* Drawer Panel - Full Height */}
@@ -416,13 +416,13 @@ export function SailorSwipeCard({ data }: SailorSwipeCardProps) {
                                         right: 0,
                                         height: '95%',
                                         backgroundColor: COLORS.white,
-                                        borderTopLeftRadius: 32,
-                                        borderTopRightRadius: 32,
+                                        borderTopLeftRadius: 0,
+                                        borderTopRightRadius: 0,
                                         ...getShadow({
-                                            shadowColor: '#000',
+                                            shadowColor: '#0A1628',
                                             shadowOffset: { width: 0, height: -4 },
-                                            shadowOpacity: 0.15,
-                                            shadowRadius: 16,
+                                            shadowOpacity: 1,
+                                            shadowRadius: 0,
                                             elevation: 10,
                                         }),
                                         overflow: 'hidden',

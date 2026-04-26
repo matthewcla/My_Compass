@@ -76,7 +76,7 @@ export default function ManifestScreen() {
             <SafeAreaView className="flex-1" edges={['top', 'bottom']}>
                 {/* Header */}
                 <View className="px-4 py-4 flex-row items-center gap-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                    <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+                    <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
                         <ArrowLeft size={24} color={isDark ? 'white' : 'black'} />
                     </TouchableOpacity>
                     <Text className="text-3xl font-bold text-slate-900 dark:text-white">

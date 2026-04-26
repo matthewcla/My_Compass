@@ -42,6 +42,13 @@ export interface TrainingEntry {
   type: 'A-School' | 'C-School' | 'GMT' | 'PQS';
 }
 
+export interface AwardEntry {
+  name: string;
+  date: string;
+  type: 'Personal' | 'Unit' | 'Campaign' | 'Service';
+  count?: number;
+}
+
 // ── DemoUser ────────────────────────────────────────────────
 export interface DemoUser extends User {
   pins: string[];
@@ -53,6 +60,7 @@ export interface DemoUser extends User {
   coolCredentials?: COOLCredential[];
   seaShoreRotation?: SeaShoreEntry[];
   trainingRecord?: TrainingEntry[];
+  awards?: AwardEntry[];
 }
 
 export const DEMO_USERS: DemoUser[] = [
@@ -166,6 +174,13 @@ export const DEMO_USERS: DemoUser[] = [
       { school: 'C-School — CIWS Mk 15 Maintenance', location: 'CNATTU Dam Neck', date: 'Jul 2022', type: 'C-School' },
       { school: 'C-School — CIWS Block 1B Upgrade', location: 'CNATTU Dam Neck', date: 'Mar 2024', type: 'C-School' },
     ],
+    awards: [
+      { name: 'Navy and Marine Corps Achievement Medal', date: '2023-11-15', type: 'Personal', count: 2 },
+      { name: 'Good Conduct Medal', date: '2021-01-15', type: 'Personal', count: 1 },
+      { name: 'National Defense Service Medal', date: '2018-01-10', type: 'Service' },
+      { name: 'Global War on Terrorism Service Medal', date: '2018-06-05', type: 'Service' },
+      { name: 'Navy Unit Commendation', date: '2020-10-12', type: 'Unit' },
+    ],
     pcsRoute: {
       losingZip: '98207', // Everett, WA (USS Gridley)
       gainingZip: '96349', // Pearl Harbor, HI (USS Higgins)
@@ -265,6 +280,12 @@ export const DEMO_USERS: DemoUser[] = [
     trainingRecord: [
       { school: 'OCS — Officer Candidate School', location: 'Newport, RI', date: 'Mar 2021', type: 'A-School' },
       { school: 'SWOS — Basic Division Officer', location: 'San Diego, CA', date: 'Jan 2025', type: 'C-School' },
+    ],
+    awards: [
+      { name: 'Navy and Marine Corps Commendation Medal', date: '2024-12-01', type: 'Personal' },
+      { name: 'Navy and Marine Corps Achievement Medal', date: '2023-05-10', type: 'Personal' },
+      { name: 'Meritorious Unit Commendation', date: '2022-08-15', type: 'Unit' },
+      { name: 'National Defense Service Medal', date: '2021-03-01', type: 'Service' },
     ],
     pcsRoute: {
       losingZip: '92136', // San Diego, CA (C-School)
@@ -380,6 +401,13 @@ export const DEMO_USERS: DemoUser[] = [
       { school: 'C-School — Nuclear Power School', location: 'NNPTC Goose Creek, SC', date: 'Jan 2017', type: 'C-School' },
       { school: 'C-School — Nuclear Prototype (S8G)', location: 'NPTU Ballston Spa, NY', date: 'Jul 2017', type: 'C-School' },
       { school: 'C-School — ELT Qualification', location: 'NPTU Charleston, SC', date: 'Feb 2021', type: 'C-School' },
+    ],
+    awards: [
+      { name: 'Navy and Marine Corps Achievement Medal', date: '2022-08-20', type: 'Personal', count: 3 },
+      { name: 'Good Conduct Medal', date: '2022-07-01', type: 'Personal', count: 2 },
+      { name: 'Strategic Deterrent Patrol Pin', date: '2023-11-01', type: 'Service', count: 4 },
+      { name: 'Navy Unit Commendation', date: '2019-12-10', type: 'Unit' },
+      { name: 'National Defense Service Medal', date: '2016-07-15', type: 'Service' },
     ],
     pcsRoute: {
       losingZip: '98315', // Silverdale, WA (Submarine Base)
@@ -499,6 +527,13 @@ export const DEMO_USERS: DemoUser[] = [
       { school: 'C-School — CANES Sys Admin', location: 'Corry Station, Pensacola', date: 'May 2019', type: 'C-School' },
       { school: 'C-School — Boundary Defense', location: 'Corry Station, Pensacola', date: 'Feb 2021', type: 'C-School' },
       { school: 'C-School — Net Sec Vuln Tech', location: 'Corry Station, Pensacola', date: 'Jan 2023', type: 'C-School' },
+    ],
+    awards: [
+      { name: 'Navy and Marine Corps Achievement Medal', date: '2023-08-10', type: 'Personal', count: 2 },
+      { name: 'Good Conduct Medal', date: '2023-07-01', type: 'Personal', count: 2 },
+      { name: 'Navy E Ribbon', date: '2020-04-15', type: 'Unit' },
+      { name: 'Global War on Terrorism Expeditionary Medal', date: '2019-11-20', type: 'Campaign' },
+      { name: 'National Defense Service Medal', date: '2017-07-10', type: 'Service' },
     ],
     pcsRoute: {
       losingZip: '23511', // Norfolk, VA (CVN-78)

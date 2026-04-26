@@ -14,7 +14,9 @@ export function LeaveBalanceCard({
     projectedBalance
 }: LeaveBalanceCardProps) {
     return (
-        <View className="bg-white dark:bg-slate-900 rounded-xl shadow-sm p-6 mb-4 border border-gray-100 dark:border-slate-800">
+        <View className="bg-white dark:bg-slate-900 rounded-none p-6 mb-4 border-2 border-slate-200 dark:border-slate-800"
+            style={{ shadowColor: '#0A1628', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 8 }}
+        >
             <View className="mb-2">
                 <Text className="text-gray-500 dark:text-slate-100 text-sm font-medium uppercase tracking-wider">
                     Days Available

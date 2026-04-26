@@ -1,8 +1,4 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { HHGCostProjection } from '@/components/pcs/financials/HHGCostProjection';
-import { HHGWeightRing } from '@/components/pcs/widgets/HHGWeightRing';
-import { MoveDatePlanner } from '@/components/pcs/widgets/MoveDatePlanner';
-import { ShipmentCreationModal } from '@/components/pcs/widgets/ShipmentCreationModal';
 import { HHGWizardStatusBar } from '@/components/pcs/wizard/HHGWizardStatusBar';
 import { services } from '@/services/api/serviceRegistry';
 import { useHeaderStore } from '@/store/useHeaderStore';
@@ -426,7 +422,7 @@ export default function HHGMovePlannerScreen() {
                         <View className="flex-row items-center gap-3 mb-1 mt-2">
                             <Pressable
                                 onPress={handleExit}
-                                className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                                className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
                             >
                                 <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
                             </Pressable>
@@ -654,11 +650,7 @@ export default function HHGMovePlannerScreen() {
 
                                 {/* Animated Weight Ring */}
                                 <View className="rounded-2xl border border-slate-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-800/50 px-4 py-5 mb-3">
-                                    <HHGWeightRing
-                                        estimatedWeight={runningTotal}
-                                        maxWeight={maxWeightAllowance}
-                                        isDark={isDark}
-                                    />
+                                    <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">HHG Weight Ring (Unimplemented)</Text></View>
 
                                     <ScalePressable
                                         onPress={() => setSheetOpen(true)}
@@ -719,13 +711,13 @@ export default function HHGMovePlannerScreen() {
                             {/* ── Section 2: Cost Projection ─────────── */}
                             <View onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
                                 <Text className="text-lg font-bold text-slate-900 dark:text-white mb-3">Cost Projection</Text>
-                                <HHGCostProjection />
+                                <View className="p-4 bg-slate-800 rounded-xl"><Text className="text-white text-center">HHG Cost Projection (Unimplemented)</Text></View>
                             </View>
 
                             {/* ── Section 3: Move Dates ───────────────── */}
                             <View onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
                                 <Text className="text-lg font-bold text-slate-900 dark:text-white mb-3">Move Dates</Text>
-                                <MoveDatePlanner />
+                                <View className="p-4 bg-slate-800 rounded-xl"><Text className="text-white text-center">Move Date Planner (Unimplemented)</Text></View>
                             </View>
 
                             {/* ── Section 4: Review ───────────────────── */}
@@ -836,7 +828,7 @@ export default function HHGMovePlannerScreen() {
                     </Animated.View>
 
                     {/* Content */}
-                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+                    <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border-2 border-slate-300 dark:border-slate-600 shadow-2xl">
                         <View className="p-6 items-center">
                             <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
                                 Save Progress?
@@ -1077,11 +1069,9 @@ export default function HHGMovePlannerScreen() {
             </Modal>
 
             {/* ── Shipment Creation Modal ────────────────────── */}
-            <ShipmentCreationModal
-                visible={showCreateShipment}
-                onClose={() => setShowCreateShipment(false)}
-                onCreated={(id) => setActiveShipmentId(id)}
-            />
+            {showCreateShipment && (
+                <View className="p-4 bg-slate-800 rounded-xl mb-4"><Text className="text-white text-center">Shipment Creation Modal (Unimplemented)</Text></View>
+            )}
         </View>
     );
 }

@@ -1,5 +1,4 @@
-import { ManifestRail } from '@/components/cycle/ManifestRail';
-import { SlateSlot } from '@/components/cycle/SlateSlot';
+
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { selectManifestItems, useAssignmentStore } from '@/store/useAssignmentStore';
 import { useRouter } from 'expo-router';
@@ -105,7 +104,7 @@ export default function CycleScreen() {
                 {/* Header */}
                 <View className="px-4 py-4 flex-row items-center justify-between bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-10">
                     <View className="flex-row items-center gap-4">
-                        <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
+                        <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800">
                             <ArrowLeft size={24} color={isDark ? 'white' : 'black'} />
                         </TouchableOpacity>
                         <View>
@@ -130,17 +129,9 @@ export default function CycleScreen() {
                     >
                         <View className="gap-3">
                             {slots.map((slot, index) => (
-                                <SlateSlot
-                                    key={slot.rank}
-                                    rank={slot.rank}
-                                    application={slot.app}
-                                    billet={slot.billet}
-                                    isFirst={index === 0}
-                                    isLast={index === activeApps.length - 1}
-                                    onRemove={handleRemove}
-                                    onMoveUp={handleMoveUp}
-                                    onMoveDown={handleMoveDown}
-                                />
+                                <View key={slot.rank} className="p-4 bg-slate-800 rounded-xl mb-2">
+                                    <Text className="text-white text-center">Slate Slot {slot.rank} (Unimplemented)</Text>
+                                </View>
                             ))}
                         </View>
                     </ScrollView>
@@ -163,11 +154,9 @@ export default function CycleScreen() {
                     {/* Horizontal Rail */}
                     <View className="h-40">
                         {/* H-40 is arbitrary, ManifestRail might adjust height dynamically */}
-                        <ManifestRail
-                            items={manifestCandidates}
-                            onSelect={(billet) => handleRailItemPress(billet.id)}
-                            onSeeAll={() => router.push('/(career)/manifest' as any)}
-                        />
+                        <View className="flex-1 items-center justify-center">
+                            <Text className="text-slate-500">Manifest Rail (Unimplemented)</Text>
+                        </View>
                     </View>
 
                     {/* Submit Footer Injected Here or Separate? */}

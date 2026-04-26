@@ -156,7 +156,7 @@ Every flow in My Compass belongs to one of the following **five types**. Each ty
 **Required Design Elements:**
 1. **Input sections** with clear labels and units (e.g., weight in lbs, distance in miles)
 2. **Real-time calculation** — results update as inputs change (no "Calculate" button)
-3. **Result card** — prominent, visually distinct display of the estimate (use `GlassView` or elevated card)
+3. **Result card** — prominent, visually distinct display of the estimate (use `SolidView` or elevated card)
 4. **Breakdown view** — itemized line items showing how the total was derived
 5. **Store persistence** — estimates save to Zustand store for use by downstream flows
 6. **Warning indicators** — visual alerts when inputs exceed limits (e.g., over weight allowance)
@@ -346,7 +346,7 @@ The `StatusCard` is the top-of-dashboard hero tile that communicates the Sailor'
 
 #### Layout Structure
 
-Every variant follows a **single-row horizontal layout** inside a `GlassView` wrapped in a `TouchableOpacity` for phase-specific navigation. The card utilizes a custom box shadow (`shadow-[0_8px_30px_rgba(0,0,0,0.06)]`) and a full-bleed `LinearGradient` wash:
+Every variant follows a **single-row horizontal layout** inside a `SolidView` wrapped in a `TouchableOpacity` for phase-specific navigation. The card utilizes a custom box shadow (`shadow-[0_8px_30px_rgba(0,0,0,0.06)]`) and a full-bleed `LinearGradient` wash:
 
 | Structure | Elements |
 |-----------|----------|
@@ -553,5 +553,32 @@ Always guard with `Platform.OS !== 'web'`.
 | `<img>` | `<Image>` (expo-image) |
 | `<a>` | `<Link>` (expo-router) |
 | `<button>` | `<Pressable>` |
-| `<ul>`, `<li>` | `<FlatList>` or `<FlashList>` |
 | `<input>` | `<TextInput>` |
+
+### 6.5 Web/PWA Robustness Standards
+
+To ensure the "Glass Cockpit" aesthetic and application logic do not break when compiling for Web/PWA, you must adhere to the following strict cross-platform rules:
+
+1. **NativeWind + Reanimated `className` Dropping:**
+   React Native Web via NativeWind V4 will often drop the `className` prop when applied directly to `Animated.View` or other Reanimated components. This causes containers to lose their backgrounds, borders, and geometry (resulting in "invisible" layouts).
+   - ❌ **Anti-pattern:** `<Animated.View style={animatedStyle} className="bg-primary w-10 h-10" />`
+   - ✅ **Standard:** Wrap a standard `View` inside the animated container:
+     ```tsx
+     <Animated.View style={animatedStyle}>
+         <View className="bg-primary w-10 h-10" />
+     </Animated.View>
+     ```
+
+2. **Hydration Mismatches & Dark Mode (`useColorScheme`):**
+   Importing the vanilla `useColorScheme` from `react-native` fails to read the injected NativeWind theme on the web, causing `isDark` to always evaluate to `false`. This breaks JS-based color logic (like SVG icons and explicit `style` overrides).
+   - ❌ **Anti-pattern:** `import { useColorScheme } from 'react-native';`
+   - ✅ **Standard:** `import { useColorScheme } from '@/components/useColorScheme';` (This hook bridges the NativeWind context safely).
+
+3. **Scroll View `onLayout` Race Conditions:**
+   Web browsers frequently trigger `handleScroll` events before `onLayout` has finished populating layout coordinates. If scroll-tracking logic (like the Pizza Tracker) evaluates missing coordinates as `0`, the logic will leap to the end of the form.
+   - ❌ **Anti-pattern:** `const sectionTop = sectionCoords.current[i] || 0;` (Defaults to 0, instantly triggering active state).
+   - ✅ **Standard:** Always explicitly check for `undefined` and skip logic until layout is populated:
+     ```tsx
+     const sectionTop = sectionCoords.current[i];
+     if (sectionTop !== undefined && triggerPoint >= sectionTop) { ... }
+     ```

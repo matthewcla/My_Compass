@@ -1,14 +1,15 @@
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
-import { MessageCard } from '@/components/inbox/MessageCard';
-import { ScreenGradient } from '@/components/ScreenGradient';
+
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { useColorScheme } from '@/components/useColorScheme';
 import { useInboxStore } from '@/store/useInboxStore';
 import type { InboxMessage } from '@/types/inbox';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { Mail, AlertCircle, FileText, Bookmark } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useColorScheme } from 'nativewind';
 
 // Create Animated SectionList
 type InboxSection = { title: string; data: InboxMessage[] };
@@ -17,7 +18,7 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
     SectionList as React.ComponentType<AnimatedInboxSectionListProps>
 ) as React.ComponentType<AnimatedInboxSectionListProps>;
 
-type FilterType = 'All' | 'Official' | 'My Status' | 'Pinned';
+type FilterType = 'All' | 'My Messages' | 'Bookmarked';
 const MAX_FILTER_MESSAGES = 500;
 const MIN_FILTER_PINNED_HEIGHT = 52;
 
@@ -41,20 +42,36 @@ const formatDTG = (dateString: string) => {
 
 const ListEmpty = () => (
     <View className="p-8 items-center">
-        <Text className="text-slate-400 dark:text-slate-500 text-center">No messages found.</Text>
+        <Text className="text-outline text-center">No messages found.</Text>
     </View>
 );
 
 export default function InboxScreen() {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
-    const { messages, fetchMessages, isLoading, togglePin } = useInboxStore();
     const router = useRouter();
+    const insets = useSafeAreaInsets();
+    const { messages, fetchMessages, isLoading, togglePin } = useInboxStore();
+    const { colorScheme } = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
+    const themeColors = {
+        primary: isDark ? '#338EF7' : '#000A23',
+        secondary: isDark ? '#F5A524' : '#785A00',
+        outline: isDark ? '#8E909A' : '#747780',
+        background: isDark ? '#131313' : '#FFFFFF'
+    };
+
+    const getMessageIcon = (type: string) => {
+        switch(type) {
+            case 'NAVADMIN':
+            case 'ALNAV': return <AlertCircle size={16} color={themeColors.secondary} />;
+            case 'STATUS_REPORT': return <FileText size={16} color={themeColors.primary} />;
+            default: return <Mail size={16} color={themeColors.outline} />;
+        }
+    };
+
     const [, startTransition] = useTransition();
-    const [activeFilter, setActiveFilter] = useState<FilterType>('All');
+    const [activeFilter, setActiveFilter] = useState<FilterType>('My Messages');
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterHeight, setFilterHeight] = useState(0);
-    const lastNonZeroFilterHeight = useRef(0);
     const listRef = useRef<any>(null);
 
     // Scroll to top whenever this tab gains focus
@@ -84,18 +101,63 @@ export default function InboxScreen() {
         router.push(`/inbox/${id}`);
     }, [router]);
 
-    const renderMessageItem = useCallback(({ item }: { item: InboxMessage }) => (
-        <MessageCard
-            message={item}
-            // Pass stable handler to enable React.memo optimization
-            onPress={handlePress}
-            onTogglePin={togglePin}
-        />
-    ), [handlePress, togglePin]);
+    const renderMessageItem = useCallback(({ item }: { item: InboxMessage }) => {
+        const isUnread = !item.isRead;
+        return (
+            <Pressable 
+                onPress={() => handlePress(item.id)}
+                className="mx-4 mb-2 p-4 rounded-sm bg-surface-container border border-outline-variant"
+                style={({ pressed }) => ({
+                    opacity: pressed ? 0.8 : 1,
+                    transform: [{ scale: pressed ? 0.98 : 1 }]
+                })}
+            >
+                <View className="flex-row justify-between items-start mb-2">
+                    <Text className="text-[10px] font-bold tracking-wider text-outline uppercase">
+                        {formatDTG(item.timestamp)}
+                    </Text>
+                </View>
+                <View className="flex-row items-start justify-between">
+                    <View className="flex-1 pr-2">
+                        <View className="flex-row items-center mb-1">
+                            {isUnread && <View className="w-2 h-2 rounded-full bg-primary mr-2" />}
+                            <Text className={`text-base font-semibold flex-1 ${isUnread ? 'text-on-surface' : 'text-on-surface-variant'}`} numberOfLines={1}>
+                                {item.subject}
+                            </Text>
+                        </View>
+                        <Text className="text-sm text-on-surface-variant" numberOfLines={2}>
+                            {item.body}
+                        </Text>
+                        <View className="flex-row items-center mt-1 w-full justify-between pr-2">
+                            <View className="flex-row items-center">
+                                {getMessageIcon(item.type)}
+                                <Text className={`text-[10px] font-bold tracking-wider uppercase ml-2 ${item.type === 'NAVADMIN' || item.type === 'ALNAV' ? 'text-secondary' : item.type === 'STATUS_REPORT' ? 'text-primary' : 'text-outline'}`} numberOfLines={1}>
+                                    {item.type.replace('_', ' ')}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                    
+                    {/* Pin/Bookmark Action */}
+                    <Pressable
+                        onPress={() => togglePin(item.id)}
+                        hitSlop={12}
+                        className="mt-1 p-1"
+                    >
+                        {item.isPinned ? (
+                            <Bookmark size={20} color={themeColors.secondary} fill={themeColors.secondary} />
+                        ) : (
+                            <Bookmark size={20} color={themeColors.outline} />
+                        )}
+                    </Pressable>
+                </View>
+            </Pressable>
+        );
+    }, [handlePress, togglePin, themeColors]);
 
     const renderSectionHeader = useCallback(({ section: { title } }: { section: { title: string } }) => (
         <View className="px-5 py-3 bg-transparent">
-            <Text className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 uppercase">{title}</Text>
+            <Text className="text-xs font-bold tracking-wider text-outline uppercase">{title}</Text>
         </View>
     ), []);
 
@@ -119,11 +181,9 @@ export default function InboxScreen() {
             }
 
             switch (activeFilter) {
-                case 'Official':
-                    return msg.type === 'NAVADMIN' || msg.type === 'ALNAV';
-                case 'My Status':
+                case 'My Messages':
                     return msg.type === 'STATUS_REPORT' || msg.type === 'GENERAL_ADMIN';
-                case 'Pinned':
+                case 'Bookmarked':
                     return msg.isPinned;
                 default:
                     return true;
@@ -166,41 +226,26 @@ export default function InboxScreen() {
     }, [filteredMessages]);
 
     const renderHeader = () => (
-        <View
-            className="px-4 pb-3 bg-white dark:bg-black border-slate-200 dark:border-slate-800"
-            onLayout={(e) => {
-                const measuredHeight = Math.round(e.nativeEvent.layout.height);
-                if (measuredHeight <= 0) {
-                    return;
-                }
-
-                lastNonZeroFilterHeight.current = measuredHeight;
-                setFilterHeight((previousHeight) =>
-                    previousHeight === measuredHeight ? previousHeight : measuredHeight
-                );
-            }}
-        >
-            <View className="flex-row justify-between bg-black/5 dark:bg-slate-800/50 p-1 rounded-xl mt-2 border border-black/5 dark:border-white/5">
-                {(['All', 'Official', 'My Status', 'Pinned'] as FilterType[]).map((filter) => (
+        <View className="px-4 pb-3 pt-2">
+            <View className="flex-row justify-between bg-surface-container-low p-1 rounded-sm border border-outline-variant">
+                {(['All', 'My Messages', 'Bookmarked'] as FilterType[]).map((filter) => (
                     <Pressable
                         key={filter}
                         onPress={() => startTransition(() => {
                             setActiveFilter(prev => (prev === filter ? prev : filter));
                         })}
-                        style={[
-                            styles.filterButton,
+                        className={`flex-1 items-center py-1.5 rounded-sm border ${
                             activeFilter === filter
-                                ? (isDark ? styles.filterButtonActiveDark : styles.filterButtonActiveLight)
-                                : null,
-                        ]}
+                                ? 'bg-surface-container-highest border-outline-variant shadow-sm'
+                                : 'border-transparent'
+                        }`}
                     >
                         <Text
-                            style={[
-                                styles.filterText,
+                            className={`text-xs font-semibold ${
                                 activeFilter === filter
-                                    ? (isDark ? styles.filterTextActiveDark : styles.filterTextActiveLight)
-                                    : (isDark ? styles.filterTextInactiveDark : styles.filterTextInactiveLight),
-                            ]}
+                                    ? 'text-on-surface'
+                                    : 'text-on-surface-variant'
+                            }`}
                         >
                             {filter}
                         </Text>
@@ -211,22 +256,21 @@ export default function InboxScreen() {
     );
 
     return (
-        <ScreenGradient>
+        <View className="flex-1 bg-background">
             <CollapsibleScaffold
-                statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
+                statusBarShimBackgroundColor={themeColors.background}
                 topBar={
-                    <View className="bg-slate-50 dark:bg-black">
+                    <View className="bg-background">
                         <ScreenHeader
-                            title=""
+                            title="Inbox"
                             subtitle=""
                             withSafeArea={false}
                             searchConfig={searchConfig}
+                            showWebMenu={true}
                         />
-                        {renderHeader()}
                     </View>
                 }
                 snapBehavior="none"
-                minTopBarHeight={Math.max(filterHeight || lastNonZeroFilterHeight.current, MIN_FILTER_PINNED_HEIGHT)}
             >
                 {({
                     onScroll,
@@ -260,6 +304,7 @@ export default function InboxScreen() {
                         onLayout={onLayout}
                         onContentSizeChange={onContentSizeChange}
                         scrollEnabled={scrollEnabled}
+                        ListHeaderComponent={renderHeader}
                         ListEmptyComponent={ListEmpty}
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
@@ -267,51 +312,7 @@ export default function InboxScreen() {
                     />
                 )}
             </CollapsibleScaffold>
-        </ScreenGradient>
+        </View>
     );
 }
 
-const styles = StyleSheet.create({
-    filterButton: {
-        flex: 1,
-        alignItems: 'center',
-        paddingVertical: 6,
-        borderRadius: 8,
-    },
-    filterButtonActiveLight: {
-        backgroundColor: '#ffffff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: 'rgba(0,0,0,0.05)',
-    },
-    filterButtonActiveDark: {
-        backgroundColor: '#1e293b',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.3,
-        shadowRadius: 2,
-        elevation: 1,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: 'rgba(255,255,255,0.1)',
-    },
-    filterText: {
-        fontSize: 12,
-        fontWeight: '600',
-    },
-    filterTextActiveLight: {
-        color: '#0f172a',
-    },
-    filterTextActiveDark: {
-        color: '#ffffff',
-    },
-    filterTextInactiveLight: {
-        color: '#64748b',
-    },
-    filterTextInactiveDark: {
-        color: '#94a3b8',
-    },
-});

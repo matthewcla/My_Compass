@@ -299,15 +299,6 @@ export function CollapsibleScaffold({
         // the space behind where the bar was.
         const paddingBottom = insets.bottom;
 
-        if (isMobileWebEnv) {
-            return [
-                {
-                    paddingBottom,
-                },
-                contentContainerStyle,
-            ];
-        }
-
         const totalTopBarHeight = statusBarShimHeight + animatedHeaderHeight;
         return [
             {
@@ -344,7 +335,7 @@ export function CollapsibleScaffold({
             {isMobileWebEnv && (
                 <View style={[
                     styles.topBarContainer,
-                    { position: 'sticky', top: 0, zIndex: 100 } as any
+                    { position: 'absolute', top: 0, zIndex: 100 } as any
                 ]}>
                     <View
                         style={[
@@ -356,7 +347,7 @@ export function CollapsibleScaffold({
                         ]}
                     />
 
-                    <View style={styles.animatedHeader}>
+                    <View style={styles.animatedHeader} onLayout={handleAnimatedHeaderLayout}>
                         {topBar}
                     </View>
                 </View>

@@ -1,5 +1,5 @@
 import { ScalePressable } from '@/components/ScalePressable';
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidView } from '@/components/ui/SolidView';
 import { useActiveOrder } from '@/store/usePCSStore';
 import * as Haptics from 'expo-haptics';
 
@@ -83,17 +83,22 @@ export function PCSHeroBanner() {
 
     return (
         <Animated.View entering={FadeIn.duration(400).delay(100)}>
-            <GlassView
-                intensity={isDark ? 80 : 60}
+            <SolidView
+                intensity={100}
                 tint={isDark ? 'dark' : 'light'}
-                className="mx-4 mb-8 rounded-2xl overflow-hidden"
+                className="mx-4 mb-8 rounded-none overflow-hidden"
                 style={{
-                    borderWidth: 1,
-                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
+                    borderWidth: 2,
+                    borderColor: isDark ? '#27272A' : '#E2E8F0',
+                    shadowColor: '#0A1628',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 1,
+                    shadowRadius: 0,
+                    elevation: 8,
                 }}
             >
                 {/* ── Top section: Destination + Countdown ── */}
-                <View className="bg-slate-900/70 p-5 pb-4">
+                <View className="bg-slate-900 dark:bg-slate-900 p-5 pb-4">
                     <View className="flex-row items-center mb-2">
                         <MapPin size={16} color="#C9A227" />
                         <Text className="text-xs font-semibold uppercase tracking-widest text-slate-300 ml-2">
@@ -124,9 +129,9 @@ export function PCSHeroBanner() {
                 </View>
 
                 {/* ── Sponsor Section ── */}
-                <View className="bg-white/40 dark:bg-slate-950/40 px-5 pt-3 pb-3 border-t border-slate-200/50 dark:border-slate-700/50">
+                <View className="bg-slate-50 dark:bg-slate-950 px-5 pt-3 pb-3 border-t-2 border-slate-200 dark:border-slate-800">
                     <View className="flex-row items-center">
-                        <View className="w-9 h-9 rounded-full bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 items-center justify-center mr-3">
+                        <View className="w-9 h-9 rounded-full bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 items-center justify-center mr-3">
                             <User size={15} color={isDark ? '#94a3b8' : '#64748b'} strokeWidth={2.2} />
                         </View>
 
@@ -184,7 +189,7 @@ export function PCSHeroBanner() {
                     </View>
                 </View>
 
-            </GlassView>
+            </SolidView>
         </Animated.View>
     );
 }

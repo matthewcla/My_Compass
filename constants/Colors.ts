@@ -1,11 +1,11 @@
 const systemGray = '#8E8E93';
-const systemGray6Light = '#FAFAFA';
+const systemGray6Light = '#F4F4F5'; // Off-white
 const systemGray6Dark = '#18181B';
-const systemBlueLight = '#006FEE';
+const systemBlueLight = '#0A1628'; // Navy Blue for Primary Action
 const systemBlueDark = '#338EF7';
-const navyBlue = '#000000';
-const navyLight = '#09090B';
-const navyGold = '#F5A524';
+const navyBlue = '#0A1628'; // Deep Navy
+const navyLight = '#1E3A5F';
+const navyGold = '#C9A227'; // Athletic Gold
 
 export const Colors = {
   // Canvas gradient stops (shared with ScreenGradient)
@@ -26,11 +26,11 @@ export const Colors = {
     500: '#6b7280',
   },
   light: {
-    text: '#000',
-    background: '#fff',
-    tint: systemBlueLight,
-    tabIconDefault: '#ccc',
-    tabIconSelected: systemBlueLight,
+    text: '#0F172A', // High-contrast Slate 900
+    background: '#FAFAFA', // Soft Off-White
+    tint: navyBlue,
+    tabIconDefault: '#94A3B8', // Slate 400
+    tabIconSelected: navyBlue,
 
     systemGray: systemGray,
     systemGray6: systemGray6Light,
@@ -38,16 +38,18 @@ export const Colors = {
     navyBlue: navyBlue,
     navyLight: navyLight,
     navyGold: navyGold,
-    labelPrimary: '#000000',
-    labelSecondary: '#3C3C43',
-    cardBackground: '#FFFFFF',
+    labelPrimary: '#0F172A',
+    labelSecondary: '#475569', // Slate 600
+    cardBackground: '#FFFFFF', // Crisp White surfaces
     wizardCardBackground: '#FFFFFF',
     inputBackground: '#F4F4F5',
-    accentText: systemBlueLight,
+    accentText: navyBlue,
     surface: '#FFFFFF',
-    surfaceBorder: '#E4E4E7',
-    iconBubble: '#E8EDF6',
-    iconBubbleLocked: '#F1F5F9',
+    surfaceBorder: '#E2E8F0', // Slate 200
+    primary: navyBlue,
+    secondaryContainer: navyGold,
+    iconBubble: '#F1F5F9', // Solid Slate 100
+    iconBubbleLocked: '#E2E8F0', // Solid Slate 200
 
     status: {
       success: '#15803d', // green-700 — 4.54:1 on white
@@ -74,9 +76,11 @@ export const Colors = {
     wizardCardBackground: '#09090B',
     inputBackground: '#18181B',
     accentText: '#FFFFFF',
-    surface: '#09090B',
+    surface: '#131313',
     surfaceBorder: '#27272A',
-    iconBubble: 'rgba(51, 142, 247, 0.18)',
+    primary: '#aec6fe',
+    secondaryContainer: '#fdc400',
+    iconBubble: '#18181B', // Solid instead of rgba
     iconBubbleLocked: '#27272A',
 
     status: {

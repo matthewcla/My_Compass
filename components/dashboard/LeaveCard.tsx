@@ -1,13 +1,11 @@
-import { DashboardCardSurface } from '@/components/ui/DashboardCardSurface';
-import { useColorScheme } from '@/components/useColorScheme';
 import { LeaveBalance, LeaveRequest } from '@/types/schema';
 import { formatDays } from '@/utils/formatDays';
-import { projectLeaveBalance } from '@/utils/leaveProjection';
+import { projectLeaveBalance, calculate90DayProjection } from '@/utils/leaveProjection';
 import { differenceInDays, format, parseISO } from 'date-fns';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight, Clock, Plus, Umbrella, Zap } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 
 interface LeaveCardProps {
     balance: number;
@@ -30,12 +28,19 @@ export function LeaveCard({
     onFullRequest,
     onExpand,
 }: LeaveCardProps) {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
     const [expanded, setExpanded] = useState(false);
+    const colorScheme = useColorScheme() ?? 'light';
+    const isDark = colorScheme === 'dark';
 
     const hasRequests = requests.length > 0;
     const activeRequests = requests.slice(0, 3); // Limit to top 3 for stack preview
+
+    // Calculate 90-day projection
+    const ninetyDayProjection = useMemo(() => {
+        const currentBalance = leaveBalance?.currentBalance ?? balance;
+        const allReqs = allRequests ?? requests;
+        return calculate90DayProjection(currentBalance, allReqs);
+    }, [leaveBalance, balance, allRequests, requests]);
 
     // Pre-compute projections for all active requests
     const projections = useMemo(() => {
@@ -80,28 +85,19 @@ export function LeaveCard({
 
     return (
         <View className="mx-4 mb-6">
-            <DashboardCardSurface
-                intensity={80}
-                className="rounded-[24px]"
-            >
-                <LinearGradient
-                    colors={isDark ? ['rgba(244,63,94,0.15)', 'transparent'] : ['rgba(244,63,94,0.08)', 'transparent']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-                />
+            <View className="bg-surface-container-lowest border-t-[4px] border-t-secondary-container border-outline-variant border-l border-r border-b">
                 <View className="p-5">
                     {/* Header Row: Balance + Action Buttons */}
                     <View className="flex-row items-center justify-between mb-5">
                         <View className="flex-row items-center gap-4 flex-1">
-                            <View className="w-[52px] h-[52px] rounded-full bg-rose-500/10 dark:bg-rose-900/40 items-center justify-center border-[1.5px] border-rose-500/20 dark:border-rose-800/60 shadow-sm">
-                                <Umbrella size={26} color={isDark ? '#FDA4AF' : '#E11D48'} />
+                            <View className="w-[52px] h-[52px] bg-secondary-container items-center justify-center">
+                                <Umbrella size={26} color={isDark ? '#6C5200' : '#6D5200'} className="text-on-secondary-container" />
                             </View>
                             <View className="flex-1 mr-2">
-                                <Text className="text-slate-900 dark:text-slate-100 text-[20px] font-[800] tracking-[-0.5px] leading-tight mb-0.5" numberOfLines={2}>
+                                <Text className="text-on-surface text-[20px] font-display uppercase tracking-wide leading-tight mb-0.5" numberOfLines={2}>
                                     Leave Balance
                                 </Text>
-                                <Text className="text-slate-600 dark:text-slate-400 text-[13px] font-[500] leading-tight opacity-80" numberOfLines={2}>
+                                <Text className="text-on-surface-variant text-[13px] font-headline uppercase tracking-wider leading-tight" numberOfLines={2}>
                                     {balance} Available Days
                                 </Text>
                             </View>
@@ -113,24 +109,36 @@ export function LeaveCard({
                             <TouchableOpacity
                                 activeOpacity={0.7}
                                 onPress={onQuickRequest}
-                                className="w-10 h-10 rounded-full bg-amber-500/10 items-center justify-center border border-amber-500/20 shadow-sm"
+                                className="w-10 h-10 bg-secondary-container items-center justify-center"
                             >
-                                <Zap size={18} color={isDark ? '#FBBF24' : '#D97706'} strokeWidth={2.5} />
+                                <Zap size={18} color={isDark ? '#6C5200' : '#6D5200'} className="text-on-secondary-container" strokeWidth={2.5} />
                             </TouchableOpacity>
 
                             {/* Full Request */}
                             <TouchableOpacity
                                 activeOpacity={0.7}
                                 onPress={onFullRequest}
-                                className="w-10 h-10 rounded-full bg-slate-900/5 dark:bg-white/10 items-center justify-center border border-slate-900/10 dark:border-white/20 shadow-sm"
+                                className="w-10 h-10 bg-transparent border-2 border-outline-variant items-center justify-center"
                             >
-                                <Plus size={18} color={isDark ? '#FFFFFF' : '#0F172A'} strokeWidth={2.5} />
+                                <Plus size={18} color={isDark ? '#E5E2E1' : '#1A1B1F'} className="text-on-surface" strokeWidth={2.5} />
                             </TouchableOpacity>
                         </View>
                     </View>
 
+                    {/* 3-Month Projection */}
+                    <View className="mb-5 bg-surface-container border border-outline-variant p-3">
+                        <View className="flex-row items-center justify-between">
+                            <Text className="text-on-surface-variant text-[11px] font-headline uppercase tracking-widest">
+                                90-Day Projection
+                            </Text>
+                            <Text className="text-secondary-container text-[13px] font-mono font-bold">
+                                {formatDays(ninetyDayProjection)} DAYS
+                            </Text>
+                        </View>
+                    </View>
+
                     {/* Request Smart Stack */}
-                    <View className="w-full border-t border-slate-200/50 dark:border-slate-700/50 pt-5">
+                    <View className="w-full border-t border-outline-variant pt-5">
 
                         {!hasRequests ? (
                             // Empty State
@@ -141,54 +149,33 @@ export function LeaveCard({
                                 {activeRequests.map((req, index) => {
                                     const getStatusColors = (status: string) => {
                                         switch (status) {
-                                            // Draft -> Slate/Neutral (was Orange)
-                                            case 'draft':
-                                                return {
-                                                    bg: 'bg-slate-100 dark:bg-slate-800',
-                                                    border: 'border-slate-200 dark:border-slate-700',
-                                                    text: 'text-slate-700 dark:text-slate-300',
-                                                    label: 'text-slate-500 dark:text-slate-400',
-                                                    icon: isDark ? "#94a3b8" : "#64748b",
-                                                    projText: isDark ? '#94a3b8' : '#475569'
-                                                };
-                                            // Pending -> Amber (was Sky)
-                                            case 'pending':
-                                                return {
-                                                    bg: 'bg-amber-50 dark:bg-amber-950/40',
-                                                    border: 'border-amber-200 dark:border-amber-800',
-                                                    text: 'text-amber-900 dark:text-amber-100',
-                                                    label: 'text-amber-800 dark:text-amber-200',
-                                                    icon: isDark ? "#C8921C" : "#d97706",
-                                                    projText: isDark ? '#C8921C' : '#b45309'
-                                                };
-                                            // Approved -> Slate-900/Navy (was Emerald) - "Official"
                                             case 'approved':
                                                 return {
-                                                    bg: 'bg-white dark:bg-slate-900',
-                                                    border: 'border-slate-300 dark:border-slate-700',
-                                                    text: 'text-slate-900 dark:text-white',
-                                                    label: 'text-slate-700 dark:text-slate-300',
-                                                    icon: isDark ? "#f8fafc" : "#0f172a",
-                                                    projText: isDark ? '#f8fafc' : '#0f172a'
+                                                    bg: 'bg-secondary-container',
+                                                    border: 'border-transparent',
+                                                    text: 'text-on-secondary-container',
+                                                    label: 'text-on-secondary-container',
+                                                    iconClass: 'text-on-secondary-container',
+                                                    projTextClass: 'text-on-secondary-container'
                                                 };
                                             case 'returned':
                                             case 'denied':
                                                 return {
-                                                    bg: 'bg-red-50 dark:bg-red-950/50',
-                                                    border: 'border-red-200 dark:border-red-800',
-                                                    text: 'text-red-900 dark:text-red-100',
-                                                    label: 'text-red-800 dark:text-red-200',
-                                                    icon: isDark ? "#C84444" : "#A02020",
-                                                    projText: isDark ? '#C07070' : '#7f1d1d'
+                                                    bg: 'bg-error',
+                                                    border: 'border-transparent',
+                                                    text: 'text-on-error',
+                                                    label: 'text-on-error',
+                                                    iconClass: 'text-on-error',
+                                                    projTextClass: 'text-on-error'
                                                 };
-                                            default:
+                                            default: // draft, pending
                                                 return {
-                                                    bg: 'bg-slate-50 dark:bg-slate-800',
-                                                    border: 'border-slate-200 dark:border-slate-700',
-                                                    text: 'text-slate-700 dark:text-slate-200',
-                                                    label: 'text-slate-500 dark:text-slate-400',
-                                                    icon: isDark ? "#94a3b8" : "#64748b",
-                                                    projText: isDark ? '#94a3b8' : '#334155'
+                                                    bg: 'bg-transparent',
+                                                    border: 'border-[1.5px] border-outline-variant',
+                                                    text: 'text-on-surface',
+                                                    label: 'text-on-surface-variant',
+                                                    iconClass: 'text-on-surface',
+                                                    projTextClass: 'text-on-surface'
                                                 };
                                         }
                                     };
@@ -203,7 +190,7 @@ export function LeaveCard({
                                             activeOpacity={0.7}
                                             onPress={() => onPressRequest?.(req)}
                                             className={`
-                                                w-full rounded-lg px-3 py-2.5 border-[1.5px] items-start justify-center
+                                                w-full px-3 py-2.5 items-start justify-center mb-2 border-[1.5px]
                                                 ${colors.bg} ${colors.border}
                                             `}
                                         >
@@ -211,46 +198,48 @@ export function LeaveCard({
                                             <View className="flex-row items-center w-full justify-between">
                                                 <View className="flex-col">
                                                     <View className="flex-row items-center gap-1.5 mb-0.5">
-                                                        <Text className={`text-[10px] font-bold uppercase ${colors.label}`}>
+                                                        <Text className={`text-[10px] font-headline uppercase ${colors.label}`}>
                                                             {req.status}
                                                         </Text>
-                                                        {(req.status === 'draft' || req.status === 'pending') && <Clock size={10} color={colors.icon} />}
+                                                        {(req.status === 'draft' || req.status === 'pending') && (
+                                                            <Clock size={10} color={
+                                                                req.status === 'draft' || req.status === 'pending'
+                                                                    ? (isDark ? '#E5E2E1' : '#1A1B1F')
+                                                                    : undefined
+                                                            } className={colors.iconClass} />
+                                                        )}
                                                     </View>
-                                                    <Text className={`text-xs font-bold ${colors.text}`}>
+                                                    <Text className={`text-xs font-headline ${colors.text}`}>
                                                         {formatDateRange(req.startDate, req.endDate)}
                                                     </Text>
                                                 </View>
-                                                <ChevronRight size={14} color={isDark ? '#94a3b8' : '#64748b'} />
+                                                <ChevronRight size={14} color={isDark ? '#44474F' : '#C4C6D0'} className="text-outline-variant" />
                                             </View>
 
                                             {/* Bottom Row: Projection Data */}
                                             {showProjection && (
-                                                <View className="flex-row items-center gap-3 mt-1.5 pt-1.5 border-t border-dashed"
-                                                    style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }}
-                                                >
+                                                <View className="flex-row items-center gap-3 mt-1.5 pt-1.5 border-t border-dashed border-outline-variant">
                                                     {proj.isUnchargeable ? (
-                                                        <Text className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                                        <Text className="text-[10px] font-headline text-on-surface-variant uppercase tracking-wider">
                                                             No Charge
                                                         </Text>
                                                     ) : (
                                                         <>
                                                             <View className="flex-row items-center gap-1">
-                                                                <Text className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">Avail</Text>
-                                                                <Text className="text-[11px] font-bold font-mono" style={{ color: colors.projText }}>
+                                                                <Text className="text-[9px] font-headline uppercase text-on-surface-variant">Avail</Text>
+                                                                <Text className={`text-[11px] font-bold font-mono ${colors.projTextClass}`}>
                                                                     {formatDays(proj.availableOnDeparture)}
                                                                 </Text>
                                                             </View>
                                                             <View className="flex-row items-center gap-1">
-                                                                <Text className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">Chg</Text>
-                                                                <Text className="text-[11px] font-bold font-mono" style={{ color: colors.projText }}>
+                                                                <Text className="text-[9px] font-headline uppercase text-on-surface-variant">Chg</Text>
+                                                                <Text className={`text-[11px] font-bold font-mono ${colors.projTextClass}`}>
                                                                     {formatDays(req.chargeDays || proj.availableOnDeparture - proj.remainingOnReturn)}
                                                                 </Text>
                                                             </View>
                                                             <View className="flex-row items-center gap-1">
-                                                                <Text className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500">Rem</Text>
-                                                                <Text className={`text-[11px] font-bold font-mono ${proj.isOverdraft ? 'text-red-500' : ''}`}
-                                                                    style={!proj.isOverdraft ? { color: colors.projText } : undefined}
-                                                                >
+                                                                <Text className="text-[9px] font-headline uppercase text-on-surface-variant">Rem</Text>
+                                                                <Text className={`text-[11px] font-bold font-mono ${proj.isOverdraft ? 'text-error' : colors.projTextClass}`}>
                                                                     {formatDays(proj.remainingOnReturn)}
                                                                 </Text>
                                                             </View>
@@ -265,7 +254,7 @@ export function LeaveCard({
                         )}
                     </View>
                 </View>
-            </DashboardCardSurface>
+            </View>
         </View>
     );
 }

@@ -9,7 +9,7 @@
  */
 
 import type { LeaveRequest } from '@/types/schema';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, addMonths, parseISO } from 'date-fns';
 
 // =============================================================================
 // CHARGEABLE TYPE CLASSIFICATION
@@ -225,3 +225,39 @@ export function projectLeaveBalance(input: LeaveProjectionInput): LeaveProjectio
         isUnchargeable,
     };
 }
+
+// =============================================================================
+// 90-DAY PROJECTION (WIDGET LOGIC)
+// =============================================================================
+
+/**
+ * Calculates the projected balance 90 days from now.
+ * Assumes 2.5 days/month accrual (7.5 days total).
+ * Deducts all approved or pending chargeable leave falling within the 90-day window.
+ */
+export function calculate90DayProjection(
+    currentBalance: number,
+    allRequests: LeaveRequest[],
+    now: Date = new Date()
+): number {
+    const accruedDays = 7.5;
+    const threeMonthsFromNow = addMonths(now, 3);
+
+    let chargeableDaysInWindow = 0;
+    
+    allRequests.forEach(req => {
+        if (req.status === 'approved' || req.status === 'pending') {
+            const departureDate = parseISO(req.startDate);
+            if (departureDate <= threeMonthsFromNow && departureDate >= now) {
+                const returnDate = parseISO(req.endDate);
+                const chargeableDays = req.chargeDays > 0
+                    ? req.chargeDays
+                    : Math.max(0, differenceInDays(returnDate, departureDate) + 1);
+                chargeableDaysInWindow += chargeableDays;
+            }
+        }
+    });
+
+    return currentBalance + accruedDays - chargeableDaysInWindow;
+}
+

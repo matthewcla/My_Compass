@@ -1,5 +1,5 @@
 import { SignatureButton } from '@/components/ui/SignatureButton';
-import { LeaveImpactHUD } from '@/components/wizard/LeaveImpactHUD';
+
 import { WizardStatusBar } from '@/components/wizard/WizardStatusBar';
 import { ReviewSign } from '@/components/wizard/steps/ReviewSign';
 import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
@@ -19,7 +19,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { CheckCircle, ChevronLeft } from 'lucide-react-native';
 import React, { useMemo, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Alert, KeyboardAvoidingView, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, Text, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -375,14 +376,20 @@ export default function LeaveRequestScreen() {
         // Offset to trigger "active" state a bit earlier than top-edge
         const triggerPoint = scrollY + (layoutHeight * 0.3);
 
-        let newActive = 0;
+        let newActive = activeStep;
+        let foundValidCoord = false;
+        
         for (let i = 0; i < TOTAL_STEPS; i++) {
-            const sectionTop = sectionCoords.current[i] || 0;
-            if (triggerPoint >= sectionTop) {
-                newActive = i;
+            const sectionTop = sectionCoords.current[i];
+            if (sectionTop !== undefined) {
+                foundValidCoord = true;
+                if (triggerPoint >= sectionTop) {
+                    newActive = i;
+                }
             }
         }
-        if (newActive !== activeStep) {
+        
+        if (foundValidCoord && newActive !== activeStep) {
             setActiveStep(newActive);
         }
     };
@@ -396,14 +403,14 @@ export default function LeaveRequestScreen() {
 
     if (!isHydrated) {
         return (
-            <View className="flex-1 items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <Text className="text-slate-500 font-medium">Loading...</Text>
+            <View className="flex-1 items-center justify-center bg-background">
+                <Text className="text-on-surface-variant font-medium">Loading...</Text>
             </View>
         );
     }
 
     return (
-        <View className="flex-1 bg-slate-50 dark:bg-slate-950" >
+        <View className="flex-1 bg-background" >
             {colorScheme === 'dark' && (
                 <LinearGradient
                     colors={['#0f172a', '#020617']} // slate-900 to slate-950
@@ -415,25 +422,25 @@ export default function LeaveRequestScreen() {
                     {/* Header: StatusBar */}
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
-                        className="bg-white/95 dark:bg-slate-900/95 sticky top-0 z-10 px-4 py-2"
+                        className="bg-surface/95 sticky top-0 z-10 px-4 py-2"
                     >
                         <View className="flex-row items-center gap-3 mb-1 mt-2">
                             <Pressable
                                 onPress={handleExit}
-                                className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                                className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
                             >
-                                <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
+                                <ChevronLeft size={24} color={themeColors.text} />
                             </Pressable>
                             <View className="flex-1">
                                 <Text
                                     style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
-                                    className="text-slate-400 dark:text-gray-500 mb-0"
+                                    className="text-on-surface-variant mb-0"
                                 >
                                     ADMIN FLOW
                                 </Text>
                                 <Text
                                     style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}
-                                    className="text-slate-900 dark:text-white mb-1"
+                                    className="text-on-surface mb-1"
                                 >
                                     Leave Request
                                 </Text>
@@ -517,23 +524,16 @@ export default function LeaveRequestScreen() {
 
                     {/* Floating Footer: HUD + Signature (Simplified for Debugging) */}
                     <View
-                        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
+                        className="absolute bottom-0 left-0 right-0 bg-surface border-t border-outline"
                         style={{ paddingBottom: Math.max(insets.bottom, 20) }}
                     >
                         <View className="pt-4 px-4">
-                            <LeaveImpactHUD
-                                chargeableDays={chargeableDays}
-                                availableOnDeparture={projection.availableOnDeparture}
-                                remainingOnReturn={projection.remainingOnReturn}
-                                isOverdraft={projection.isOverdraft}
-                                isUnchargeable={projection.isUnchargeable}
-                            />
+                            {/* LeaveImpactHUD Widget (Unimplemented) */}
                             <View className="mt-4">
                                 <View className="flex-1">
                                     <SignatureButton
                                         onSign={handleSubmit}
                                         isSubmitting={isSyncing}
-                                        disabled={!(validateStep(0) && validateStep(1) && validateStep(2) && validateStep(3))}
                                     />
                                 </View>
                             </View>
@@ -552,12 +552,16 @@ export default function LeaveRequestScreen() {
                         </Animated.View>
 
                         {/* Content */}
-                        <Animated.View entering={ZoomIn.duration(200)} className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+                        <Animated.View 
+                            entering={ZoomIn.duration(200)} 
+                            className="w-full max-w-sm rounded-none overflow-hidden border-2 shadow-apple-lg"
+                            style={{ backgroundColor: themeColors.surface, borderColor: themeColors.surfaceBorder }}
+                        >
                             <View className="p-6 items-center">
-                                <Text className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
+                                <Text className="text-xl font-bold text-on-surface mb-2 text-center">
                                     Save Draft?
                                 </Text>
-                                <Text className="text-slate-500 dark:text-slate-400 text-center mb-6">
+                                <Text className="text-on-surface-variant text-center mb-6">
                                     Would you like to save this request as a draft before exiting?
                                 </Text>
 
@@ -565,17 +569,17 @@ export default function LeaveRequestScreen() {
                                     {/* Save & Exit */}
                                     <Pressable
                                         onPress={() => confirmExit('save')}
-                                        className="w-full py-3 bg-blue-600 rounded-xl items-center active:bg-blue-700"
+                                        className="w-full py-3 bg-primary rounded-none items-center active:bg-primary-container"
                                     >
-                                        <Text className="text-white font-semibold">Save & Exit</Text>
+                                        <Text className="text-on-primary font-semibold">Save & Exit</Text>
                                     </Pressable>
 
                                     {/* Discard */}
                                     <Pressable
                                         onPress={() => confirmExit('discard')}
-                                        className="w-full py-3 bg-red-50 dark:bg-red-900/20 rounded-xl items-center active:bg-red-100 dark:active:bg-red-900/30"
+                                        className="w-full py-3 bg-error-container rounded-none items-center active:opacity-80"
                                     >
-                                        <Text className="text-red-600 dark:text-red-400 font-semibold">Discard</Text>
+                                        <Text className="text-on-error-container font-semibold">Discard</Text>
                                     </Pressable>
 
                                     {/* Cancel */}
@@ -583,7 +587,7 @@ export default function LeaveRequestScreen() {
                                         onPress={() => setShowExitModal(false)}
                                         className="w-full py-3 mt-2 items-center"
                                     >
-                                        <Text className="text-slate-500 dark:text-slate-400 font-medium">Cancel</Text>
+                                        <Text className="text-on-surface-variant font-medium">Cancel</Text>
                                     </Pressable>
                                 </View>
                             </View>
@@ -607,10 +611,10 @@ export default function LeaveRequestScreen() {
                             <Animated.View entering={ZoomIn.delay(200).springify()}>
                                 <CheckCircle size={100} color="white" strokeWidth={2.5} />
                             </Animated.View>
-                            <Animated.Text entering={FadeInUp.delay(500)} className="text-white text-3xl font-bold mt-8 tracking-tight">
+                            <Animated.Text entering={FadeInUp.delay(500)} className="text-on-primary text-3xl font-bold mt-8 tracking-tight">
                                 Request Sent!
                             </Animated.Text>
-                            <Animated.Text entering={FadeInUp.delay(600)} className="text-blue-100 text-lg mt-3 text-center">
+                            <Animated.Text entering={FadeInUp.delay(600)} className="text-on-primary-container text-lg mt-3 text-center">
                                 Your leave request is on its way{'\n'}to the approver.
                             </Animated.Text>
                         </BlurView>

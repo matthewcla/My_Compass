@@ -44,7 +44,7 @@ This directory contains developer-facing documentation for the My Compass projec
 
 | File | Description |
 |------|-------------|
-| [CLAUDE.md](../CLAUDE.md) | AI agent instructions — tech stack, conventions, rules |
+| [GEMINI.md](../GEMINI.md) | AI agent instructions — tech stack, conventions, rules |
 | [ARCHITECTURE.md](../ARCHITECTURE.md) | High-level architecture and coding constitution |
 | [TIMELINE.md](../TIMELINE.md) | UCT implementation plan with agent prompts |
 | [_AI_CONTEXT.xml](../_AI_CONTEXT.xml) | System kernel constraints (Zero Trust, PII, platform) |

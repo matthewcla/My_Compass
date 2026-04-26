@@ -167,7 +167,7 @@ export default function PCSWizardScreen() {
             <View className="flex-row items-center gap-3 mb-1 mt-2">
               <Pressable
                 onPress={handleExit}
-                className="p-2 -ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
               >
                 <ChevronLeft size={24} color={isDark ? '#e2e8f0' : '#1e293b'} />
               </Pressable>

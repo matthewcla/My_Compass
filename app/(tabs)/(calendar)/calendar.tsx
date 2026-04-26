@@ -2,7 +2,6 @@ import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { ScalePressable } from '@/components/ScalePressable';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { ScannerModal } from '@/components/ui/ScannerModal';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useCareerEvents } from '@/hooks/useCareerEvents';
 import { CareerEvent } from '@/types/career';
@@ -10,9 +9,9 @@ import { getShadow } from '@/utils/getShadow';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { Stack, useFocusEffect } from 'expo-router';
-import { Clock, MapPin, QrCode } from 'lucide-react-native';
+import { Clock, MapPin } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, SectionList, SectionListProps, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, SectionList, SectionListProps, Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,19 +28,25 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
     const isDark = colorScheme === 'dark';
 
     // 1. Determine Date Bubble Styling
-    let bgTint = 'bg-slate-100 dark:bg-slate-700/50';
-    let dateClass = 'text-slate-900 dark:text-white';
-    let monthClass = 'text-slate-500 dark:text-slate-400';
+    let bgTint = 'bg-white dark:bg-[#1c1b1b]';
+    let dateClass = 'text-slate-900 dark:text-[#e5e2e1]';
+    let monthClass = 'text-slate-500 dark:text-[#8e909a]';
+    let borderTint = 'border-slate-200 dark:border-[#44474f]';
 
     if (event.eventType === 'ADVANCEMENT_EXAM') {
-        bgTint = 'bg-blue-50 dark:bg-blue-900/30';
-        dateClass = 'text-[#0A1628] dark:text-blue-400';
-        monthClass = 'text-blue-800/70 dark:text-blue-400/80';
+        bgTint = 'bg-blue-50 dark:bg-[#00204e]';
+        dateClass = 'text-blue-800 dark:text-[#aec6fe]';
+        monthClass = 'text-blue-600 dark:text-[#7189bc]';
+        borderTint = 'border-blue-200 dark:border-[#aec6fe]/30';
     } else if (event.eventType === 'STATUTORY_BOARD') {
-        bgTint = 'bg-[#C9A227]/10 dark:bg-[#C9A227]/20';
-        dateClass = 'text-[#96781D] dark:text-[#C9A227]';
-        monthClass = 'text-[#96781D]/80 dark:text-[#C9A227]/80';
+        bgTint = 'bg-slate-50 dark:bg-[#c6c6c7]/10'; // Tertiary Dim
+        dateClass = 'text-slate-700 dark:text-[#e2e2e2]'; // Tertiary Fixed
+        monthClass = 'text-slate-500 dark:text-[#888989]'; // On-Tertiary Container
+        borderTint = 'border-slate-200 dark:border-[#c6c6c7]/30';
     }
+
+    const isCritical = event.priority === 'CRITICAL';
+    const cardBorder = isCritical ? 'border-t-4 border-t-amber-500 dark:border-t-[#fdc400] border-x border-b border-slate-200 dark:border-[#44474f]' : 'border border-slate-200 dark:border-[#44474f]';
 
     // 2. Format Date
     const dateObj = new Date(event.date);
@@ -51,11 +56,10 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
 
     return (
         <ScalePressable
-            className="bg-white/95 dark:bg-slate-800/90 rounded-2xl mb-4 border border-slate-200/50 dark:border-slate-700/50 flex-row items-center p-4"
-            style={getShadow({ shadowColor: isDark ? '#000000' : '#64748b', shadowOpacity: isDark ? 0.3 : 0.08, shadowRadius: 12, elevation: 3 })}
+            className={`bg-white dark:bg-[#1c1b1b] rounded-none mb-4 flex-row items-center p-4 ${cardBorder}`}
         >
             {/* Left Box: Date Bubble */}
-            <View className={`w-14 h-14 rounded-xl items-center justify-center mr-4 ${bgTint}`}>
+            <View className={`w-14 h-14 rounded-none items-center justify-center mr-4 border ${borderTint} ${bgTint}`}>
                 <Text className={`text-xl font-black leading-tight ${dateClass}`}>
                     {day}
                 </Text>
@@ -67,30 +71,30 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
             {/* Right Box: Details */}
             <View className="flex-1 justify-center">
                 <View className="flex-row items-center gap-2 mb-1">
-                    <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <Text className="text-[10px] font-bold text-slate-500 dark:text-[#8e909a] uppercase tracking-wider">
                         {event.eventType.replace('_', ' ')}
                     </Text>
-                    {event.priority === 'CRITICAL' && (
-                        <View className="px-1.5 py-0.5 bg-red-500/10 dark:bg-red-500/20 rounded-full border border-red-500/20">
-                            <Text className="text-[9px] font-bold text-red-600 dark:text-red-400 uppercase">
+                    {isCritical && (
+                        <View className="px-1.5 py-0.5 border border-amber-400 dark:border-[#fdc400]/50 rounded-none bg-amber-50 dark:bg-[#fdc400]/5">
+                            <Text className="text-[9px] font-bold text-amber-700 dark:text-[#fdc400] uppercase tracking-widest">
                                 Critical
                             </Text>
                         </View>
                     )}
                 </View>
 
-                <Text className="text-base font-bold text-slate-900 dark:text-white mb-2 leading-tight" numberOfLines={2}>
+                <Text className="text-base font-bold text-slate-900 dark:text-[#e5e2e1] mb-2 leading-tight" numberOfLines={2}>
                     {event.title}
                 </Text>
 
                 <View className="flex-row items-center gap-4">
                     <View className="flex-row items-center gap-1.5">
-                        <Clock size={12} color={isDark ? '#94a3b8' : '#64748b'} />
-                        <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">{time}</Text>
+                        <Clock size={12} color={isDark ? "#8e909a" : "#64748b"} />
+                        <Text className="text-xs font-medium text-slate-600 dark:text-[#c4c6d0]">{time}</Text>
                     </View>
                     <View className="flex-row items-center gap-1.5 flex-1">
-                        <MapPin size={12} color={isDark ? '#94a3b8' : '#64748b'} />
-                        <Text className="text-xs font-medium text-slate-500 dark:text-slate-400" numberOfLines={1}>{event.location}</Text>
+                        <MapPin size={12} color={isDark ? "#8e909a" : "#64748b"} />
+                        <Text className="text-xs font-medium text-slate-600 dark:text-[#c4c6d0]" numberOfLines={1}>{event.location}</Text>
                     </View>
                 </View>
             </View>
@@ -103,19 +107,40 @@ const EventCard = React.memo(({ event }: { event: CareerEvent }) => {
 // =============================================================================
 
 // PERFORMANCE FIX: Stable List components
-const ListHeader = () => <View style={{ height: 8 }} />;
+const ScopeToggle = ({ scope, setScope }: { scope: 'personal' | 'command', setScope: (s: 'personal' | 'command') => void }) => (
+    <View className="px-5 py-4">
+        <View className="flex-row border-b border-slate-200 dark:border-[#353534]">
+            <Pressable 
+                onPress={() => setScope('personal')}
+                className={`flex-1 py-3 items-center justify-center ${scope === 'personal' ? 'border-b-2 border-amber-500 dark:border-[#fdc400]' : ''}`}
+            >
+                <Text className={`text-xs font-bold uppercase tracking-wider ${scope === 'personal' ? 'text-slate-900 dark:text-[#e5e2e1]' : 'text-slate-500 dark:text-[#8e909a]'}`}>
+                    My Events
+                </Text>
+            </Pressable>
+            <Pressable 
+                onPress={() => setScope('command')}
+                className={`flex-1 py-3 items-center justify-center ${scope === 'command' ? 'border-b-2 border-amber-500 dark:border-[#fdc400]' : ''}`}
+            >
+                <Text className={`text-xs font-bold uppercase tracking-wider ${scope === 'command' ? 'text-slate-900 dark:text-[#e5e2e1]' : 'text-slate-500 dark:text-[#8e909a]'}`}>
+                    All Events
+                </Text>
+            </Pressable>
+        </View>
+    </View>
+);
 
 // PERFORMANCE FIX: Extract renderSectionHeader to prevent inline reallocation
 const renderSectionHeader = ({ section: { title } }: { section: { title: string } | any }) => (
-    <View className="bg-slate-50/95 dark:bg-black/95 px-5 py-2 z-10">
-        <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+    <View className="bg-slate-50/95 dark:bg-[#131313]/95 px-5 py-2 z-10 border-b border-slate-200 dark:border-[#201f1f] mb-3">
+        <Text className="text-sm font-bold text-slate-600 dark:text-[#8e909a] uppercase tracking-widest">
             {title}
         </Text>
     </View>
 );
 
 export default function CalendarScreen() {
-    const { groupedEvents, loading, refresh } = useCareerEvents();
+    const { groupedEvents, loading, refresh, eventScope, setEventScope } = useCareerEvents();
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -137,24 +162,6 @@ export default function CalendarScreen() {
         value: searchQuery
     };
 
-    // Scanner State
-    const [isScannerOpen, setIsScannerOpen] = useState(false);
-
-    // Mock Handler
-    const handleScan = (data: string) => {
-        // 1. Close Scanner
-        setIsScannerOpen(false);
-
-        // 2. Feedback
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-        // 3. Mock Validation Logic (In real app, parse JSON: { eventId, token })
-
-        // Show Success
-        if (data) {
-            Alert.alert("Check-in Complete", "You have successfully mustered for this event.");
-        }
-    };
 
     // PERFORMANCE FIX: Stable keyExtractor and renderItem
     const keyExtractor = useCallback((item: CareerEvent) => item.eventId, []);
@@ -170,13 +177,14 @@ export default function CalendarScreen() {
 
             <ScreenGradient>
                 <CollapsibleScaffold
-                    statusBarShimBackgroundColor={isDark ? '#0f172a' : '#f8fafc'}
+                    statusBarShimBackgroundColor={isDark ? "#131313" : "#ffffff"}
                     topBar={
                         <ScreenHeader
-                            title=""
+                            title="Events"
                             subtitle=""
                             withSafeArea={false}
                             searchConfig={searchConfig}
+                            showWebMenu={true}
                         />
                     }
                 >
@@ -204,7 +212,7 @@ export default function CalendarScreen() {
                                 renderItem={renderItem}
                                 renderSectionHeader={renderSectionHeader}
                                 contentContainerStyle={contentContainerStyle}
-                                ListHeaderComponent={ListHeader}
+                                ListHeaderComponent={<ScopeToggle scope={eventScope} setScope={setEventScope} />}
                                 stickySectionHeadersEnabled={true}
                                 refreshing={loading}
                                 onRefresh={refresh}
@@ -221,26 +229,6 @@ export default function CalendarScreen() {
                     )}
                 </CollapsibleScaffold>
 
-                {/* FAB: Scan QR Code */}
-                <View className="absolute bottom-28 right-6">
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() => setIsScannerOpen(true)}
-                        accessibilityRole="button"
-                        accessibilityLabel="Open Scanner"
-                        className="w-14 h-14 bg-white/95 dark:bg-slate-800/95 border border-slate-200/60 dark:border-slate-700/60 rounded-full items-center justify-center shadow-lg transform active:scale-95"
-                        style={getShadow({ shadowColor: isDark ? '#000' : '#64748b', shadowOpacity: isDark ? 0.4 : 0.2, shadowRadius: 12, elevation: 8 })}
-                    >
-                        <QrCode size={24} color={isDark ? '#e2e8f0' : '#0f172a'} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Scanner Modal */}
-                <ScannerModal
-                    visible={isScannerOpen}
-                    onClose={() => setIsScannerOpen(false)}
-                    onScan={handleScan}
-                />
             </ScreenGradient>
         </>
     );

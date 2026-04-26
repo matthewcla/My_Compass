@@ -47,6 +47,7 @@ export interface AdminRequest {
     completedAt?: string;            // When the request was completed
     resolutionNote?: string;         // Note from the approver/system on completed requests
     sourceId?: string;               // Original ID from the source store (e.g. leave request ID)
+    isUserActionable?: boolean;      // Derived flag if the current user needs to act on it
 }
 
 export type AdminFilterType =
@@ -67,14 +68,19 @@ interface AdminStoreState {
     activeStatusFilter: AdminStatus | null;
     activeTypeFilter: AdminFilterType;
     lastSyncedAt: string;
+    currentUserRole: string;
 }
 
 interface AdminStoreActions {
     setStatusFilter: (filter: AdminStatus | null) => void;
     setTypeFilter: (filter: AdminFilterType) => void;
+    setCurrentUserRole: (role: string) => void;
     hydrateFromLeaveStore: () => void;
     getFilteredRequests: () => AdminRequest[];
     getCounts: () => { actionRequired: number; inProgress: number; completed: number };
+    submitRequest: (payload: Partial<AdminRequest>) => void;
+    recommendRequest: (id: string, decision: 'approve' | 'disapprove', notes?: string) => void;
+    approveRequest: (id: string, notes?: string) => void;
 }
 
 type AdminStore = AdminStoreState & AdminStoreActions;
@@ -394,10 +400,13 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     activeStatusFilter: null,
     activeTypeFilter: 'ALL',
     lastSyncedAt: NOW,
+    currentUserRole: 'Chief',
 
     setStatusFilter: (filter) => set({ activeStatusFilter: filter }),
 
     setTypeFilter: (filter) => set({ activeTypeFilter: filter }),
+    
+    setCurrentUserRole: (role) => set({ currentUserRole: role }),
 
     hydrateFromLeaveStore: () => {
         const leaveRequests = useLeaveStore.getState().leaveRequests;
@@ -415,9 +424,90 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
         }
     },
 
+    submitRequest: (payload) => {
+        const newReq: AdminRequest = {
+            id: `admin-req-${Date.now()}`,
+            type: payload.type || 'ADMIN_REQUEST',
+            label: payload.label || 'New Request',
+            submittedAt: new Date().toISOString(),
+            currentStepLabel: 'Pending LPO review',
+            approvalChain: [
+                { id: 'sailor', label: 'Sailor', role: 'Requestor', status: 'approved' },
+                { id: 'lpo', label: 'LPO', role: 'Leading Petty Officer', status: 'current' },
+                { id: 'chief', label: 'Chief', role: 'Chief Petty Officer', status: 'pending' },
+                { id: 'divo', label: 'DIVO', role: 'Division Officer', status: 'pending' },
+            ],
+            status: 'in_progress',
+            syncState: 'SAVED_LOCALLY',
+            slaStatus: 'green',
+            daysSinceLastAction: 0,
+            lastSyncedAt: new Date().toISOString(),
+            ...payload,
+        };
+        set(state => ({ requests: [newReq, ...state.requests] }));
+    },
+
+    recommendRequest: (id, decision, notes) => {
+        set(state => {
+            const requests = state.requests.map(req => {
+                if (req.id !== id) return req;
+                const currentIdx = req.approvalChain.findIndex(s => s.status === 'current');
+                if (currentIdx === -1) return req;
+                
+                const newChain = [...req.approvalChain];
+                newChain[currentIdx] = { ...newChain[currentIdx], status: decision === 'approve' ? 'approved' : 'denied' };
+                
+                let nextStatus = req.status;
+                let nextStepLabel = req.currentStepLabel;
+                
+                if (decision === 'disapprove') {
+                    nextStatus = 'completed';
+                    nextStepLabel = `Denied by ${newChain[currentIdx].label}`;
+                } else if (currentIdx + 1 < newChain.length) {
+                    newChain[currentIdx + 1] = { ...newChain[currentIdx + 1], status: 'current' };
+                    nextStepLabel = `Pending ${newChain[currentIdx + 1].label} review`;
+                } else {
+                    nextStatus = 'completed';
+                    nextStepLabel = 'Approved';
+                }
+                
+                return {
+                    ...req,
+                    approvalChain: newChain,
+                    status: nextStatus,
+                    currentStepLabel: nextStepLabel,
+                    resolutionNote: notes,
+                };
+            });
+            return { requests };
+        });
+    },
+
+    approveRequest: (id, notes) => {
+        set(state => {
+            const requests = state.requests.map(req => {
+                if (req.id !== id) return req;
+                const newChain = req.approvalChain.map(s => s.status === 'current' ? { ...s, status: 'approved' as const } : s);
+                return {
+                    ...req,
+                    approvalChain: newChain,
+                    status: 'completed' as AdminStatus,
+                    currentStepLabel: 'Approved',
+                    resolutionNote: notes,
+                    completedAt: new Date().toISOString(),
+                };
+            });
+            return { requests };
+        });
+    },
+
     getFilteredRequests: () => {
-        const { requests, activeStatusFilter, activeTypeFilter } = get();
-        let filtered = [...requests];
+        const { requests, activeStatusFilter, activeTypeFilter, currentUserRole } = get();
+        let filtered = requests.map(req => {
+            const currentStep = req.approvalChain.find(s => s.status === 'current');
+            const isUserActionable = currentStep?.label.toLowerCase() === currentUserRole.toLowerCase();
+            return { ...req, isUserActionable };
+        });
 
         // Status bucket filter
         if (activeStatusFilter) {
@@ -426,7 +516,7 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
 
         // Type chip filter
         if (activeTypeFilter === 'MY_ACTION') {
-            filtered = filtered.filter(r => r.status === 'action_required');
+            filtered = filtered.filter(r => r.isUserActionable);
         } else if (activeTypeFilter !== 'ALL') {
             filtered = filtered.filter(r => r.type === activeTypeFilter);
         }

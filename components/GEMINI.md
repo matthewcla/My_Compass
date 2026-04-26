@@ -1,6 +1,6 @@
 # components/ — Component Conventions
 
-> Read the root `CLAUDE.md` first. This file covers component-specific patterns only.
+> Read the root `GEMINI.md` first. This file covers component-specific patterns only.
 
 ---
 

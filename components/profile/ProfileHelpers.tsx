@@ -1,27 +1,22 @@
 import { LockKeyhole } from 'lucide-react-native';
 import React, { memo } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 
 // ─── Section Card ────────────────────────────────────────
 interface SectionCardProps {
     title: string;
     icon: React.ReactNode;
     children: React.ReactNode;
-    isDark: boolean;
 }
 
-export const SectionCard = memo(function SectionCard({ title, icon, children, isDark }: SectionCardProps) {
+export const SectionCard = memo(function SectionCard({ title, icon, children }: SectionCardProps) {
     return (
-        <View style={{
-            backgroundColor: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-            borderColor: isDark ? 'rgba(51, 65, 85, 0.5)' : 'rgba(226, 232, 240, 0.5)',
-            borderWidth: 1,
-            borderRadius: 16, padding: 20, marginBottom: 12,
-            shadowColor: isDark ? '#000' : '#64748b', shadowOpacity: isDark ? 0.3 : 0.05, shadowRadius: 8, elevation: 2,
+        <View className="bg-white dark:bg-slate-800 border-t border-navyGold p-5 mb-3" style={{
+            shadowColor: '#C9A227', shadowOpacity: 0.1, shadowRadius: 8, elevation: 2,
         }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+            <View className="flex-row items-center mb-3.5">
                 {icon}
-                <Text style={{ color: isDark ? '#F1F5F9' : '#0F172A', fontWeight: '700', fontSize: 17, marginLeft: 10 }}>
+                <Text className="text-slate-900 dark:text-slate-100 font-bold text-[17px] ml-2.5">
                     {title}
                 </Text>
             </View>
@@ -35,16 +30,15 @@ interface InfoRowProps {
     icon: React.ReactNode;
     label: string;
     value: string;
-    isDark: boolean;
 }
 
-export const InfoRow = memo(function InfoRow({ icon, label, value, isDark }: InfoRowProps) {
+export const InfoRow = memo(function InfoRow({ icon, label, value }: InfoRowProps) {
     return (
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
-            <View style={{ width: 28, alignItems: 'center', marginTop: 1 }}>{icon}</View>
-            <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 12, fontWeight: '500', marginBottom: 1 }}>{label}</Text>
-                <Text style={{ color: isDark ? '#E2E8F0' : '#1E293B', fontSize: 15, fontWeight: '500' }}>{value}</Text>
+        <View className="flex-row items-start mb-2.5">
+            <View className="w-7 items-center mt-[1px]">{icon}</View>
+            <View className="flex-1 ml-2">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-[1px]">{label}</Text>
+                <Text className="text-slate-800 dark:text-slate-200 text-[15px] font-medium">{value}</Text>
             </View>
         </View>
     );
@@ -55,26 +49,22 @@ interface MilestoneRowProps {
     label: string;
     date: string;
     daysLeft: number | null;
-    isDark: boolean;
     accentColor: string;
     isLast?: boolean;
 }
 
-export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, isDark, accentColor, isLast }: MilestoneRowProps) {
+export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, accentColor, isLast }: MilestoneRowProps) {
     return (
-        <View style={{
-            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-            paddingVertical: 12, borderBottomWidth: isLast ? 0 : 1, borderBottomColor: isDark ? '#334155' : '#F1F5F9',
-        }}>
-            <View style={{ flex: 1 }}>
-                <Text style={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 12, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+        <View className={`flex-row items-center justify-between py-3 ${isLast ? '' : 'border-b border-slate-200 dark:border-slate-700'}`}>
+            <View className="flex-1">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                     {label}
                 </Text>
-                <Text style={{ color: isDark ? '#E2E8F0' : '#1E293B', fontSize: 16, fontWeight: '600', marginTop: 2 }}>{date}</Text>
+                <Text className="text-slate-800 dark:text-slate-200 text-base font-semibold mt-0.5" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{date}</Text>
             </View>
             {daysLeft !== null && daysLeft > 0 && (
-                <View style={{ backgroundColor: accentColor + '18', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
-                    <Text style={{ color: accentColor, fontSize: 12, fontWeight: '700' }}>{daysLeft}d</Text>
+                <View className="px-2.5 py-1" style={{ backgroundColor: accentColor + '18' }}>
+                    <Text className="text-xs font-bold" style={{ color: accentColor, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{daysLeft}d</Text>
                 </View>
             )}
         </View>
@@ -84,9 +74,9 @@ export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, 
 // ─── Timeline Entry ──────────────────────────────────────
 function getStationTypeBadge(type?: string) {
     switch (type) {
-        case 'AFLOAT': return { label: 'AFLOAT', bg: '#0F172A', text: '#F8FAFC' }; // Slate 900 / Slate 50
-        case 'OCONUS': return { label: 'OCONUS', bg: '#334155', text: '#F1F5F9' }; // Slate 700 / Slate 100
-        case 'CONUS': return { label: 'CONUS', bg: '#64748B', text: '#F8FAFC' }; // Slate 500 / Slate 50
+        case 'AFLOAT': return { label: 'AFLOAT', bgClass: 'bg-slate-800 dark:bg-slate-700', textClass: 'text-slate-50' };
+        case 'OCONUS': return { label: 'OCONUS', bgClass: 'bg-slate-600 dark:bg-slate-500', textClass: 'text-slate-100' };
+        case 'CONUS': return { label: 'CONUS', bgClass: 'bg-slate-400 dark:bg-slate-300', textClass: 'text-slate-900' };
         default: return null;
     }
 }
@@ -96,39 +86,33 @@ interface TimelineEntryProps {
     subtitle: string;
     dates: string;
     type: 'AFLOAT' | 'CONUS' | 'OCONUS';
-    isDark: boolean;
     isLast?: boolean;
     isCurrent?: boolean;
 }
 
-export const TimelineEntry = memo(function TimelineEntry({ title, subtitle, dates, type, isDark, isLast, isCurrent }: TimelineEntryProps) {
+export const TimelineEntry = memo(function TimelineEntry({ title, subtitle, dates, type, isLast, isCurrent }: TimelineEntryProps) {
     const badge = getStationTypeBadge(type);
     return (
-        <View style={{ flexDirection: 'row', marginBottom: isLast ? 0 : 4 }}>
-            <View style={{ width: 28, alignItems: 'center' }}>
-                <View style={{
-                    width: isCurrent ? 12 : 10, height: isCurrent ? 12 : 10, borderRadius: 6,
-                    backgroundColor: isCurrent ? '#C9A227' : (isDark ? '#60A5FA' : '#2563EB'),
-                    marginTop: 4,
-                    ...(isCurrent ? { borderWidth: 2, borderColor: '#C9A22740' } : {}),
-                }} />
+        <View className={`flex-row ${isLast ? 'mb-0' : 'mb-1'}`}>
+            <View className="w-7 items-center">
+                <View className={`mt-1 ${isCurrent ? 'w-3 h-3 bg-navyGold border-2 border-navyGold/25' : 'w-2.5 h-2.5 bg-blue-500 dark:bg-blue-400'}`} />
                 {!isLast && (
-                    <View style={{ width: 2, flex: 1, backgroundColor: isDark ? '#334155' : '#E2E8F0', marginTop: 2 }} />
+                    <View className="w-[2px] flex-1 bg-slate-200 dark:bg-slate-700 mt-0.5" />
                 )}
             </View>
-            <View style={{ flex: 1, paddingBottom: isLast ? 0 : 16, marginLeft: 8 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ color: isDark ? '#F1F5F9' : '#0F172A', fontSize: 15, fontWeight: isCurrent ? '700' : '600', flex: 1 }}>
+            <View className={`flex-1 ml-2 ${isLast ? 'pb-0' : 'pb-4'}`}>
+                <View className="flex-row items-center gap-2">
+                    <Text className={`text-slate-900 dark:text-slate-100 text-[15px] flex-1 ${isCurrent ? 'font-bold' : 'font-semibold'}`}>
                         {title}
                     </Text>
                     {badge && (
-                        <View style={{ backgroundColor: badge.bg, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                            <Text style={{ color: badge.text, fontSize: 9, fontWeight: '800', letterSpacing: 0.3 }}>{badge.label}</Text>
+                        <View className={`px-1.5 py-0.5 ${badge.bgClass}`}>
+                            <Text className={`text-[9px] font-extrabold tracking-widest ${badge.textClass}`}>{badge.label}</Text>
                         </View>
                     )}
                 </View>
-                <Text style={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: 13, marginTop: 1 }}>{subtitle}</Text>
-                <Text style={{ color: isDark ? '#64748B' : '#94A3B8', fontSize: 12, marginTop: 2 }}>{dates}</Text>
+                <Text className="text-slate-500 dark:text-slate-400 text-[13px] mt-[1px]">{subtitle}</Text>
+                <Text className="text-slate-600 dark:text-slate-500 text-xs mt-0.5" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{dates}</Text>
             </View>
         </View>
     );
@@ -139,35 +123,27 @@ interface ControlPillProps {
     label: string;
     isActive: boolean;
     onPress: () => void;
-    isDark: boolean;
     disabled?: boolean;
 }
 
-export const ControlPill = memo(function ControlPill({ label, isActive, onPress, isDark, disabled }: ControlPillProps) {
+export const ControlPill = memo(function ControlPill({ label, isActive, onPress, disabled }: ControlPillProps) {
     return (
         <Pressable
             onPress={disabled ? undefined : onPress}
-            style={{
-                paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20, marginRight: 8,
-                flexDirection: 'row', alignItems: 'center', gap: 5,
-                backgroundColor: isActive
-                    ? (isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.05)')
-                    : 'transparent',
-                borderWidth: 1.5,
-                borderColor: isActive ? '#C9A227' : (isDark ? '#334155' : '#E2E8F0'),
-                ...(isActive ? {
-                    shadowColor: '#C9A227', shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: isDark ? 0.2 : 0.1, shadowRadius: 4, elevation: 2,
-                } : {}),
-            }}
+            className={`px-5 py-3 mr-2 flex-row items-center gap-1.5 border-[1.5px] ${
+                isActive 
+                    ? 'bg-slate-100 dark:bg-white/10 border-navyGold' 
+                    : 'bg-transparent border-slate-200 dark:border-slate-700'
+            }`}
+            style={isActive ? {
+                shadowColor: '#C9A227', shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
+            } : {}}
         >
-            <Text style={{
-                color: isActive ? '#C9A227' : (isDark ? '#94A3B8' : '#64748B'),
-                fontSize: 13, fontWeight: isActive ? '700' : '600',
-            }}>
+            <Text className={`text-[13px] ${isActive ? 'text-navyGold font-bold' : 'text-slate-500 dark:text-slate-400 font-semibold'}`}>
                 {label}
             </Text>
-            {disabled && <LockKeyhole size={12} color={isDark ? '#64748B' : '#94A3B8'} />}
+            {disabled && <LockKeyhole size={12} color="#64748B" />}
         </Pressable>
     );
 });

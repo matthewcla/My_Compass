@@ -1,85 +1,161 @@
-import AdminFeedWidget from '@/components/admin/AdminFeedWidget';
-import DetailerContactWidget from '@/components/assignment/DetailerContactWidget';
-import MNAProcessWidget from '@/components/assignment/MNAProcessWidget';
-import NegotiationWidget from '@/components/assignment/NegotiationWidget';
-import ReadinessWidget from '@/components/assignment/ReadinessWidget';
-import SelectionDetailWidget from '@/components/assignment/SelectionDetailWidget';
 import { CollapsibleScaffold } from '@/components/CollapsibleScaffold';
 import { LeaveCard } from '@/components/dashboard/LeaveCard';
-import { StatusCard } from '@/components/dashboard/StatusCard';
 import { QuickLeaveTicket } from '@/components/leave/QuickLeaveTicket';
-import { ObliservBanner } from '@/components/pcs/financials/ObliservBanner';
 import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
-import { PCSHeroBanner } from '@/components/pcs/PCSHeroBanner';
-import { ArrivalBriefingWidget } from '@/components/pcs/widgets/ArrivalBriefingWidget';
-import { BaseWelcomeKit } from '@/components/pcs/widgets/BaseWelcomeKit';
-import { DigitalOrdersWallet } from '@/components/pcs/widgets/DigitalOrdersWallet';
-import { DigitalSeaBagWidget } from '@/components/pcs/widgets/DigitalSeaBagWidget';
-import { GainingCommandCard } from '@/components/pcs/widgets/GainingCommandCard';
-import { LeaveImpactWidget } from '@/components/pcs/widgets/LeaveImpactWidget';
-import { LiquidationTrackerWidget } from '@/components/pcs/widgets/LiquidationTrackerWidget';
-import { OrdersProcessingWidget } from '@/components/pcs/widgets/OrdersProcessingWidget';
-import { PCSFinancialSnapshot } from '@/components/pcs/widgets/PCSFinancialSnapshot';
-import { PCSMissionBrief } from '@/components/pcs/widgets/PCSMissionBrief';
-import { PCSSummaryWidget } from '@/components/pcs/widgets/PCSSummaryWidget';
-import { PCSTaskTracker } from '@/components/pcs/widgets/PCSTaskTracker';
-import { TransitSegmentWidget } from '@/components/pcs/widgets/TransitSegmentWidget';
-import { TravelClaimHUDWidget } from '@/components/pcs/widgets/TravelClaimHUDWidget';
-import { TravelReceiptLoggerWidget } from '@/components/pcs/widgets/TravelReceiptLoggerWidget';
 import { ScreenGradient } from '@/components/ScreenGradient';
 import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { DemoPhase } from '@/constants/DemoData';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useHubPriority } from '@/hooks/useHubPriority';
 import { useSession } from '@/lib/ctx';
-import { useAssignmentStore } from '@/store/useAssignmentStore';
-import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
+import { useDemoStore, useCurrentProfile } from '@/store/useDemoStore';
 import { useLeaveStore } from '@/store/useLeaveStore';
-import { usePCSPhase, usePCSStore, useSubPhase, useUCTPhaseStatus } from '@/store/usePCSStore';
-import { getShadow } from '@/utils/getShadow';
-import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { Bell } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Bell, Menu } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { Alert, Modal, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, Text, View, ScrollView } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useShallow } from 'zustand/react/shallow';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const AnimatedFlashList = (Platform.OS === 'web'
-    ? FlashList
-    : Animated.createAnimatedComponent(FlashList)) as React.ComponentType<any>;
+const AnimatedScrollView = (Platform.OS === 'web'
+    ? ScrollView
+    : Animated.createAnimatedComponent(ScrollView)) as React.ComponentType<any>;
 
-// P2 FIX #8/#9: Stable component references prevent FlashList re-render thrashing
-const ItemSeparator = () => <View style={{ height: 24 }} />;
-const ListHeader = () => <View style={{ height: 24 }} />;
-const ListFooter = () => <View style={{ height: 250 }} />;
-const getItemType = (item: string) => item;
+// Bento Grid Components
+const ActionRequiredWidget = () => {
+    const actions = useHubPriority();
+    const router = useRouter();
+    const isDark = useColorScheme() === 'dark';
+    const topActions = actions;
 
-const HubMissionStatusItem = React.memo(() => {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
-    const { data } = useDashboardData();
-    const isDemoMode = useDemoStore(state => state.isDemoMode);
-    const demoTimeline = useDemoStore(state => state.demoTimelineOverride);
-    
     return (
-        <View style={getShadow({ shadowColor: isDark ? '#94a3b8' : '#64748b', shadowOpacity: isDark ? 0.1 : 0.12, shadowRadius: 12, elevation: 3 })} className="px-1">
-            <StatusCard
-                nextCycle={data?.cycle?.cycleId ?? '24-02'}
-                daysUntilOpen={isDemoMode && demoTimeline ? demoTimeline.daysUntilOpen : (data?.cycle?.daysRemaining ?? 12)}
-            />
+        <View className="flex-1 bg-surface-container-low rounded-sm p-5 border border-outline-variant border-l-[4px] border-l-secondary-container shadow-apple-sm">
+            <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center gap-2">
+                    <MaterialIcons name="warning" size={20} color={isDark ? Colors.dark.status.warning : Colors.light.status.warning} />
+                    <Text className="font-headline text-lg text-on-surface">Action Required</Text>
+                </View>
+                {topActions.length > 0 && (
+                    <View className="bg-error px-2 py-1 rounded-sm">
+                        <Text className="font-headline text-on-error text-xs">{topActions.length} Pending</Text>
+                    </View>
+                )}
+            </View>
+            
+            {topActions.length === 0 ? (
+                <View className="flex-1 items-center justify-center py-4">
+                    <MaterialIcons name="check-circle" size={40} color={isDark ? Colors.dark.status.success : Colors.light.status.success} />
+                    <Text className="mt-3 font-label text-on-surface-variant text-center">All Caught Up!</Text>
+                </View>
+            ) : (
+                <View className="flex-col gap-3">
+                    {topActions.map((action, i) => (
+                        <Pressable 
+                            key={action.id} 
+                            onPress={() => router.push(action.route as any)}
+                            className="bg-surface-container-lowest active:bg-surface-container-high active:scale-[0.99] transition-transform p-4 rounded-sm border border-outline-variant shadow-sm"
+                        >
+                            {/* Eyebrow Badge Placement */}
+                            {action.dueText && (
+                                <View className="bg-error self-start px-2 py-0.5 rounded-sm mb-2">
+                                    <Text className="font-headline text-on-error text-[9px] uppercase tracking-wider">{action.dueText}</Text>
+                                </View>
+                            )}
+                            
+                            <View className="mb-2">
+                                <Text className="font-headline text-on-surface mb-1">{action.title}</Text>
+                                <Text className="text-on-surface-variant text-xs leading-relaxed">{action.description}</Text>
+                            </View>
+                            
+                            <View className="flex-row items-center mt-2">
+                                {/* Explicit text-white for contrast safety */}
+                                <View className="bg-primary dark:bg-primary-container px-4 py-1.5 rounded-sm shadow-sm">
+                                    <Text className="font-headline text-white dark:text-on-primary-container text-xs">{action.actionText}</Text>
+                                </View>
+                            </View>
+                        </Pressable>
+                    ))}
+                </View>
+            )}
         </View>
     );
-});
+};
+
+const CareerSnapshotWidget = () => {
+    return (
+        <View className="flex-1 bg-primary dark:bg-surface-container-low rounded-sm p-5 border border-primary dark:border-outline-variant shadow-apple-sm justify-between overflow-hidden">
+            <View className="absolute right-[-30px] top-[10px] opacity-10">
+                <MaterialIcons name="star" size={180} color={Colors.dark.labelPrimary} />
+            </View>
+            <View className="z-10">
+                <Text className="font-label text-xs tracking-widest uppercase text-white dark:text-on-surface mb-4">Career Snapshot</Text>
+                <View className="flex-row items-center justify-start mb-4 gap-4">
+                    <View className="w-14 h-14 bg-surface-container-lowest shadow-sm rounded-sm items-center justify-center border border-outline-variant">
+                        <Text className="font-display text-xl text-primary">E5</Text>
+                    </View>
+                    <View className="flex-1">
+                        {/* Explicit text-white for contrast safety */}
+                        <Text className="font-headline text-lg text-white dark:text-on-surface">Petty Officer 2nd Class</Text>
+                        <Text className="font-label text-xs text-white/80 dark:text-on-surface-variant mt-0.5">Time in Rate: 2y 4m</Text>
+                    </View>
+                </View>
+            </View>
+            <View className="z-10 mt-6">
+                <View className="flex-row justify-between items-end mb-2">
+                    <Text className="font-label text-white/80 dark:text-on-surface-variant text-[10px] uppercase tracking-wider">Next Advancement Cycle</Text>
+                    <Text className="font-headline text-white dark:text-on-surface text-sm">Mar 2026</Text>
+                </View>
+                <View className="h-1.5 w-full bg-white/20 dark:bg-surface-container-highest rounded-full overflow-hidden mb-2">
+                    <View className="h-full bg-inverse-primary dark:bg-primary w-[60%] rounded-full" />
+                </View>
+                <View className="flex-row justify-between">
+                    <Text className="font-label text-white/80 dark:text-on-surface-variant text-[9px]">Evals Complete</Text>
+                    <Text className="font-label text-white/80 dark:text-on-surface-variant text-[9px]">Exam Prep</Text>
+                </View>
+            </View>
+        </View>
+    );
+};
+
+const QuickLinksWidget = () => {
+    const router = useRouter();
+    const isDark = useColorScheme() === 'dark';
+    const links = [
+        { icon: 'flight-land', label: 'Check-In', route: '/pcs/check-in' },
+        { icon: 'receipt', label: 'Travel Claim', route: '/travel-claim/request' },
+        { icon: 'event', label: 'Leave', route: '/leave/request' },
+        { icon: 'admin-panel-settings', label: 'Admin', route: '/(tabs)/(admin)' }
+    ];
+
+    return (
+        <View className="flex-1 bg-surface-container-low rounded-sm p-5 border border-outline-variant shadow-apple-sm">
+            <Text className="font-headline text-lg text-on-surface mb-4">Quick Links</Text>
+            <View className="flex-row flex-wrap justify-between gap-y-4">
+                {links.map((link, i) => (
+                    <Pressable 
+                        key={i} 
+                        onPress={() => router.push(link.route as any)}
+                        className="w-[48%] items-center bg-surface-container-lowest active:bg-surface-container-high active:scale-[0.97] transition-transform p-3 rounded-sm border border-outline-variant shadow-sm"
+                    >
+                        <View className="bg-surface-container p-3 rounded-sm mb-2">
+                            <MaterialIcons name={link.icon as any} size={24} color={isDark ? Colors.dark.secondaryContainer : Colors.light.primary} />
+                        </View>
+                        <Text className="font-label text-xs text-center text-on-surface-variant">{link.label}</Text>
+                    </Pressable>
+                ))}
+            </View>
+        </View>
+    );
+};
 
 const HubLeaveItem = React.memo(({ 
-    listRef, 
     onQuickRequest 
 }: { 
-    listRef: React.RefObject<any>, 
     onQuickRequest: () => void 
 }) => {
     const router = useRouter();
@@ -110,18 +186,10 @@ const HubLeaveItem = React.memo(({
             }}
             onQuickRequest={onQuickRequest}
             onFullRequest={() => router.push('/leave/request' as any)}
-            onExpand={(expanded) => {
-                if (expanded) {
-                    setTimeout(() => {
-                        listRef.current?.scrollToEnd({ animated: true });
-                    }, 300);
-                }
-            }}
+            onExpand={() => {}}
         />
     );
 });
-
-type FilterTab = 'Hub' | 'My Career' | 'My Admin';
 
 export default function HubDashboard() {
     const router = useRouter();
@@ -129,11 +197,7 @@ export default function HubDashboard() {
     const user = useCurrentProfile();
     const generateQuickDraft = useLeaveStore(state => state.generateQuickDraft);
     const fetchUserDefaults = useLeaveStore(state => state.fetchUserDefaults);
-    const insets = useSafeAreaInsets();
     const { data, loading, error } = useDashboardData();
-    const [activeFilter, setActiveFilter] = React.useState<FilterTab>('Hub');
-
-    const listRef = React.useRef<any>(null);
 
     // Quick Leave State
     const [showQuickLeave, setShowQuickLeave] = React.useState(false);
@@ -152,27 +216,6 @@ export default function HubDashboard() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
 
-    const isDemoMode = useDemoStore(state => state.isDemoMode);
-    const selectedPhase = useDemoStore(state => state.selectedPhase);
-    const assignmentPhase = useDemoStore(state => state.assignmentPhaseOverride);
-    const demoTimeline = useDemoStore(state => state.demoTimelineOverride);
-    const initializeOrders = usePCSStore(state => state.initializeOrders);
-    const obliserv = usePCSStore(state => state.financials.obliserv);
-    const pcsPhase = usePCSPhase();
-    const subPhase = useSubPhase();
-    const uctPhaseStatus = useUCTPhaseStatus();
-
-    const activeUCTPhase = React.useMemo(() => {
-        const active = Object.entries(uctPhaseStatus).find(([_, status]) => status === 'ACTIVE');
-        return active ? Number(active[0]) : 1;
-    }, [uctPhaseStatus]);
-
-    // QW4: Reactive liquidation state (must be above early returns per Rules of Hooks)
-    const liquidationStatus = usePCSStore((s) => s.financials.liquidation?.currentStatus);
-    const shipments = usePCSStore(state => state.financials.hhg?.shipments ?? []);
-    const hasShipments = shipments.length > 0;
-    const dependentCount = user?.dependents ?? 0;
-
     // Hydrate defaults on mount
     React.useEffect(() => {
         if (user?.id) {
@@ -180,282 +223,10 @@ export default function HubDashboard() {
         }
     }, [user?.id, fetchUserDefaults]);
 
-    // Hydrate billets so DiscoveryStatusCard scoreboard is populated
-    const fetchBillets = useAssignmentStore(state => state.fetchBillets);
-    React.useEffect(() => {
-        fetchBillets();
-    }, [fetchBillets]);
-
-    // Initialize PCS Orders if in PCS Demo Phase
-    React.useEffect(() => {
-        if (isDemoMode && selectedPhase === DemoPhase.MY_PCS) {
-            initializeOrders();
-        }
-    }, [isDemoMode, selectedPhase, initializeOrders]);
-
-
-    // Scroll to top whenever this tab gains focus
-    useFocusEffect(
-        useCallback(() => {
-            listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
-        }, [])
-    );
-
-
-    // QW1: Wrapped in useCallback to prevent FlashList re-creating the callback on every render
-    // QW2: Each widget section gets a FadeInUp stagger for polished entrance
-    // IMPORTANT: Must be above early returns to satisfy Rules of Hooks
-    const renderItem = useCallback(({ item, index }: { item: string; index: number }) => {
-        const delay = index * 60;
-
-        switch (item) {
-            case 'missionStatus':
-                return (
-                    <Animated.View entering={FadeInUp.duration(350).springify()}>
-                        <HubMissionStatusItem />
-                    </Animated.View>
-                );
-            case 'negotiationWidget':
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <NegotiationWidget
-                            onStartExploring={() => router.push({ pathname: '/(career)/discovery', params: { returnPath: '/(tabs)/(hub)' } } as any)}
-                            onManageSlate={() => router.push('/(career)/cycle' as any)}
-                        />
-                    </Animated.View>
-                );
-            case 'transitSegmentWidget': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <TransitSegmentWidget />
-                    </Animated.View>
-                );
-            }
-            case 'travelReceiptLoggerWidget': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <TravelReceiptLoggerWidget />
-                    </Animated.View>
-                );
-            }
-
-
-            case 'digitalOrdersWallet': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <DigitalOrdersWallet />
-                    </Animated.View>
-                );
-            }
-            case 'pcsFinancialSnapshot': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSFinancialSnapshot />
-                    </Animated.View>
-                );
-            }
-            case 'gainingCommandCard': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <GainingCommandCard />
-                    </Animated.View>
-                );
-            }
-            case 'leaveImpact': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <LeaveImpactWidget />
-                    </Animated.View>
-                );
-            }
-            case 'slateSummary': {
-                // Return null since we removed this view, but keeping the case in case of legacy usage
-                return null;
-            }
-            case 'digitalSeaBag': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <DigitalSeaBagWidget />
-                    </Animated.View>
-                );
-            }
-            case 'adminFeed': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <AdminFeedWidget />
-                    </Animated.View>
-                );
-            }
-            case 'mnaProcess': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <MNAProcessWidget />
-                    </Animated.View>
-                );
-            }
-            case 'careerReadiness': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <ReadinessWidget />
-                    </Animated.View>
-                );
-            }
-            case 'detailerContact': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <DetailerContactWidget />
-                    </Animated.View>
-                );
-            }
-            case 'selectionDetail': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <SelectionDetailWidget />
-                    </Animated.View>
-                );
-            }
-            case 'pcsSummaryWidget': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSSummaryWidget />
-                    </Animated.View>
-                );
-            }
-            case 'ordersProcessingWidget': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <OrdersProcessingWidget />
-                    </Animated.View>
-                );
-            }
-            case 'pcsHeroBanner': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSHeroBanner />
-                    </Animated.View>
-                );
-            }
-            case 'baseWelcomeKit': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <BaseWelcomeKit />
-                    </Animated.View>
-                );
-            }
-            case 'arrivalBriefing': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <ArrivalBriefingWidget />
-                    </Animated.View>
-                );
-            }
-            case 'travelClaimHUD': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <TravelClaimHUDWidget />
-                    </Animated.View>
-                );
-            }
-            case 'travelClaimUrgency': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <TravelClaimHUDWidget />
-                    </Animated.View>
-                );
-            }
-            case 'liquidationTracker': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <LiquidationTrackerWidget />
-                    </Animated.View>
-                );
-            }
-            case 'pcsTaskTracker': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSTaskTracker />
-                    </Animated.View>
-                );
-            }
-            case 'missionBrief': {
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <PCSMissionBrief />
-                    </Animated.View>
-                );
-            }
-            case 'obliserv':
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <ObliservBanner variant="widget" />
-                    </Animated.View>
-                );
-            case 'leave':
-                return (
-                    <Animated.View entering={FadeInUp.delay(delay).duration(350).springify()}>
-                        <HubLeaveItem listRef={listRef} onQuickRequest={handleQuickRequest} />
-                    </Animated.View>
-                );
-            default:
-                return null;
-        }
-    }, [router, handleQuickRequest]);
-
-    const sections = React.useMemo(() => {
-        const feed: string[] = [];
-
-        // Priority 0: Core Status (Always Top)
-        feed.push('missionStatus');
-
-        // Priority 1: Critical Action Items (OBLISERV only applies during Selection before orders are released)
-        if (assignmentPhase === 'SELECTION') {
-            feed.push('obliserv');
-        }
-
-        // Priority 2: PCS Lifecycle Integration
-        // Surface the correct Phase Core Widget based on assignment/PCS lifecycle moment
-        if (assignmentPhase === 'ORDERS_PROCESSING') {
-            // Focus: Tracking administrative order steps
-            feed.push('ordersProcessingWidget');
-        } else if (assignmentPhase === 'ORDERS_RELEASED' || pcsPhase === 'CHECK_IN') {
-            // Focus: Active PCS Workflow
-            if (activeUCTPhase === 3) {
-                // Exceptional case: Operational Travel Tools trump the UCT visually
-                feed.push('transitSegmentWidget');
-                feed.push('travelReceiptLoggerWidget');
-                // Removed redundant receiptCapture and missionBrief components to resolve conflict
-            } else if (activeUCTPhase === 4) {
-                // Focus: Post-Arrival reporting procedures
-                feed.push('arrivalBriefing');
-            } else {
-                // Focus: Plan Your Move & Check-in. Summary Dashboard linking to workflows.
-                feed.push('pcsSummaryWidget');
-            }
-            feed.push('digitalOrdersWallet');
-        } else {
-            // Priority 3: Career Discovery & Selection Details (if NOT in PCS processing)
-            if (assignmentPhase === 'SELECTION') {
-                feed.push('selectionDetail');
-            } else if (assignmentPhase === 'ON_RAMP') {
-                feed.push('careerReadiness');
-                feed.push('discoveryStatus');
-            } else if (assignmentPhase === 'NEGOTIATION') {
-                feed.push('negotiationWidget'); // Consolidated Billet Explorer & Slate Summary
-            }
-        }
-
-        // Anchor: Universal Utilities (Never omit these, sit at the bottom of the feed)
-        feed.push('digitalSeaBag');
-        feed.push('leave');
-
-        return feed;
-    }, [assignmentPhase, pcsPhase, subPhase, liquidationStatus, hasShipments, dependentCount, activeUCTPhase]);
-
     // Loading state
     if (loading && !data) {
         return (
             <ScreenGradient>
-                {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <HubSkeleton />
             </ScreenGradient>
         );
@@ -465,7 +236,6 @@ export default function HubDashboard() {
     if (error && !data) {
         return (
             <ScreenGradient>
-                {/* <ScreenHeader title="HUB" subtitle={renderGreeting()} /> */}
                 <View className="flex-1 items-center justify-center px-8">
                     <Text className="text-slate-400 text-center">{error}</Text>
                 </View>
@@ -473,49 +243,69 @@ export default function HubDashboard() {
         );
     }
 
-
     return (
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 topBar={
-                    <BlurView intensity={isDark ? 85 : 70} tint={isDark ? "dark" : "light"} className="overflow-hidden">
-                        {/* Inner Glass Top-Glow Highlight */}
-                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.6)' }} />
-
-                        <View className="flex-row items-center justify-between px-4 pt-3 pb-3">
-                            <View className="flex-row items-center">
-                                <Text
-                                    style={{
-                                        textShadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.4)',
-                                        textShadowOffset: { width: 0, height: 1 },
-                                        textShadowRadius: 4,
-                                        color: isDark ? '#FFFFFF' : '#0F172A'
-                                    }}
-                                    className="text-[28px] font-black tracking-tighter"
-                                >
+                    <View className="overflow-hidden bg-surface-container-lowest">
+                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? Colors.dark.surfaceBorder : Colors.light.surfaceBorder }} />
+                        <View className="flex-row items-center justify-between px-5 pt-3 pb-3">
+                            <View className="flex-row items-center gap-3">
+                                {Platform.OS === 'web' && (
+                                    <Pressable
+                                        onPress={() => {
+                                            const { toggleDrawer } = require('@/store/useUIStore').useUIStore.getState();
+                                            toggleDrawer();
+                                        }}
+                                        hitSlop={12}
+                                        className="p-2.5 rounded-xl hover:bg-slate-900/5 dark:hover:bg-white/10 active:scale-95 transition-all duration-200 ease-out"
+                                    >
+                                        {({ pressed, hovered }: any) => (
+                                            <Menu 
+                                                color={isDark ? "#f8fafc" : Colors.light.text} 
+                                                size={24} 
+                                                style={{ 
+                                                    opacity: pressed ? 0.7 : (hovered ? 0.9 : 1),
+                                                    transform: [{ scale: hovered && !pressed ? 1.05 : 1 }]
+                                                }}
+                                            />
+                                        )}
+                                    </Pressable>
+                                )}
+                                <Text className="text-2xl font-display tracking-tighter text-primary dark:text-white">
                                     MyCompass
                                 </Text>
                             </View>
-
-                            <Pressable
-                                onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
-                                hitSlop={12}
-                                className="w-10 h-10 rounded-full items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 active:opacity-70"
-                            >
-                                <Bell color={isDark ? '#E2E8F0' : '#334155'} size={20} strokeWidth={2.5} />
-                            </Pressable>
+                            <View className="flex items-center">
+                                <Pressable
+                                    onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
+                                    hitSlop={12}
+                                    className="p-2.5 rounded-xl hover:bg-slate-900/5 dark:hover:bg-white/10 active:scale-95 transition-all duration-200 ease-out"
+                                >
+                                    {({ pressed, hovered }: any) => (
+                                        <Bell 
+                                            color={isDark ? "#f8fafc" : Colors.light.text} 
+                                            size={24} 
+                                            style={{ 
+                                                opacity: pressed ? 0.7 : (hovered ? 0.9 : 1),
+                                                transform: [{ scale: hovered && !pressed ? 1.05 : 1 }]
+                                            }}
+                                        />
+                                    )}
+                                </Pressable>
+                            </View>
                         </View>
                         <View
                             className="w-full"
                             style={{
-                                height: 1, // Using integer value instead of StyleSheet.hairlineWidth for consistency
-                                backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                                height: 1,
+                                backgroundColor: isDark ? Colors.dark.surfaceBorder : Colors.light.surfaceBorder
                             }}
                         />
-                    </BlurView>
+                    </View>
                 }
-                contentContainerStyle={{ paddingHorizontal: 16 }}
+                contentContainerStyle={{ paddingHorizontal: 0 }}
             >
                 {({
                     onScroll,
@@ -527,27 +317,68 @@ export default function HubDashboard() {
                     scrollEventThrottle,
                     contentContainerStyle
                 }) => (
-                    <AnimatedFlashList
-                        ref={listRef}
-                        data={sections}
-                        renderItem={renderItem}
-                        getItemType={getItemType}
-                        ItemSeparatorComponent={ItemSeparator}
-                        ListHeaderComponent={ListHeader}
-                        ListFooterComponent={ListFooter}
-
-                        estimatedItemSize={220}
-                        style={{ flex: 1 }}
-                        showsVerticalScrollIndicator={false}
-                        scrollEventThrottle={scrollEventThrottle}
+                    <AnimatedScrollView
                         onScroll={onScroll}
                         onScrollBeginDrag={onScrollBeginDrag}
                         onScrollEndDrag={onScrollEndDrag}
                         onLayout={onLayout}
                         onContentSizeChange={onContentSizeChange}
                         scrollEnabled={scrollEnabled}
-                        contentContainerStyle={contentContainerStyle}
-                    />
+                        scrollEventThrottle={scrollEventThrottle}
+                        contentContainerStyle={[contentContainerStyle, { paddingBottom: 150 }]}
+                        showsVerticalScrollIndicator={false}
+                        className="flex-1"
+                    >
+                        {/* Header Image Area */}
+                        <View className="relative w-full h-48 md:h-64 bg-black overflow-hidden border-b-4 border-secondary-container mb-6">
+                            <LinearGradient
+                                colors={['rgba(0,0,0,0.8)', 'transparent']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 0.66, y: 0 }}
+                                style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '100%', zIndex: 10 }}
+                            />
+                            <Image
+                                source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlk0EQB3AeeQZRB_5FtVwpVzBeqCT1W0966Y_uc6miRy4RCqlHyN9u54wBUvBVHYSZRT4jH_YTMJBVtfzeOFakU7hnZeBDqDQc4kr75YMTipBs1Q-HH3H_CLaPpMIHeQAKyvdSp7yqWaR97VxVKNC2goiGrKZUb3eKHO3sYi9P4Bit9Zm5XVJPzd744sVbF4gk13iIY5aFsSs-Yl0VPPeMoJ5IILKO0levwWL_ggbVRUN-lfLGR_OIlDWX1XhwAsFq_JerR59KS3o' }}
+                                style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.5 }}
+                                contentFit="cover"
+                            />
+                            <View className="absolute bottom-6 left-5 z-20">
+                                <Text className="font-label text-secondary-container tracking-widest text-sm mb-1 uppercase">MyNavy HR</Text>
+                                <Text className="font-display text-4xl md:text-5xl text-white tracking-tighter uppercase leading-none">FEED</Text>
+                            </View>
+                        </View>
+
+                        {/* Bento Grid Layout */}
+                        <View className="px-4 md:px-6 pb-6 flex-col gap-4">
+                            {/* Greeting Section */}
+                            <View className="mb-2 mt-2">
+                                <Text className="font-display text-2xl text-primary dark:text-on-surface mb-1">Good Morning, Petty Officer</Text>
+                                <Text className="font-headline text-on-surface-variant text-sm">Here is your daily briefing and required actions.</Text>
+                            </View>
+
+                            {/* Top Row */}
+                            <View className="flex-col md:flex-row gap-4 w-full">
+                                <Animated.View entering={FadeInUp.delay(0).duration(350).springify()} className="flex-1 md:flex-[2]">
+                                    <ActionRequiredWidget />
+                                </Animated.View>
+                                <Animated.View entering={FadeInUp.delay(50).duration(350).springify()} className="flex-1 md:flex-[1]">
+                                    <CareerSnapshotWidget />
+                                </Animated.View>
+                            </View>
+                            
+                            {/* Bottom Row */}
+                            <View className="flex-col md:flex-row gap-4 w-full">
+                                <Animated.View entering={FadeInUp.delay(100).duration(350).springify()} className="flex-1 md:flex-[2]">
+                                    <HubLeaveItem onQuickRequest={handleQuickRequest} />
+                                </Animated.View>
+                                <Animated.View entering={FadeInUp.delay(150).duration(350).springify()} className="flex-1 md:flex-[1]">
+                                    <QuickLinksWidget />
+                                </Animated.View>
+                            </View>
+                            {/* Spacer to clear bottom pill */}
+                            <View className="h-24 w-full" />
+                        </View>
+                    </AnimatedScrollView>
                 )}
             </CollapsibleScaffold>
 
@@ -561,7 +392,7 @@ export default function HubDashboard() {
                     setQuickLeaveDraft(null);
                 }}
             >
-                <View className="flex-1 justify-center px-4 bg-slate-900/20 dark:bg-black/60 shadow-[0_0_50px_rgba(0,0,0,0.3)] dark:shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                <View className="flex-1 justify-center px-4 bg-slate-900 dark:bg-black/80 shadow-none">
                     <Pressable
                         className="absolute inset-0"
                         onPress={() => {

@@ -1,4 +1,4 @@
-# CLAUDE.md — My Compass Constitution
+# GEMINI.md — My Compass Constitution
 
 > This is the single authoritative instruction file for all AI agents working on this codebase.
 > Every rule here is mandatory. When in doubt, re-read Section 1.
@@ -215,7 +215,7 @@ This app must align with the USN Data Governance Framework. These rules apply wh
 | **Understandable** | Zod schemas document data shape; field names are self-describing |
 | **Linked** | Related data uses consistent foreign keys and references across stores |
 | **Trustworthy** | All external data validated with Zod at the boundary before entering the app |
-| **Interoperable** | All data access goes through standardized service interfaces (see `services/api/CLAUDE.md`) |
+| **Interoperable** | All data access goes through standardized service interfaces (see `services/api/GEMINI.md`) |
 | **Secure** | Storage tiers enforced (Rule 4.5, 4.6); Zero Trust assumed for all external data |
 
 **Data Quality Awareness (7 DOW Dimensions):**
@@ -239,7 +239,7 @@ When designing schemas and validation, consider: **Accuracy, Completeness, Confo
 
 ### 4.12 Agent Autonomy & File Mutability
 
-- **NEVER:** Modify `CLAUDE.md` files or any documentation in the `docs/` directory unless explicitly instructed by the user.
+- **NEVER:** Modify `GEMINI.md` files or any documentation in the `docs/` directory unless explicitly instructed by the user.
 - **ALWAYS:** Ask for permission before updating structural guidelines or core instructions.
 - **WHY:** Agents should focus on implementation, not unilaterally rewriting project governance.
 
@@ -324,7 +324,7 @@ export const useFeatureLoading = () => useFeatureStore(s => s.isLoading);
 - Section comments: `// --- State ---`, `// --- Actions ---`
 - Offline-first: load from storage → display → fetch background → persist
 - Export selector hooks for granular subscriptions
-- See `store/CLAUDE.md` for full store conventions.
+- See `store/GEMINI.md` for full store conventions.
 
 ### 5.3 Flow Pattern (Wizard)
 
@@ -388,7 +388,7 @@ Before creating any new component, flow, widget, or tool — check the relevant 
 | Built tools | `docs/TOOLS_IMPLEMENTED.md` | Before building a new tool |
 | Planned but unbuilt tools | `docs/TOOLS_NOT_IMPLEMENTED.md` | When scoping new tool work |
 | USN Data Governance (VAULTIS, Zero Trust, Data Quality) | `docs/USN_DATA_GOVERNANCE_SUMMARY.md` | Before designing data models, APIs, or storage patterns |
-| API integration governance, service contracts, DSA patterns | `services/api/CLAUDE.md` | Before building or modifying service implementations |
+| API integration governance, service contracts, DSA patterns | `services/api/GEMINI.md` | Before building or modifying service implementations |
 
 ---
 
@@ -403,15 +403,15 @@ app/                    # Expo Router file-based routes (entry point)
   inbox/                # Inbox/messaging
   _layout.tsx           # Root layout (providers, AuthGuard)
   sign-in.tsx           # Auth entry
-components/             # Reusable components (see components/CLAUDE.md)
+components/             # Reusable components (see components/GEMINI.md)
   ui/                   # Generic UI primitives
   wizard/               # Wizard step components
   pcs/                  # PCS feature components
   [feature]/            # Feature-specific component groups
-store/                  # Zustand stores (see store/CLAUDE.md)
+store/                  # Zustand stores (see store/GEMINI.md)
 hooks/                  # Custom React hooks
 services/               # Business logic & API clients
-  api/                  # REST client, interfaces, mocks, registry (see services/api/CLAUDE.md)
+  api/                  # REST client, interfaces, mocks, registry (see services/api/GEMINI.md)
   syncQueue.ts          # Offline mutation queue
   storage.ts            # Unified SQLite + AsyncStorage interface
 types/                  # TypeScript types & Zod schemas

@@ -36,7 +36,7 @@ export default function CareerDashboard() {
                 <Animated.View entering={FadeInDown.duration(600).springify().damping(20)}>
                     <View className="mb-8 items-center justify-center">
                         <View className="absolute">
-                            <Compass size={120} color={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'} strokeWidth={1} />
+                            <Compass size={120} color={isDark ? '#18181B' : '#F1F5F9'} strokeWidth={1} />
                         </View>
                         <Animated.View entering={FadeIn.delay(300).duration(800)}>
                             <View style={styles.iconCircle}>
@@ -78,20 +78,20 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: 'rgba(201, 162, 39, 0.15)', // Navy Gold tint
+        backgroundColor: '#FEF3C7', // Navy Gold tint
         alignItems: 'center',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(201, 162, 39, 0.3)',
+        borderColor: '#FDE68A',
     },
     glassMockCard: {
         width: '100%',
         marginTop: 48,
         padding: 20,
         borderRadius: 24,
-        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+        backgroundColor: '#FFFFFF',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderColor: '#E2E8F0',
         overflow: 'hidden',
         opacity: 0.6,
     }

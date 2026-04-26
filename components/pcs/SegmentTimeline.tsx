@@ -41,16 +41,16 @@ export const SegmentTimeline = () => {
 
                             {/* Icon Column */}
                             <View className="mr-4 items-center z-10">
-                                <View className={`w-8 h-8 rounded-full items-center justify-center border-2 ${isComplete ? 'bg-blue-600 border-blue-600' :
-                                        isPlanning ? 'bg-white dark:bg-slate-900 border-blue-600' :
+                                <View className={`w-8 h-8 rounded-none items-center justify-center border-2 ${isComplete ? 'bg-primary dark:bg-blue-600 border-primary dark:border-blue-600' :
+                                        isPlanning ? 'bg-white dark:bg-slate-900 border-primary dark:border-blue-600' :
                                             'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600'
                                     }`}>
                                     {isComplete ? (
-                                        <Check size={16} color="white" />
+                                        <Check size={16} color="white" strokeWidth={3} />
                                     ) : isLocked ? (
-                                        <Lock size={14} color={isDark ? '#94a3b8' : '#cbd5e1'} />
+                                        <Lock size={14} color={isDark ? '#94a3b8' : '#64748b'} />
                                     ) : (
-                                        <Edit2 size={14} color={Colors[colorScheme ?? 'light'].tint} />
+                                        <Edit2 size={14} color={isDark ? Colors.dark.tint : '#0A1628'} />
                                     )}
                                 </View>
                             </View>
@@ -59,19 +59,19 @@ export const SegmentTimeline = () => {
                             <Pressable
                                 onPress={handlePress}
                                 disabled={!isPlanning && !isComplete}
-                                className={`flex-1 rounded-xl p-3 ${isPlanning ? 'bg-blue-50/50 dark:bg-slate-800/50 border border-blue-100 dark:border-blue-900' : ''
+                                className={`flex-1 rounded-none p-3 ${isPlanning ? 'bg-slate-50 dark:bg-slate-800 border-2 border-primary dark:border-blue-500' : ''
                                     }`}
                             >
                                 <View className="flex-row justify-between items-start mb-1">
-                                    <Text className={`font-bold text-base ${isPlanning ? 'text-blue-700 dark:text-blue-400' :
+                                    <Text className={`font-bold text-base ${isPlanning ? 'text-primary dark:text-blue-400' :
                                             isLocked ? 'text-slate-400 dark:text-slate-500' :
                                                 'text-slate-900 dark:text-white'
                                         }`}>
                                         {segment.location.name}
                                     </Text>
                                     {isPlanning && (
-                                        <Text className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded">
-                                            Current
+                                        <Text className="text-xs font-bold text-secondary dark:text-blue-400 bg-primary dark:bg-blue-900/40 px-2 py-0.5 rounded-none border border-secondary dark:border-blue-400">
+                                            CURRENT
                                         </Text>
                                     )}
                                 </View>
@@ -90,17 +90,17 @@ export const SegmentTimeline = () => {
 
                                 {/* Entry Affordance */}
                                 {(isPlanning || isComplete) && (
-                                    <View className="flex-row items-center justify-end mt-3 pt-2 border-t border-slate-100 dark:border-slate-700/50">
+                                    <View className="flex-row items-center justify-end mt-3 pt-2 border-t-2 border-slate-200 dark:border-slate-700">
                                         <Text className={`text-xs font-bold mr-1 ${isPlanning
-                                                ? 'text-blue-600 dark:text-blue-400'
+                                                ? 'text-primary dark:text-blue-400'
                                                 : 'text-slate-500 dark:text-slate-400'
                                             }`}>
-                                            {isPlanning ? 'Plan Travel' : 'View Plan'}
+                                            {isPlanning ? 'PLAN TRAVEL' : 'VIEW PLAN'}
                                         </Text>
                                         <ChevronRight
                                             size={14}
                                             color={isPlanning
-                                                ? (isDark ? '#60a5fa' : '#2563eb')
+                                                ? (isDark ? '#60a5fa' : '#0A1628')
                                                 : (isDark ? '#94a3b8' : '#64748b')
                                             }
                                             strokeWidth={2.5}

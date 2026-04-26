@@ -2,10 +2,11 @@
 // Top status strip — three tappable buckets: Action Required / In Progress / Completed
 // Now includes "Last synced" footer and improved active state with glow effect.
 
-import { DashboardCardSurface } from '@/components/ui/DashboardCardSurface';
-import { useColorScheme } from '@/components/useColorScheme';
+import { SolidView } from '@/components/ui/SolidView';
 import { AdminStatus, useAdminStore } from '@/store/useAdminStore';
 import { getShadow } from '@/utils/getShadow';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -14,44 +15,12 @@ interface BucketConfig {
     key: AdminStatus;
     label: string;
     icon: typeof AlertTriangle;
-    colors: {
-        activeText: string;
-        iconActive: string;
-        iconInactive: string;
-    };
 }
 
 const BUCKETS: BucketConfig[] = [
-    {
-        key: 'action_required',
-        label: 'Action\nRequired',
-        icon: AlertTriangle,
-        colors: {
-            activeText: 'text-amber-900 dark:text-amber-100',
-            iconActive: '#d97706',
-            iconInactive: '#64748b',
-        },
-    },
-    {
-        key: 'in_progress',
-        label: 'In\nProgress',
-        icon: Clock,
-        colors: {
-            activeText: 'text-blue-900 dark:text-blue-100',
-            iconActive: '#2563eb',
-            iconInactive: '#64748b',
-        },
-    },
-    {
-        key: 'completed',
-        label: 'Completed',
-        icon: CheckCircle,
-        colors: {
-            activeText: 'text-green-900 dark:text-green-100',
-            iconActive: '#15803d',
-            iconInactive: '#64748b',
-        },
-    },
+    { key: 'action_required', label: 'Action\nRequired', icon: AlertTriangle },
+    { key: 'in_progress', label: 'In\nProgress', icon: Clock },
+    { key: 'completed', label: 'Completed', icon: CheckCircle },
 ];
 
 interface AdminHealthBarProps {
@@ -59,11 +28,12 @@ interface AdminHealthBarProps {
 }
 
 export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
     const requests = useAdminStore(state => state.requests);
     const activeFilter = useAdminStore(state => state.activeStatusFilter);
     const setStatusFilter = useAdminStore(state => state.setStatusFilter);
+    const colorScheme = useColorScheme() ?? 'light';
+    const isDark = colorScheme === 'dark';
+    const themeColors = Colors[colorScheme];
 
     const counts = useMemo(() => ({
         actionRequired: requests.filter(r => r.status === 'action_required').length,
@@ -80,9 +50,10 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
     const allClear = counts.actionRequired === 0;
 
     return (
-        <DashboardCardSurface
-            intensity={70}
-            className="rounded-xl"
+        <SolidView
+            intensity={100}
+            tint="default"
+            className="rounded-none border-2 border-outline-variant bg-surface"
         >
                 <View className="flex-row items-stretch p-2 gap-2">
                     {BUCKETS.map((bucket) => {
@@ -90,32 +61,53 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                         const count = countMap[bucket.key];
                         const Icon = bucket.icon;
 
-                        const iconColorActive = isDark
-                            ? (bucket.key === 'action_required' ? '#fbbf24' : bucket.key === 'in_progress' ? '#60a5fa' : '#4ade80')
-                            : bucket.colors.iconActive;
+                        const getBucketColors = (key: AdminStatus) => {
+                            switch (key) {
+                                case 'action_required':
+                                    return {
+                                        activeText: 'text-secondary',
+                                        iconActive: themeColors.status.warning,
+                                        iconInactive: isDark ? '#475569' : '#64748B',
+                                    };
+                                case 'in_progress':
+                                    return {
+                                        activeText: 'text-primary',
+                                        iconActive: Colors.blue[isDark ? 500 : 600],
+                                        iconInactive: isDark ? '#475569' : '#64748B',
+                                    };
+                                case 'completed':
+                                    return {
+                                        activeText: 'text-on-surface',
+                                        iconActive: themeColors.status.success,
+                                        iconInactive: isDark ? '#475569' : '#64748B',
+                                    };
+                            }
+                        };
+                        const colors = getBucketColors(bucket.key);
+                        const iconColorActive = colors.iconActive;
 
                         return (
                             <TouchableOpacity
                                 key={bucket.key}
                                 activeOpacity={0.7}
                                 onPress={() => setStatusFilter(isActive ? null : bucket.key)}
-                                className={`flex-1 items-center justify-center py-2.5 px-2 rounded-lg border ${isActive
-                                    ? 'bg-slate-100/80 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600'
+                                className={`flex-1 items-center justify-center py-2.5 px-2 rounded-none border-2 ${isActive
+                                    ? 'bg-surface-container-highest border-outline'
                                     : 'bg-transparent border-transparent'
                                     }`}
                             >
                                 <Icon
                                     size={16}
-                                    color={isActive ? iconColorActive : bucket.colors.iconInactive}
+                                    color={isActive ? iconColorActive : colors.iconInactive}
                                     strokeWidth={2.5}
                                 />
                                 <Text
-                                    className={`text-2xl font-black mt-0.5 ${isActive ? bucket.colors.activeText : 'text-slate-700 dark:text-slate-200'}`}
+                                    className={`text-2xl font-black mt-0.5 ${isActive ? colors.activeText : 'text-on-surface'}`}
                                 >
                                     {count}
                                 </Text>
                                 <Text
-                                    className={`text-[8px] font-bold uppercase tracking-wider text-center leading-[11px] ${isActive ? bucket.colors.activeText : 'text-slate-500 dark:text-slate-400'}`}
+                                    className={`text-[8px] font-bold uppercase tracking-wider text-center leading-[11px] ${isActive ? colors.activeText : 'text-on-surface-variant'}`}
                                     numberOfLines={2}
                                 >
                                     {bucket.label}
@@ -127,8 +119,8 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
 
                 {/* All Clear Banner */}
                 {allClear && (
-                    <View className="bg-green-50 dark:bg-green-900/20 px-4 py-1.5 border-t border-green-100 dark:border-green-800/30">
-                        <Text className="text-green-700 dark:text-green-300 text-xs font-bold text-center">
+                    <View className="bg-primary-container px-4 py-1.5 border-t-2 border-primary-container">
+                        <Text className="text-on-primary-container text-xs font-bold text-center">
                             ✅ All clear — no pending actions
                         </Text>
                     </View>
@@ -136,12 +128,12 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
 
                 {/* Last Synced Footer */}
                 {lastSyncedLabel && (
-                    <View className="border-t border-slate-100 dark:border-slate-700/50 px-3 py-1.5">
-                        <Text className="text-[10px] font-medium text-slate-400 dark:text-slate-500 text-center">
+                    <View className="border-t-2 border-outline-variant px-3 py-1.5">
+                        <Text className="text-[10px] font-medium text-on-surface-variant text-center">
                             Last synced: {lastSyncedLabel}
                         </Text>
                     </View>
                 )}
-            </DashboardCardSurface>
+            </SolidView>
     );
 }

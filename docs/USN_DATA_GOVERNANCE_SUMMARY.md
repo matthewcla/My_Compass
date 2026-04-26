@@ -78,7 +78,7 @@ Per USN Data Governance Framework §3.5, every external API integration should d
 | Dispute Resolution | Methods for mitigating risks and resolving disputes |
 | Termination Terms | Conditions and notice periods for ending the agreement |
 
-In My Compass, we implement this as `@DSA` JSDoc blocks on `real*Service.ts` files. See `services/api/CLAUDE.md` for the pattern.
+In My Compass, we implement this as `@DSA` JSDoc blocks on `real*Service.ts` files. See `services/api/GEMINI.md` for the pattern.
 
 ---
 

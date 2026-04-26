@@ -30,7 +30,7 @@ export function groupEventsByMonth(events: CareerEvent[]): Section<CareerEvent>[
 }
 
 export function useCareerEvents() {
-    const { events, isLoading, fetchEvents } = useCareerStore();
+    const { events, isLoading, fetchEvents, eventScope, setEventScope } = useCareerStore();
 
     useEffect(() => {
         fetchEvents();
@@ -47,5 +47,7 @@ export function useCareerEvents() {
         groupedEvents,
         loading: isLoading,
         refresh,
+        eventScope,
+        setEventScope,
     };
 }

@@ -41,27 +41,25 @@ export const PCSChecklist = () => {
                 <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 px-1">
                     {title}
                 </Text>
-                <View className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
+                <View className="bg-white dark:bg-slate-800 rounded-none overflow-hidden border-2 border-slate-200 dark:border-slate-800 shadow-apple-lg">
                     {items.map((item, index) => {
                         const isLast = index === items.length - 1;
                         const isComplete = item.status === 'COMPLETE';
 
                         return (
-                            <View key={item.id} className={`flex-row items-center p-4 ${!isLast ? 'border-b border-slate-100 dark:border-slate-700' : ''}`}>
-                                <View className={`w-5 h-5 rounded-full border items-center justify-center mr-3 ${isComplete ? 'bg-green-500 border-green-500' :
-                                        isActionRequired ? 'border-blue-500' :
-                                            'border-slate-300 dark:border-slate-600'
+                            <View key={item.id} className={`flex-row items-center p-4 ${!isLast ? 'border-b-2 border-slate-200 dark:border-slate-800' : ''}`}>
+                                <View className={`w-5 h-5 rounded-none border-2 items-center justify-center mr-3 ${isComplete ? 'bg-green-600 border-green-600' :
+                                        isActionRequired ? 'bg-white border-primary dark:border-blue-500' :
+                                            'bg-slate-50 border-slate-300 dark:bg-slate-900 dark:border-slate-600'
                                     }`}>
-                                    {isComplete && <Check size={12} color="white" />}
-                                    {isActionRequired && !isComplete && <View className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
+                                    {isComplete && <Check size={12} color="white" strokeWidth={3} />}
+                                    {isActionRequired && !isComplete && <View className="w-2 h-2 rounded-none bg-primary dark:bg-blue-500" />}
                                 </View>
                                 <View className="flex-1">
                                     <Text className={`text-base font-medium ${isComplete ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'
                                         }`}>
                                         {item.label}
                                     </Text>
-
-
                                 </View>
                             </View>
                         );

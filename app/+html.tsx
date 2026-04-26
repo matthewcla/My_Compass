@@ -22,6 +22,12 @@ export default function Root({ children }: { children: React.ReactNode }) {
 
         {/* Using raw CSS styles as an escape-hatch to ensure the background color never flickers in dark-mode. */}
         <style dangerouslySetInnerHTML={{ __html: globalCss }} />
+        
+        {/* Google Fonts for Web/PWA explicitly linked to bypass expo-font SSG injection failures */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        
         {/* Add any additional <head> elements that you want globally available on web... */}
       </head>
       <body>

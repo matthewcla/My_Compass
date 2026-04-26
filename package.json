@@ -74,7 +74,7 @@
     "@types/jest": "29.5.14",
     "@types/react": "~19.1.0",
     "babel-plugin-transform-import-meta": "^2.3.3",
-    "jest-expo": "^55.0.16",
+    "jest-expo": "~54.0.17",
     "module-alias": "^2.3.4",
     "react-test-renderer": "19.1.0",
     "ts-morph": "^27.0.2",

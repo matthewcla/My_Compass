@@ -5,7 +5,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import Colors from '@/constants/Colors';
 import { FlashList } from '@shopify/flash-list';
 import React, { useCallback, useRef, useState } from 'react';
-import { Platform, View, Text } from 'react-native';
+import { Platform, View, Text, useColorScheme } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { AdminHealthBar } from '@/components/admin/AdminHealthBar';
@@ -25,6 +25,7 @@ const ListFooter = () => <View style={{ height: 250 }} />;
 
 export default function AdminDashboard() {
     const listRef = useRef<any>(null);
+    const colorScheme = useColorScheme() ?? 'light';
     const activeStatusFilter = useAdminStore(state => state.activeStatusFilter);
     const activeTypeFilter = useAdminStore(state => state.activeTypeFilter);
     const allRequests = useAdminStore(state => state.requests);
@@ -62,10 +63,10 @@ export default function AdminDashboard() {
     return (
         <ScreenGradient>
             <CollapsibleScaffold
-                statusBarShimBackgroundColor={Colors.gradient.dark[0]}
+                statusBarShimBackgroundColor={colorScheme === 'dark' ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 minTopBarHeight={0}
                 topBar={
-                    <View className="bg-black">
+                    <View className="bg-transparent dark:bg-black">
                         <ScreenHeader
                             title="Admin"
                             subtitle="Command Center"

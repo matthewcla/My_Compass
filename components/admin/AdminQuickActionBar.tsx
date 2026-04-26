@@ -4,6 +4,8 @@
 import { SolidView } from '@/components/ui/SolidView';
 import { getShadow } from '@/utils/getShadow';
 import { useRouter } from 'expo-router';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 import {
     Calendar,
     FileText,
@@ -23,6 +25,8 @@ interface QuickAction {
 export function AdminQuickActionBar() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const colorScheme = useColorScheme() ?? 'light';
+    const isDark = colorScheme === 'dark';
 
     const actions: QuickAction[] = [
         {
@@ -54,7 +58,7 @@ export function AdminQuickActionBar() {
         <View
             style={{
                 position: 'absolute',
-                bottom: tabBarHeight + 8,
+                bottom: tabBarHeight + 48,
                 left: 0,
                 right: 0,
             }}
@@ -62,7 +66,7 @@ export function AdminQuickActionBar() {
             <View style={[
                 { marginHorizontal: 16 },
                 getShadow({
-                    shadowColor: '#000',
+                    shadowColor: isDark ? '#000' : '#64748b',
                     shadowOpacity: 0.4,
                     shadowRadius: 16,
                     elevation: 8,
@@ -70,8 +74,8 @@ export function AdminQuickActionBar() {
             ]}>
                 <SolidView
                     intensity={100}
-                    tint="dark"
-                    className="rounded-sm overflow-hidden border border-slate-700/50"
+                    tint="default"
+                    className="rounded-sm overflow-hidden border border-slate-200 dark:border-slate-700/50"
                 >
                     <View className="flex-row items-center justify-around py-3 px-2">
                         {actions.map((action) => {
@@ -84,14 +88,14 @@ export function AdminQuickActionBar() {
                                     className="items-center justify-center px-3 py-2"
                                     style={{ minWidth: 64, minHeight: 44 }}
                                 >
-                                    <View className="bg-slate-800 w-10 h-10 rounded-sm items-center justify-center mb-1 border border-slate-700/50">
+                                    <View className="bg-slate-100 dark:bg-slate-800 w-10 h-10 rounded-sm items-center justify-center mb-1 border border-slate-200 dark:border-slate-700/50">
                                         <Icon
                                             size={18}
-                                            color="#e2e8f0"
+                                            color={isDark ? '#e2e8f0' : '#475569'}
                                             strokeWidth={2}
                                         />
                                     </View>
-                                    <Text className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                                    <Text className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                                         {action.label}
                                     </Text>
                                 </TouchableOpacity>

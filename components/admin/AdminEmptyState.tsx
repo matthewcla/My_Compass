@@ -2,6 +2,7 @@
 // Positive empty state when no active admin requests are pending.
 
 import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 import { ShieldCheck } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
@@ -15,7 +16,7 @@ export function AdminEmptyState() {
             <View className="bg-green-100 dark:bg-green-900/30 p-6 rounded-full mb-5">
                 <ShieldCheck
                     size={48}
-                    color={isDark ? '#4ade80' : '#15803d'}
+                    color={Colors[colorScheme ?? 'light'].status.success}
                     strokeWidth={1.5}
                 />
             </View>

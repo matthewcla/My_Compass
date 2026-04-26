@@ -117,7 +117,7 @@ export default function InboxScreen() {
                             {item.subject}
                         </Text>
                         <Text className="text-sm text-slate-400" numberOfLines={2}>
-                            {item.snippet || item.body}
+                            {item.body}
                         </Text>
                     </View>
                     <Pressable

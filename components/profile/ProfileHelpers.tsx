@@ -1,6 +1,6 @@
 import { LockKeyhole } from 'lucide-react-native';
 import React, { memo } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 
 // ─── Section Card ────────────────────────────────────────
 interface SectionCardProps {
@@ -12,11 +12,11 @@ interface SectionCardProps {
 export const SectionCard = memo(function SectionCard({ title, icon, children }: SectionCardProps) {
     return (
         <View style={{
-            backgroundColor: 'rgba(30, 41, 59, 0.9)',
-            borderColor: 'rgba(51, 65, 85, 0.5)',
-            borderWidth: 1,
+            backgroundColor: '#1E293B',
+            borderTopColor: '#C9A227',
+            borderTopWidth: 1,
             borderRadius: 0, padding: 20, marginBottom: 12,
-            shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, elevation: 2,
+            shadowColor: '#C9A227', shadowOpacity: 0.1, shadowRadius: 8, elevation: 2,
         }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
                 {icon}
@@ -67,11 +67,11 @@ export const MilestoneRow = memo(function MilestoneRow({ label, date, daysLeft, 
                 <Text style={{ color: '#94A3B8', fontSize: 12, fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase' }}>
                     {label}
                 </Text>
-                <Text style={{ color: '#E2E8F0', fontSize: 16, fontWeight: '600', marginTop: 2 }}>{date}</Text>
+                <Text style={{ color: '#E2E8F0', fontSize: 16, fontWeight: '600', marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{date}</Text>
             </View>
             {daysLeft !== null && daysLeft > 0 && (
                 <View style={{ backgroundColor: accentColor + '18', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 0 }}>
-                    <Text style={{ color: accentColor, fontSize: 12, fontWeight: '700' }}>{daysLeft}d</Text>
+                    <Text style={{ color: accentColor, fontSize: 12, fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{daysLeft}d</Text>
                 </View>
             )}
         </View>
@@ -124,7 +124,7 @@ export const TimelineEntry = memo(function TimelineEntry({ title, subtitle, date
                     )}
                 </View>
                 <Text style={{ color: '#94A3B8', fontSize: 13, marginTop: 1 }}>{subtitle}</Text>
-                <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2 }}>{dates}</Text>
+                <Text style={{ color: '#64748B', fontSize: 12, marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{dates}</Text>
             </View>
         </View>
     );
@@ -143,7 +143,7 @@ export const ControlPill = memo(function ControlPill({ label, isActive, onPress,
         <Pressable
             onPress={disabled ? undefined : onPress}
             style={{
-                paddingHorizontal: 18, paddingVertical: 9, borderRadius: 0, marginRight: 8,
+                paddingHorizontal: 20, paddingVertical: 12, borderRadius: 0, marginRight: 8,
                 flexDirection: 'row', alignItems: 'center', gap: 5,
                 backgroundColor: isActive
                     ? 'rgba(255, 255, 255, 0.08)'

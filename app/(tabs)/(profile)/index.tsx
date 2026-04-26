@@ -31,6 +31,7 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
+    Platform,
     Pressable,
     ScrollView,
     Text,
@@ -191,20 +192,22 @@ export default function ProfileScreen() {
                             <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
                                 Personal Awards
                             </Text>
-                            {personalAwards.map((award, idx) => (
-                                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                        <Award size={14} color="#C9A227" style={{ marginRight: 8 }} />
-                                        <Text style={{ color: '#E2E8F0', fontSize: 13, fontWeight: '500' }}>{award.name}</Text>
-                                        {award.count && award.count > 1 && (
-                                            <View style={{ backgroundColor: '#334155', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8 }}>
-                                                <Text style={{ color: '#F1F5F9', fontSize: 10, fontWeight: '800' }}>{award.count}</Text>
-                                            </View>
-                                        )}
+                            <View style={{ backgroundColor: '#000000', borderWidth: 1, borderColor: '#334155', borderRadius: 0 }}>
+                                {personalAwards.map((award, idx) => (
+                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: idx < personalAwards.length - 1 ? 1 : 0, borderBottomColor: '#334155' }}>
+                                        <Award size={16} color="#C9A227" style={{ marginRight: 12 }} />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{award.name}</Text>
+                                        </View>
+                                        <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+                                            {award.count && award.count > 1 ? (
+                                                <Text style={{ color: '#F59E0B', fontSize: 14, fontWeight: '800', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
+                                            ) : null}
+                                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
+                                        </View>
                                     </View>
-                                    <Text style={{ color: '#64748B', fontSize: 12 }}>{formatDate(award.date)}</Text>
-                                </View>
-                            ))}
+                                ))}
+                            </View>
                         </View>
                     )}
 
@@ -213,20 +216,22 @@ export default function ProfileScreen() {
                             <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
                                 Unit Awards
                             </Text>
-                            {unitAwards.map((award, idx) => (
-                                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                        <Flag size={14} color="#60A5FA" style={{ marginRight: 8 }} />
-                                        <Text style={{ color: '#E2E8F0', fontSize: 13, fontWeight: '500' }}>{award.name}</Text>
-                                        {award.count && award.count > 1 && (
-                                            <View style={{ backgroundColor: '#334155', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8 }}>
-                                                <Text style={{ color: '#F1F5F9', fontSize: 10, fontWeight: '800' }}>{award.count}</Text>
-                                            </View>
-                                        )}
+                            <View style={{ backgroundColor: '#000000', borderWidth: 1, borderColor: '#334155', borderRadius: 0 }}>
+                                {unitAwards.map((award, idx) => (
+                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: idx < unitAwards.length - 1 ? 1 : 0, borderBottomColor: '#334155' }}>
+                                        <Flag size={16} color="#60A5FA" style={{ marginRight: 12 }} />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{award.name}</Text>
+                                        </View>
+                                        <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+                                            {award.count && award.count > 1 ? (
+                                                <Text style={{ color: '#60A5FA', fontSize: 14, fontWeight: '800', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
+                                            ) : null}
+                                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
+                                        </View>
                                     </View>
-                                    <Text style={{ color: '#64748B', fontSize: 12 }}>{formatDate(award.date)}</Text>
-                                </View>
-                            ))}
+                                ))}
+                            </View>
                         </View>
                     )}
 
@@ -235,20 +240,22 @@ export default function ProfileScreen() {
                             <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
                                 Campaign Medals
                             </Text>
-                            {campaignAwards.map((award, idx) => (
-                                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                        <Shield size={14} color="#EF4444" style={{ marginRight: 8 }} />
-                                        <Text style={{ color: '#E2E8F0', fontSize: 13, fontWeight: '500' }}>{award.name}</Text>
-                                        {award.count && award.count > 1 && (
-                                            <View style={{ backgroundColor: '#334155', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8 }}>
-                                                <Text style={{ color: '#F1F5F9', fontSize: 10, fontWeight: '800' }}>{award.count}</Text>
-                                            </View>
-                                        )}
+                            <View style={{ backgroundColor: '#000000', borderWidth: 1, borderColor: '#334155', borderRadius: 0 }}>
+                                {campaignAwards.map((award, idx) => (
+                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: idx < campaignAwards.length - 1 ? 1 : 0, borderBottomColor: '#334155' }}>
+                                        <Shield size={16} color="#EF4444" style={{ marginRight: 12 }} />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{award.name}</Text>
+                                        </View>
+                                        <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+                                            {award.count && award.count > 1 ? (
+                                                <Text style={{ color: '#EF4444', fontSize: 14, fontWeight: '800', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
+                                            ) : null}
+                                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
+                                        </View>
                                     </View>
-                                    <Text style={{ color: '#64748B', fontSize: 12 }}>{formatDate(award.date)}</Text>
-                                </View>
-                            ))}
+                                ))}
+                            </View>
                         </View>
                     )}
 
@@ -257,20 +264,22 @@ export default function ProfileScreen() {
                             <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
                                 Service Awards
                             </Text>
-                            {serviceAwards.map((award, idx) => (
-                                <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                        <Star size={14} color="#6EE7B7" style={{ marginRight: 8 }} />
-                                        <Text style={{ color: '#E2E8F0', fontSize: 13, fontWeight: '500' }}>{award.name}</Text>
-                                        {award.count && award.count > 1 && (
-                                            <View style={{ backgroundColor: '#334155', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8 }}>
-                                                <Text style={{ color: '#F1F5F9', fontSize: 10, fontWeight: '800' }}>{award.count}</Text>
-                                            </View>
-                                        )}
+                            <View style={{ backgroundColor: '#000000', borderWidth: 1, borderColor: '#334155', borderRadius: 0 }}>
+                                {serviceAwards.map((award, idx) => (
+                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: idx < serviceAwards.length - 1 ? 1 : 0, borderBottomColor: '#334155' }}>
+                                        <Star size={16} color="#6EE7B7" style={{ marginRight: 12 }} />
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ color: '#E2E8F0', fontSize: 14, fontWeight: '600' }}>{award.name}</Text>
+                                        </View>
+                                        <View style={{ alignItems: 'flex-end', marginLeft: 12 }}>
+                                            {award.count && award.count > 1 ? (
+                                                <Text style={{ color: '#6EE7B7', fontSize: 14, fontWeight: '800', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>x{award.count}</Text>
+                                            ) : null}
+                                            <Text style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{formatDate(award.date)}</Text>
+                                        </View>
                                     </View>
-                                    <Text style={{ color: '#64748B', fontSize: 12 }}>{formatDate(award.date)}</Text>
-                                </View>
-                            ))}
+                                ))}
+                            </View>
                         </View>
                     )}
                 </SectionCard>
@@ -597,15 +606,10 @@ export default function ProfileScreen() {
                         showsVerticalScrollIndicator={false}
                     >
                         {/* ── Cover Banner ─────────────────────────────────── */}
-                        <LinearGradient
-                            colors={['#0A1628', '#1E3A5F', '#0F2847']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ height: 140, position: 'relative' }}
-                        >
-                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, backgroundColor: 'rgba(0,0,0,0.15)' }} />
+                        <View style={{ height: 140, position: 'relative', backgroundColor: '#000000' }}>
+                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, backgroundColor: 'rgba(255,255,255,0.02)' }} />
                             <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, backgroundColor: '#C9A227' }} />
-                        </LinearGradient>
+                        </View>
 
                         {/* ── Avatar ───────────────────────────────────────── */}
                         <Animated.View entering={FadeIn.duration(300)} style={{ alignItems: 'flex-start', paddingHorizontal: 20, marginTop: -50 }}>
@@ -665,7 +669,7 @@ export default function ProfileScreen() {
                             <ScrollView
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 16 }}
+                                contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 24 }}
                             >
                                 <ControlPill label="Professional" isActive={activeTab === 'professional'} onPress={handleProfessionalPress} />
                                 <ControlPill label="Personal" isActive={activeTab === 'personal'} onPress={handlePersonalPress} />

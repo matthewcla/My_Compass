@@ -240,13 +240,15 @@ export default function HubDashboard() {
 
                         <View className="flex-row items-center justify-between px-5 pt-3 pb-3">
                             <View className="flex-row items-center gap-3">
-                                <Pressable
-                                    onPress={() => Alert.alert('Menu', 'Menu opened')}
-                                    hitSlop={12}
-                                    className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
-                                >
-                                    <Menu color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
-                                </Pressable>
+                                {Platform.OS === 'web' && (
+                                    <Pressable
+                                        onPress={() => Alert.alert('Menu', 'Menu opened')}
+                                        hitSlop={12}
+                                        className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
+                                    >
+                                        <Menu color={isDark ? '#aec6fe' : '#0F172A'} size={24} />
+                                    </Pressable>
+                                )}
                                 <Text
                                     className="text-xl font-black font-headline uppercase tracking-tighter text-primary dark:text-primary"
                                 >

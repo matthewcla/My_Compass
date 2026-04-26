@@ -242,7 +242,10 @@ export default function HubDashboard() {
                             <View className="flex-row items-center gap-3">
                                 {Platform.OS === 'web' && (
                                     <Pressable
-                                        onPress={() => Alert.alert('Menu', 'Menu opened')}
+                                        onPress={() => {
+                                            const { toggleDrawer } = require('@/store/useUIStore').useUIStore.getState();
+                                            toggleDrawer();
+                                        }}
                                         hitSlop={12}
                                         className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
                                     >
@@ -252,7 +255,7 @@ export default function HubDashboard() {
                                 <Text
                                     className="text-xl font-black font-headline uppercase tracking-tighter text-primary dark:text-primary"
                                 >
-                                    ANCHOR POINT
+                                    HOME HUB
                                 </Text>
                             </View>
 

@@ -249,6 +249,7 @@ export default function InboxScreen() {
                             subtitle=""
                             withSafeArea={false}
                             searchConfig={searchConfig}
+                            showWebMenu={true}
                         />
                     </View>
                 }

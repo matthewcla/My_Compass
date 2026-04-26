@@ -4,6 +4,7 @@ import { PCSDevPanel } from '@/components/pcs/PCSDevPanel';
 import { ControlPill, InfoRow, MilestoneRow, SectionCard, TimelineEntry } from '@/components/profile/ProfileHelpers';
 import { ProfileTimelineTab } from '@/components/profile/ProfileTimelineTab';
 import { ScreenGradient } from '@/components/ScreenGradient';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { DemoUser } from '@/constants/DemoData';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useProfileTimelineStore } from '@/store/useProfileTimelineStore';
@@ -585,7 +586,7 @@ export default function ProfileScreen() {
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={'#0f172a'}
-                topBar={<View />}
+                topBar={<ScreenHeader title="" subtitle="" showWebMenu={true} />}
                 contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
             >
                 {({

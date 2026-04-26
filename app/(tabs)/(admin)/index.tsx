@@ -70,6 +70,7 @@ export default function AdminDashboard() {
                             title="Admin"
                             subtitle="Command Center"
                             withSafeArea={false}
+                            showWebMenu={true}
                         />
                     </View>
                 }

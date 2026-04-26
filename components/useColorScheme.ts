@@ -16,15 +16,6 @@ export function useColorScheme(): 'light' | 'dark' {
         } catch (e) {
             console.warn('[Theme] nativewindColorScheme.set error:', e);
         }
-
-        // Web fallback: Ensure the dark class is forcefully applied to the HTML element
-        if (typeof document !== 'undefined' && document.documentElement) {
-            if (effectiveScheme === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        }
     }, [effectiveScheme]);
 
     return effectiveScheme;

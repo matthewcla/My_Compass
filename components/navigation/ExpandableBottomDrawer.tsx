@@ -143,7 +143,7 @@ export default function ExpandableBottomDrawer() {
     // Base floating margin dynamically scaled if standard insets (like Home Indicator) are present
     const COLLAPSED_BOTTOM_MARGIN = insets.bottom > 0 ? insets.bottom : 16;
     const RESTING_TOP_OFFSET_FROM_BOTTOM = HEIGHT_COLLAPSED + COLLAPSED_BOTTOM_MARGIN;
-    const isHidden = pathname?.includes('/discovery') || pathname?.includes('/manifest') || pathname?.includes('/cycle');
+    const isHidden = Platform.OS === 'web' || pathname?.includes('/discovery') || pathname?.includes('/manifest') || pathname?.includes('/cycle');
 
     // Report global space used so the scaffold clears the resting pill correctly
     useEffect(() => {

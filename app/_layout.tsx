@@ -27,6 +27,7 @@ import { AuthGuard } from '@/components/navigation/AuthGuard';
 import { SessionTimeoutOverlay } from '@/components/SessionTimeoutOverlay';
 import { ThemeTransitionOverlay } from '@/components/ThemeTransitionOverlay';
 import { KeyboardActionToolbar } from '@/components/ui/KeyboardActionToolbar';
+import { NavigationDrawer } from '@/components/ui/NavigationDrawer';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { SessionProvider, useSession } from '@/lib/ctx';
@@ -173,6 +174,7 @@ function InnerLayout() {
           onExtend={resetTimer}
         />
         <KeyboardActionToolbar />
+        <NavigationDrawer />
       </View>
     </>
   );

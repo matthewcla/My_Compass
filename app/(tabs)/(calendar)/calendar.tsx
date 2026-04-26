@@ -203,6 +203,7 @@ export default function CalendarScreen() {
                             subtitle=""
                             withSafeArea={false}
                             searchConfig={searchConfig}
+                            showWebMenu={true}
                         />
                     }
                 >

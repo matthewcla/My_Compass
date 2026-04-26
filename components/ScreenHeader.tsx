@@ -1,7 +1,8 @@
-
 import { SearchConfig } from '@/store/useHeaderStore';
+import { useUIStore } from '@/store/useUIStore';
+import { Menu } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ScreenHeaderProps {
@@ -12,6 +13,7 @@ interface ScreenHeaderProps {
     withSafeArea?: boolean;
     variant?: 'large' | 'inline';
     searchConfig?: SearchConfig | null;
+    showWebMenu?: boolean;
 }
 
 export function ScreenHeader({
@@ -21,14 +23,22 @@ export function ScreenHeader({
     rightAction,
     withSafeArea = true,
     variant = 'large',
-    searchConfig
+    searchConfig,
+    showWebMenu = false
 }: ScreenHeaderProps) {
     const GLOBAL_SEARCH_RADIUS = 24;
 
     const insets = useSafeAreaInsets();
+    const toggleDrawer = useUIStore(state => state.toggleDrawer);
 
     const isInline = variant === 'inline';
-    const hasHeaderContent = Boolean(title || subtitle || rightAction);
+    const hasHeaderContent = Boolean(title || subtitle || rightAction || (showWebMenu && Platform.OS === 'web') || leftAction);
+    
+    // Web menu replaces left action if true and on web, and no explicit leftAction was provided
+    const actualLeftAction = (showWebMenu && Platform.OS === 'web' && !leftAction)
+        ? { icon: Menu, onPress: toggleDrawer }
+        : leftAction;
+
     return (
         <View className="z-50">
             {hasHeaderContent && (
@@ -41,14 +51,14 @@ export function ScreenHeader({
                     className={`flex-row justify-between items-center relative z-50`}
                 >
                     <View className="flex-row items-center flex-1 mr-4">
-                        {leftAction && (
+                        {actualLeftAction && (
                             <Pressable
-                                onPress={leftAction.onPress}
+                                onPress={actualLeftAction.onPress}
                                 hitSlop={12}
                                 className="mr-2"
                             >
                                 {({ pressed }) => {
-                                    const LeftIcon = leftAction.icon;
+                                    const LeftIcon = actualLeftAction.icon;
                                     return (
                                         <LeftIcon
                                             color="#ffffff"

@@ -44,30 +44,30 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
                 <SolidView
                     intensity={100}
                     tint="default"
-                    className={`rounded-none overflow-hidden border-2 ${isActionable ? 'border-amber-400/50 bg-white dark:bg-slate-900' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'}`}
+                    className={`rounded-none overflow-hidden border-2 ${isActionable ? 'border-secondary/50 bg-surface' : 'border-outline-variant bg-surface'}`}
                 >
                     <View className="flex-row items-center px-4 py-4 gap-4">
                         {/* Days counter */}
                         <View className="items-center" style={{ minWidth: 40 }}>
                             <Text className={`text-[20px] font-black tracking-tight ${request.slaStatus === 'red' ? 'text-error' :
                                 request.slaStatus === 'amber' ? 'text-secondary' :
-                                    'text-slate-900 dark:text-slate-300'
+                                    'text-on-surface'
                                 }`} numberOfLines={1}>
                                 {request.daysSinceLastAction}
                             </Text>
-                            <Text className="text-[9px] font-bold uppercase text-slate-600 dark:text-slate-500 tracking-wider">
+                            <Text className="text-[9px] font-bold uppercase text-on-surface-variant tracking-wider">
                                 days
                             </Text>
                         </View>
 
                         {/* Content */}
                         <View className="flex-1">
-                            <Text className="text-[15px] font-[800] text-slate-900 dark:text-white tracking-[-0.2px] mb-1" numberOfLines={1}>
+                            <Text className="text-[15px] font-[800] text-on-surface tracking-[-0.2px] mb-1" numberOfLines={1}>
                                 {request.label}
                             </Text>
                             <View className="flex-row items-center gap-2">
-                                <View className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-none border border-slate-300 dark:border-slate-700">
-                                    <Text className="text-[9px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                <View className="bg-surface-container-highest px-2 py-0.5 rounded-none border border-outline-variant">
+                                    <Text className="text-[9px] font-black text-on-surface-variant uppercase tracking-wider">
                                         {level}
                                     </Text>
                                 </View>
@@ -83,7 +83,7 @@ export function AdminRequestCard({ request, onPress, onAction }: AdminRequestCar
                                 <AlertCircle size={18} color={Colors[colorScheme].status.error} strokeWidth={2.5} />
                             </TouchableOpacity>
                         ) : (
-                            <View className="w-8 h-8 rounded-none bg-slate-100 dark:bg-slate-800/80 items-center justify-center border-2 border-slate-200 dark:border-slate-700/80">
+                            <View className="w-8 h-8 rounded-none bg-surface-container-highest items-center justify-center border-2 border-outline-variant">
                                 <ChevronRight size={18} color={isDark ? '#64748B' : '#94A3B8'} strokeWidth={2.5} />
                             </View>
                         )}

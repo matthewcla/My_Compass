@@ -39,15 +39,15 @@ export function AdminFilterChips() {
                         activeOpacity={0.7}
                         onPress={() => setTypeFilter(chip.key)}
                         className={`px-3.5 py-2 rounded-sm border ${isActive
-                            ? 'bg-slate-900 dark:bg-slate-800 border-slate-900 dark:border-slate-600'
-                            : 'bg-transparent border-slate-300 dark:border-slate-800'
+                            ? 'bg-primary border-primary'
+                            : 'bg-transparent border-outline'
                             }`}
                         style={{ minHeight: 44, justifyContent: 'center' }}
                     >
                         <Text
                             className={`text-xs font-bold ${isActive
-                                ? 'text-white'
-                                : 'text-slate-600 dark:text-slate-400'
+                                ? 'text-on-primary'
+                                : 'text-on-surface-variant'
                                 }`}
                         >
                             {chip.label}

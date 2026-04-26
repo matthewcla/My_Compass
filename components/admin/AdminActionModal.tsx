@@ -24,6 +24,7 @@ export function AdminActionModal({ request, onClose }: AdminActionModalProps) {
 
     const currentIdx = request.approvalChain.findIndex(s => s.status === 'current');
     const isFinalStep = currentIdx === request.approvalChain.length - 1;
+    const isActionable = request.isUserActionable;
 
     const handleApprove = () => {
         if (isFinalStep) {
@@ -48,51 +49,51 @@ export function AdminActionModal({ request, onClose }: AdminActionModalProps) {
 
     return (
         <Modal transparent animationType="slide" visible={!!request} onRequestClose={handleClose}>
-            <View className="flex-1 bg-slate-900/40 dark:bg-black/80 justify-end">
+            <View className="flex-1 bg-black/50 justify-end">
                 <View 
-                    style={{ paddingBottom: Math.max(insets.bottom + 24, 24) }}
-                    className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 px-6 pt-6"
+                    style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+                    className="bg-surface border-t border-outline-variant px-6 pt-6"
                 >
                     <View className="flex-row justify-between items-start mb-6">
-                        <View className="flex-1 pr-4">
-                            <Text className="text-2xl font-black text-slate-900 dark:text-white mb-1 tracking-tight">{request.label}</Text>
-                            <Text className="text-sm font-bold text-slate-500 uppercase tracking-widest">{request.status.replace('_', ' ')}</Text>
+                        <View className="flex-1">
+                            <Text className="text-2xl font-black text-on-surface mb-1 tracking-tight">{request.label}</Text>
+                            <Text className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">{request.status.replace('_', ' ')}</Text>
                         </View>
-                        <TouchableOpacity onPress={handleClose} className="p-2 bg-slate-100 dark:bg-slate-900 rounded-sm border border-slate-200 dark:border-slate-800">
+                        <TouchableOpacity onPress={handleClose} className="p-2 bg-surface-container-highest rounded-sm border border-outline-variant">
                             <X size={20} color={isDark ? '#94a3b8' : '#64748b'} />
                         </TouchableOpacity>
                     </View>
 
                     <ScrollView style={{ maxHeight: 300 }} className="mb-6" showsVerticalScrollIndicator={false}>
-                        <Text className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-4">Approval Chain</Text>
-                        {request.approvalChain.map((step, idx) => {
+                        <Text className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-4">Approval Chain</Text>
+                        {request.approvalChain.map((step) => {
                             const isPast = step.status === 'approved' || step.status === 'denied';
                             const isCurrent = step.status === 'current';
                             return (
                                 <View key={step.id} className="flex-row items-center mb-4">
                                     <View className={`w-10 h-10 rounded-sm items-center justify-center mr-4 ${
-                                        step.status === 'approved' ? 'bg-green-100 dark:bg-green-500/20 border border-green-200 dark:border-green-500/50' :
-                                        step.status === 'current' ? 'bg-secondary/10 border border-secondary/30' :
-                                        step.status === 'denied' ? 'bg-error/10 border border-error/30' :
-                                        'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800'
+                                        step.status === 'approved' ? 'bg-secondary-container/20 border border-secondary-container/50' :
+                                        isCurrent ? 'bg-primary-container/20 border border-primary-container/50' :
+                                        step.status === 'denied' ? 'bg-error-container/20 border border-error-container/50' :
+                                        'bg-surface-container-highest border border-outline-variant'
                                     }`}>
                                         {step.status === 'approved' && <CheckCircle size={20} color={themeColors.status.success} />}
                                         {step.status === 'denied' && <XCircle size={20} color={themeColors.status.error} />}
                                     </View>
                                     <View>
-                                        <Text className={`font-bold ${isCurrent ? 'text-secondary' : isPast ? 'text-slate-500 dark:text-slate-300' : 'text-slate-900 dark:text-slate-600'}`}>{step.label}</Text>
-                                        <Text className="text-slate-500 text-xs">{step.role}</Text>
+                                        <Text className={`font-bold ${isCurrent ? 'text-primary' : isPast ? 'text-on-surface-variant' : 'text-on-surface'}`}>{step.label}</Text>
+                                        <Text className="text-on-surface-variant text-xs">{step.role}</Text>
                                     </View>
                                 </View>
                             );
                         })}
                     </ScrollView>
 
-                    {request.isUserActionable ? (
-                        <View className="border-t border-slate-200 dark:border-slate-800 pt-6">
-                            <Text className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-2">Recommendation Notes</Text>
+                    {isActionable ? (
+                        <View className="border-t border-outline-variant pt-6">
+                            <Text className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-2">Recommendation Notes</Text>
                             <TextInput 
-                                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm text-slate-900 dark:text-white p-4 mb-6 min-h-[80px]"
+                                className="bg-surface-container-low border border-outline-variant rounded-sm text-on-surface p-4 mb-6 min-h-[80px]"
                                 placeholder="Add comments here..."
                                 placeholderTextColor={isDark ? '#475569' : '#94A3B8'}
                                 multiline
@@ -121,8 +122,8 @@ export function AdminActionModal({ request, onClose }: AdminActionModalProps) {
                             </View>
                         </View>
                     ) : (
-                        <View className="border-t border-slate-200 dark:border-slate-800 pt-6 items-center">
-                            <Text className="text-slate-500 text-sm">No action required from you at this time.</Text>
+                        <View className="border-t border-outline-variant pt-6 items-center">
+                            <Text className="text-on-surface-variant text-sm">No action required from you at this time.</Text>
                         </View>
                     )}
                 </View>

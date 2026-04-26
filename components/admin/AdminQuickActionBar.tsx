@@ -75,7 +75,7 @@ export function AdminQuickActionBar() {
                 <SolidView
                     intensity={100}
                     tint="default"
-                    className="rounded-sm overflow-hidden border border-slate-200 dark:border-slate-700/50"
+                    className="rounded-sm overflow-hidden border border-outline-variant"
                 >
                     <View className="flex-row items-center justify-around py-3 px-2">
                         {actions.map((action) => {
@@ -88,14 +88,14 @@ export function AdminQuickActionBar() {
                                     className="items-center justify-center px-3 py-2"
                                     style={{ minWidth: 64, minHeight: 44 }}
                                 >
-                                    <View className="bg-slate-100 dark:bg-slate-800 w-10 h-10 rounded-sm items-center justify-center mb-1 border border-slate-200 dark:border-slate-700/50">
+                                    <View className="bg-surface-container-highest w-10 h-10 rounded-sm items-center justify-center mb-1 border border-outline-variant">
                                         <Icon
                                             size={18}
                                             color={isDark ? '#e2e8f0' : '#475569'}
                                             strokeWidth={2}
                                         />
                                     </View>
-                                    <Text className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                    <Text className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">
                                         {action.label}
                                     </Text>
                                 </TouchableOpacity>

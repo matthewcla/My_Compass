@@ -66,7 +66,7 @@ export default function AdminDashboard() {
                 statusBarShimBackgroundColor={colorScheme === 'dark' ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 minTopBarHeight={0}
                 topBar={
-                    <View className="bg-transparent dark:bg-black">
+                    <View className="bg-transparent dark:bg-background">
                         <ScreenHeader
                             title="Admin"
                             subtitle="Command Center"

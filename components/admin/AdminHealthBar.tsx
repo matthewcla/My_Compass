@@ -53,7 +53,7 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
         <SolidView
             intensity={100}
             tint="default"
-            className="rounded-none border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+            className="rounded-none border-2 border-outline-variant bg-surface"
         >
                 <View className="flex-row items-stretch p-2 gap-2">
                     {BUCKETS.map((bucket) => {
@@ -65,19 +65,19 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                             switch (key) {
                                 case 'action_required':
                                     return {
-                                        activeText: 'text-amber-700 dark:text-amber-400',
+                                        activeText: 'text-secondary',
                                         iconActive: themeColors.status.warning,
                                         iconInactive: isDark ? '#475569' : '#64748B',
                                     };
                                 case 'in_progress':
                                     return {
-                                        activeText: 'text-blue-600 dark:text-blue-400',
+                                        activeText: 'text-primary',
                                         iconActive: Colors.blue[isDark ? 500 : 600],
                                         iconInactive: isDark ? '#475569' : '#64748B',
                                     };
                                 case 'completed':
                                     return {
-                                        activeText: 'text-green-700 dark:text-green-400',
+                                        activeText: 'text-on-surface',
                                         iconActive: themeColors.status.success,
                                         iconInactive: isDark ? '#475569' : '#64748B',
                                     };
@@ -92,7 +92,7 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                                 activeOpacity={0.7}
                                 onPress={() => setStatusFilter(isActive ? null : bucket.key)}
                                 className={`flex-1 items-center justify-center py-2.5 px-2 rounded-none border-2 ${isActive
-                                    ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700'
+                                    ? 'bg-surface-container-highest border-outline'
                                     : 'bg-transparent border-transparent'
                                     }`}
                             >
@@ -102,12 +102,12 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                                     strokeWidth={2.5}
                                 />
                                 <Text
-                                    className={`text-2xl font-black mt-0.5 ${isActive ? colors.activeText : 'text-slate-900 dark:text-slate-300'}`}
+                                    className={`text-2xl font-black mt-0.5 ${isActive ? colors.activeText : 'text-on-surface'}`}
                                 >
                                     {count}
                                 </Text>
                                 <Text
-                                    className={`text-[8px] font-bold uppercase tracking-wider text-center leading-[11px] ${isActive ? colors.activeText : 'text-slate-500'}`}
+                                    className={`text-[8px] font-bold uppercase tracking-wider text-center leading-[11px] ${isActive ? colors.activeText : 'text-on-surface-variant'}`}
                                     numberOfLines={2}
                                 >
                                     {bucket.label}
@@ -119,8 +119,8 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
 
                 {/* All Clear Banner */}
                 {allClear && (
-                    <View className="bg-green-100 dark:bg-green-900/30 px-4 py-1.5 border-t-2 border-green-200 dark:border-green-800/50">
-                        <Text className="text-green-700 dark:text-green-400 text-xs font-bold text-center">
+                    <View className="bg-primary-container px-4 py-1.5 border-t-2 border-primary-container">
+                        <Text className="text-on-primary-container text-xs font-bold text-center">
                             ✅ All clear — no pending actions
                         </Text>
                     </View>
@@ -128,8 +128,8 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
 
                 {/* Last Synced Footer */}
                 {lastSyncedLabel && (
-                    <View className="border-t-2 border-slate-200 dark:border-slate-800 px-3 py-1.5">
-                        <Text className="text-[10px] font-medium text-slate-500 text-center">
+                    <View className="border-t-2 border-outline-variant px-3 py-1.5">
+                        <Text className="text-[10px] font-medium text-on-surface-variant text-center">
                             Last synced: {lastSyncedLabel}
                         </Text>
                     </View>

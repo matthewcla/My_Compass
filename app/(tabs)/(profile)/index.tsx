@@ -518,8 +518,12 @@ export default function ProfileScreen() {
         <ScreenGradient>
             <CollapsibleScaffold
                 statusBarShimBackgroundColor={colorScheme === 'dark' ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
-                topBar={<ScreenHeader title="" subtitle="" showWebMenu={true} />}
-                contentContainerStyle={{ paddingTop: 8, paddingBottom: 100 }}
+                topBar={
+                    <View className="bg-surface-container-lowest dark:bg-background border-b border-outline-variant dark:border-surface-border">
+                        <ScreenHeader title="" subtitle="" showWebMenu={true} withSafeArea={Platform.OS !== 'web'} />
+                    </View>
+                }
+                contentContainerStyle={{ paddingBottom: 100 }}
             >
                 {({
                     onScroll, onScrollBeginDrag, onScrollEndDrag,
@@ -539,22 +543,24 @@ export default function ProfileScreen() {
                         showsVerticalScrollIndicator={false}
                     >
                         {/* ── Cover Banner ─────────────────────────────────── */}
-                        <View className="h-[140px] relative bg-slate-100 dark:bg-black">
-                            <View className="absolute bottom-0 left-0 right-0 h-10 bg-white dark:bg-slate-900" />
+                        <View className="h-[95px] relative overflow-hidden bg-slate-200 dark:bg-slate-800">
+                            <View className="absolute bottom-0 left-0 right-0 h-[20px] bg-white dark:bg-slate-900" />
                             <View className="absolute bottom-0 left-0 right-0 h-[3px] bg-navyGold" />
                         </View>
 
                         {/* ── Avatar ───────────────────────────────────────── */}
-                        <Animated.View entering={FadeIn.duration(300)} className="items-start px-5 -mt-[50px]">
-                            <View className="w-[100px] h-[100px] rounded-full justify-center items-center bg-navyBlue border-4 border-white dark:border-slate-900 shadow-apple-md">
-                                <Text className="text-navyGold text-[32px] font-extrabold tracking-widest">
-                                    {initials}
-                                </Text>
-                            </View>
-                        </Animated.View>
+                        <View className="px-4" style={{ position: 'relative', zIndex: 20, elevation: 10 }}>
+                            <Animated.View entering={FadeIn.duration(300)} className="items-start" style={{ marginTop: -50 }}>
+                                <View className="w-[100px] h-[100px] rounded-full justify-center items-center bg-white dark:bg-slate-900 border-[2px] border-navyBlue dark:border-blue-400 shadow-apple-md">
+                                    <Text className="text-navyGold text-[32px] font-extrabold tracking-widest">
+                                        {initials}
+                                    </Text>
+                                </View>
+                            </Animated.View>
+                        </View>
 
                         {/* ── Identity Header ──────────────────────────────── */}
-                        <View className="px-5 mt-3">
+                        <View className="px-4 mt-3">
                             <View className="flex-row items-center gap-1.5">
                                 <Text className="text-slate-900 dark:text-white text-[24px] font-extrabold tracking-tight">
                                     {user.displayName}
@@ -595,7 +601,7 @@ export default function ProfileScreen() {
                             <ScrollView
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 24 }}
+                                contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24 }}
                             >
                                 <ControlPill label="Professional" isActive={activeTab === 'professional'} onPress={handleProfessionalPress} />
                                 <ControlPill label="Personal" isActive={activeTab === 'personal'} onPress={handlePersonalPress} />

@@ -1,4 +1,4 @@
-import { useCurrentProfile } from '@/store/useDemoStore';
+import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useUIStore } from '@/store/useUIStore';
 import { useRouter } from 'expo-router';
 import {
@@ -11,7 +11,7 @@ import {
     UserCircle
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -33,6 +33,10 @@ export function NavigationDrawer() {
     const backdropOpacity = useSharedValue(0);
 
     const [isVisible, setIsVisible] = useState(false);
+    const [isSettingsModalVisible, setSettingsModalVisible] = useState(false);
+
+    const showDevFloatingIcons = useDemoStore((s) => s.showDevFloatingIcons);
+    const toggleDevFloatingIcons = useDemoStore((s) => s.toggleDevFloatingIcons);
 
     useEffect(() => {
         if (isDrawerOpen) {
@@ -142,7 +146,7 @@ export function NavigationDrawer() {
                     <DrawerItem
                         icon={<Settings size={20} color="#e5e2e1" />}
                         label="SETTINGS"
-                        onPress={() => handleNavigate('/(tabs)/(profile)/preferences')}
+                        onPress={() => setSettingsModalVisible(true)}
                     />
                 </ScrollView>
 
@@ -163,6 +167,45 @@ export function NavigationDrawer() {
                     </Pressable>
                 </View>
             </Animated.View>
+
+            {/* Settings Modal */}
+            <Modal
+                visible={isSettingsModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setSettingsModalVisible(false)}
+            >
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 999 }}>
+                    <View className="bg-[#1c1b1b] p-6 rounded-2xl w-80 border border-[#44474f]">
+                        <Text className="text-[#fdc400] font-headline font-bold text-xl mb-4 uppercase tracking-wide">SETTINGS</Text>
+                        
+                        <View className="flex-row items-center justify-between mb-6">
+                            <View className="flex-row items-center gap-3 flex-1 mr-4">
+                                <View className="p-2 rounded-xl bg-emerald-100/10 border border-emerald-500/20">
+                                    <Text style={{ fontSize: 18 }}>🧪</Text>
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="text-[#e5e2e1] font-semibold text-base">Dev Tools</Text>
+                                    <Text className="text-[#c4c6d0] text-xs mt-1">Show diagnostic icons</Text>
+                                </View>
+                            </View>
+                            <Switch
+                                value={showDevFloatingIcons}
+                                onValueChange={toggleDevFloatingIcons}
+                                trackColor={{ false: '#3f3f46', true: '#10B981' }}
+                                thumbColor="#FFFFFF"
+                            />
+                        </View>
+                        
+                        <Pressable 
+                            onPress={() => setSettingsModalVisible(false)}
+                            className="w-full bg-[#353534] py-3 rounded-xl border border-[#44474f] items-center hover:bg-[#44474f] transition-colors"
+                        >
+                            <Text className="text-[#e5e2e1] font-headline font-bold uppercase tracking-widest text-sm">CLOSE</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }

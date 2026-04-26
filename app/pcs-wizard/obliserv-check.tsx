@@ -101,7 +101,7 @@ export default function ObliservCheckScreen() {
                     <Animated.View entering={FadeIn.duration(400)}>
                         <View style={{
                             width: 80, height: 80, borderRadius: 40,
-                            backgroundColor: isDark ? 'rgba(34,197,94,0.15)' : '#F0FDF4',
+                            backgroundColor: isDark ? '#064E3B' : '#F0FDF4',
                             alignItems: 'center', justifyContent: 'center', marginBottom: 16,
                         }}>
                             <CheckCircle2 size={40} color="#22C55E" strokeWidth={2} />
@@ -146,7 +146,7 @@ export default function ObliservCheckScreen() {
                         style={{
                             paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8,
                             flexDirection: 'row', alignItems: 'center',
-                            backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)',
+                            backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                             gap: 12,
                         }}
                     >
@@ -186,15 +186,15 @@ export default function ObliservCheckScreen() {
                         <Animated.View
                             entering={FadeInDown.delay(200).springify()}
                             style={{
-                                backgroundColor: isDark ? 'rgba(239,68,68,0.08)' : '#FEF2F2',
+                                backgroundColor: isDark ? '#450A0A' : '#FEF2F2',
                                 borderRadius: 16, padding: 20, marginBottom: 20,
-                                borderWidth: 1, borderColor: isDark ? 'rgba(239,68,68,0.25)' : '#FECACA',
+                                borderWidth: 1, borderColor: isDark ? '#7F1D1D' : '#FECACA',
                             }}
                         >
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
                                 <View style={{
                                     width: 36, height: 36, borderRadius: 10,
-                                    backgroundColor: isDark ? 'rgba(239,68,68,0.2)' : '#FEE2E2',
+                                    backgroundColor: isDark ? '#7F1D1D' : '#FEE2E2',
                                     alignItems: 'center', justifyContent: 'center', marginRight: 12,
                                 }}>
                                     <AlertTriangle size={18} color="#EF4444" strokeWidth={2.5} />
@@ -217,7 +217,7 @@ export default function ObliservCheckScreen() {
                             {/* Gap Display */}
                             {gapMonths > 0 && (
                                 <View style={{
-                                    backgroundColor: isDark ? 'rgba(239,68,68,0.12)' : '#FEE2E2',
+                                    backgroundColor: isDark ? '#450A0A' : '#FEE2E2',
                                     borderRadius: 12, padding: 16, marginBottom: 16, alignItems: 'center',
                                 }}>
                                     <Text style={{
@@ -236,7 +236,7 @@ export default function ObliservCheckScreen() {
 
                             {/* Date Breakdown */}
                             <View style={{
-                                backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.6)',
+                                backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
                                 borderRadius: 10, padding: 12, marginBottom: 16,
                             }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -280,7 +280,7 @@ export default function ObliservCheckScreen() {
                                 <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF' }}>
                                     Intend to Reenlist
                                 </Text>
-                                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+                                <Text style={{ fontSize: 12, color: '#94A3B8', marginTop: 2 }}>
                                     Commit to a new service obligation
                                 </Text>
                             </Pressable>
@@ -288,9 +288,9 @@ export default function ObliservCheckScreen() {
                             <Pressable
                                 onPress={() => handleIntent('extend')}
                                 style={{
-                                    backgroundColor: isDark ? 'rgba(239,68,68,0.1)' : '#FFFFFF',
+                                    backgroundColor: isDark ? '#450A0A' : '#FFFFFF',
                                     borderRadius: 14, paddingVertical: 16, alignItems: 'center',
-                                    borderWidth: 1.5, borderColor: isDark ? 'rgba(239,68,68,0.3)' : '#FECACA',
+                                    borderWidth: 1.5, borderColor: isDark ? '#7F1D1D' : '#FECACA',
                                 }}
                             >
                                 <Text style={{

@@ -123,8 +123,8 @@ function DepartmentCard({
                 onPress={onToggle}
                 style={{
                     backgroundColor: checked
-                        ? isDark ? 'rgba(34,197,94,0.08)' : '#F0FDF4'
-                        : isDark ? 'rgba(30,41,59,0.6)' : '#FFFFFF',
+                        ? isDark ? '#064E3B' : '#F0FDF4'
+                        : isDark ? '#0F172A' : '#FFFFFF',
                     borderWidth: 1.5,
                     borderColor: checked
                         ? '#22C55E'
@@ -143,7 +143,7 @@ function DepartmentCard({
                                 height: 40,
                                 borderRadius: 12,
                                 backgroundColor: checked
-                                    ? 'rgba(34,197,94,0.15)'
+                                    ? (isDark ? '#064E3B' : '#D1FAE5')
                                     : isDark ? '#1E293B' : '#F1F5F9',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -322,7 +322,7 @@ export default function CheckInScreen() {
                     <Animated.View
                         entering={FadeInDown.delay(100).springify()}
                         style={{
-                            backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)',
+                            backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                             paddingBottom: 12,
                         }}
                     >
@@ -343,7 +343,7 @@ export default function CheckInScreen() {
                                     borderRadius: 18,
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    backgroundColor: isDark ? 'rgba(51,65,85,0.5)' : 'rgba(241,245,249,0.8)',
+                                    backgroundColor: isDark ? '#1E293B' : '#F1F5F9',
                                 }}
                             >
                                 <ChevronLeft size={22} color={isDark ? '#e2e8f0' : '#1e293b'} />
@@ -403,7 +403,7 @@ export default function CheckInScreen() {
                                 style={{
                                     marginLeft: 10,
                                     backgroundColor: allDone
-                                        ? isDark ? 'rgba(34,197,94,0.15)' : '#F0FDF4'
+                                        ? isDark ? (isDark ? '#064E3B' : '#D1FAE5') : '#F0FDF4'
                                         : isDark ? '#1E293B' : '#F1F5F9',
                                     paddingHorizontal: 10,
                                     paddingVertical: 4,
@@ -471,7 +471,7 @@ export default function CheckInScreen() {
                     >
                         <View
                             style={{
-                                backgroundColor: isDark ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)',
+                                backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
                                 borderRadius: 16,
                                 padding: 4,
                                 borderWidth: 1,
@@ -529,7 +529,7 @@ export default function CheckInScreen() {
                             <View
                                 style={{
                                     flex: 1,
-                                    backgroundColor: 'rgba(0,0,0,0.4)',
+                                    backgroundColor: 'rgba(0,0,0,0.5)',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                 }}

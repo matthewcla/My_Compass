@@ -26,26 +26,26 @@ export function AppErrorBoundary({ retry }: ErrorBoundaryProps) {
 
     return (
         <View
-            className="flex-1 bg-[#000000] justify-center items-center px-8"
+            className="flex-1 bg-background justify-center items-center px-8"
             style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
         >
             {/* Icon */}
-            <AlertTriangle size={48} color="#f59e0b" strokeWidth={1.5} />
+            <AlertTriangle size={48} color="#C9A227" strokeWidth={1.5} />
 
             {/* Title */}
-            <Text className="text-white font-bold text-xl mt-6 text-center">
+            <Text className="text-primary font-bold text-xl mt-6 text-center">
                 System Error
             </Text>
 
             {/* Safe, generic message — no raw error content */}
-            <Text className="text-white/60 text-sm text-center mt-3 leading-6 max-w-xs">
+            <Text className="text-primary opacity-60 text-sm text-center mt-3 leading-6 max-w-xs">
                 An unexpected error occurred. Your session data has been preserved.
                 If this issue persists, contact your system administrator.
             </Text>
 
             {/* Support reference code — time-based only, no PII */}
-            <View className="mt-5 px-4 py-2 bg-white/5 rounded-lg border border-white/10">
-                <Text className="text-white/40 text-xs text-center font-mono tracking-widest">
+            <View className="mt-5 px-4 py-2 border-2 border-primary rounded-none">
+                <Text className="text-primary opacity-40 text-xs text-center font-mono tracking-widest">
                     Ref: {refCode}
                 </Text>
             </View>
@@ -55,15 +55,15 @@ export function AppErrorBoundary({ retry }: ErrorBoundaryProps) {
                 onPress={retry}
                 accessibilityRole="button"
                 accessibilityLabel="Retry"
-                className="mt-8 bg-amber-400 rounded-2xl py-4 px-12 active:bg-amber-500"
+                className="mt-8 bg-secondary rounded-none py-4 px-12 border-2 border-primary"
             >
-                <Text className="text-[#000000] font-bold text-base tracking-wide">
+                <Text className="text-primary font-bold text-base tracking-wide uppercase">
                     Retry
                 </Text>
             </Pressable>
 
             {/* Footer */}
-            <Text className="text-white/20 text-xs text-center mt-6">
+            <Text className="text-primary opacity-20 text-xs text-center mt-6 uppercase tracking-wider">
                 My Compass — U.S. Navy Personnel Management
             </Text>
         </View>

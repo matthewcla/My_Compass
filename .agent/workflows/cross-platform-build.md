@@ -20,7 +20,7 @@ Run this checklist when making changes that affect native configuration, permiss
 - Run `npx expo run:ios` and confirm the app launches on simulator or device
 
 ## Step 4: Platform-Specific Rendering Audit
-- Verify `BlurView` / `GlassView` renders acceptably on Android (lower blur intensity may be needed)
+- Verify `BlurView` / `SolidView` renders acceptably on Android (lower blur intensity may be needed)
 - Verify safe area insets are correct on both platforms (edge-to-edge is enabled on Android)
 - Verify custom shadows render on Android (may need `elevation` property)
 

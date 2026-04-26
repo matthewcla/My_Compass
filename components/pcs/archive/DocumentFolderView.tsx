@@ -2,7 +2,7 @@
 import { groupDocuments } from '@/components/pcs/archive/archiveUtils';
 import { DocumentCategorySection } from '@/components/pcs/archive/DocumentCategorySection';
 import { PDFViewerModal } from '@/components/pcs/archive/PDFViewerModal';
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidView } from '@/components/ui/SolidView';
 import { usePCSArchiveStore, useSelectedHistoricalOrder } from '@/store/usePCSArchiveStore';
 import { DocumentCategory, PCSDocument } from '@/types/pcs';
 import { ArrowLeft, CalendarDays, MapPin } from 'lucide-react-native';
@@ -68,7 +68,7 @@ export function DocumentFolderView() {
                 </TouchableOpacity>
 
                 {/* Move Summary Card */}
-                <GlassView className="rounded-2xl p-5 mb-8 border border-slate-200 dark:border-white/10">
+                <SolidView className="rounded-2xl p-5 mb-8 border border-slate-200 dark:border-white/10">
                     <View className="mb-4">
                         <Text className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                             PCS Move
@@ -101,7 +101,7 @@ export function DocumentFolderView() {
                             </Text>
                         </View>
                     </View>
-                </GlassView>
+                </SolidView>
 
                 {/* Content */}
                 {categories.map((cat) => {

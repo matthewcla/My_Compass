@@ -21,38 +21,38 @@
     /* System Colors - Light Mode */
     --color-system-gray: 142 142 147;
     /* #8E8E93 */
-    --color-system-gray6: 250 250 250;
-    /* #FAFAFA */
-    --color-system-blue: 0 111 238;
-    /* #006FEE */
+    --color-system-gray6: 244 244 245;
+    /* #F4F4F5 */
+    --color-system-blue: 10 22 40;
+    /* #0A1628 */
 
     /* Semantic Colors - Light Mode */
     --color-background: 250 250 250;
     /* #FAFAFA */
-    --color-foreground: 0 0 0;
-    /* #000000 */
-    --color-label-primary: 0 0 0;
-    --color-label-secondary: 60 60 67;
-    /* #3C3C43 */
+    --color-foreground: 15 23 42;
+    /* #0F172A */
+    --color-label-primary: 15 23 42;
+    --color-label-secondary: 71 85 105;
+    /* #475569 */
     --color-card-background: 255 255 255;
     /* #FFFFFF */
     --color-wizard-card-background: 255 255 255;
     /* #FFFFFF */
     --color-input-background: 244 244 245;
     /* #F4F4F5 */
-    --color-accent-text: 0 111 238;
-    /* #006FEE */
+    --color-accent-text: 10 22 40;
+    /* #0A1628 */
 
     /* Brand Colors */
-    --color-navy-blue: 0 0 0;
-    /* #000000 */
-    --color-navy-gold: 245 165 36;
-    /* #F5A524 */
+    --color-navy-blue: 10 22 40;
+    /* #0A1628 */
+    --color-navy-gold: 201 162 39;
+    /* #C9A227 */
 
     /* Anchor Point Theme */
-    --color-surface: 19 19 19;
-    --color-secondary-container: 253 196 0;
-    --color-primary: 174 198 254;
+    --color-surface: 255 255 255;
+    --color-secondary-container: 201 162 39;
+    --color-primary: 10 22 40;
   }
 
   .dark {

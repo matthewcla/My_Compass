@@ -1,6 +1,5 @@
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidView } from '@/components/ui/SolidView';
 import { PCSDocument } from '@/types/pcs';
-import { BlurView } from 'expo-blur';
 import * as Sharing from 'expo-sharing';
 import { Share as ShareIcon, X } from 'lucide-react-native';
 import React from 'react';
@@ -82,14 +81,14 @@ export function PDFViewerModal({ visible, document, onClose }: PDFViewerModalPro
                 exiting={FadeOut.duration(200)}
                 style={styles.container}
             >
-                <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: '#000000', opacity: 0.95 }]} />
 
-                <GlassView className="absolute top-12 left-4 right-4 z-50 rounded-full flex-row items-center justify-between p-2 px-4 border border-white/20">
+                <SolidView className="absolute top-12 left-4 right-4 z-50 rounded-none flex-row items-center justify-between p-2 px-4 border-2 border-slate-700 bg-slate-900">
                     <View className="flex-1">
                         <Text className="text-white font-semibold truncate" numberOfLines={1}>
                             {document.displayName}
                         </Text>
-                        <Text className="text-white/60 text-xs">
+                        <Text className="text-slate-400 text-xs uppercase tracking-wider">
                             {document.category.replace('_', ' ')}
                         </Text>
                     </View>
@@ -97,19 +96,19 @@ export function PDFViewerModal({ visible, document, onClose }: PDFViewerModalPro
                     <View className="flex-row items-center gap-2">
                         <TouchableOpacity
                             onPress={handleShare}
-                            className="w-10 h-10 items-center justify-center rounded-full bg-white/10"
+                            className="w-10 h-10 items-center justify-center rounded-none bg-slate-800 border border-slate-700"
                         >
                             <ShareIcon size={20} color="white" />
                         </TouchableOpacity>
 
                         <TouchableOpacity
                             onPress={onClose}
-                            className="w-10 h-10 items-center justify-center rounded-full bg-white/10"
+                            className="w-10 h-10 items-center justify-center rounded-none bg-slate-800 border border-slate-700"
                         >
                             <X size={20} color="white" />
                         </TouchableOpacity>
                     </View>
-                </GlassView>
+                </SolidView>
 
                 <Animated.View
                     entering={SlideInDown.springify().damping(15)}

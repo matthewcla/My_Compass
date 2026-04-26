@@ -1,4 +1,4 @@
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidView } from '@/components/ui/SolidView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { X, Zap, ZapOff } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
@@ -77,7 +77,7 @@ export function ScannerModal({ visible, onClose, onScan, validator }: ScannerMod
                 <View className="flex-1 items-center justify-center">
 
                     {/* Header: Adjusted for Safe Area + standard padding */}
-                    <GlassView
+                    <SolidView
                         intensity={40}
                         tint="dark"
                         className="absolute rounded-full px-6 py-3 border border-white/20"
@@ -86,7 +86,7 @@ export function ScannerModal({ visible, onClose, onScan, validator }: ScannerMod
                         <Text className="text-white font-bold text-sm tracking-widest uppercase">
                             Scan Event QR Code
                         </Text>
-                    </GlassView>
+                    </SolidView>
 
                     {/* Scan Frame */}
                     <View

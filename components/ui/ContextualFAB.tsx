@@ -26,15 +26,15 @@ export function ContextualFAB() {
 
     const phaseConfig: Record<Exclude<PCSPhase, 'DORMANT'>, PhaseConfig> = {
         ORDERS_NEGOTIATION: {
-            bgClass: 'bg-blue-600',
+            bgClass: 'bg-primary dark:bg-blue-600',
             icon: <MessageCircle size={24} color="white" />,
         },
         TRANSIT_LEAVE: {
-            bgClass: 'bg-amber-500',
-            icon: <Camera size={24} color="white" />,
+            bgClass: 'bg-secondary dark:bg-amber-500',
+            icon: <Camera size={24} color="#0F172A" />,
         },
         CHECK_IN: {
-            bgClass: 'bg-green-600',
+            bgClass: 'bg-primary dark:bg-green-600',
             icon: <MapPin size={24} color="white" />,
         },
     };
@@ -48,12 +48,12 @@ export function ContextualFAB() {
             className="absolute bottom-6 right-6 z-50"
         >
             <Pressable
-                className={`w-14 h-14 rounded-full items-center justify-center shadow-lg ${config.bgClass}`}
+                className={`w-14 h-14 rounded-full items-center justify-center border-2 border-slate-200 dark:border-transparent ${config.bgClass}`}
                 style={{
-                    shadowColor: '#000',
+                    shadowColor: '#0A1628',
                     shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 6,
+                    shadowOpacity: 1,
+                    shadowRadius: 0,
                     elevation: 8,
                 }}
             >

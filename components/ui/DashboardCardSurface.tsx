@@ -1,4 +1,4 @@
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidView } from '@/components/ui/SolidView';
 import { useColorScheme } from '@/components/useColorScheme';
 import { getShadow } from '@/utils/getShadow';
 import React from 'react';
@@ -20,7 +20,7 @@ export function DashboardCardSurface({
 
     if (isDark) {
         return (
-            <GlassView
+            <SolidView
                 intensity={intensity}
                 tint="dark"
                 className={`overflow-hidden shadow-sm border border-white/10 ${className}`}
@@ -28,24 +28,24 @@ export function DashboardCardSurface({
                 {...props}
             >
                 {children}
-            </GlassView>
+            </SolidView>
         );
     }
 
-    // Light Mode: Solid white surface with crisp borders and precise Apple shadow
+    // Light Mode: Solid white surface with crisp borders and precise Brutalist hard shadow
     // Note: Separating the shadow container from the overflow container prevents clipping.
     return (
         <View
             className={`bg-transparent ${className}`}
             style={[
-                getShadow({ shadowColor: '#475569', shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }),
+                getShadow({ shadowColor: '#0A1628', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 8 }),
                 style
             ]}
             {...props}
         >
             <View 
-                className="overflow-hidden bg-white border border-slate-200/80" 
-                style={{ borderRadius: (style as any)?.borderRadius ?? 24 }}
+                className="overflow-hidden bg-white border-2 border-slate-200"
+                style={{ borderRadius: 0 }}
             >
                 {children}
             </View>

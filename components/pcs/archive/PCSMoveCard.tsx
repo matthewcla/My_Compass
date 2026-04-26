@@ -1,4 +1,4 @@
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidView } from '@/components/ui/SolidView';
 import { HistoricalPCSOrder } from '@/types/pcs';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
@@ -27,7 +27,7 @@ function PCSMoveCardComponent({ order, onPress }: PCSMoveCardProps) {
 
   return (
     <Pressable onPress={handlePress} accessibilityRole="button">
-      <GlassView
+      <SolidView
         intensity={65}
         tint="light"
         className="rounded-2xl border border-slate-200/90 dark:border-slate-700/90 p-4"
@@ -74,7 +74,7 @@ function PCSMoveCardComponent({ order, onPress }: PCSMoveCardProps) {
             </Text>
           </View>
         </View>
-      </GlassView>
+      </SolidView>
     </Pressable>
   );
 }

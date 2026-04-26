@@ -38,31 +38,32 @@ function StatusIcon({ status, isDark }: { status: UCTNodeStatus; isDark: boolean
         case 'COMPLETED':
             return <CheckCircle size={20} color="white" />;
         case 'ACTIVE':
-            return <MapPin size={18} color="#C5A455" />;
+            return <MapPin size={18} color="#0A1628" />;
         case 'LOCKED':
-            return <Lock size={16} color={isDark ? '#94a3b8' : '#9ca3af'} />;
+            return <Lock size={16} color={isDark ? '#94a3b8' : '#64748b'} />;
     }
 }
 
 function iconContainerStyle(status: UCTNodeStatus, isDark: boolean) {
     switch (status) {
         case 'COMPLETED':
-            return { backgroundColor: '#22c55e' }; // green-500
+            return { backgroundColor: '#16A34A', borderRadius: 0 }; // green-600, square
         case 'ACTIVE':
             return {
-                backgroundColor: isDark ? '#2563eb' : '#1d4ed8', // blue-600 / blue-700
+                backgroundColor: '#C9A227', // Athletic Gold
                 borderWidth: 2,
-                borderColor: '#bfdbfe', // blue-200
+                borderColor: '#0A1628', // Navy Border
+                borderRadius: 0, // square
             };
         case 'LOCKED':
-            return { backgroundColor: isDark ? '#334155' : '#e2e8f0' }; // slate-700 / slate-200
+            return { backgroundColor: isDark ? '#334155' : '#E2E8F0', borderRadius: 0 }; // slate-700 / slate-200, square
     }
 }
 
 function lineColorStyle(status: UCTNodeStatus, isDark: boolean) {
     return status === 'COMPLETED'
-        ? { backgroundColor: '#22c55e' } // green-500
-        : { backgroundColor: isDark ? '#334155' : '#e2e8f0' }; // slate-700 / slate-200
+        ? { backgroundColor: '#16A34A' } // green-600
+        : { backgroundColor: isDark ? '#334155' : '#E2E8F0' }; // slate-700 / slate-200
 }
 
 function titleColorValue(status: UCTNodeStatus, isDark: boolean): string {
@@ -198,8 +199,8 @@ export function TrackNode({
                                     </Text>
                                 )}
                                 {daysIndicator && status !== 'COMPLETED' && (
-                                    <View className="bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
-                                        <Text className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                                    <View className="bg-primary dark:bg-blue-900/40 px-2 py-0.5 rounded-none border border-secondary dark:border-blue-400">
+                                        <Text className="text-xs font-bold text-secondary dark:text-blue-300">
                                             {daysIndicator}
                                         </Text>
                                     </View>
@@ -223,13 +224,15 @@ export function TrackNode({
                                 className="mt-5"
                             >
                                 {status === 'ACTIVE' ? (
-                                    /* Glass card for active state */
-                                    <View className="bg-white/95 dark:bg-slate-800/90 rounded-2xl p-5 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+                                    /* Solid card for active state */
+                                    <View className="bg-white dark:bg-slate-800 rounded-none p-5 border-2 border-slate-200 dark:border-slate-700"
+                                        style={{ shadowColor: '#0A1628', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 8 }}
+                                    >
                                         {children}
                                     </View>
                                 ) : (
                                     /* Read-only receipt for completed state */
-                                    <View className="rounded-xl p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
+                                    <View className="rounded-none p-3 bg-slate-50 dark:bg-slate-800/80 border-2 border-slate-200 dark:border-slate-700">
                                         {children}
                                     </View>
                                 )}

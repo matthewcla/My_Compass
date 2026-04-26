@@ -87,7 +87,7 @@ export function SessionTimeoutOverlay({ visible, remainingSeconds, onExtend }: S
 
 const styles = StyleSheet.create({
     backdrop: {
-        backgroundColor: 'rgba(0, 0, 0, 0.72)',
+        backgroundColor: 'rgba(0, 0, 0, 0.50)',
     },
     cardContainer: {
         ...StyleSheet.absoluteFillObject,
@@ -96,20 +96,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
     },
     card: {
-        backgroundColor: '#0F2040',
-        borderRadius: 24,
+        backgroundColor: '#0A1628',
+        borderRadius: 0,
         paddingVertical: 32,
         paddingHorizontal: 28,
         alignItems: 'center',
         width: '100%',
         maxWidth: 360,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.08)',
-        // Apple-style shadow
+        borderWidth: 2,
+        borderColor: '#C9A227',
+        // Brutalist hard shadow
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
         elevation: 12,
     },
     iconRow: {
@@ -141,8 +141,8 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     button: {
-        backgroundColor: '#f59e0b',
-        borderRadius: 16,
+        backgroundColor: '#C9A227',
+        borderRadius: 0,
         paddingVertical: 14,
         paddingHorizontal: 40,
         alignItems: 'center',

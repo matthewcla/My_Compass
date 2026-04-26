@@ -340,8 +340,8 @@ export default function ExpandableBottomDrawer() {
                     <LinearGradient
                         colors={[
                             'transparent',
-                            isDark ? 'rgba(2, 6, 23, 0.8)' : 'rgba(248, 250, 252, 0.8)',
-                            isDark ? 'rgba(2, 6, 23, 1)' : 'rgba(248, 250, 252, 1)'
+                            isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(250, 250, 250, 0.8)',
+                            isDark ? 'rgba(0, 0, 0, 1)' : 'rgba(250, 250, 250, 1)'
                         ]}
                         locations={[0, 0.6, 1]}
                         style={StyleSheet.absoluteFill}
@@ -354,9 +354,13 @@ export default function ExpandableBottomDrawer() {
                             styles.glassShape,
                             glassStyle,
                             {
-                                shadowColor: isDark ? '#000000' : '#1e293b',
-                                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
-                                borderWidth: 1,
+                                shadowColor: '#000000',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 1,
+                                shadowRadius: 0,
+                                elevation: 8,
+                                borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : '#0A1628',
+                                borderWidth: isDark ? 1 : 2,
                             }
                         ]}
                     >
@@ -364,7 +368,7 @@ export default function ExpandableBottomDrawer() {
                             style={[
                                 StyleSheet.absoluteFill,
                                 {
-                                    backgroundColor: '#131313', // Anchor Point surface
+                                    backgroundColor: isDark ? '#131313' : '#FFFFFF', // Anchor Point surface solid
                                 }
                             ]}
                         />
@@ -393,7 +397,7 @@ export default function ExpandableBottomDrawer() {
                                 <View style={[
                                     styles.grabber,
                                     {
-                                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)',
+                                        backgroundColor: isDark ? '#475569' : '#CBD5E1',
                                         width: 36,
                                         height: 4,
                                         marginTop: 10
@@ -502,7 +506,7 @@ const styles = StyleSheet.create({
     },
     innerBorder: {
         borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: 'rgba(255,255,255,0.1)',
+        borderTopColor: '#475569',
         borderTopLeftRadius: 40,
         borderTopRightRadius: 40,
         borderBottomLeftRadius: 40,

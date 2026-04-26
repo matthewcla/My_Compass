@@ -1,7 +1,7 @@
 // components/admin/AdminQuickActionBar.tsx
 // Persistent bottom tray with quick-submit buttons for common request types.
 
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidView } from '@/components/ui/SolidView';
 import { getShadow } from '@/utils/getShadow';
 import { useRouter } from 'expo-router';
 import {
@@ -68,7 +68,7 @@ export function AdminQuickActionBar() {
                     elevation: 8,
                 }),
             ]}>
-                <GlassView
+                <SolidView
                     intensity={100}
                     tint="dark"
                     className="rounded-sm overflow-hidden border border-slate-700/50"
@@ -98,7 +98,7 @@ export function AdminQuickActionBar() {
                             );
                         })}
                     </View>
-                </GlassView>
+                </SolidView>
             </View>
         </View>
     );

@@ -2,7 +2,7 @@
 // Top status strip — three tappable buckets: Action Required / In Progress / Completed
 // Now includes "Last synced" footer and improved active state with glow effect.
 
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidView } from '@/components/ui/SolidView';
 import { AdminStatus, useAdminStore } from '@/store/useAdminStore';
 import { getShadow } from '@/utils/getShadow';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react-native';
@@ -77,10 +77,10 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
     const allClear = counts.actionRequired === 0;
 
     return (
-        <GlassView
-            intensity={80}
-            tint="dark"
-            className="rounded-sm border border-slate-800"
+        <SolidView
+            intensity={100}
+            tint="default"
+            className="rounded-none border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
         >
                 <View className="flex-row items-stretch p-2 gap-2">
                     {BUCKETS.map((bucket) => {
@@ -95,8 +95,8 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                                 key={bucket.key}
                                 activeOpacity={0.7}
                                 onPress={() => setStatusFilter(isActive ? null : bucket.key)}
-                                className={`flex-1 items-center justify-center py-2.5 px-2 rounded-sm border ${isActive
-                                    ? 'bg-slate-900/80 border-slate-700'
+                                className={`flex-1 items-center justify-center py-2.5 px-2 rounded-none border-2 ${isActive
+                                    ? 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700'
                                     : 'bg-transparent border-transparent'
                                     }`}
                             >
@@ -106,7 +106,7 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
                                     strokeWidth={2.5}
                                 />
                                 <Text
-                                    className={`text-2xl font-black mt-0.5 ${isActive ? bucket.colors.activeText : 'text-slate-300'}`}
+                                    className={`text-2xl font-black mt-0.5 ${isActive ? bucket.colors.activeText : 'text-slate-900 dark:text-slate-300'}`}
                                 >
                                     {count}
                                 </Text>
@@ -123,8 +123,8 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
 
                 {/* All Clear Banner */}
                 {allClear && (
-                    <View className="bg-green-900/30 px-4 py-1.5 border-t border-green-800/50">
-                        <Text className="text-green-400 text-xs font-bold text-center">
+                    <View className="bg-green-100 dark:bg-green-900/30 px-4 py-1.5 border-t-2 border-green-200 dark:border-green-800/50">
+                        <Text className="text-green-700 dark:text-green-400 text-xs font-bold text-center">
                             ✅ All clear — no pending actions
                         </Text>
                     </View>
@@ -132,12 +132,12 @@ export function AdminHealthBar({ lastSyncedLabel }: AdminHealthBarProps) {
 
                 {/* Last Synced Footer */}
                 {lastSyncedLabel && (
-                    <View className="border-t border-slate-800/80 px-3 py-1.5">
+                    <View className="border-t-2 border-slate-200 dark:border-slate-800 px-3 py-1.5">
                         <Text className="text-[10px] font-medium text-slate-500 text-center">
                             Last synced: {lastSyncedLabel}
                         </Text>
                     </View>
                 )}
-            </GlassView>
+            </SolidView>
     );
 }

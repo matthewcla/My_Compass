@@ -1,5 +1,5 @@
-import { GlassCalendarModal } from '@/components/ui/GlassCalendarModal';
-import { GlassView } from '@/components/ui/GlassView';
+import { SolidCalendarModal } from '@/components/ui/SolidCalendarModal';
+import { SolidView } from '@/components/ui/SolidView';
 import { SignatureButton } from '@/components/ui/SignatureButton';
 import Colors from '@/constants/Colors';
 import { useLeaveStore } from '@/store/useLeaveStore';
@@ -267,17 +267,17 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
 
     return (
         <View className="w-full">
-            <GlassView
+            <SolidView
                 intensity={80}
                 tint="dark"
                 className="rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.4)] bg-slate-900/60 border border-white/10"
             >
-                <GlassView intensity={20} tint="dark" className="absolute inset-0" />
+                <SolidView intensity={20} tint="dark" className="absolute inset-0" />
                 {cardContent}
-            </GlassView>
+            </SolidView>
 
             {/* Glass Calendar Modals */}
-            <GlassCalendarModal
+            <SolidCalendarModal
                 visible={showStartPicker}
                 onClose={() => setShowStartPicker(false)}
                 onSelect={onStartDateChange}
@@ -286,7 +286,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                 title="Select Start Date"
             />
 
-            <GlassCalendarModal
+            <SolidCalendarModal
                 visible={showEndPicker}
                 onClose={() => setShowEndPicker(false)}
                 onSelect={onEndDateChange}

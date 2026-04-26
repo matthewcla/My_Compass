@@ -54,7 +54,7 @@ components/           # Reusable UI components
 ├── assignment/       #   Billet discovery & slating widgets
 ├── travel-claim/     #   Expense cards, receipt uploader
 ├── wizard/           #   Leave wizard HUD & cards
-├── ui/               #   Shared primitives (GlassView, FAB, etc.)
+├── ui/               #   Shared primitives (SolidView, FAB, etc.)
 └── ...
 
 store/                # Zustand stores

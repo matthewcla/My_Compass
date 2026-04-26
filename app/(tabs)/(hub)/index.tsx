@@ -225,7 +225,7 @@ export default function HubDashboard() {
                 statusBarShimBackgroundColor={isDark ? Colors.gradient.dark[0] : Colors.gradient.light[0]}
                 topBar={
                     <View className="overflow-hidden bg-surface-container-lowest dark:bg-[#0A0A0A]">
-                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }} />
+                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: isDark ? '#27272A' : '#E2E8F0' }} />
                         <View className="flex-row items-center justify-between px-5 pt-3 pb-3">
                             <View className="flex-row items-center gap-3">
                                 {Platform.OS === 'web' && (
@@ -258,7 +258,7 @@ export default function HubDashboard() {
                             className="w-full"
                             style={{
                                 height: 1,
-                                backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                                backgroundColor: isDark ? '#18181B' : '#F1F5F9'
                             }}
                         />
                     </View>
@@ -290,7 +290,7 @@ export default function HubDashboard() {
                         {/* Header Image Area */}
                         <View className="relative w-full h-48 md:h-64 bg-[#2a2a2a] overflow-hidden border-b-4 border-secondary-container mb-6">
                             <LinearGradient
-                                colors={['rgba(19,19,19,1)', 'rgba(19,19,19,0)']}
+                                colors={isDark ? ['#131313', 'transparent'] : ['#FAFAFA', 'transparent']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 0.66, y: 0 }}
                                 style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '100%', zIndex: 10 }}
@@ -344,7 +344,7 @@ export default function HubDashboard() {
                     setQuickLeaveDraft(null);
                 }}
             >
-                <View className="flex-1 justify-center px-4 bg-slate-900/20 dark:bg-black/60 shadow-[0_0_50px_rgba(0,0,0,0.3)] dark:shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                <View className="flex-1 justify-center px-4 bg-slate-900 dark:bg-black/80 shadow-none">
                     <Pressable
                         className="absolute inset-0"
                         onPress={() => {

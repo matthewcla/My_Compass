@@ -346,7 +346,7 @@ export default function ProfileScreen() {
                                 )}
                             </View>
                             <View style={{
-                                backgroundColor: cred.status === 'Earned' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                                backgroundColor: cred.status === 'Earned' ? '#18181B' : 'transparent',
                                 borderWidth: cred.status === 'Earned' ? 0 : 1,
                                 borderColor: cred.status === 'Earned' ? 'transparent' : '#334155',
                                 paddingHorizontal: 8, paddingVertical: 3, borderRadius: 0,
@@ -462,8 +462,8 @@ export default function ProfileScreen() {
                     onPress={() => router.push('/(profile)/preferences' as any)}
                     style={{
                         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                        backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                        borderColor: 'rgba(51, 65, 85, 0.5)',
+                        backgroundColor: '#1E293B',
+                        borderColor: '#334155',
                         borderWidth: 1,
                         borderRadius: 0, padding: 16, marginBottom: 12,
                         shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8, elevation: 2,
@@ -568,7 +568,7 @@ export default function ProfileScreen() {
                                 </View>
                                 {dep.efmpEnrolled && (
                                     <View style={{
-                                        backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                                        backgroundColor: '#FEF08A',
                                         paddingHorizontal: 6, paddingVertical: 2, borderRadius: 0,
                                     }}>
                                         <Text style={{ color: '#D97706', fontSize: 10, fontWeight: '700' }}>EFMP</Text>
@@ -608,7 +608,7 @@ export default function ProfileScreen() {
                     >
                         {/* ── Cover Banner ─────────────────────────────────── */}
                         <View style={{ height: 140, position: 'relative', backgroundColor: '#000000' }}>
-                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, backgroundColor: 'rgba(255,255,255,0.02)' }} />
+                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 40, backgroundColor: '#0F172A' }} />
                             <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, backgroundColor: '#C9A227' }} />
                         </View>
 

@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
         shadowRadius: 2,
         elevation: 1,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: 'rgba(255,255,255,0.1)',
+        borderColor: '#27272A',
     },
     filterText: {
         fontSize: 12,

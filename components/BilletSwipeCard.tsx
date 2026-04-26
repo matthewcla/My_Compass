@@ -436,18 +436,18 @@ export const BilletSwipeCard = React.memo(function BilletSwipeCard({ billet, onS
                                 <TouchableOpacity
                                     activeOpacity={1}
                                     onPress={closeDrawer}
-                                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' }}
+                                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
                                 />
 
                                 {/* Drawer Panel - Full Height */}
                                 <View
-                                    className="absolute bottom-0 left-0 right-0 h-[95%] bg-white dark:bg-slate-900 rounded-t-[32px] overflow-hidden"
+                                    className="absolute bottom-0 left-0 right-0 h-[95%] bg-white dark:bg-slate-900 rounded-none overflow-hidden"
                                     style={{
                                         ...getShadow({
-                                            shadowColor: '#000',
+                                            shadowColor: '#0A1628',
                                             shadowOffset: { width: 0, height: -4 },
-                                            shadowOpacity: 0.15,
-                                            shadowRadius: 16,
+                                            shadowOpacity: 1,
+                                            shadowRadius: 0,
                                             elevation: 10,
                                         }),
                                     }}

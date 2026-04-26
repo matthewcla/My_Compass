@@ -37,12 +37,12 @@ export const JobCard = React.memo(function JobCard({
     // 2. Determine Button State Logic
     // 2. Determine Button State Logic
     let buttonText = 'Promote';
-    let buttonBgClass = 'bg-navyBlue';
+    let buttonBgClass = 'bg-primary';
     let isDisabled = false;
 
     if (isProcessing) {
         buttonText = 'Processing...';
-        buttonBgClass = 'bg-gray-400';
+        buttonBgClass = 'bg-slate-400';
         isDisabled = true;
     } else if (applicationStatus === 'confirmed') {
         buttonText = 'Locked';
@@ -50,15 +50,15 @@ export const JobCard = React.memo(function JobCard({
         isDisabled = true;
     } else if (applicationStatus === 'submitted') {
         buttonText = 'Pending Confirmation...';
-        buttonBgClass = 'bg-blue-400';
+        buttonBgClass = 'bg-blue-600';
         isDisabled = true;
     }
 
     return (
         <ScalePressable
-            className="bg-white/90 dark:bg-slate-900/90 p-4 rounded-xl shadow-apple-md android:elevation-4 border border-black/5 dark:border-white/10"
+            className="bg-white dark:bg-slate-900 p-4 rounded-none border-2 border-slate-200 dark:border-slate-800"
             // @ts-ignore - Web-specific style to remove focus ring
-            style={Platform.OS === 'web' ? { outlineStyle: 'none' } : undefined}
+            style={Platform.OS === 'web' ? { outlineStyle: 'none', shadowColor: '#0A1628', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 8 } : { shadowColor: '#0A1628', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 1, shadowRadius: 0, elevation: 8 }}
         >
             {/* Header: Title + Location */}
             <View className="flex-row justify-between items-start mb-2">
@@ -77,7 +77,7 @@ export const JobCard = React.memo(function JobCard({
                 {/* Match Indicator Badge using Reanimated */}
                 <Animated.View
                     entering={FadeInRight.delay(200).springify().damping(12)}
-                    className={`px-2 py-1 rounded-md ${matchBgClass}`}
+                    className={`px-2 py-1 rounded-none border border-slate-200 dark:border-slate-700 ${matchBgClass}`}
                 >
                     <Text className={`font-bold text-xs ${matchColorClass}`}>
                         {matchScore}% Match
@@ -86,8 +86,8 @@ export const JobCard = React.memo(function JobCard({
             </View>
 
             {/* Narrative Box */}
-            <View className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 mb-4">
-                <Text className="text-gray-600 dark:text-gray-300 text-sm leading-5" testID="compass-narrative">
+            <View className="bg-slate-50 dark:bg-slate-800 p-3 rounded-none border border-slate-200 dark:border-slate-700 mb-4">
+                <Text className="text-slate-600 dark:text-slate-300 text-sm leading-5" testID="compass-narrative">
                     {billet.compass.contextualNarrative}
                 </Text>
             </View>
@@ -96,7 +96,7 @@ export const JobCard = React.memo(function JobCard({
             <TouchableOpacity
                 onPress={() => onBuyPress(billet.id)}
                 disabled={isDisabled}
-                className={`py-3 rounded-lg flex-row justify-center items-center active:opacity-90 ${buttonBgClass}`}
+                className={`py-3 rounded-none border-2 border-transparent flex-row justify-center items-center active:opacity-90 ${buttonBgClass}`}
             >
                 <Text className="text-white font-bold text-base">{buttonText}</Text>
             </TouchableOpacity>

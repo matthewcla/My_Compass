@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 
-interface GlassCalendarModalProps {
+interface SolidCalendarModalProps {
     visible: boolean;
     onClose: () => void;
     onSelect: (date: Date) => void;
@@ -12,14 +12,14 @@ interface GlassCalendarModalProps {
     title?: string;
 }
 
-export function GlassCalendarModal({
+export function SolidCalendarModal({
     visible,
     onClose,
     onSelect,
     selectedDate,
     minDate,
     title = 'Select Date',
-}: GlassCalendarModalProps) {
+}: SolidCalendarModalProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const isDark = colorScheme === 'dark';
 
@@ -73,8 +73,8 @@ export function GlassCalendarModal({
     // Replaced Native Modal with absolute View to fix Navigation Context Crash (Expo 54/RN 0.76+)
     return (
         <View
-            testID="glass-calendar-modal"
-            className="absolute inset-0 z-50 flex-1 items-center justify-center bg-black/60"
+            testID="solid-calendar-modal"
+            className="absolute inset-0 z-50 flex-1 items-center justify-center bg-black/50"
             // Ensure this sits on top of everything within its stacking context
             style={{ elevation: 100 }}
         >
@@ -83,16 +83,16 @@ export function GlassCalendarModal({
 
             <View className="w-[90%] max-w-[360px]">
                 <View
-                    className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-2xl bg-white dark:bg-slate-900"
+                    className="rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 shadow-apple-lg bg-white dark:bg-slate-900"
                 >
                     {/* Header */}
-                    <View className="flex-row items-center justify-between p-4 border-b border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+                    <View className="flex-row items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
                         <Text className="text-slate-900 dark:text-white font-bold text-sm uppercase tracking-wider">
                             {title}
                         </Text>
                         <Pressable
                             onPress={onClose}
-                            className="p-1 rounded-full bg-slate-200/50 dark:bg-white/10 active:opacity-70"
+                            className="p-1 rounded-none bg-slate-200 dark:bg-slate-700 active:opacity-70"
                         >
                             <X size={16} color={isDark ? '#94a3b8' : '#64748b'} />
                         </Pressable>
@@ -114,7 +114,7 @@ export function GlassCalendarModal({
                     </View>
 
                     {/* Footer Hint */}
-                    <View className="p-3 bg-slate-50/50 dark:bg-black/20 border-t border-slate-200/50 dark:border-white/5">
+                    <View className="p-3 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800">
                         <Text className="text-center text-xs text-slate-500 font-medium">
                             Swipe to change months
                         </Text>

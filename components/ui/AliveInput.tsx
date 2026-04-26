@@ -63,7 +63,7 @@ export function AliveInput({ icon, containerClassName, style, isValid, hasError,
     return (
         <View className="mb-2">
             <Animated.View
-                className={`flex-row items-center bg-inputBackground rounded-none px-4 shadow-none ${containerClassName}`}
+                className={`flex-row items-center bg-inputBackground rounded-none px-5 shadow-none ${containerClassName}`}
                 style={[{ flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? '#18181B' : '#FFFFFF' }, animatedStyle]}
             >
                 {icon && <View className="mr-3">{icon}</View>}

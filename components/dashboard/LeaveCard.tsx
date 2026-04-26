@@ -1,8 +1,7 @@
-import { useColorScheme } from '@/components/useColorScheme';
 import { LeaveBalance, LeaveRequest } from '@/types/schema';
 import { formatDays } from '@/utils/formatDays';
-import { projectLeaveBalance } from '@/utils/leaveProjection';
-import { addMonths, differenceInDays, format, parseISO } from 'date-fns';
+import { projectLeaveBalance, calculate90DayProjection } from '@/utils/leaveProjection';
+import { differenceInDays, format, parseISO } from 'date-fns';
 import { ChevronRight, Clock, Plus, Umbrella, Zap } from 'lucide-react-native';
 import React, { useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -28,8 +27,6 @@ export function LeaveCard({
     onFullRequest,
     onExpand,
 }: LeaveCardProps) {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
     const [expanded, setExpanded] = useState(false);
 
     const hasRequests = requests.length > 0;
@@ -38,28 +35,8 @@ export function LeaveCard({
     // Calculate 90-day projection
     const ninetyDayProjection = useMemo(() => {
         const currentBalance = leaveBalance?.currentBalance ?? balance;
-        // Accrual of 2.5 days/month for 3 months = 7.5 days
-        const accruedDays = 7.5;
-        const now = new Date();
-        const threeMonthsFromNow = addMonths(now, 3);
-
-        let chargeableDaysInWindow = 0;
-        
         const allReqs = allRequests ?? requests;
-        allReqs.forEach(req => {
-            if (req.status === 'approved' || req.status === 'pending') {
-                const departureDate = parseISO(req.startDate);
-                if (departureDate <= threeMonthsFromNow && departureDate >= now) {
-                    const returnDate = parseISO(req.endDate);
-                    const chargeableDays = req.chargeDays > 0
-                        ? req.chargeDays
-                        : Math.max(0, differenceInDays(returnDate, departureDate) + 1);
-                    chargeableDaysInWindow += chargeableDays;
-                }
-            }
-        });
-
-        return currentBalance + accruedDays - chargeableDaysInWindow;
+        return calculate90DayProjection(currentBalance, allReqs);
     }, [leaveBalance, balance, allRequests, requests]);
 
     // Pre-compute projections for all active requests
@@ -111,7 +88,7 @@ export function LeaveCard({
                     <View className="flex-row items-center justify-between mb-5">
                         <View className="flex-row items-center gap-4 flex-1">
                             <View className="w-[52px] h-[52px] bg-secondary-container items-center justify-center">
-                                <Umbrella size={26} color={isDark ? '#3e2e00' : '#6d5200'} />
+                                <Umbrella size={26} className="text-on-secondary-container" />
                             </View>
                             <View className="flex-1 mr-2">
                                 <Text className="text-on-surface text-[20px] font-display uppercase tracking-wide leading-tight mb-0.5" numberOfLines={2}>
@@ -131,7 +108,7 @@ export function LeaveCard({
                                 onPress={onQuickRequest}
                                 className="w-10 h-10 bg-secondary-container items-center justify-center"
                             >
-                                <Zap size={18} color={isDark ? '#3e2e00' : '#6d5200'} strokeWidth={2.5} />
+                                <Zap size={18} className="text-on-secondary-container" strokeWidth={2.5} />
                             </TouchableOpacity>
 
                             {/* Full Request */}
@@ -140,7 +117,7 @@ export function LeaveCard({
                                 onPress={onFullRequest}
                                 className="w-10 h-10 bg-transparent border-2 border-outline-variant items-center justify-center"
                             >
-                                <Plus size={18} color={isDark ? '#ffffff' : '#1a1b1f'} strokeWidth={2.5} />
+                                <Plus size={18} className="text-on-surface" strokeWidth={2.5} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -175,8 +152,8 @@ export function LeaveCard({
                                                     border: 'border-transparent',
                                                     text: 'text-on-secondary-container',
                                                     label: 'text-on-secondary-container',
-                                                    icon: isDark ? "#3e2e00" : "#6d5200",
-                                                    projText: isDark ? '#3e2e00' : '#6d5200'
+                                                    iconClass: 'text-on-secondary-container',
+                                                    projTextClass: 'text-on-secondary-container'
                                                 };
                                             case 'returned':
                                             case 'denied':
@@ -185,8 +162,8 @@ export function LeaveCard({
                                                     border: 'border-transparent',
                                                     text: 'text-on-error',
                                                     label: 'text-on-error',
-                                                    icon: isDark ? "#690005" : "#ffffff",
-                                                    projText: isDark ? '#690005' : '#ffffff'
+                                                    iconClass: 'text-on-error',
+                                                    projTextClass: 'text-on-error'
                                                 };
                                             default: // draft, pending
                                                 return {
@@ -194,8 +171,8 @@ export function LeaveCard({
                                                     border: 'border-[1.5px] border-outline-variant',
                                                     text: 'text-on-surface',
                                                     label: 'text-on-surface-variant',
-                                                    icon: isDark ? "#e5e2e1" : "#1a1b1f",
-                                                    projText: isDark ? '#e5e2e1' : '#1a1b1f'
+                                                    iconClass: 'text-on-surface',
+                                                    projTextClass: 'text-on-surface'
                                                 };
                                         }
                                     };
@@ -221,13 +198,13 @@ export function LeaveCard({
                                                         <Text className={`text-[10px] font-headline uppercase ${colors.label}`}>
                                                             {req.status}
                                                         </Text>
-                                                        {(req.status === 'draft' || req.status === 'pending') && <Clock size={10} color={colors.icon} />}
+                                                        {(req.status === 'draft' || req.status === 'pending') && <Clock size={10} className={colors.iconClass} />}
                                                     </View>
                                                     <Text className={`text-xs font-headline ${colors.text}`}>
                                                         {formatDateRange(req.startDate, req.endDate)}
                                                     </Text>
                                                 </View>
-                                                <ChevronRight size={14} color={isDark ? '#94a3b8' : '#64748b'} />
+                                                <ChevronRight size={14} className="text-outline-variant" />
                                             </View>
 
                                             {/* Bottom Row: Projection Data */}
@@ -241,21 +218,19 @@ export function LeaveCard({
                                                         <>
                                                             <View className="flex-row items-center gap-1">
                                                                 <Text className="text-[9px] font-headline uppercase text-on-surface-variant">Avail</Text>
-                                                                <Text className="text-[11px] font-bold font-mono" style={{ color: colors.projText }}>
+                                                                <Text className={`text-[11px] font-bold font-mono ${colors.projTextClass}`}>
                                                                     {formatDays(proj.availableOnDeparture)}
                                                                 </Text>
                                                             </View>
                                                             <View className="flex-row items-center gap-1">
                                                                 <Text className="text-[9px] font-headline uppercase text-on-surface-variant">Chg</Text>
-                                                                <Text className="text-[11px] font-bold font-mono" style={{ color: colors.projText }}>
+                                                                <Text className={`text-[11px] font-bold font-mono ${colors.projTextClass}`}>
                                                                     {formatDays(req.chargeDays || proj.availableOnDeparture - proj.remainingOnReturn)}
                                                                 </Text>
                                                             </View>
                                                             <View className="flex-row items-center gap-1">
                                                                 <Text className="text-[9px] font-headline uppercase text-on-surface-variant">Rem</Text>
-                                                                <Text className={`text-[11px] font-bold font-mono ${proj.isOverdraft ? 'text-error' : ''}`}
-                                                                    style={!proj.isOverdraft ? { color: colors.projText } : undefined}
-                                                                >
+                                                                <Text className={`text-[11px] font-bold font-mono ${proj.isOverdraft ? 'text-error' : colors.projTextClass}`}>
                                                                     {formatDays(proj.remainingOnReturn)}
                                                                 </Text>
                                                             </View>

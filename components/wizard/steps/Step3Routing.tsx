@@ -33,30 +33,30 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
 
                 {/* Group 1: Duty Info */}
                 <View className="gap-3">
-                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+                    <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1">
                         DUTY INFORMATION
                     </Text>
-                    <View className="bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700 gap-4">
+                    <View className="bg-surface-container rounded-none p-4 border border-outline-variant gap-4">
 
                         {/* Duty Section */}
-                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 py-2 gap-3">
-                            <Briefcase size={20} color={themeColors.tint} strokeWidth={2} />
+                        <View className="flex-row items-center border-b border-outline-variant py-2 gap-3">
+                            <Briefcase size={20} className="text-primary" strokeWidth={2} />
                             <TextInput
-                                className="flex-1 text-base text-labelPrimary dark:text-white"
+                                className="flex-1 text-base text-on-surface"
                                 placeholder="Duty Section (e.g. N1 Admin)"
-                                placeholderTextColor={Colors.gray[500]}
+                                placeholderTextColor={themeColors.outlineVariant}
                                 value={formData.dutySection}
                                 onChangeText={(text) => handleTextChange('dutySection', text)}
                             />
                         </View>
 
                         {/* Dept/Div */}
-                        <View className="flex-row items-center border-b border-gray-200 dark:border-slate-700 py-2 gap-3">
-                            <Building2 size={20} color={themeColors.tint} strokeWidth={2} />
+                        <View className="flex-row items-center border-b border-outline-variant py-2 gap-3">
+                            <Building2 size={20} className="text-primary" strokeWidth={2} />
                             <TextInput
-                                className="flex-1 text-base text-labelPrimary dark:text-white"
+                                className="flex-1 text-base text-on-surface"
                                 placeholder="Dept / Div"
-                                placeholderTextColor={Colors.gray[500]}
+                                placeholderTextColor={themeColors.outlineVariant}
                                 value={formData.deptDiv}
                                 onChangeText={(text) => handleTextChange('deptDiv', text)}
                             />
@@ -64,11 +64,11 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
 
                         {/* Duty Phone */}
                         <View className="flex-row items-center py-2 gap-3">
-                            <Phone size={20} color={themeColors.tint} strokeWidth={2} />
+                            <Phone size={20} className="text-primary" strokeWidth={2} />
                             <TextInput
-                                className="flex-1 text-base text-labelPrimary dark:text-white"
+                                className="flex-1 text-base text-on-surface"
                                 placeholder="Duty Phone"
-                                placeholderTextColor={Colors.gray[500]}
+                                placeholderTextColor={themeColors.outlineVariant}
                                 value={formData.dutyPhone}
                                 onChangeText={(text) => handleTextChange('dutyPhone', text)}
                                 keyboardType="phone-pad"
@@ -79,10 +79,10 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
 
                 {/* Group 2: Ration Status */}
                 <View className="gap-3">
-                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+                    <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1">
                         RATION STATUS
                     </Text>
-                    <View className="bg-inputBackground rounded-2xl p-2 border border-slate-200 dark:border-slate-700 flex-row">
+                    <View className="bg-surface-container rounded-none p-2 border border-outline-variant flex-row">
                         {RATION_OPTIONS.map((option) => {
                             const isSelected = formData.rationStatus === option.id;
                             return (
@@ -94,23 +94,11 @@ export function Step3Routing({ formData, onUpdate, embedded = false }: Step3Rout
                                         });
                                         onUpdate('rationStatus', option.id);
                                     }}
-                                    style={{
-                                        flex: 1,
-                                        paddingVertical: 12, // py-3
-                                        paddingHorizontal: 8, // px-2
-                                        borderRadius: 12, // rounded-xl
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        backgroundColor: isSelected ? (isDark ? '#334155' : 'white') : 'transparent',
-                                        shadowColor: isSelected ? '#000' : undefined,
-                                        shadowOffset: isSelected ? { width: 0, height: 1 } : undefined,
-                                        shadowOpacity: isSelected ? 0.05 : undefined,
-                                        elevation: isSelected ? 1 : undefined,
-                                    }}
+                                    className={`flex-1 py-3 px-2 rounded-none items-center justify-center ${isSelected ? 'bg-primary-container' : 'bg-transparent'}`}
                                 >
-                                    <Text className={`font-medium ${isSelected
-                                        ? 'text-blue-600 dark:text-blue-400'
-                                        : 'text-gray-500 dark:text-gray-400'
+                                    <Text className={`font-bold ${isSelected
+                                        ? 'text-on-primary-container'
+                                        : 'text-on-surface-variant'
                                         }`}>
                                         {option.label}
                                     </Text>

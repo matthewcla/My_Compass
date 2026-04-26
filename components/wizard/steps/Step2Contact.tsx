@@ -36,20 +36,20 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
 
                 {/* 0. Location & Legal */}
                 <View>
-                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">
+                    <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 ml-1">
                         Leave Area
                     </Text>
 
-                    <Animated.View layout={LinearTransition} className="bg-inputBackground rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <Animated.View layout={LinearTransition} className="bg-surface-container rounded-none border border-outline-variant overflow-hidden">
                         {/* CONUS Toggle */}
-                        <View className="flex-row items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700/50">
+                        <View className="flex-row items-center justify-between p-4 border-b border-outline-variant">
                             <View className="flex-row items-center flex-1 mr-4">
-                                <View className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 items-center justify-center mr-3">
-                                    <MapPin size={20} className="text-blue-600 dark:text-blue-400" />
+                                <View className="w-10 h-10 rounded-none bg-primary-container items-center justify-center mr-3">
+                                    <MapPin size={20} className="text-primary" />
                                 </View>
                                 <View>
-                                    <Text className="text-base font-bold text-labelPrimary dark:text-white">Leave inside CONUS?</Text>
-                                    <Text className="text-xs text-slate-500 mt-0.5">Continental United States</Text>
+                                    <Text className="text-base font-bold text-on-surface">Leave inside CONUS?</Text>
+                                    <Text className="text-xs text-on-surface-variant mt-0.5">Continental United States</Text>
                                 </View>
                             </View>
                             <Switch
@@ -58,7 +58,7 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                                     Haptics.selectionAsync();
                                     onUpdate('leaveInConus', val);
                                 }}
-                                trackColor={{ false: '#767577', true: '#2563EB' }}
+                                trackColor={{ false: '#767577', true: themeColors.primary }}
                                 thumbColor={'#FFFFFF'}
                             />
                         </View>
@@ -66,13 +66,13 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                         {/* Destination Country (Conditional) */}
                         {!formData.leaveInConus && (
                             <Animated.View entering={FadeIn} exiting={FadeOut}>
-                                <View className="p-4 bg-white dark:bg-slate-900/30">
+                                <View className="p-4 bg-surface">
                                     <AliveInput
                                         value={formData.destinationCountry}
                                         onChangeText={(text) => onUpdate('destinationCountry', text)}
                                         placeholder="e.g. Japan, Germany, Italy"
-                                        icon={<Globe2 size={20} className="text-orange-600 dark:text-orange-400" />}
-                                        containerClassName="border-orange-200 dark:border-orange-900/50 bg-orange-50/50 dark:bg-orange-950/20"
+                                        icon={<Globe2 size={20} className="text-on-secondary-container" />}
+                                        containerClassName="border-outline-variant bg-secondary-container"
                                     />
                                 </View>
                             </Animated.View>
@@ -82,7 +82,7 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
 
                 {/* 1. Address & Phone */}
                 <View className="gap-4">
-                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+                    <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1">
                         Contact Info
                     </Text>
 
@@ -108,7 +108,7 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
 
                 {/* 3. Mode of Travel (Visual Cards) */}
                 <View className="gap-3">
-                    <Text className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+                    <Text className="text-xs font-bold text-on-surface-variant uppercase tracking-widest ml-1">
                         Mode of Travel
                     </Text>
                     <ScrollView
@@ -120,9 +120,8 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                             const isSelected = formData.modeOfTravel === mode.id;
                             const Icon = mode.icon;
 
-                            // Dynamic Colors based on selection
-                            const activeBg = isDark ? 'bg-slate-800' : 'bg-white';
-                            const activeBorder = isDark ? 'border-blue-500' : 'border-blue-500';
+                            const activeBg = 'bg-primary-container';
+                            const activeBorder = 'border-primary';
 
                             return (
                                 <Animated.View
@@ -135,26 +134,26 @@ export function Step2Contact({ formData, onUpdate, embedded = false }: Step2Cont
                                             onUpdate('modeOfTravel', mode.id);
                                         }}
                                         activeOpacity={0.7}
-                                        className={`w-28 h-28 p-3 rounded-2xl border-2 justify-between ${isSelected
+                                        className={`w-28 h-28 p-3 rounded-none border-2 justify-between ${isSelected
                                             ? `${activeBg} ${activeBorder}`
-                                            : 'bg-inputBackground border-slate-200 dark:border-transparent'
+                                            : 'bg-surface-container border-outline-variant'
                                             }`}
                                     >
-                                        <View className={`w-10 h-10 rounded-full items-center justify-center ${isSelected ? 'bg-blue-500' : 'bg-slate-200 dark:bg-slate-700'
+                                        <View className={`w-10 h-10 rounded-none items-center justify-center ${isSelected ? 'bg-primary' : 'bg-surface-variant'
                                             }`}>
                                             <Icon
                                                 size={20}
-                                                color={isSelected ? 'white' : (isDark ? '#94a3b8' : '#64748b')}
+                                                color={isSelected ? themeColors.onPrimary : themeColors.onSurfaceVariant}
                                                 strokeWidth={2.5}
                                             />
                                         </View>
                                         <View>
-                                            <Text className={`font-bold text-base ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'
+                                            <Text className={`font-bold text-base ${isSelected ? 'text-on-primary-container' : 'text-on-surface-variant'
                                                 }`}>
                                                 {mode.label}
                                             </Text>
                                             {isSelected && (
-                                                <Animated.View entering={FadeIn} className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1" />
+                                                <Animated.View entering={FadeIn} className="w-1.5 h-1.5 rounded-none bg-primary mt-1" />
                                             )}
                                         </View>
                                     </TouchableOpacity>

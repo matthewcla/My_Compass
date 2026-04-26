@@ -17,44 +17,44 @@ export function ReviewSign({ formData, embedded = false }: ReviewSignProps) {
     return (
         <WizardCard title="Review Request" scrollable={!embedded}>
             <View className="gap-6 pb-6">
-                <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-900/50">
-                    <Text className="text-blue-900 dark:text-blue-100 font-bold text-lg mb-4">Summary</Text>
+                <View className="bg-primary-container p-4 rounded-none border border-primary">
+                    <Text className="text-on-primary-container font-bold text-lg mb-4">Summary</Text>
 
                     <View className="gap-4">
                         <View>
-                            <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Dates</Text>
-                            <Text className="text-base text-labelPrimary font-medium">{formData.startDate} to {formData.endDate}</Text>
+                            <Text className="text-xs font-bold text-primary uppercase tracking-widest">Dates</Text>
+                            <Text className="text-base text-on-surface font-medium">{formData.startDate} to {formData.endDate}</Text>
                         </View>
 
                         <View>
-                            <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Type</Text>
-                            <Text className="text-base text-labelPrimary font-medium capitalize">{formData.leaveType}</Text>
+                            <Text className="text-xs font-bold text-primary uppercase tracking-widest">Type</Text>
+                            <Text className="text-base text-on-surface font-medium capitalize">{formData.leaveType}</Text>
                         </View>
 
                         <View>
-                            <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Location</Text>
-                            <Text className="text-base text-labelPrimary font-medium">{formData.leaveAddress}</Text>
-                            <Text className="text-base text-labelPrimary">{formData.leavePhoneNumber}</Text>
+                            <Text className="text-xs font-bold text-primary uppercase tracking-widest">Location</Text>
+                            <Text className="text-base text-on-surface font-medium">{formData.leaveAddress}</Text>
+                            <Text className="text-base text-on-surface">{formData.leavePhoneNumber}</Text>
                         </View>
 
                         <View>
-                            <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Emergency Contact</Text>
-                            <Text className="text-base text-labelPrimary font-medium">{formData.emergencyContact?.name} ({formData.emergencyContact?.relationship})</Text>
-                            <Text className="text-base text-labelPrimary">{formData.emergencyContact?.phoneNumber}</Text>
+                            <Text className="text-xs font-bold text-primary uppercase tracking-widest">Emergency Contact</Text>
+                            <Text className="text-base text-on-surface font-medium">{formData.emergencyContact?.name} ({formData.emergencyContact?.relationship})</Text>
+                            <Text className="text-base text-on-surface">{formData.emergencyContact?.phoneNumber}</Text>
                         </View>
 
                         <View>
-                            <Text className="text-xs font-bold text-systemBlue uppercase tracking-widest">Remarks</Text>
-                            <Text className="text-base text-labelPrimary font-italic">{formData.memberRemarks || "None"}</Text>
+                            <Text className="text-xs font-bold text-primary uppercase tracking-widest">Remarks</Text>
+                            <Text className="text-base text-on-surface font-italic">{formData.memberRemarks || "None"}</Text>
                         </View>
                     </View>
                 </View>
 
-                <View className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/50 flex-row items-start">
+                <View className="bg-warning-container p-4 rounded-none border border-warning flex-row items-start">
                     <View className="mt-1 mr-3">
-                        <CheckCircle2 size={20} color={themeColors.navyGold} strokeWidth={1.5} />
+                        <CheckCircle2 size={20} className="text-warning" strokeWidth={1.5} />
                     </View>
-                    <Text className="text-amber-800 dark:text-amber-100 text-sm flex-1">
+                    <Text className="text-on-warning-container text-sm flex-1">
                         By submitting this request, you certify that the information provided is accurate and you understand the leave policies relevant to your request type.
                     </Text>
                 </View>

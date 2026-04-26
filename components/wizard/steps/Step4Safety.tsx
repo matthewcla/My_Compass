@@ -37,23 +37,23 @@ export function Step4Safety({ formData, onUpdate, embedded = false }: Step4Safet
                 {/* Section 1: Emergency Contact */}
                 <View className="gap-4">
                     <View className="flex-row items-center gap-2">
-                        <UserPlus size={22} color={themeColors.tint} strokeWidth={2} />
-                        <Text className="text-lg font-bold text-gray-900 dark:text-white">
+                        <UserPlus size={22} className="text-primary" strokeWidth={2} />
+                        <Text className="text-lg font-bold text-on-surface">
                             Emergency Contact
                         </Text>
                     </View>
 
-                    <View className="bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700 gap-4">
+                    <View className="bg-surface-container rounded-none p-4 border border-outline-variant gap-4">
 
                         {/* Name */}
                         <View className="gap-2">
-                            <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Name</Text>
-                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 gap-3">
-                                <User size={18} color={themeColors.tabIconDefault} />
+                            <Text className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider ml-1">Name</Text>
+                            <View className="flex-row items-center bg-surface border border-outline-variant rounded-none px-5 py-4 gap-3">
+                                <User size={18} className="text-on-surface-variant" />
                                 <TextInput
-                                    className="flex-1 text-base text-gray-900 dark:text-white"
+                                    className="flex-1 text-base text-on-surface"
                                     placeholder="Full Name"
-                                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                    placeholderTextColor={isDark ? '#8E909A' : '#747780'}
                                     value={formData.emergencyContact?.name}
                                     onChangeText={(text) => handleEmergencyUpdate('name', text)}
                                 />
@@ -62,13 +62,13 @@ export function Step4Safety({ formData, onUpdate, embedded = false }: Step4Safet
 
                         {/* Relationship */}
                         <View className="gap-2">
-                            <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Relationship</Text>
-                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 gap-3">
-                                <User size={18} color={themeColors.tabIconDefault} />
+                            <Text className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider ml-1">Relationship</Text>
+                            <View className="flex-row items-center bg-surface border border-outline-variant rounded-none px-5 py-4 gap-3">
+                                <User size={18} className="text-on-surface-variant" />
                                 <TextInput
-                                    className="flex-1 text-base text-gray-900 dark:text-white"
+                                    className="flex-1 text-base text-on-surface"
                                     placeholder="e.g. Spouse, Parent"
-                                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                    placeholderTextColor={isDark ? '#8E909A' : '#747780'}
                                     value={formData.emergencyContact?.relationship}
                                     onChangeText={(text) => handleEmergencyUpdate('relationship', text)}
                                 />
@@ -77,13 +77,13 @@ export function Step4Safety({ formData, onUpdate, embedded = false }: Step4Safet
 
                         {/* Phone */}
                         <View className="gap-2">
-                            <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Phone Number</Text>
-                            <View className="flex-row items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-3 gap-3">
-                                <Phone size={18} color={themeColors.tabIconDefault} />
+                            <Text className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider ml-1">Phone Number</Text>
+                            <View className="flex-row items-center bg-surface border border-outline-variant rounded-none px-5 py-4 gap-3">
+                                <Phone size={18} className="text-on-surface-variant" />
                                 <TextInput
-                                    className="flex-1 text-base text-gray-900 dark:text-white"
+                                    className="flex-1 text-base text-on-surface"
                                     placeholder="555-123-4567"
-                                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                                    placeholderTextColor={isDark ? '#8E909A' : '#747780'}
                                     value={formData.emergencyContact?.phoneNumber}
                                     onChangeText={(text) => handleEmergencyUpdate('phoneNumber', text)}
                                     keyboardType="phone-pad"
@@ -97,17 +97,17 @@ export function Step4Safety({ formData, onUpdate, embedded = false }: Step4Safet
                 {/* Section 2: Remarks */}
                 <View className="gap-4">
                     <View className="flex-row items-center gap-2">
-                        <FileText size={22} color={themeColors.tint} strokeWidth={2} />
-                        <Text className="text-lg font-bold text-gray-900 dark:text-white">
+                        <FileText size={22} className="text-primary" strokeWidth={2} />
+                        <Text className="text-lg font-bold text-on-surface">
                             Member Remarks
                         </Text>
                     </View>
 
-                    <View className="bg-inputBackground rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
+                    <View className="bg-surface-container rounded-none p-4 border border-outline-variant">
                         <TextInput
-                            className="flex-1 text-base text-gray-900 dark:text-white min-h-[120px]"
+                            className="flex-1 text-base text-on-surface min-h-[120px]"
                             placeholder="Add any additional context for your chain of command here..."
-                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                            placeholderTextColor={isDark ? '#8E909A' : '#747780'}
                             value={formData.memberRemarks}
                             onChangeText={(text) => onUpdate('memberRemarks', text)}
                             multiline

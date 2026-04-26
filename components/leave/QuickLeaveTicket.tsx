@@ -1,7 +1,5 @@
 import { SolidCalendarModal } from '@/components/ui/SolidCalendarModal';
-import { SolidView } from '@/components/ui/SolidView';
 import { SignatureButton } from '@/components/ui/SignatureButton';
-import Colors from '@/constants/Colors';
 import { useLeaveStore } from '@/store/useLeaveStore';
 import { CreateLeaveRequestPayload } from '@/types/api';
 import { LeaveRequest } from '@/types/schema';
@@ -28,12 +26,12 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
     const [endDate, setEndDate] = useState(new Date(draft.endDate));
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Dummy Default Address if missing
-    const displayAddress = draft.leaveAddress || "123 Sailor Blvd, Norfolk, VA";
-
     // Date Picker State
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
+
+    // UX SPEC: Strict validation boolean instead of reactive alerts
+    const isReadyToSign = Boolean(draft.leaveAddress && draft.leavePhoneNumber && draft.emergencyContact);
 
     const onStartDateChange = (selectedDate: Date) => {
         setStartDate(selectedDate);
@@ -47,23 +45,17 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
     };
 
     const handleSign = async () => {
+        if (!isReadyToSign) return;
+
         setIsSubmitting(true);
         try {
-            const finalAddress = draft.leaveAddress || displayAddress;
-
-            if (!finalAddress || !draft.leavePhoneNumber || !draft.emergencyContact) {
-                Alert.alert('Missing Info', 'Some required information is missing. Please edit the full request.');
-                setIsSubmitting(false);
-                return;
-            }
-
             const payload: CreateLeaveRequestPayload = {
                 startDate: startDate.toISOString(),
                 endDate: endDate.toISOString(),
                 leaveType: draft.leaveType,
-                leaveAddress: finalAddress,
-                leavePhoneNumber: draft.leavePhoneNumber,
-                emergencyContact: draft.emergencyContact,
+                leaveAddress: draft.leaveAddress!,
+                leavePhoneNumber: draft.leavePhoneNumber!,
+                emergencyContact: draft.emergencyContact!,
                 dutySection: draft.dutySection,
                 deptDiv: draft.deptDiv,
                 dutyPhone: draft.dutyPhone,
@@ -107,70 +99,70 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
 
     const cardContent = (
         <>
-            {/* Header */}
+            {/* Header: Removed Text Shadows, Added strict typographic hierarchy */}
             <View className="flex-row items-center justify-between px-5 pt-5 pb-0">
                 <View className="flex-1">
-                    <Text className="text-slate-400 font-bold text-[10px] tracking-[2px] uppercase mb-0.5" style={{ textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
+                    <Text className="text-on-surface-variant font-bold text-[10px] tracking-[2px] uppercase mb-0.5">
                         QUICK TICKET
                     </Text>
-                    <Text className="text-[20px] font-[800] tracking-[-0.5px] leading-tight text-white" style={{ textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }}>
+                    <Text className="text-[20px] font-bold tracking-[-0.5px] leading-tight text-on-surface">
                         Leave Request
                     </Text>
                 </View>
                 <Pressable
                     onPress={onClose}
-                    className="w-8 h-8 rounded-full items-center justify-center bg-white/10 active:opacity-70"
+                    className="w-8 h-8 rounded-full items-center justify-center bg-surface-container active:opacity-70"
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                    <X size={16} color="#9ca3af" />
+                    <X size={16} className="text-on-surface-variant" />
                 </Pressable>
             </View>
 
             {/* Main Content */}
             <View className="p-5 pt-4 gap-5">
 
-                {/* Hero: Date Pills (centered) */}
+                {/* Hero: Date Pills (Sharp Corners, Semantic Colors) */}
                 <View className="items-center gap-2 mt-1">
                     <View className="flex-row items-center gap-3">
                         <TouchableOpacity
                             onPress={() => setShowStartPicker(true)}
-                            className="px-5 items-center justify-center rounded-lg bg-slate-700/50 border border-slate-600/40"
+                            className="px-5 items-center justify-center rounded-none bg-surface-container border border-outline-variant"
                             style={{ minHeight: 44 }}
                         >
-                            <Text className="text-white text-base font-mono font-bold tracking-tight">
+                            <Text className="text-on-surface text-base font-mono font-bold tracking-tight">
                                 {format(startDate, 'dd MMM')}
                             </Text>
                         </TouchableOpacity>
 
-                        <Triangle size={10} color="#94a3b8" rotation={90} fill="#94a3b8" />
+                        <Triangle size={10} className="text-on-surface-variant" rotation={90} />
 
                         <TouchableOpacity
                             onPress={() => setShowEndPicker(true)}
-                            className="px-5 items-center justify-center rounded-lg bg-slate-700/50 border border-slate-600/40"
+                            className="px-5 items-center justify-center rounded-none bg-surface-container border border-outline-variant"
                             style={{ minHeight: 44 }}
                         >
-                            <Text className="text-white text-base font-mono font-bold tracking-tight">
+                            <Text className="text-on-surface text-base font-mono font-bold tracking-tight">
                                 {format(endDate, 'dd MMM')}
                             </Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Chargeable days subtitle */}
-                    <Text className="text-slate-400 text-xs font-semibold mt-1">
+                    <Text className="text-on-surface-variant text-xs font-semibold mt-1">
                         {daysCount} chargeable {daysCount === 1 ? 'day' : 'days'}
                     </Text>
                 </View>
 
-                {/* Projection Strip: Avail | Charge | Remain */}
-                <View className={`flex-row items-center justify-between rounded-xl px-3 py-3 border ${projection.isUnchargeable
-                        ? 'bg-slate-800/40 border-slate-700/50'
+                {/* Projection Strip: Rigid layout, 0px border radius */}
+                <View className={`flex-row items-center justify-between rounded-none px-3 py-3 border ${projection.isUnchargeable
+                        ? 'bg-surface-container-high border-outline-variant'
                         : projection.isOverdraft
-                            ? 'bg-error-container/20 border-error/50'
-                            : 'bg-emerald-950/20 border-emerald-900/50'
+                            ? 'bg-error-container border-error'
+                            : 'bg-surface-container border-outline'
                     }`}>
                     {projection.isUnchargeable ? (
                         <View className="flex-1 items-center">
-                            <Text className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                            <Text className="text-on-surface-variant text-xs font-semibold uppercase tracking-wider">
                                 No charge to leave balance
                             </Text>
                         </View>
@@ -178,36 +170,36 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                         <>
                             {/* Available */}
                             <View className="flex-1 items-center">
-                                <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
+                                <Text className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider mb-0.5">
                                     Avail
                                 </Text>
-                                <Text className="text-white text-xl font-mono font-bold">
+                                <Text className="text-on-surface text-xl font-mono font-bold">
                                     {formatDays(projection.availableOnDeparture)}
                                 </Text>
                             </View>
 
                             {/* Divider */}
-                            <View className="h-6 w-[1px] bg-slate-600" />
+                            <View className="h-6 w-[1px] bg-outline-variant" />
 
                             {/* Charge */}
                             <View className="flex-1 items-center">
-                                <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
+                                <Text className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider mb-0.5">
                                     Charge
                                 </Text>
-                                <Text className="text-white text-xl font-mono font-bold">
+                                <Text className="text-on-surface text-xl font-mono font-bold">
                                     {daysCount}.0
                                 </Text>
                             </View>
 
                             {/* Divider */}
-                            <View className="h-6 w-[1px] bg-slate-600" />
+                            <View className="h-6 w-[1px] bg-outline-variant" />
 
                             {/* Remaining */}
                             <View className="flex-1 items-center">
-                                <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">
+                                <Text className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider mb-0.5">
                                     Remain
                                 </Text>
-                                <Text className={`text-xl font-mono font-bold ${projection.isOverdraft ? 'text-error' : 'text-emerald-400'}`}>
+                                <Text className={`text-xl font-mono font-bold ${projection.isOverdraft ? 'text-error' : 'text-primary'}`}>
                                     {formatDays(projection.remainingOnReturn)}
                                 </Text>
                             </View>
@@ -219,36 +211,36 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                 <View className="gap-4 mt-2">
                     {/* Location */}
                     <View className="flex-row items-center gap-4">
-                        <View className="w-10 h-10 rounded-full items-center justify-center border border-blue-900/60 bg-blue-900/40">
-                            <MapPin size={18} color={!draft.leaveAddress ? '#fb7185' : '#60a5fa'} />
+                        <View className={`w-10 h-10 rounded-full items-center justify-center border ${!draft.leaveAddress ? 'border-error bg-error-container' : 'border-primary bg-primary-container'}`}>
+                            <MapPin size={18} className={!draft.leaveAddress ? "text-error" : "text-primary"} />
                         </View>
                         <View className="flex-1">
                             <View className="flex-row justify-between items-center mb-0.5">
-                                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Location</Text>
+                                <Text className="text-on-surface-variant text-[10px] uppercase font-bold tracking-wider">Location</Text>
                                 <Pressable onPress={onEdit} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                                    <Text className="text-slate-300 text-[11px] font-bold">CHANGE</Text>
+                                    <Text className="text-primary text-[11px] font-bold">CHANGE</Text>
                                 </Pressable>
                             </View>
-                            <Text className={`text-[15px] font-[500] leading-tight mt-0.5 ${!draft.leaveAddress ? 'text-error italic' : 'text-slate-200'}`} numberOfLines={1}>
-                                {displayAddress}
+                            <Text className={`text-[15px] font-[500] leading-tight mt-0.5 ${!draft.leaveAddress ? 'text-error font-bold' : 'text-on-surface'}`} numberOfLines={1}>
+                                {draft.leaveAddress || "MISSING - ACTION REQUIRED"}
                             </Text>
                         </View>
                     </View>
 
                     {/* Emergency Contact */}
                     <View className="flex-row items-center gap-4">
-                        <View className="w-10 h-10 rounded-full items-center justify-center border border-slate-700 bg-slate-800/60">
-                            <Phone size={18} color="#94a3b8" />
+                        <View className={`w-10 h-10 rounded-full items-center justify-center border ${!draft.emergencyContact ? 'border-error bg-error-container' : 'border-outline-variant bg-surface-container'}`}>
+                            <Phone size={18} className={!draft.emergencyContact ? "text-error" : "text-on-surface-variant"} />
                         </View>
                         <View className="flex-1">
                             <View className="flex-row justify-between items-center mb-0.5">
-                                <Text className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Emergency</Text>
+                                <Text className="text-on-surface-variant text-[10px] uppercase font-bold tracking-wider">Emergency</Text>
                                 <Pressable onPress={onEdit} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                                    <Text className="text-slate-300 text-[11px] font-bold">EDIT</Text>
+                                    <Text className="text-primary text-[11px] font-bold">EDIT</Text>
                                 </Pressable>
                             </View>
-                            <Text className="text-slate-200 text-[15px] font-[500] leading-tight mt-0.5">
-                                {draft.emergencyContact?.name || "None Set"}
+                            <Text className={`text-[15px] font-[500] leading-tight mt-0.5 ${!draft.emergencyContact ? 'text-error font-bold' : 'text-on-surface'}`} numberOfLines={1}>
+                                {draft.emergencyContact?.name || "MISSING - ACTION REQUIRED"}
                             </Text>
                         </View>
                     </View>
@@ -260,6 +252,7 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
                 <SignatureButton
                     onSign={handleSign}
                     isSubmitting={isSubmitting}
+                    disabled={!isReadyToSign}
                 />
             </View>
         </>
@@ -267,14 +260,9 @@ export function QuickLeaveTicket({ draft, onSubmit, onEdit, onClose }: QuickLeav
 
     return (
         <View className="w-full">
-            <SolidView
-                intensity={80}
-                tint="dark"
-                className="rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.4)] bg-slate-900/60 border border-white/10"
-            >
-                <SolidView intensity={20} tint="dark" className="absolute inset-0" />
+            <View className="rounded-none border-t-4 border-t-secondary border-x border-b border-outline-variant bg-surface-container-lowest overflow-hidden">
                 {cardContent}
-            </SolidView>
+            </View>
 
             {/* Glass Calendar Modals */}
             <SolidCalendarModal

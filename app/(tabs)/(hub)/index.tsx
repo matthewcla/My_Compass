@@ -259,12 +259,21 @@ export default function HubDashboard() {
                                             toggleDrawer();
                                         }}
                                         hitSlop={12}
-                                        className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
+                                        className="p-2.5 rounded-xl hover:bg-slate-900/5 dark:hover:bg-white/10 active:scale-95 transition-all duration-200 ease-out"
                                     >
-                                        <Menu color={isDark ? Colors.dark.primary : Colors.light.text} size={24} />
+                                        {({ pressed, hovered }: any) => (
+                                            <Menu 
+                                                color={isDark ? "#f8fafc" : Colors.light.text} 
+                                                size={24} 
+                                                style={{ 
+                                                    opacity: pressed ? 0.7 : (hovered ? 0.9 : 1),
+                                                    transform: [{ scale: hovered && !pressed ? 1.05 : 1 }]
+                                                }}
+                                            />
+                                        )}
                                     </Pressable>
                                 )}
-                                <Text className="text-2xl font-display tracking-tighter text-primary dark:text-primary">
+                                <Text className="text-2xl font-display tracking-tighter text-primary dark:text-white">
                                     MyCompass
                                 </Text>
                             </View>
@@ -272,9 +281,18 @@ export default function HubDashboard() {
                                 <Pressable
                                     onPress={() => Alert.alert('Notifications', 'No new notifications at this time.')}
                                     hitSlop={12}
-                                    className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
+                                    className="p-2.5 rounded-xl hover:bg-slate-900/5 dark:hover:bg-white/10 active:scale-95 transition-all duration-200 ease-out"
                                 >
-                                    <Bell color={isDark ? Colors.dark.primary : Colors.light.text} size={24} />
+                                    {({ pressed, hovered }: any) => (
+                                        <Bell 
+                                            color={isDark ? "#f8fafc" : Colors.light.text} 
+                                            size={24} 
+                                            style={{ 
+                                                opacity: pressed ? 0.7 : (hovered ? 0.9 : 1),
+                                                transform: [{ scale: hovered && !pressed ? 1.05 : 1 }]
+                                            }}
+                                        />
+                                    )}
                                 </Pressable>
                             </View>
                         </View>

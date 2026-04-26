@@ -2,7 +2,8 @@ import { SearchConfig } from '@/store/useHeaderStore';
 import { useUIStore } from '@/store/useUIStore';
 import { Menu } from 'lucide-react-native';
 import React from 'react';
-import { Platform, Pressable, Text, View, useColorScheme } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ScreenHeaderProps {
@@ -58,16 +59,22 @@ export function ScreenHeader({
                             <Pressable
                                 onPress={actualLeftAction.onPress}
                                 hitSlop={12}
-                                className="p-2 hover:bg-surface-variant active:scale-95 transition-transform duration-100"
+                                className="p-2.5 rounded-xl hover:bg-slate-900/5 dark:hover:bg-white/10 active:scale-95 transition-all duration-200 ease-out"
                             >
-                                {({ pressed }) => {
+                                {({ pressed, hovered }: any) => {
                                     const LeftIcon = actualLeftAction.icon;
+                                    // Deep Navy in Light Mode, Soft Slate in Dark Mode
+                                    const iconColor = isDark ? "#f8fafc" : "#0A1628";
+                                    
                                     return (
                                         <LeftIcon
-                                            color={isDark ? "#ffffff" : "#0A1628"}
+                                            color={iconColor}
                                             size={isInline ? 20 : 24}
                                             strokeWidth={2.5}
-                                            style={{ opacity: pressed ? 0.7 : 1 }}
+                                            style={{ 
+                                                opacity: pressed ? 0.7 : (hovered ? 0.9 : 1),
+                                                transform: [{ scale: hovered && !pressed ? 1.05 : 1 }]
+                                            }}
                                         />
                                     );
                                 }}
@@ -92,15 +99,20 @@ export function ScreenHeader({
                             <Pressable
                                 onPress={rightAction.onPress}
                                 hitSlop={12}
+                                className="p-2.5 rounded-xl hover:bg-slate-900/5 dark:hover:bg-white/10 active:scale-95 transition-all duration-200 ease-out"
                             >
-                                {({ pressed }) => {
+                                {({ pressed, hovered }: any) => {
                                     const Icon = rightAction.icon;
+                                    const iconColor = isDark ? "#f8fafc" : "#0A1628";
                                     return (
                                         <Icon
-                                            color={isDark ? "#ffffff" : "#0A1628"}
+                                            color={iconColor}
                                             size={isInline ? 20 : 24}
                                             strokeWidth={2}
-                                            style={{ opacity: pressed ? 0.7 : 1 }}
+                                            style={{ 
+                                                opacity: pressed ? 0.7 : (hovered ? 0.9 : 1),
+                                                transform: [{ scale: hovered && !pressed ? 1.05 : 1 }]
+                                            }}
                                         />
                                     );
                                 }}

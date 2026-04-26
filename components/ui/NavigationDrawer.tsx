@@ -1,3 +1,4 @@
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useCurrentProfile, useDemoStore } from '@/store/useDemoStore';
 import { useUIStore } from '@/store/useUIStore';
 import { useRouter } from 'expo-router';
@@ -178,6 +179,10 @@ export function NavigationDrawer() {
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 999 }}>
                     <View className="bg-[#1c1b1b] p-6 rounded-2xl w-80 border border-[#44474f]">
                         <Text className="text-[#fdc400] font-headline font-bold text-xl mb-4 uppercase tracking-wide">SETTINGS</Text>
+                        
+                        <View className="mb-6">
+                            <ThemeToggle />
+                        </View>
                         
                         <View className="flex-row items-center justify-between mb-6">
                             <View className="flex-row items-center gap-3 flex-1 mr-4">

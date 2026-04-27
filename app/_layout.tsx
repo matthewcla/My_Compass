@@ -28,7 +28,9 @@ import { SessionTimeoutOverlay } from '@/components/SessionTimeoutOverlay';
 import { ThemeTransitionOverlay } from '@/components/ThemeTransitionOverlay';
 import { KeyboardActionToolbar } from '@/components/ui/KeyboardActionToolbar';
 import { NavigationDrawer } from '@/components/ui/NavigationDrawer';
+import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 import { useColorScheme } from '@/components/useColorScheme';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { SessionProvider, useSession } from '@/lib/ctx';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
@@ -145,16 +147,17 @@ function InnerLayout() {
     setIsLayoutReady(true);
   }, []);
 
-  const colorScheme = useColorScheme();
+  const systemTheme = useColorScheme();
+  const theme = useClientOnlyValue('dark', systemTheme ?? 'light');
 
   if (!fontsLoaded || !dbInitialized) {
     return null;
   }
 
   return (
-    <>
+    <ThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthGuard />
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} translucent />
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} translucent />
       <View
         className="flex-1 bg-white dark:bg-black"
         onLayout={onLayoutRootView}
@@ -176,7 +179,7 @@ function InnerLayout() {
         <KeyboardActionToolbar />
         <NavigationDrawer />
       </View>
-    </>
+    </ThemeProvider>
   );
 }
 

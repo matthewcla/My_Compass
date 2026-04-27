@@ -123,8 +123,9 @@ const CareerSnapshotWidget = () => {
 };
 
 const QuickLinksWidget = () => {
-    const router = useRouter();
     const isDark = useColorScheme() === 'dark';
+    const [showModal, setShowModal] = React.useState(false);
+    
     const links = [
         { icon: 'flight-land', label: 'Check-In', route: '/pcs/check-in' },
         { icon: 'receipt', label: 'Travel Claim', route: '/travel-claim/request' },
@@ -139,8 +140,8 @@ const QuickLinksWidget = () => {
                 {links.map((link, i) => (
                     <Pressable 
                         key={i} 
-                        onPress={() => router.push(link.route as any)}
-                        className="w-[48%] items-center bg-surface-container-lowest active:bg-surface-container-high active:scale-[0.97] transition-transform p-3 rounded-sm border border-outline-variant shadow-sm"
+                        onPress={() => setShowModal(true)}
+                        className="w-[48%] items-center bg-surface-container-lowest active:bg-surface-container-high active:scale-[0.97] transition-transform p-3 rounded-sm border border-outline-variant shadow-sm opacity-90"
                     >
                         <View className="bg-surface-container p-3 rounded-sm mb-2">
                             <MaterialIcons name={link.icon as any} size={24} color={isDark ? Colors.dark.secondaryContainer : Colors.light.primary} />
@@ -149,6 +150,35 @@ const QuickLinksWidget = () => {
                     </Pressable>
                 ))}
             </View>
+
+            <Modal
+                visible={showModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowModal(false)}
+            >
+                <View className="flex-1 justify-center items-center px-4 bg-slate-900/40 dark:bg-black/60 shadow-none">
+                    <Pressable
+                        className="absolute inset-0"
+                        onPress={() => setShowModal(false)}
+                    />
+                    <View className="bg-surface-container-lowest p-6 rounded-sm w-80 border border-outline-variant shadow-apple-md z-10">
+                        <View className="flex-row items-center gap-3 mb-4">
+                            <MaterialIcons name="construction" size={24} color={isDark ? Colors.dark.secondaryContainer : Colors.light.primary} />
+                            <Text className="font-headline text-lg text-on-surface">Coming Soon</Text>
+                        </View>
+                        <Text className="font-body text-sm text-on-surface-variant mb-6 leading-relaxed">
+                            This Quick Link is currently a placeholder. Future updates will connect this directly to the respective module.
+                        </Text>
+                        <Pressable 
+                            onPress={() => setShowModal(false)}
+                            className="bg-primary dark:bg-primary-container p-3 rounded-sm items-center active:scale-[0.98] transition-transform"
+                        >
+                            <Text className="font-headline text-white dark:text-on-primary-container text-sm uppercase tracking-wider">Acknowledge</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };

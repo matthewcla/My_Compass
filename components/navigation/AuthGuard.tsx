@@ -1,16 +1,27 @@
+import { HubSkeleton } from '@/components/skeletons/HubSkeleton';
 import { useSession } from '@/lib/ctx';
+import { useIsMounted } from '@/lib/utils';
 import { useDemoStore } from '@/store/useDemoStore';
 import { useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 
 export function AuthGuard() {
     const { session, isLoading: isSessionLoading, consentAcknowledged } = useSession();
     const isDemoMode = useDemoStore((state) => state.isDemoMode);
     const segments = useSegments();
     const router = useRouter();
+    const isMounted = useIsMounted();
+    const [isStoreHydrated, setIsStoreHydrated] = useState(false);
 
     useEffect(() => {
-        if (isSessionLoading) return;
+        setIsStoreHydrated(useDemoStore.persist.hasHydrated());
+        const unsub = useDemoStore.persist.onFinishHydration(() => setIsStoreHydrated(true));
+        return unsub;
+    }, []);
+
+    useEffect(() => {
+        if (!isMounted || !isStoreHydrated || isSessionLoading) return;
 
         // Check if the current segment is in a protected group
         // We check the first segment to determine the context
@@ -49,7 +60,15 @@ export function AuthGuard() {
         else if (session && isConsentAcknowledged && (inPublicGroup || inConsentScreen)) {
             router.replace('/(tabs)' as any);
         }
-    }, [session, isSessionLoading, consentAcknowledged, isDemoMode, segments]);
+    }, [session, isSessionLoading, consentAcknowledged, isDemoMode, segments, isMounted, isStoreHydrated]);
 
-    return null; // This component renders nothing
+    if (!isMounted || !isStoreHydrated || isSessionLoading) {
+        return (
+            <View className="absolute inset-0 z-50 bg-white dark:bg-black">
+                <HubSkeleton />
+            </View>
+        );
+    }
+
+    return null; // This component renders nothing when ready
 }

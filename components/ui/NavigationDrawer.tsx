@@ -177,8 +177,8 @@ export function NavigationDrawer() {
                 onRequestClose={() => setSettingsModalVisible(false)}
             >
                 <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 999 }}>
-                    <View className="bg-[#1c1b1b] p-6 rounded-2xl w-80 border border-[#44474f]">
-                        <Text className="text-[#fdc400] font-headline font-bold text-xl mb-4 uppercase tracking-wide">SETTINGS</Text>
+                    <View className="bg-white dark:bg-[#1c1b1b] p-6 rounded-2xl w-80 border border-slate-200 dark:border-[#44474f]">
+                        <Text className="text-slate-900 dark:text-[#fdc400] font-headline font-bold text-xl mb-4 uppercase tracking-wide">SETTINGS</Text>
                         
                         <View className="mb-6">
                             <ThemeToggle />
@@ -190,23 +190,23 @@ export function NavigationDrawer() {
                                     <Text style={{ fontSize: 18 }}>🧪</Text>
                                 </View>
                                 <View className="flex-1">
-                                    <Text className="text-[#e5e2e1] font-semibold text-base">Dev Tools</Text>
-                                    <Text className="text-[#c4c6d0] text-xs mt-1">Show diagnostic icons</Text>
+                                    <Text className="text-slate-800 dark:text-[#e5e2e1] font-semibold text-base">Dev Tools</Text>
+                                    <Text className="text-slate-500 dark:text-[#c4c6d0] text-xs mt-1">Show diagnostic icons</Text>
                                 </View>
                             </View>
                             <Switch
                                 value={showDevFloatingIcons}
                                 onValueChange={toggleDevFloatingIcons}
-                                trackColor={{ false: '#3f3f46', true: '#10B981' }}
+                                trackColor={{ false: '#d1d5db', true: '#10B981' }}
                                 thumbColor="#FFFFFF"
                             />
                         </View>
                         
                         <Pressable 
                             onPress={() => setSettingsModalVisible(false)}
-                            className="w-full bg-[#353534] py-3 rounded-xl border border-[#44474f] items-center hover:bg-[#44474f] transition-colors"
+                            className="w-full bg-slate-100 dark:bg-[#353534] py-3 rounded-xl border border-slate-200 dark:border-[#44474f] items-center hover:bg-slate-200 dark:hover:bg-[#44474f] transition-colors"
                         >
-                            <Text className="text-[#e5e2e1] font-headline font-bold uppercase tracking-widest text-sm">CLOSE</Text>
+                            <Text className="text-slate-800 dark:text-[#e5e2e1] font-headline font-bold uppercase tracking-widest text-sm">CLOSE</Text>
                         </Pressable>
                     </View>
                 </View>

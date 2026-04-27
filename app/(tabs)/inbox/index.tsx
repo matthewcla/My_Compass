@@ -157,7 +157,7 @@ export default function InboxScreen() {
 
     const renderSectionHeader = useCallback(({ section: { title } }: { section: { title: string } }) => (
         <View className="px-5 py-3 bg-transparent">
-            <Text className="text-xs font-bold tracking-wider text-outline uppercase">{title}</Text>
+            <Text className="text-xs font-bold tracking-wider text-slate-700 dark:text-outline uppercase">{title}</Text>
         </View>
     ), []);
 

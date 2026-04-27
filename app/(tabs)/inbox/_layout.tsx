@@ -8,7 +8,7 @@ export default function InboxLayout() {
     const showGlobalHeader = pathname !== '/inbox';
 
     return (
-        <View className="flex-1 bg-black">
+        <View className="flex-1 bg-background">
             {showGlobalHeader && <GlobalHeader />}
             <Stack screenOptions={{ headerShown: false }} />
         </View>

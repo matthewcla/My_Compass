@@ -111,8 +111,8 @@ export const TimelineEntry = memo(function TimelineEntry({ title, subtitle, date
                         </View>
                     )}
                 </View>
-                <Text className="text-slate-500 dark:text-slate-400 text-[13px] mt-[1px]">{subtitle}</Text>
-                <Text className="text-slate-600 dark:text-slate-500 text-xs mt-0.5" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{dates}</Text>
+                <Text className="text-slate-600 dark:text-slate-400 text-[13px] mt-[1px]">{subtitle}</Text>
+                <Text className="text-slate-700 dark:text-slate-500 text-xs mt-0.5" style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>{dates}</Text>
             </View>
         </View>
     );

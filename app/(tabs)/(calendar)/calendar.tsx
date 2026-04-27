@@ -133,7 +133,7 @@ const ScopeToggle = ({ scope, setScope }: { scope: 'personal' | 'command', setSc
 // PERFORMANCE FIX: Extract renderSectionHeader to prevent inline reallocation
 const renderSectionHeader = ({ section: { title } }: { section: { title: string } | any }) => (
     <View className="bg-slate-50/95 dark:bg-[#131313]/95 px-5 py-2 z-10 border-b border-slate-200 dark:border-[#201f1f] mb-3">
-        <Text className="text-sm font-bold text-slate-600 dark:text-[#8e909a] uppercase tracking-widest">
+        <Text className="text-sm font-bold text-slate-800 dark:text-[#8e909a] uppercase tracking-widest">
             {title}
         </Text>
     </View>

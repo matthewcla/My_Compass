@@ -1,4 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppState, AppStateStatus } from 'react-native';
+
+// Temporary mock for NetInfo until @react-native-community/netinfo can be installed
+const addEventListener = (callback: (state: any) => void) => {
+    callback({ isConnected: true });
+};
 
 // =============================================================================
 // TYPES
@@ -43,9 +49,32 @@ export class SyncQueueService {
     private executor: SyncExecutor | null = null;
     private processing = false;
     private initialized = false;
+    private isOnline = true;
+    private isForeground = true;
 
     async init(): Promise<void> {
         if (this.initialized) return;
+
+        this.isForeground = AppState.currentState === 'active';
+
+        AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+            if (nextAppState === 'active') {
+                this.isForeground = true;
+                if (this.isOnline) {
+                    this.processQueue();
+                }
+            } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+                this.isForeground = false;
+            }
+        });
+
+        addEventListener((state: any) => {
+            this.isOnline = !!state.isConnected;
+            if (this.isOnline && this.isForeground) {
+                this.processQueue();
+            }
+        });
+
         await this.hydrate();
         this.initialized = true;
     }
@@ -86,7 +115,7 @@ export class SyncQueueService {
     }
 
     async processQueue(): Promise<void> {
-        if (this.processing || !this.executor) return;
+        if (this.processing || !this.executor || !this.isOnline || !this.isForeground) return;
         this.processing = true;
 
         try {

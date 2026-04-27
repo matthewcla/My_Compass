@@ -98,7 +98,7 @@ export const useDemoStore = create<DemoState>()(
       },
       lifecycleStep: 0,
       demoTimelineOverride: null,
-      showDevFloatingIcons: true,
+      showDevFloatingIcons: false,
 
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
       toggleDevFloatingIcons: () => set((state) => ({ showDevFloatingIcons: !state.showDevFloatingIcons })),
@@ -251,19 +251,19 @@ export const useDemoStore = create<DemoState>()(
     {
       name: 'demo-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
       migrate: (persisted: unknown, version: number) => {
-        if (version === 0 || version === undefined) {
-          const state = persisted as Record<string, unknown>;
+        const state = persisted as Record<string, unknown>;
+        if (version === 0 || version === undefined || version === 1) {
           if (state.lifecycleStep === undefined) state.lifecycleStep = 0;
-          if (state.showDevFloatingIcons === undefined) state.showDevFloatingIcons = true;
+          state.showDevFloatingIcons = false;
           if (state.pcsContextOverride === undefined) state.pcsContextOverride = null;
           if (state.uctPhaseOverride === undefined) state.uctPhaseOverride = null;
           if (state.assignmentPhaseOverride === undefined) state.assignmentPhaseOverride = null;
           if (state.selectionDetails === undefined) state.selectionDetails = null;
           if (state.negotiationDetails === undefined) state.negotiationDetails = null;
         }
-        return persisted;
+        return state;
       },
       // When rehydrating, replace the stale persisted selectedUser with the
       // fresh version from DEMO_USERS so newly-added fields always appear.

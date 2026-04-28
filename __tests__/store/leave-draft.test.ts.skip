@@ -1,0 +1,99 @@
+
+import { storage } from '@/services/storage';
+import { useLeaveStore } from '@/store/useLeaveStore';
+import { LeaveRequest } from '@/types/schema';
+
+// Mock storage
+jest.mock('@/services/storage', () => ({
+    storage: {
+        saveLeaveRequest: jest.fn(),
+        getUserLeaveRequests: jest.fn(),
+    }
+}));
+
+// Mock API
+jest.mock('@/services/api/mockLeaveService', () => ({
+    fetchLeaveBalance: jest.fn(),
+    submitLeaveRequest: jest.fn(),
+}));
+
+describe('useLeaveStore Draft Logic', () => {
+    beforeEach(() => {
+        useLeaveStore.getState().resetStore();
+        jest.clearAllMocks();
+    });
+
+    it('create and update draft triggers persistence with new fields', async () => {
+        // 1. Manually seed a draft (simulation of "Start Wizard")
+        const draftId = 'test-draft-1';
+        const initialDraft: Partial<LeaveRequest> = {
+            id: draftId,
+            userId: 'user-1',
+            status: 'draft',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            lastSyncTimestamp: new Date().toISOString(),
+            syncStatus: 'pending_upload',
+            // Minimal required fields for schema if full validation was enforced, 
+            // but store updateDraft allows partial
+        };
+
+        useLeaveStore.setState({
+            leaveRequests: { [draftId]: initialDraft as LeaveRequest },
+            userLeaveRequestIds: [draftId]
+        });
+
+        // 2. Update Draft - Step 3 Command Details
+        const updatePatch = {
+            dutySection: 'N1 Admin',
+            rationStatus: 'commuted' as const
+        };
+
+        await useLeaveStore.getState().updateDraft(draftId, updatePatch);
+
+        // Verify storage was called
+        expect(storage.saveLeaveRequest).toHaveBeenCalledTimes(1);
+        const savedRequest = (storage.saveLeaveRequest as jest.Mock).mock.calls[0][0];
+
+        expect(savedRequest.dutySection).toBe('N1 Admin');
+        expect(savedRequest.rationStatus).toBe('commuted');
+        // Ensure status is still draft
+        expect(savedRequest.status).toBe('draft');
+    });
+
+    it('updates invalidate preReviewChecks', async () => {
+        const draftId = 'test-draft-2';
+        useLeaveStore.setState({
+            leaveRequests: {
+                [draftId]: {
+                    id: draftId,
+                    status: 'draft',
+                    preReviewChecks: { isReadyToSubmit: true, hasReadPolicy: true, hasInformalApproval: true }
+                } as LeaveRequest
+            }
+        });
+
+        // Edit a field
+        await useLeaveStore.getState().updateDraft(draftId, { chargeDays: 5 });
+
+        const updated = useLeaveStore.getState().leaveRequests[draftId];
+        expect(updated.preReviewChecks).toBeUndefined();
+    });
+
+    it('validateStep validates correct schema for step', () => {
+        const draftId = 'test-draft-3';
+        useLeaveStore.setState({
+            leaveRequests: {
+                [draftId]: {
+                    id: draftId,
+                    leaveType: 'annual',
+                    // MissingStartDate
+                } as LeaveRequest
+            }
+        });
+
+        const result = useLeaveStore.getState().validateStep(draftId, 1);
+        expect(result.success).toBe(false);
+        expect(result.errors.startDate).toBeDefined();
+    });
+});

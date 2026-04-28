@@ -1,0 +1,626 @@
+import { SignatureButton } from '@/components/ui/SignatureButton';
+
+import { WizardStatusBar } from '@/components/wizard/WizardStatusBar';
+import { ReviewSign } from '@/components/wizard/steps/ReviewSign';
+import { Step1Intent } from '@/components/wizard/steps/Step1Intent';
+import { Step2Contact } from '@/components/wizard/steps/Step2Contact';
+import { Step3Routing } from '@/components/wizard/steps/Step3Routing';
+import { Step4Safety } from '@/components/wizard/steps/Step4Safety';
+import Colors from '@/constants/Colors';
+import { useHeaderStore } from '@/store/useHeaderStore';
+import { useLeaveStore } from '@/store/useLeaveStore';
+import { useUserId } from '@/store/useUserStore';
+import { CreateLeaveRequestPayload } from '@/types/api';
+import { calculateLeave } from '@/utils/leaveLogic';
+import { projectLeaveBalance } from '@/utils/leaveProjection';
+import { parseISO } from 'date-fns';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { CheckCircle, ChevronLeft } from 'lucide-react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { Alert, KeyboardAvoidingView, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, Platform, Pressable, Text, View } from 'react-native';
+import { useColorScheme } from '@/components/useColorScheme';
+import Animated, { FadeIn, FadeInDown, FadeInUp, ZoomIn } from 'react-native-reanimated';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// --- Types & Constants ---
+
+const TOTAL_STEPS = 5;
+
+export default function LeaveRequestScreen() {
+    const colorScheme = useColorScheme() ?? 'light';
+    const themeColors = Colors[colorScheme];
+    const isDark = colorScheme === 'dark';
+    const insets = useSafeAreaInsets();
+    const router = useRouter();
+    const submitRequest = useLeaveStore((state) => state.submitRequest);
+    const discardDraft = useLeaveStore((state) => state.discardDraft);
+    const leaveRequests = useLeaveStore((state) => state.leaveRequests);
+    const isSyncing = useLeaveStore((state) => state.isSyncingRequests);
+    const setHeaderVisible = useHeaderStore((state) => state.setVisible);
+
+    // Hide Global Header
+    useFocusEffect(
+        React.useCallback(() => {
+            setHeaderVisible(false);
+            return () => setHeaderVisible(true);
+        }, [setHeaderVisible])
+    );
+
+    // Resume/Draft tracking
+    const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+    const [showExitModal, setShowExitModal] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+
+
+
+    const handleExit = () => {
+        setShowExitModal(true);
+    };
+
+    const confirmExit = async (action: 'discard' | 'save') => {
+        setShowExitModal(false);
+        if (action === 'discard') {
+            if (currentDraftId) {
+                await discardDraft(currentDraftId);
+            }
+            router.back();
+        } else {
+            // Save & Exit (default behavior: back out, store persists state)
+            router.back();
+        }
+    };
+
+    // Check for draft on mount
+    const { draftId } = useLocalSearchParams();
+    const fetchUserRequests = useLeaveStore((state) => state.fetchUserRequests);
+    const fetchLeaveData = useLeaveStore((state) => state.fetchLeaveData);
+    const userId = useUserId();
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    React.useEffect(() => {
+        if (!userId) return;
+        // Hydrate and then set ready
+        const init = async () => {
+            // Always fetch latest data to ensure balance is accurate
+            await Promise.all([
+                fetchUserRequests(userId),
+                fetchLeaveData(userId)
+            ]);
+            setIsHydrated(true);
+        };
+        init();
+    }, [userId]);
+
+    React.useEffect(() => {
+        if (!isHydrated) return; // Wait for hydration
+
+        // 1. Direct Draft Link (from Hub Card)
+        if (draftId && typeof draftId === 'string') {
+            const draft = leaveRequests[draftId];
+            if (draft) {
+                setCurrentDraftId(draft.id);
+                setFormData({
+                    leaveType: draft.leaveType,
+                    startDate: draft.startDate,
+                    endDate: draft.endDate,
+                    leaveAddress: draft.leaveAddress,
+                    leavePhoneNumber: draft.leavePhoneNumber,
+                    emergencyContact: draft.emergencyContact,
+                    memberRemarks: draft.memberRemarks ?? undefined,
+                    modeOfTravel: draft.modeOfTravel,
+                    dutySection: draft.dutySection,
+                    deptDiv: draft.deptDiv,
+                    dutyPhone: draft.dutyPhone,
+                    rationStatus: draft.rationStatus as any,
+                });
+                return;
+            }
+        }
+
+        // 2. Auto-discovery (Fallback)
+        // Simple logic: grab the first 'draft' status request found for this user
+        const drafts = Object.values(leaveRequests).filter(r => r.status === 'draft');
+
+        if (drafts.length > 0 && !currentDraftId) {
+            const draft = drafts[0];
+            setCurrentDraftId(draft.id);
+            setFormData({
+                leaveType: draft.leaveType,
+                startDate: draft.startDate,
+                endDate: draft.endDate,
+                leaveAddress: draft.leaveAddress,
+                leavePhoneNumber: draft.leavePhoneNumber,
+                emergencyContact: draft.emergencyContact,
+                memberRemarks: draft.memberRemarks ?? undefined,
+                modeOfTravel: draft.modeOfTravel,
+                dutySection: draft.dutySection,
+                deptDiv: draft.deptDiv,
+                dutyPhone: draft.dutyPhone,
+                rationStatus: draft.rationStatus as any,
+            });
+        }
+    }, [leaveRequests, draftId, isHydrated]);
+
+    // --- State ---
+    const [activeStep, setActiveStep] = useState(0);
+    const scrollViewRef = useRef<any>(null);
+    const sectionCoords = useRef<number[]>([]);
+
+
+
+    const [formData, setFormData] = useState<Partial<CreateLeaveRequestPayload>>({
+        leaveType: 'annual',
+        leaveInConus: true,
+        destinationCountry: 'USA',
+        startTime: '16:00',
+        endTime: '07:30',
+        departureWorkingHours: '0730-1600',
+        returnWorkingHours: '0730-1600',
+        emergencyContact: {
+            name: '',
+            relationship: '',
+            phoneNumber: '',
+        },
+        rationStatus: 'not_applicable', // Default to avoid validation lock
+    });
+
+    const createDraft = useLeaveStore((state) => state.createDraft);
+    const updateDraft = useLeaveStore((state) => state.updateDraft);
+    const generateQuickDraft = useLeaveStore((state) => state.generateQuickDraft);
+    const userDefaults = useLeaveStore((state) => state.userDefaults);
+
+    // Smart Defaults: Pre-fill on Mount if New Request
+    React.useEffect(() => {
+        if (!draftId && !currentDraftId && userDefaults) {
+            setFormData(prev => ({
+                ...prev,
+                leaveAddress: userDefaults.leaveAddress,
+                leavePhoneNumber: userDefaults.leavePhoneNumber,
+                emergencyContact: userDefaults.emergencyContact || prev.emergencyContact,
+                dutySection: userDefaults.dutySection,
+                deptDiv: userDefaults.deptDiv,
+                dutyPhone: userDefaults.dutyPhone,
+                rationStatus: userDefaults.rationStatus as any,
+            }));
+        }
+    }, [draftId, currentDraftId, userDefaults]);
+
+    // Auto-Save / Draft Creation
+    React.useEffect(() => {
+        // Skip initial mount or empty state
+        if (!formData.startDate && !formData.leaveType) return;
+
+        const timer = setTimeout(async () => {
+            if (currentDraftId) {
+                // Update Existing
+                // We need to match the LeaveRequest shape somewhat or just patch known fields
+                // The store updateDraft takes Partial<LeaveRequest>.
+                // Mapping formData (CreatePayload) to LeaveRequest partial:
+                const patch: Record<string, unknown> = { ...formData };
+                await updateDraft(currentDraftId, patch);
+            } else {
+                // Create New Draft if we have minimal viable data
+                // Only create if user has actually interacted (e.g. selected a date)
+                if (formData.startDate && userId) {
+                    // Use authenticated user ID
+                    const newDraft = generateQuickDraft('standard', userId);
+                    // Override defaults with current form data
+                    Object.assign(newDraft, formData);
+                    await createDraft(newDraft);
+                    setCurrentDraftId(newDraft.id);
+                }
+            }
+        }, 800); // 800ms debounce
+
+        return () => clearTimeout(timer);
+    }, [formData, currentDraftId, createDraft, updateDraft, generateQuickDraft, userId]);
+
+    // Enforce Time Rules: Departure = End of Day, Return = Start of Day
+    React.useEffect(() => {
+        const getShiftTimes = (shiftCode: string = '0730-1600') => {
+            if (shiftCode === 'NONE') return { start: '00:00', end: '00:00' };
+            // Format: HHMM-HHMM
+            const startStr = shiftCode.split('-')[0];
+            const endStr = shiftCode.split('-')[1];
+            const formatTime = (t: string) => `${t.substring(0, 2)}:${t.substring(2)}`;
+            return { start: formatTime(startStr), end: formatTime(endStr) };
+        };
+
+        const dep = getShiftTimes(formData.departureWorkingHours);
+        const ret = getShiftTimes(formData.returnWorkingHours);
+
+        // Only update if different
+        if (formData.startTime !== dep.end || formData.endTime !== ret.start) {
+            setFormData(prev => ({
+                ...prev,
+                startTime: dep.end, // Departure at End of Shift
+                endTime: ret.start  // Return at Start of Shift
+            }));
+        }
+    }, [formData.departureWorkingHours, formData.returnWorkingHours]);
+
+    // --- Hoisted Logic (Leave Calculation) ---
+    const leaveBalance = useLeaveStore((state) => state.leaveBalance);
+    const availableDays = leaveBalance?.currentBalance ?? 0;
+
+    const calculation = useMemo(() => {
+        return calculateLeave({
+            startDate: formData.startDate || '',
+            endDate: formData.endDate || '',
+            startTime: formData.startTime || '00:00',
+            endTime: formData.endTime || '00:00',
+            departureWorkingHours: formData.departureWorkingHours || 'NONE',
+            returnWorkingHours: formData.returnWorkingHours || 'NONE'
+        }, availableDays);
+    }, [formData.startDate, formData.endDate, formData.startTime, formData.endTime, formData.departureWorkingHours, formData.returnWorkingHours, availableDays]);
+
+    const { chargeableDays } = calculation;
+
+    // --- Forward Projection ---
+    const projection = useMemo(() => {
+        const departureDate = formData.startDate ? parseISO(formData.startDate) : new Date();
+        const returnDate = formData.endDate ? parseISO(formData.endDate) : new Date();
+
+        return projectLeaveBalance({
+            currentBalance: availableDays,
+            maxCarryOver: leaveBalance?.maxCarryOver ?? 60,
+            departureDate,
+            returnDate,
+            chargeableDays,
+            leaveType: formData.leaveType || 'annual',
+            allRequests: Object.values(leaveRequests),
+            currentRequestId: currentDraftId ?? undefined,
+        });
+    }, [availableDays, leaveBalance?.maxCarryOver, formData.startDate, formData.endDate, chargeableDays, formData.leaveType, leaveRequests, currentDraftId]);
+
+    // --- Helpers ---
+
+    const updateField = (field: keyof CreateLeaveRequestPayload, value: unknown) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+
+
+    // --- Validation Logic ---
+    const validateStep = (stepIndex: number): boolean => {
+        switch (stepIndex) {
+            case 0: // Intent
+                return !!(formData.startDate && formData.endDate && formData.leaveType);
+            case 1: // Location
+                const isLocationValid = !!(formData.leaveAddress && formData.leavePhoneNumber && formData.modeOfTravel);
+                if (formData.leaveInConus) {
+                    return isLocationValid;
+                }
+                return isLocationValid && !!formData.destinationCountry;
+            case 2: // Command
+                return !!(formData.dutySection && formData.deptDiv && formData.dutyPhone && formData.rationStatus);
+            case 3: // Safety
+                return !!(formData.emergencyContact?.name && formData.emergencyContact?.phoneNumber && formData.memberRemarks);
+            default:
+                return true;
+        }
+    };
+
+    const stepErrors = useMemo(() => {
+        const errors: number[] = [];
+        for (let i = 0; i < activeStep; i++) {
+            if (!validateStep(i)) {
+                errors.push(i);
+            }
+        }
+        return errors;
+    }, [activeStep, formData]);
+
+    const handleSubmit = async () => {
+        // Validate all
+        if (!validateStep(0)) {
+            Alert.alert('Required', 'Please complete the Leave Request details (Step 1).');
+            scrollToSection(0);
+            return;
+        }
+        if (!validateStep(1)) {
+            Alert.alert('Required', 'Please complete Location & Travel (Step 2).');
+            scrollToSection(1);
+            return;
+        }
+        // Step 3 (Routing) is technically optional or has defaults, but if we had checks we'd scroll to index 2.
+
+        if (!validateStep(2)) {
+            Alert.alert('Required', 'Please complete Command & Duty details (Step 3).');
+            scrollToSection(2);
+            return;
+        }
+
+        if (!validateStep(3)) {
+            Alert.alert('Required', 'Please complete Emergency Contact (Step 4).');
+            scrollToSection(3);
+            return;
+        }
+
+        if (!userId) {
+            Alert.alert("Error", "User not authenticated.");
+            return;
+        }
+
+        try {
+            await submitRequest(formData as CreateLeaveRequestPayload, userId);
+
+            // Cleanup: Remove the draft so it doesn't persist as a zombie
+            if (currentDraftId) {
+                await discardDraft(currentDraftId);
+            }
+
+            // Success Celebration
+            setShowSuccess(true);
+            setTimeout(() => {
+                router.back();
+            }, 2500);
+
+        } catch (error) {
+            Alert.alert("Error", "Failed to submit leave request.");
+        }
+    };
+
+    // --- Scroll Handling ---
+
+    const handleSectionLayout = (index: number, event: LayoutChangeEvent) => {
+        const layout = event.nativeEvent.layout;
+        sectionCoords.current[index] = layout.y;
+    };
+
+    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const scrollY = event.nativeEvent.contentOffset.y;
+        const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+        // Offset to trigger "active" state a bit earlier than top-edge
+        const triggerPoint = scrollY + (layoutHeight * 0.3);
+
+        let newActive = activeStep;
+        let foundValidCoord = false;
+        
+        for (let i = 0; i < TOTAL_STEPS; i++) {
+            const sectionTop = sectionCoords.current[i];
+            if (sectionTop !== undefined) {
+                foundValidCoord = true;
+                if (triggerPoint >= sectionTop) {
+                    newActive = i;
+                }
+            }
+        }
+        
+        if (foundValidCoord && newActive !== activeStep) {
+            setActiveStep(newActive);
+        }
+    };
+
+    const scrollToSection = (index: number) => {
+        const y = sectionCoords.current[index];
+        if (y !== undefined) {
+            scrollViewRef.current?.scrollTo({ y, animated: true });
+        }
+    };
+
+    if (!isHydrated) {
+        return (
+            <View className="flex-1 items-center justify-center bg-background">
+                <Text className="text-on-surface-variant font-medium">Loading...</Text>
+            </View>
+        );
+    }
+
+    return (
+        <View className="flex-1 bg-background" >
+            {colorScheme === 'dark' && (
+                <LinearGradient
+                    colors={['#0f172a', '#020617']} // slate-900 to slate-950
+                    style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+                />
+            )}
+            < SafeAreaView style={{ flex: 1 }} edges={['top']} >
+                <View className="flex-1">
+                    {/* Header: StatusBar */}
+                    <Animated.View
+                        entering={FadeInDown.delay(100).springify()}
+                        className="bg-surface/95 sticky top-0 z-10 px-4 py-2"
+                    >
+                        <View className="flex-row items-center gap-3 mb-1 mt-2">
+                            <Pressable
+                                onPress={handleExit}
+                                className="p-2 -ml-2 web:ml-2 rounded-full active:bg-slate-100 dark:active:bg-slate-800"
+                            >
+                                <ChevronLeft size={24} color={themeColors.text} />
+                            </Pressable>
+                            <View className="flex-1">
+                                <Text
+                                    style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1.5 }}
+                                    className="text-on-surface-variant mb-0"
+                                >
+                                    ADMIN FLOW
+                                </Text>
+                                <Text
+                                    style={{ fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}
+                                    className="text-on-surface mb-1"
+                                >
+                                    Leave Request
+                                </Text>
+                            </View>
+                        </View>
+                        <WizardStatusBar
+                            currentStep={activeStep}
+                            onStepPress={scrollToSection}
+                            errorSteps={stepErrors}
+                        />
+                    </Animated.View>
+
+                    {/* Main Scroll Feed */}
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={{ flex: 1 }}
+                        keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0} // Accounts for header
+                    >
+                        <Animated.ScrollView
+                            entering={FadeInDown.delay(200).springify()}
+                            ref={scrollViewRef}
+                            className="flex-1"
+                            contentContainerClassName="px-4 pt-4 pb-56" // Adjusted bottom padding for Floating Footer
+                            onScroll={handleScroll}
+                            scrollEventThrottle={16}
+                            keyboardShouldPersistTaps="handled"
+                            keyboardDismissMode="interactive"
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {/* 1. Intent */}
+                            <Animated.View entering={FadeInUp.delay(50).duration(300)} onLayout={(e) => handleSectionLayout(0, e)} className="mb-6">
+                                <Step1Intent
+                                    leaveType={formData.leaveType}
+                                    startDate={formData.startDate || ''}
+                                    endDate={formData.endDate || ''}
+                                    startTime={formData.startTime}
+                                    endTime={formData.endTime}
+                                    departureWorkingHours={formData.departureWorkingHours}
+                                    returnWorkingHours={formData.returnWorkingHours}
+                                    onUpdate={updateField}
+                                    embedded={true}
+                                />
+                            </Animated.View>
+
+                            {/* 2. Contact */}
+                            <Animated.View entering={FadeInUp.delay(100).duration(300)} onLayout={(e) => handleSectionLayout(1, e)} className="mb-6">
+                                <Step2Contact
+                                    formData={formData}
+                                    onUpdate={updateField}
+                                    embedded={true}
+                                />
+                            </Animated.View>
+
+                            {/* 3. Routing */}
+                            <Animated.View entering={FadeInUp.delay(150).duration(300)} onLayout={(e) => handleSectionLayout(2, e)} className="mb-6">
+                                <Step3Routing
+                                    formData={formData}
+                                    onUpdate={updateField}
+                                    embedded={true}
+                                />
+                            </Animated.View>
+
+                            {/* 4. Safety */}
+                            <Animated.View entering={FadeInUp.delay(200).duration(300)} onLayout={(e) => handleSectionLayout(3, e)} className="mb-6">
+                                <Step4Safety
+                                    formData={formData}
+                                    onUpdate={updateField}
+                                    embedded={true}
+                                />
+                            </Animated.View>
+
+                            {/* 5. Review */}
+                            <Animated.View entering={FadeInUp.delay(250).duration(300)} onLayout={(e) => handleSectionLayout(4, e)} className="mb-6">
+                                <ReviewSign
+                                    formData={formData}
+                                    embedded={true}
+                                />
+                            </Animated.View>
+                        </Animated.ScrollView>
+                    </KeyboardAvoidingView>
+
+                    {/* Floating Footer: HUD + Signature (Simplified for Debugging) */}
+                    <View
+                        className="absolute bottom-0 left-0 right-0 bg-surface border-t border-outline"
+                        style={{ paddingBottom: Math.max(insets.bottom, 20) }}
+                    >
+                        <View className="pt-4 px-4">
+                            {/* LeaveImpactHUD Widget (Unimplemented) */}
+                            <View className="mt-4">
+                                <View className="flex-1">
+                                    <SignatureButton
+                                        onSign={handleSubmit}
+                                        isSubmitting={isSyncing}
+                                    />
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </SafeAreaView >
+
+            {/* Exit Confirmation Overlay */}
+            {
+                showExitModal && (
+                    <View className="absolute inset-0 z-50 items-center justify-center p-4">
+                        {/* Backdrop */}
+                        <Animated.View entering={FadeIn} className="absolute inset-0 bg-black/60">
+                            <Pressable className="flex-1" onPress={() => setShowExitModal(false)} />
+                        </Animated.View>
+
+                        {/* Content */}
+                        <Animated.View 
+                            entering={ZoomIn.duration(200)} 
+                            className="w-full max-w-sm rounded-none overflow-hidden border-2 shadow-apple-lg"
+                            style={{ backgroundColor: themeColors.surface, borderColor: themeColors.surfaceBorder }}
+                        >
+                            <View className="p-6 items-center">
+                                <Text className="text-xl font-bold text-on-surface mb-2 text-center">
+                                    Save Draft?
+                                </Text>
+                                <Text className="text-on-surface-variant text-center mb-6">
+                                    Would you like to save this request as a draft before exiting?
+                                </Text>
+
+                                <View className="w-full gap-3">
+                                    {/* Save & Exit */}
+                                    <Pressable
+                                        onPress={() => confirmExit('save')}
+                                        className="w-full py-3 bg-primary rounded-none items-center active:bg-primary-container"
+                                    >
+                                        <Text className="text-on-primary font-semibold">Save & Exit</Text>
+                                    </Pressable>
+
+                                    {/* Discard */}
+                                    <Pressable
+                                        onPress={() => confirmExit('discard')}
+                                        className="w-full py-3 bg-error-container rounded-none items-center active:opacity-80"
+                                    >
+                                        <Text className="text-on-error-container font-semibold">Discard</Text>
+                                    </Pressable>
+
+                                    {/* Cancel */}
+                                    <Pressable
+                                        onPress={() => setShowExitModal(false)}
+                                        className="w-full py-3 mt-2 items-center"
+                                    >
+                                        <Text className="text-on-surface-variant font-medium">Cancel</Text>
+                                    </Pressable>
+                                </View>
+                            </View>
+                        </Animated.View>
+                    </View>
+                )
+            }
+
+            {/* Success Celebration Overlay */}
+            {
+                showSuccess && (
+                    <Animated.View
+                        entering={FadeIn}
+                        className="absolute inset-0 z-50 items-center justify-center"
+                    >
+                        <BlurView
+                            intensity={40}
+                            tint="dark"
+                            className="absolute inset-0 items-center justify-center bg-black/40"
+                        >
+                            <Animated.View entering={ZoomIn.delay(200).springify()}>
+                                <CheckCircle size={100} color="white" strokeWidth={2.5} />
+                            </Animated.View>
+                            <Animated.Text entering={FadeInUp.delay(500)} className="text-on-primary text-3xl font-bold mt-8 tracking-tight">
+                                Request Sent!
+                            </Animated.Text>
+                            <Animated.Text entering={FadeInUp.delay(600)} className="text-on-primary-container text-lg mt-3 text-center">
+                                Your leave request is on its way{'\n'}to the approver.
+                            </Animated.Text>
+                        </BlurView>
+                    </Animated.View>
+                )
+            }
+        </View >
+    );
+}

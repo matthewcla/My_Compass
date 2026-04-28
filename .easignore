@@ -1,0 +1,46 @@
+# EAS Build ignore file
+# Exclude files from EAS builds to reduce upload time
+
+# Dependencies (reinstalled on EAS servers)
+node_modules/
+
+# Development
+dist/
+web-build/
+.expo/
+.vercel/
+
+# Native build artifacts (rebuilt by EAS)
+ios/
+android/
+
+# Documentation
+*.md
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.github/
+
+# Logs / Debug
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+
+# Misc
+*.tsbuildinfo
+
+# AI Agents & Assistants (Massive file counts)
+.agent/
+.claude/
+.jules/
+
+# Tests & Mocks
+__tests__/

@@ -1,0 +1,79 @@
+import { useColorScheme } from '@/components/useColorScheme';
+import { usePCSStore } from '@/store/usePCSStore';
+import { ChecklistItem } from '@/types/pcs';
+import { Check } from 'lucide-react-native';
+import React from 'react';
+import { Text, View } from 'react-native';
+
+export const PCSChecklist = () => {
+    const { checklist, activeOrder } = usePCSStore();
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+
+    if (!checklist.length) return null;
+
+    // Helper to determine status category
+    const getItemStatus = (item: ChecklistItem) => {
+        if (item.status === 'COMPLETE') return 'completed';
+
+        // Check if linked segment is locked
+        if (item.segmentId && activeOrder) {
+            const segment = activeOrder.segments.find(s => s.id === item.segmentId);
+            if (segment && segment.status === 'LOCKED') {
+                return 'upcoming';
+            }
+        }
+        return 'action_required';
+    };
+
+    const groupedItems = checklist.reduce((acc, item) => {
+        const status = getItemStatus(item);
+        if (!acc[status]) acc[status] = [];
+        acc[status].push(item);
+        return acc;
+    }, {} as Record<string, ChecklistItem[]>);
+
+    const renderGroup = (title: string, items: ChecklistItem[], isActionRequired = false) => {
+        if (!items || items.length === 0) return null;
+
+        return (
+            <View className="mb-6">
+                <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 px-1">
+                    {title}
+                </Text>
+                <View className="bg-white dark:bg-slate-800 rounded-none overflow-hidden border-2 border-slate-200 dark:border-slate-800 shadow-apple-lg">
+                    {items.map((item, index) => {
+                        const isLast = index === items.length - 1;
+                        const isComplete = item.status === 'COMPLETE';
+
+                        return (
+                            <View key={item.id} className={`flex-row items-center p-4 ${!isLast ? 'border-b-2 border-slate-200 dark:border-slate-800' : ''}`}>
+                                <View className={`w-5 h-5 rounded-none border-2 items-center justify-center mr-3 ${isComplete ? 'bg-green-600 border-green-600' :
+                                        isActionRequired ? 'bg-white border-primary dark:border-blue-500' :
+                                            'bg-slate-50 border-slate-300 dark:bg-slate-900 dark:border-slate-600'
+                                    }`}>
+                                    {isComplete && <Check size={12} color="white" strokeWidth={3} />}
+                                    {isActionRequired && !isComplete && <View className="w-2 h-2 rounded-none bg-primary dark:bg-blue-500" />}
+                                </View>
+                                <View className="flex-1">
+                                    <Text className={`text-base font-medium ${isComplete ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'
+                                        }`}>
+                                        {item.label}
+                                    </Text>
+                                </View>
+                            </View>
+                        );
+                    })}
+                </View>
+            </View>
+        );
+    };
+
+    return (
+        <View className="px-4 pb-8">
+            {renderGroup('Action Required', groupedItems['action_required'], true)}
+            {renderGroup('Upcoming', groupedItems['upcoming'])}
+            {renderGroup('Completed', groupedItems['completed'])}
+        </View>
+    );
+};

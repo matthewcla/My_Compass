@@ -1,0 +1,1 @@
+import { colorScheme } from 'nativewind';
